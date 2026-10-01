@@ -40,11 +40,11 @@ fun ToolsScreen(modifier: Modifier = Modifier) {
         tools.forEach { title ->
             Row(
                 modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = ScanFitSpacing.minTouchTarget)
-                        .padding(horizontal = ScanFitSpacing.screenMargin, vertical = ScanFitSpacing.md)
-                        .semantics(mergeDescendants = true) {},
+                Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = ScanFitSpacing.minTouchTarget)
+                    .padding(horizontal = ScanFitSpacing.screenMargin, vertical = ScanFitSpacing.md)
+                    .semantics(mergeDescendants = true) {},
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {

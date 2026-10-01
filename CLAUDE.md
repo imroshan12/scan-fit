@@ -45,7 +45,7 @@ python3 spec/tools/gen_strings.py && python3 spec/tools/gen_tokens.py
 ./gradlew :core:imaging:testDebugUnitTest --tests "*Conformance*"
 
 # ios (from ios/)
-xcodebuild -scheme ScanFit -destination 'platform=iOS Simulator,name=iPhone 16' test
+xcodebuild -scheme ScanFit -destination 'platform=iOS Simulator,name=iPhone 17' test
 swift test --package-path Packages/Core        # engine + conformance tests, fast
 swiftlint --strict
 ```

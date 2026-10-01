@@ -27,6 +27,8 @@ internal fun Project.configureAndroid(android: CommonExtension) {
     android.compileOptions.targetCompatibility = JavaVersion.VERSION_17
     android.lint.warningsAsErrors = true
     android.lint.abortOnError = true
+    // GradleDependency/NewerVersionAvailable: versions are pinned on purpose in libs.versions.toml
+    // and bumped by hand.
     android.lint.disable += setOf("GradleDependency", "NewerVersionAvailable", "AndroidGradlePluginVersion")
     android.testOptions.unitTests.isReturnDefaultValues = true
     configureKotlin()

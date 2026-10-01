@@ -2,9 +2,13 @@ spec/dist/
 spec/fixtures/images/real/
 **/.DS_Store
 # android
-android/.gradle/
+android/**/.gradle/
 android/**/build/
+android/**/bin/
+android/.kotlin/
 android/local.properties
+.idea/
+*.iml
 *.keystore
 # ios
 ios/**/xcuserdata/

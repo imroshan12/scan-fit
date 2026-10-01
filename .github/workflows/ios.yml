@@ -34,8 +34,11 @@ jobs:
       - name: Tools
         run: brew install xcodegen swiftlint
       - run: swiftlint --strict
-      - name: Engine + conformance tests (Core, fast)
-        run: swift test --package-path Packages/Core
+      - name: Engine + conformance tests (Core), with coverage
+        run: swift test --package-path Packages/Core --enable-code-coverage
+      - name: Engine coverage gate (>= 90% lines)
+        working-directory: ios/Packages/Core
+        run: python3 ../../Scripts/check_coverage.py
       - name: Feature tests
         run: swift test --package-path Packages/Features
       - name: App build + tests on an iPhone SE (3rd gen) simulator, the low-end profile
