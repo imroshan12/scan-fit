@@ -30,6 +30,11 @@ fi
 if [[ -n "${BUILD}" && ! "${BUILD}" =~ ^[0-9]+$ ]]; then echo "error: --build must be an integer" >&2; exit 2; fi
 if [[ "${UPLOAD}" == 1 && "${SIGN}" == 0 ]]; then echo "error: --upload needs a signed build" >&2; exit 2; fi
 
+# Xcode's script phases do not inherit the caller's PATH (a venv or setup-python interpreter is invisible to them), so
+# hand the "Embed signed presets" phase an absolute interpreter. It needs `cryptography` to verify the signature.
+PYTHON="$(command -v "${PYTHON:-python3}")" || { echo "error: python3 not found" >&2; exit 1; }
+export PYTHON
+
 DEV_KEY="../spec/signing/dev_public_key.b64"
 OUT="build"
 ARCHIVE="${OUT}/ScanFit.xcarchive"

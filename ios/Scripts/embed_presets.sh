@@ -40,7 +40,8 @@ if "${PYTHON}" -c "import cryptography" >/dev/null 2>&1; then
     exit 1
   }
 elif [[ "${CONFIGURATION}" == "Release" ]]; then
-  echo "error: Release builds need python3 with 'cryptography' to verify the presets signature (pip install -r spec/tools/requirements.txt)." >&2
+  echo "error: Release builds need a python3 with 'cryptography' to verify the presets signature (pip install -r spec/tools/requirements.txt)." >&2
+  echo "       Xcode build phases do not see your shell PATH or venv: set PYTHON=/absolute/path/to/that/python3 (Scripts/archive.sh does this for you)." >&2
   exit 1
 else
   echo "warning: skipping build-time presets verification (pip install -r spec/tools/requirements.txt). The app still verifies at launch." >&2

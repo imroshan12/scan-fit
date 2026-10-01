@@ -56,9 +56,9 @@ jobs:
       - name: Feature tests
         run: swift test --package-path Packages/Features
       - name: App + string-catalog tests on an iPhone SE (3rd gen) simulator, the low-end profile
-        env:
-          PYTHON: python3
         run: |
+          # Absolute path: Xcode's script phases do not see setup-python's PATH, and the presets phase needs cryptography.
+          export PYTHON="$(command -v python3)"
           xcodegen generate
           RUNTIME=$(xcrun simctl list runtimes -j | python3 -c "import json,sys; r=[x for x in json.load(sys.stdin)['runtimes'] if x['platform']=='iOS' and x['isAvailable']]; print(sorted(r,key=lambda x:x['version'])[-1]['identifier'])")
           UDID=$(xcrun simctl create "ScanFit SE3" com.apple.CoreSimulator.SimDeviceType.iPhone-SE-3rd-generation "$RUNTIME")

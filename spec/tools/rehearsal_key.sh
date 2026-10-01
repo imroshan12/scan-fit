@@ -4,13 +4,14 @@
 # then exercise R8, release lint and the embed checks exactly as a real release would. The throwaway key is discarded
 # with the runner and the result is never published.
 #
-# It OVERWRITES spec/signing/prod_public_key.b64, so it refuses to run outside CI (GitHub sets CI=true).
+# It OVERWRITES spec/signing/prod_public_key.b64 (your real, committed key), so it refuses to run anywhere but GitHub Actions.
+# It checks GITHUB_ACTIONS, which only the runner sets: a hand-typed CI=true on your machine is not enough.
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 PY="${PYTHON:-python3}"
 
-if [[ "${CI:-}" != "true" ]]; then
-  echo "error: rehearsal_key.sh overwrites spec/signing/prod_public_key.b64 and only runs in CI (CI=true)." >&2
+if [[ "${GITHUB_ACTIONS:-}" != "true" || -z "${GITHUB_RUN_ID:-}" ]]; then
+  echo "error: rehearsal_key.sh overwrites spec/signing/prod_public_key.b64 (the real key) and runs only on GitHub Actions." >&2
   exit 1
 fi
 
