@@ -1,0 +1,8 @@
+# Tests are exempt from length and complexity rules, like detekt's `excludes: ['**/test/**']` on the Kotlin side:
+# conformance tests loop over every case in spec/fixtures/cases.json in one readable function.
+disabled_rules:
+  - line_length
+  - cyclomatic_complexity
+  - function_body_length
+  - large_tuple
+  - optional_data_string_conversion   # fixtures are known-valid UTF-8, and decoding(as:) never traps

@@ -36,7 +36,8 @@ public struct FitEngine: Sendable {
 
         func encode(_ raster: Raster, _ quality: Int) -> [UInt8] {
             encodes += 1
-            switch JpegPatcher.patch(encoder.encode(raster, quality: quality), dpi: dpi, allowGrayscale: allowGrayscale) {
+            let jpeg = encoder.encode(raster, quality: quality)
+            switch JpegPatcher.patch(jpeg, dpi: dpi, allowGrayscale: allowGrayscale) {
             case let .success(bytes): return bytes
             case .failure:
                 failed = true
@@ -48,7 +49,11 @@ public struct FitEngine: Sendable {
     private static let qLow = 35, qHigh = 95, qMax = 100
     private static let marginFraction = 0.05, ladderDown = 0.85, ladderUp = 1.25
 
-    public func fit(_ source: Raster, spec: DocSpec, options: FitOptions = FitOptions()) -> Result<FitResult, FitError> {
+    public func fit(
+        _ source: Raster,
+        spec: DocSpec,
+        options: FitOptions = FitOptions()
+    ) -> Result<FitResult, FitError> {
         guard spec.formats.contains(.jpg) || spec.formats.contains(.jpeg) else { return .failure(.unsupportedFormat) }
         guard let max = spec.sizeKb.max else { return .failure(.unknownLimit) }
         let window = Self.window(min: spec.sizeKb.min ?? 0, max: max, target: spec.sizeKb.target)
@@ -109,13 +114,17 @@ public struct FitEngine: Sendable {
         switch first {
         case let .hit(quality, bytes):
             let size = Geometry.scaled(start, hitScale)
-            return .success(FitResult(bytes: bytes, width: size.w, height: size.h, quality: quality,
-                                      strategy: Self.strategy(down: downscaled, up: upscaled, padded: false), encodes: measure.encodes))
+            return .success(FitResult(
+                bytes: bytes, width: size.w, height: size.h, quality: quality,
+                strategy: Self.strategy(down: downscaled, up: upscaled, padded: false), encodes: measure.encodes
+            ))
         case let .tooSmall(bytes):
             let size = Geometry.scaled(start, lastSmallScale)
             let padded = JpegPatcher.pad(lastSmall ?? bytes, to: roundHalfUp(window.target * 1024))
-            return .success(FitResult(bytes: padded, width: size.w, height: size.h, quality: Self.qMax,
-                                      strategy: Self.strategy(down: false, up: upscaled, padded: true), encodes: measure.encodes))
+            return .success(FitResult(
+                bytes: padded, width: size.w, height: size.h, quality: Self.qMax,
+                strategy: Self.strategy(down: false, up: upscaled, padded: true), encodes: measure.encodes
+            ))
         case .tooBig:
             return .failure(.tooDetailed)
         }
@@ -152,7 +161,8 @@ public struct FitEngine: Sendable {
         if m.failed { return .tooBig }
         if kb(e95) < w.goalLo {
             let e100 = m.encode(raster, Self.qMax)
-            return (w.goalLo...w.goalHi).contains(kb(e100)) ? .hit(quality: Self.qMax, bytes: e100) : .tooSmall(maxBytes: e100)
+            let fits = (w.goalLo...w.goalHi).contains(kb(e100))
+            return fits ? .hit(quality: Self.qMax, bytes: e100) : .tooSmall(maxBytes: e100)
         }
         if kb(e95) <= w.goalHi, kb(e95) <= w.target { return .hit(quality: Self.qHigh, bytes: e95) }
         let e35 = m.encode(raster, Self.qLow)
@@ -174,7 +184,8 @@ public struct FitEngine: Sendable {
         let hiValid = (w.goalLo...w.goalHi).contains(kb(eHi))
         let loValid = (w.goalLo...w.goalHi).contains(kb(eLo))
         if loValid && hiValid {
-            return abs(kb(eHi) - w.target) < abs(kb(eLo) - w.target) ? .hit(quality: hi, bytes: eHi) : .hit(quality: lo, bytes: eLo)
+            let hiCloser = abs(kb(eHi) - w.target) < abs(kb(eLo) - w.target)
+            return hiCloser ? .hit(quality: hi, bytes: eHi) : .hit(quality: lo, bytes: eLo)
         }
         if hiValid { return .hit(quality: hi, bytes: eHi) }
         if loValid { return .hit(quality: lo, bytes: eLo) }

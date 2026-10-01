@@ -9,7 +9,8 @@ enum ImageOps {
         if wl % 2 == 0 { wl -= 1 }
         wl = max(wl, 1)
         let wu = wl + 2
-        let mIdeal = (12.0 * sigma * sigma - 3.0 * Double(wl * wl) - 12.0 * Double(wl) - 9.0) / (-4.0 * Double(wl) - 4.0)
+        let numerator = 12.0 * sigma * sigma - 3.0 * Double(wl * wl) - 12.0 * Double(wl) - 9.0
+        let mIdeal = numerator / (-4.0 * Double(wl) - 4.0)
         let m = min(max(roundHalfUp(mIdeal), 0), 3)
         return (0..<3).map { $0 < m ? wl : wu }
     }

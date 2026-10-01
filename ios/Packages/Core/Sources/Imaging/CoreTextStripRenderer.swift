@@ -32,7 +32,10 @@ public struct CoreTextStripRenderer: TextMeasurer {
               let data = ctx.data else { return base }
         let px = data.bindMemory(to: UInt8.self, capacity: w * h * 4)
         for p in 0..<(w * h) {
-            px[p * 4] = base.rgb[p * 3]; px[p * 4 + 1] = base.rgb[p * 3 + 1]; px[p * 4 + 2] = base.rgb[p * 3 + 2]; px[p * 4 + 3] = 255
+            px[p * 4] = base.rgb[p * 3]
+            px[p * 4 + 1] = base.rgb[p * 3 + 1]
+            px[p * 4 + 2] = base.rgb[p * 3 + 2]
+            px[p * 4 + 3] = 255
         }
         ctx.setFillColor(red: 0, green: 0, blue: 0, alpha: 1)
         ctx.setShouldAntialias(true)
@@ -40,7 +43,10 @@ public struct CoreTextStripRenderer: TextMeasurer {
             let ctLine = line(entry.text, entry.sizePx, entry.bold)
             let textWidth = CTLineGetTypographicBounds(ctLine, nil, nil, nil)
             // CoreGraphics' origin is bottom-left; the layout's y grows downwards.
-            ctx.textPosition = CGPoint(x: CGFloat(entry.centerX) - CGFloat(textWidth) / 2, y: CGFloat(h) - CGFloat(entry.baselineY))
+            ctx.textPosition = CGPoint(
+                x: CGFloat(entry.centerX) - CGFloat(textWidth) / 2,
+                y: CGFloat(h) - CGFloat(entry.baselineY)
+            )
             CTLineDraw(ctLine, ctx)
         }
         var out = [UInt8](repeating: 0, count: w * h * 3)
@@ -50,7 +56,10 @@ public struct CoreTextStripRenderer: TextMeasurer {
 
     /// Photo + strip in one step: the output has the same size as `photo`.
     public func withStrip(_ photo: Raster, name: String, date: String) -> Raster {
-        let layout = NameDateStrip.layout(name: name, date: date, width: photo.width, height: photo.height, measurer: self)
-        return draw(NameDateStrip.placePhoto(photo, layout: layout, width: photo.width, height: photo.height), layout: layout)
+        let layout = NameDateStrip.layout(
+            name: name, date: date, width: photo.width, height: photo.height, measurer: self
+        )
+        let placed = NameDateStrip.placePhoto(photo, layout: layout, width: photo.width, height: photo.height)
+        return draw(placed, layout: layout)
     }
 }

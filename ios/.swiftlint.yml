@@ -19,13 +19,26 @@ opt_in_rules:
 force_unwrapping: error
 force_cast: error
 force_try: error
+# Policy mirrors the Kotlin side (android/config/detekt/detekt.yml) so both platforms are held to the same bar:
+# 120 columns in sources, complexity 25, method length 100, and tests exempt from length/complexity rules.
+disabled_rules:
+  - trailing_comma    # comma style is SwiftFormat's job (--commas always); both styles are valid Swift 6
+
 identifier_name:
-  min_length: 2
-  excluded: [id, x, y, w, h, kb, db, ok, hi, en]
+  min_length: 1       # pixel kernels use r/g/b/x/y/i/k like the spec; Kotlin has no min-length rule either
 line_length:
-  warning: 120
+  warning: 120        # detekt MaxLineLength 120
   error: 160
   ignores_urls: true
+cyclomatic_complexity:
+  warning: 25         # detekt CyclomaticComplexMethod allowedComplexity 25 (FitEngine.fit mirrors ALGORITHMS 1.3-1.4)
+  error: 40
+function_body_length:
+  warning: 100        # detekt LongMethod allowedLines 100
+  error: 150
+function_parameter_count:
+  warning: 6          # pixel kernels take (pixels, w, h) plus their parameters
+  error: 8
 type_body_length:
   warning: 300
   error: 500

@@ -11,7 +11,8 @@ public struct Raster: Sendable, Equatable {
     /// Traps on an empty or mis-sized buffer: that is a programmer error, never user input.
     public init(width: Int, height: Int, rgb: [UInt8]) {
         precondition(width > 0 && height > 0, "empty raster \(width)x\(height)")
-        precondition(rgb.count == width * height * Self.channels, "buffer size \(rgb.count) != \(width * height * Self.channels)")
+        let expected = width * height * Self.channels
+        precondition(rgb.count == expected, "buffer size \(rgb.count) != \(expected)")
         self.width = width
         self.height = height
         self.rgb = rgb

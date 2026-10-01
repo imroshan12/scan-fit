@@ -13,7 +13,8 @@ public enum FitStrategy: String, Sendable, Equatable {
 }
 
 public enum FitError: String, Error, Sendable, Equatable {
-    /// Cannot get under the maximum even at the lowest quality and smallest allowed size: re-crop or plainer background.
+    /// Cannot get under the maximum even at the lowest quality and smallest allowed size:
+    /// re-crop or plainer background.
     case tooDetailed = "TOO_DETAILED"
     /// The slot has no maximum size, so there is nothing to fit to (the spec is not verified yet).
     case unknownLimit = "UNKNOWN_LIMIT"

@@ -35,8 +35,10 @@ public enum MatchEngine {
                 if e.verdict == .no || e.verdict == .unknown { continue }
                 let unverified = exam.confidence == .low
                 let verdict: Verdict = (unverified && e.verdict == .exact) ? .accepted : e.verdict
-                entries.append(MatchEntry(examId: exam.id, examName: exam.name, body: exam.body, docType: slot.type,
-                                          verdict: verdict, unverified: unverified, fix: e.fix, failed: e.failed, issues: e.issues))
+                entries.append(MatchEntry(
+                    examId: exam.id, examName: exam.name, body: exam.body, docType: slot.type,
+                    verdict: verdict, unverified: unverified, fix: e.fix, failed: e.failed, issues: e.issues
+                ))
             }
         }
         var rank: [String: Int] = [:]
@@ -52,7 +54,11 @@ public enum MatchEngine {
     }
 
     /// The verdict for one file against one slot (confidence is applied by `match`, not here).
-    public static func evaluate(_ slot: DocSpec, _ file: FileFacts, options: MatchOptions = MatchOptions()) -> SlotEvaluation {
+    public static func evaluate(
+        _ slot: DocSpec,
+        _ file: FileFacts,
+        options: MatchOptions = MatchOptions()
+    ) -> SlotEvaluation {
         let size = slot.sizeKb
         if size.min == nil, size.max == nil, slot.dimensions.mode == .none {
             return SlotEvaluation(verdict: .unknown)

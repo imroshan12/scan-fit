@@ -107,7 +107,7 @@ def check_dist_signature(root, key, r):
 
 def check_versions(root, r):
     android = parse_properties(read(root, "android", "gradle.properties")).get("scanfit.versionName")
-    ios = first(r'^\s*MARKETING_VERSION:\s*"?([^"\s#]+)', read(root, "ios", "project.yml"))
+    ios = first(r'^\s*MARKETING_VERSION:\s*["\']?([^"\'\s#]+)', read(root, "ios", "project.yml"))
     for label, v in (("android/gradle.properties scanfit.versionName", android), ("ios/project.yml MARKETING_VERSION", ios)):
         if v is None or not SEMVER.fullmatch(v):
             r.block(f"{label} is missing or not semver (got {v!r})")
@@ -146,7 +146,7 @@ def check_ios(root, env, r):
         r.block("iOS signing team is still the example value " + TEAM_ID_EXAMPLE)
     else:
         r.ok("iOS signing team set")
-    bundle_id = first(r"^\s*APP_BUNDLE_ID:\s*(\S+)", read(root, "ios", "project.yml"))
+    bundle_id = first(r"^\s*APP_BUNDLE_ID:\s*[\"']?([^\"'\s#]+)", read(root, "ios", "project.yml"))
     if bundle_id == PLACEHOLDER_IOS_ID:
         r.warn(f"iOS bundle id is still the placeholder '{bundle_id}': permanent once published on the App Store")
 

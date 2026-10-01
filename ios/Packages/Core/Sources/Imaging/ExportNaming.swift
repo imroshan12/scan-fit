@@ -12,7 +12,8 @@ public enum ExportNaming {
         var out = ""
         var pendingDash = false
         for scalar in cut.unicodeScalars {
-            let isAlnum = (scalar.value >= 48 && scalar.value <= 57) || (scalar.value >= 65 && scalar.value <= 90) || (scalar.value >= 97 && scalar.value <= 122)
+            let code = scalar.value
+            let isAlnum = (48...57).contains(code) || (65...90).contains(code) || (97...122).contains(code)
             if isAlnum {
                 if pendingDash && !out.isEmpty { out.append("-") }
                 pendingDash = false

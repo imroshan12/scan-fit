@@ -1,6 +1,7 @@
 import Foundation
 
-/// Replaces the background with white using a person mask (ALGORITHMS 2.3 / 9.6). Pixels inside the mask are never altered.
+/// Replaces the background with white using a person mask (ALGORITHMS 2.3 / 9.6).
+/// Pixels inside the mask are never altered.
 public enum BackgroundWhitening {
     private static let featherPasses = 2
 

@@ -34,8 +34,14 @@ public struct FitPipeline: Sendable {
         fit = FitEngine(encoder: encoder)
     }
 
-    public func run(_ source: Raster, spec: DocSpec, pipeline: Pipeline = .plain, crop: CropRect? = nil,
-                    options: FitOptions = FitOptions(), ink: InkOptions = InkOptions()) -> Result<PipelineResult, FitError> {
+    public func run(
+        _ source: Raster,
+        spec: DocSpec,
+        pipeline: Pipeline = .plain,
+        crop: CropRect? = nil,
+        options: FitOptions = FitOptions(),
+        ink: InkOptions = InkOptions()
+    ) -> Result<PipelineResult, FitError> {
         let aspect = Geometry.targetAspect(spec)
         var inkResult: InkResult?
         let prepared: Raster
@@ -44,7 +50,9 @@ public struct FitPipeline: Sendable {
             inkResult = cleaned
             prepared = Self.padded(cleaned.raster, aspect)
         } else if FitProfile.cropsToAspect(spec.type) {
-            let wanted = crop ?? aspect.map { Geometry.defaultCrop(srcW: source.width, srcH: source.height, aspect: $0) }
+            let wanted = crop ?? aspect.map {
+                Geometry.defaultCrop(srcW: source.width, srcH: source.height, aspect: $0)
+            }
             if let rect = Self.clamped(source, wanted) {
                 prepared = source.crop(x: rect.x, y: rect.y, width: rect.w, height: rect.h)
             } else {
@@ -62,7 +70,8 @@ public struct FitPipeline: Sendable {
     private static func padded(_ r: Raster, _ aspect: Double?) -> Raster {
         guard let aspect else { return r }
         let plan = Geometry.padToAspect(srcW: r.width, srcH: r.height, aspect: aspect)
-        return (plan.w == r.width && plan.h == r.height) ? r : r.crop(x: -plan.x, y: -plan.y, width: plan.w, height: plan.h)
+        if plan.w == r.width, plan.h == r.height { return r }
+        return r.crop(x: -plan.x, y: -plan.y, width: plan.w, height: plan.h)
     }
 
     private static func clamped(_ r: Raster, _ c: CropRect?) -> CropRect? {

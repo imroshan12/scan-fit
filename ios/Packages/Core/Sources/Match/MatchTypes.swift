@@ -2,7 +2,8 @@ import Foundation
 import Inspect
 import ScanModel
 
-/// What the file is for. It comes from the flow that produced the file, or from the user's pick in the Checker (ALGORITHMS 4).
+/// What the file is for. It comes from the flow that produced the file, or from the user's pick in the
+/// Checker (ALGORITHMS 4).
 public enum DocKind: String, Sendable, Equatable, CaseIterable {
     case photo, signature, thumb, declaration, fingers
     case pdfDocument = "pdf_document"
@@ -30,7 +31,8 @@ public enum Constraint: String, Sendable, Equatable {
     case dims
 }
 
-/// The facts about a file that matching needs. `width`/`height` are nil for PDFs. `dpi` is only used for an advisory issue.
+/// The facts about a file that matching needs. `width`/`height` are nil for PDFs. `dpi` is only used for an
+/// advisory issue.
 public struct FileFacts: Sendable, Equatable {
     public var format: DetectedFormat
     public var kb: Double

@@ -28,8 +28,15 @@ public enum AutoFraming {
 
     /// - Parameters:
     ///   - aspect: output width / height of the slot
-    ///   - coverage: fraction of the crop height taken by the chin-to-hairline span (a preset `face_coverage` overrides)
-    public static func frame(_ face: Face, imgW: Int, imgH: Int, aspect: Double, coverage: Double = defaultCoverage) -> Framing {
+    ///   - coverage: fraction of the crop height taken by the chin-to-hairline span
+    ///     (a preset `face_coverage` overrides)
+    public static func frame(
+        _ face: Face,
+        imgW: Int,
+        imgH: Int,
+        aspect: Double,
+        coverage: Double = defaultCoverage
+    ) -> Framing {
         precondition(imgW > 0 && imgH > 0 && aspect > 0 && coverage > 0, "invalid framing input")
         var h = roundHalfUp(chinToHairline * face.h / coverage)
         var w = roundHalfUp(Double(h) * aspect)

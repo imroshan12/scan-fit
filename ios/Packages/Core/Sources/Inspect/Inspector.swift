@@ -35,7 +35,8 @@ public enum Inspector {
 
     private static func contextFreeIssues(_ f: InspectedFile, fileName: String) -> [Issue] {
         var issues: [Issue] = []
-        let ext = fileName.split(separator: ".", omittingEmptySubsequences: false).dropFirst().last.map { $0.lowercased() } ?? ""
+        let ext = fileName.split(separator: ".", omittingEmptySubsequences: false)
+            .dropFirst().last.map { $0.lowercased() } ?? ""
         if let named = extensionFormats[ext], named != f.format { issues.append(.extensionMismatch) }
         if f.format == .jpeg {
             if f.color == .cmyk { issues.append(.cmykColor) }

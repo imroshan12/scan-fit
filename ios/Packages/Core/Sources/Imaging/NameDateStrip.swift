@@ -30,7 +30,13 @@ public enum NameDateStrip {
     private static let ascent: Float = 0.8
     private static let ellipsis = "…"
 
-    public static func layout(name: String, date: String, width w: Int, height h: Int, measurer: any TextMeasurer) -> StripLayout {
+    public static func layout(
+        name: String,
+        date: String,
+        width w: Int,
+        height h: Int,
+        measurer: any TextMeasurer
+    ) -> StripLayout {
         let stripH = roundHalfUp(stripFraction * Double(h))
         let stripTop = h - stripH
         let available = Float(Double(w) * (1 - 2 * margin))
@@ -41,14 +47,18 @@ public enum NameDateStrip {
         let top = Float(stripTop) + (Float(stripH) - block) / 2
         let cx = Float(w) / 2
         let lines = [
-            StripLine(text: nameText, sizePx: nameSizePx, bold: true, centerX: cx, baselineY: top + ascent * nameSizePx),
-            StripLine(text: date, sizePx: dateSizePx, bold: false, centerX: cx, baselineY: top + nameSizePx + gap * Float(stripH) + ascent * dateSizePx),
+            StripLine(text: nameText, sizePx: nameSizePx, bold: true, centerX: cx,
+                      baselineY: top + ascent * nameSizePx),
+            StripLine(text: date, sizePx: dateSizePx, bold: false, centerX: cx,
+                      baselineY: top + nameSizePx + gap * Float(stripH) + ascent * dateSizePx),
         ]
         return StripLayout(stripTop: stripTop, stripHeight: stripH, photoArea: Size(w, h - stripH), lines: lines)
     }
 
     /// Shrinks to 60 % of the base size, then truncates with an ellipsis (never both silently).
-    private static func fitName(_ text: String, _ baseSize: Float, _ available: Float, _ m: any TextMeasurer) -> (String, Float) {
+    private static func fitName(
+        _ text: String, _ baseSize: Float, _ available: Float, _ m: any TextMeasurer
+    ) -> (String, Float) {
         if m.width(text, sizePx: baseSize, bold: true) <= available { return (text, baseSize) }
         let small = baseSize * shrinkFloor
         if m.width(text, sizePx: small, bold: true) <= available {
@@ -61,7 +71,8 @@ public enum NameDateStrip {
         return (cut.trimmingCharacters(in: .whitespaces) + ellipsis, small)
     }
 
-    /// Photo scaled uniformly into the area above the strip (letterboxed horizontally); the strip below stays white for the text.
+    /// Photo scaled uniformly into the area above the strip (letterboxed horizontally);
+    /// the strip below stays white for the text.
     public static func placePhoto(_ photo: Raster, layout: StripLayout, width w: Int, height h: Int) -> Raster {
         let area = layout.photoArea
         let scale = min(Double(area.w) / Double(photo.width), Double(area.h) / Double(photo.height))

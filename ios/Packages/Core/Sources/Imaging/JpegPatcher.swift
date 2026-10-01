@@ -18,7 +18,11 @@ public enum JpegPatcher {
     private static let maxCom = 65_537 // 2 marker + 2 length + 65 533 payload
     private static let padByte: UInt8 = 0x20
 
-    public static func patch(_ bytes: [UInt8], dpi: Int = defaultDpi, allowGrayscale: Bool = false) -> Result<[UInt8], PatchError> {
+    public static func patch(
+        _ bytes: [UInt8],
+        dpi: Int = defaultDpi,
+        allowGrayscale: Bool = false
+    ) -> Result<[UInt8], PatchError> {
         guard Inspector.detectFormat(bytes) == .jpeg else { return .failure(.notJpeg) }
         let walk = JpegWalk(bytes)
         guard let scanStart = walk.scanStart else { return .failure(.truncated) }
@@ -84,13 +88,17 @@ public enum JpegPatcher {
     }
 
     private static func insertionPoint(_ bytes: [UInt8]) -> Int {
-        let jfif = JpegWalk(bytes).segments.first { $0.marker == JpegSegment.app0 && bytes.ascii($0.bodyStart, 5) == "JFIF\0" }
+        let jfif = JpegWalk(bytes).segments.first {
+            $0.marker == JpegSegment.app0 && bytes.ascii($0.bodyStart, 5) == "JFIF\0"
+        }
         return jfif?.end ?? 2
     }
 
     /// Concatenated ICC data from all APP2 chunks (Latin-1), or nil when there is no ICC profile.
     private static func iccProfile(_ b: [UInt8], _ walk: JpegWalk) -> [UInt8]? {
-        let chunks = walk.segments.filter { $0.marker == JpegSegment.app2 && b.ascii($0.bodyStart, 11) == "ICC_PROFILE" }
+        let chunks = walk.segments.filter {
+            $0.marker == JpegSegment.app2 && b.ascii($0.bodyStart, 11) == "ICC_PROFILE"
+        }
         guard !chunks.isEmpty else { return nil }
         var data: [UInt8] = []
         for chunk in chunks {
@@ -102,12 +110,16 @@ public enum JpegPatcher {
 
     /// ICC v2 stores descriptions as ASCII, v4 (`mluc`) as UTF-16BE: accept `sRGB` in either form.
     private static func isSrgb(_ profile: [UInt8]) -> Bool {
-        contains(profile, [0x73, 0x52, 0x47, 0x42]) || contains(profile, [0x00, 0x73, 0x00, 0x52, 0x00, 0x47, 0x00, 0x42])
+        contains(profile, [0x73, 0x52, 0x47, 0x42])
+            || contains(profile, [0x00, 0x73, 0x00, 0x52, 0x00, 0x47, 0x00, 0x42])
     }
 
     private static func contains(_ haystack: [UInt8], _ needle: [UInt8]) -> Bool {
         guard haystack.count >= needle.count else { return false }
-        for start in 0...(haystack.count - needle.count) where Array(haystack[start..<(start + needle.count)]) == needle { return true }
+        for start in 0...(haystack.count - needle.count)
+        where Array(haystack[start..<(start + needle.count)]) == needle {
+            return true
+        }
         return false
     }
 }

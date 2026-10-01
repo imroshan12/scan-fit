@@ -24,8 +24,8 @@ public struct InkResult: Sendable {
     public let coverage: Double
 }
 
-/// Turns a phone photo of ink on paper into black-on-white (ALGORITHMS section 3 / 9.5). The input should already be rectified
-/// (document scanner or 4-corner crop) and no larger than 1600 px on its long side.
+/// Turns a phone photo of ink on paper into black-on-white (ALGORITHMS section 3 / 9.5). The input should
+/// already be rectified (document scanner or 4-corner crop) and no larger than 1600 px on its long side.
 public enum InkCleanup {
     private static let sauvolaK = 0.34, sauvolaR = 128.0
     private static let trimPadding = 0.08, thumbSide = 1.16
@@ -40,7 +40,9 @@ public enum InkCleanup {
         return variant == .thumb ? thumb(n, w, h) : binarised(src, n, w, h, variant, options)
     }
 
-    private static func binarised(_ src: Raster, _ n: [Int], _ w: Int, _ h: Int, _ variant: InkVariant, _ options: InkOptions) -> InkResult {
+    private static func binarised(
+        _ src: Raster, _ n: [Int], _ w: Int, _ h: Int, _ variant: InkVariant, _ options: InkOptions
+    ) -> InkResult {
         var window = max(15, min(w, h) / 20)
         if window % 2 == 0 { window += 1 }
         var mask = ImageOps.sauvola(n, w, h, window: window, k: sauvolaK, range: sauvolaR)
@@ -73,7 +75,9 @@ public enum InkCleanup {
         return InkResult(raster: trimmed, quality: gate(coverage), coverage: coverage)
     }
 
-    private static func darken(_ v: Int, _ factor: Double) -> UInt8 { UInt8(min(max(roundHalfUp(Double(v) * factor), 0), 255)) }
+    private static func darken(_ v: Int, _ factor: Double) -> UInt8 {
+        UInt8(min(max(roundHalfUp(Double(v) * factor), 0), 255))
+    }
 
     private static func thumb(_ n: [Int], _ w: Int, _ h: Int) -> InkResult {
         var hist = [Int](repeating: 0, count: 256)

@@ -53,7 +53,8 @@ public enum FitProfile: Sendable {
     public static func of(_ type: DocType) -> FitProfile {
         switch type {
         case .photo, .postcardPhoto: .photo
-        case .signature, .tripleSignature, .leftThumb, .thumbImpression, .leftHandFingersThumb, .rightHandFingersThumb: .inkSmall
+        case .signature, .tripleSignature, .leftThumb, .thumbImpression,
+             .leftHandFingersThumb, .rightHandFingersThumb: .inkSmall
         default: .document
         }
     }
@@ -126,7 +127,8 @@ public enum Geometry {
 
     private static func rangeStart(_ spec: DocSpec, fallback: Size) -> Size {
         let d = spec.dimensions
-        guard let minW = d.minW, let maxW = d.maxW, let minH = d.minH, let maxH = d.maxH, let a = targetAspect(spec) else { return fallback }
+        guard let minW = d.minW, let maxW = d.maxW, let minH = d.minH, let maxH = d.maxH,
+              let a = targetAspect(spec) else { return fallback }
         var w = roundHalfUp(Double(minW + maxW) / 2)
         var h = roundHalfUp(Double(w) / a)
         if h < minH || h > maxH {

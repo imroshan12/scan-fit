@@ -366,6 +366,12 @@ class ReleasePreflight(unittest.TestCase):
         self.put("android/gradle.properties", "scanfit.versionName=1.2.0-rc1\n")
         self.assertEqual([], self.run_pre().blockers)
 
+    def test_yaml_quote_styles_do_not_matter(self):
+        self.complete_repo()
+        for quoted in ("'1.2.0'", '"1.2.0"', "1.2.0"):
+            self.put("ios/project.yml", f"    MARKETING_VERSION: {quoted}   # shared\n    APP_BUNDLE_ID: 'com.example.scanfit'\n")
+            self.assertEqual([], self.run_pre().blockers, quoted)
+
     def test_machine_hindi_warns_for_a_prerelease_and_blocks_a_final_release(self):
         self.complete_repo()
         self.put("spec/strings/hi.json", '{"a": "TODO_HI: x", "p": {"one": "TODO_HI: y", "other": "z"}}')

@@ -10,7 +10,7 @@ android {
     defaultConfig {
         // Placeholder id: it is permanent once published on Play. Confirm it (and the iOS bundle id in
         // ios/project.yml) before the first upload.
-        applicationId = "app.scanfit"
+        applicationId = "com.roshtech.scanfit"
         // versionName/versionCode come from gradle.properties / -P flags (ReleaseConfig.kt in build-logic).
     }
 

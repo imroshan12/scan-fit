@@ -13,6 +13,9 @@ public extension Array where Element == UInt8 {
 
     func ascii(_ from: Int, _ length: Int) -> String {
         guard from >= 0, length >= 0, from + length <= count else { return "" }
+        // `decoding:` is total: invalid bytes become U+FFFD (like the JVM), never nil,
+        // so callers just compare the result.
+        // swiftlint:disable:next optional_data_string_conversion
         return String(decoding: self[from..<(from + length)], as: UTF8.self)
     }
 
