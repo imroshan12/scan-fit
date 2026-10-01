@@ -31,11 +31,19 @@ def main():
     args = ap.parse_args()
     modules = args.modules or DEFAULT_MODULES
 
-    # One shared profile, one test binary per package target: export coverage over all of them together.
-    profile = find(os.path.join(args.build_dir, "**", "codecov", "default.profdata"))
-    binaries = sorted(set(glob.glob(os.path.join(args.build_dir, "**", "*.xctest", "Contents", "MacOS", "*"), recursive=True)))
-    if not profile or not binaries:
+    # One profile, and the test binaries built in the same configuration directory as that profile. Two layouts exist:
+    # SwiftPM's native build (`.build/<triple>/debug/`, one CorePackageTests.xctest) and the Xcode build system
+    # (`.build/out/Products/Debug/`, one bundle per test target). Stale builds of another configuration are ignored.
+    profiles = glob.glob(os.path.join(args.build_dir, "**", "codecov", "default.profdata"), recursive=True)
+    if not profiles:
         sys.exit("coverage data not found: run `swift test --enable-code-coverage` first")
+    profile = max(profiles, key=os.path.getmtime)
+    config_dir = os.path.dirname(os.path.dirname(profile))
+    candidates = glob.glob(os.path.join(config_dir, "*.xctest", "Contents", "MacOS", "*"))
+    # Executables only, once each: the native build leaves a `<name>.dSYM` directory beside the binary.
+    binaries = sorted({os.path.realpath(p) for p in candidates if os.path.isfile(p)})
+    if not binaries:
+        sys.exit(f"no test binaries next to {profile}")
     cmd = ["xcrun", "llvm-cov", "export", binaries[0], f"-instr-profile={profile}", "-summary-only"]
     for extra in binaries[1:]:
         cmd += ["-object", extra]

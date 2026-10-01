@@ -47,7 +47,8 @@ python3 spec/tools/release_preflight.py        # what still blocks a release bui
 
 # ios (from ios/)
 xcodebuild -scheme ScanFit -destination 'platform=iOS Simulator,name=iPhone 17' test
-swift test --package-path Packages/Core        # engine + conformance tests, fast
+swift test --package-path Packages/Core        # engine + conformance tests, fast (on a toolchain older than Swift 6.4 add
+                                               #   --skip DesignSystemTests: the String Catalog needs the Xcode build system)
 swiftlint --strict
 ```
 
