@@ -34,6 +34,7 @@
     "one": "TODO_HI: {count:int} परीक्षा · स्पेक्स v{version:str}",
     "other": "TODO_HI: {count:int} परीक्षाएँ · स्पेक्स v{version:str}"
   },
+  "home.presets_verifying": "TODO_HI: परीक्षा स्पेक्स सत्यापित हो रहे हैं…",
   "home.presets_verified": "TODO_HI: स्पेक्स सत्यापित",
   "home.presets_unverified": "TODO_HI: स्पेक डेटा सत्यापित नहीं हो सका",
 

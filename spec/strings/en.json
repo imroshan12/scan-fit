@@ -34,6 +34,7 @@
     "one": "{count:int} exam · specs v{version:str}",
     "other": "{count:int} exams · specs v{version:str}"
   },
+  "home.presets_verifying": "Verifying exam specs…",
   "home.presets_verified": "Specs verified",
   "home.presets_unverified": "Spec data could not be verified",
 

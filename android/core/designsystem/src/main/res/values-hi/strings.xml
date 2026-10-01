@@ -92,6 +92,7 @@
     </plurals>
     <string name="home_presets_unverified">स्पेक डेटा सत्यापित नहीं हो सका</string>
     <string name="home_presets_verified">स्पेक्स सत्यापित</string>
+    <string name="home_presets_verifying">परीक्षा स्पेक्स सत्यापित हो रहे हैं…</string>
     <string name="home_search_hint">%1$d+ परीक्षाएँ खोजें — IBPS, SSC, NEET…</string>
     <string name="home_section_pinned">मेरी परीक्षाएँ</string>
     <string name="home_section_popular">अभी लोकप्रिय</string>

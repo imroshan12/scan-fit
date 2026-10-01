@@ -3,6 +3,7 @@
 (stdlib unittest; needs `pip install -r spec/tools/requirements.txt`)."""
 import base64
 import copy
+import glob
 import json
 import os
 import sys
@@ -162,6 +163,83 @@ class SigningVector(unittest.TestCase):
     def test_dev_key_in_spec_signing_matches_the_vector(self):
         with open(os.path.join(SPEC, "signing", "dev_public_key.b64"), "rb") as f:
             self.assertEqual(f.read(), self.read("dev_public_key.b64"))
+
+
+class CasesFile(unittest.TestCase):
+    """spec/fixtures/cases.json is the conformance contract: it must never reference things that do not exist."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.cases = load("fixtures", "cases.json")
+        cls.exams = {}
+        for path in glob.glob(os.path.join(SPEC, "presets", "exams", "**", "*.json"), recursive=True):
+            with open(path, encoding="utf-8") as f:
+                e = json.load(f)
+            cls.exams[e["id"]] = e
+
+    def all_cases(self):
+        for section, items in self.cases.items():
+            if isinstance(items, list):
+                for c in items:
+                    yield section, c
+
+    def test_ids_are_unique_per_section(self):
+        for section, items in self.cases.items():
+            if isinstance(items, list):
+                ids = [c["id"] for c in items]
+                self.assertEqual(len(ids), len(set(ids)), f"duplicate ids in {section}")
+
+    def test_every_input_fixture_exists(self):
+        for section, c in self.all_cases():
+            if "input" in c:
+                path = os.path.join(SPEC, "fixtures", "images", c["input"])
+                self.assertTrue(os.path.exists(path), f"{section}.{c['id']}: missing fixture {c['input']}")
+
+    def test_every_preset_and_doc_reference_exists(self):
+        for section, c in self.all_cases():
+            if "preset" in c:
+                self.assertIn(c["preset"], self.exams, f"{section}.{c['id']}")
+                if "doc" in c:
+                    types = [d["type"] for d in self.exams[c["preset"]]["documents"]]
+                    self.assertIn(c["doc"], types, f"{section}.{c['id']}: {c['preset']} has no {c['doc']}")
+
+    def test_every_exam_named_in_match_expectations_exists(self):
+        for c in self.cases["match_cases"]:
+            names = []
+            for k, v in c.items():
+                if k.startswith("expect_") and isinstance(v, list):
+                    names += [x["exam"] if isinstance(x, dict) else x for x in v]
+            for n in names:
+                self.assertIn(n, self.exams, f"match_cases.{c['id']}: unknown exam {n}")
+
+    def test_a_case_names_a_preset_or_an_inline_spec(self):
+        for c in self.cases["fit_cases"] + self.cases["geometry_cases"]:
+            self.assertTrue(("preset" in c) != ("spec" in c), c["id"])
+
+    def test_geometry_expectations_follow_the_rounding_rules(self):
+        """Re-derive the crop/pad numbers from ALGORITHMS 9.1 so a typo in the file cannot become the contract."""
+        def rnd(x):
+            return int(x + 0.5)
+
+        def crop(W, H, a):
+            if W / H > a:
+                w, h = rnd(H * a), H
+            else:
+                w, h = W, rnd(W / a)
+            return {"x": (W - w) // 2, "y": (H - h) // 2, "w": w, "h": h}
+
+        def pad(W, H, a):
+            cw, ch = (rnd(H * a), H) if W / H < a else (W, rnd(W / a))
+            return {"w": cw, "h": ch, "x": (cw - W) // 2, "y": (ch - H) // 2}
+
+        for c in self.cases["geometry_cases"]:
+            doc = next(d for d in self.exams[c["preset"]]["documents"] if d["type"] == c["doc"])
+            dims, src = doc["dimensions"], c["source"]
+            if "crop" in c["expect"]:
+                a = (dims["width"] / dims["height"]) if dims["mode"] != "range" else sum(dims["aspect_w_over_h"].values()) / 2
+                self.assertEqual(crop(src["w"], src["h"], a), c["expect"]["crop"], c["id"])
+            if "pad" in c["expect"]:
+                self.assertEqual(pad(src["w"], src["h"], dims["width"] / dims["height"]), c["expect"]["pad"], c["id"])
 
 
 class PresetsDist(unittest.TestCase):

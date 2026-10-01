@@ -1443,6 +1443,23 @@
         }
       }
     },
+    "home.presets_verifying": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verifying exam specs…"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "परीक्षा स्पेक्स सत्यापित हो रहे हैं…"
+          }
+        }
+      }
+    },
     "home.search_hint": {
       "extractionState": "manual",
       "localizations": {

@@ -18,16 +18,16 @@ data class SettingsUiState(
 
 @HiltViewModel
 class SettingsViewModel
-    @Inject
-    constructor(
-        presets: PresetsRepository,
-    ) : ViewModel() {
-        val uiState: StateFlow<SettingsUiState> =
-            presets.outcome
-                .map { SettingsUiState((it as? PresetsLoadOutcome.Ready)?.summary?.version) }
-                .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), SettingsUiState(null))
+@Inject
+constructor(
+    presets: PresetsRepository,
+) : ViewModel() {
+    val uiState: StateFlow<SettingsUiState> =
+        presets.outcome
+            .map { SettingsUiState((it as? PresetsLoadOutcome.Ready)?.summary?.version) }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), SettingsUiState(null))
 
-        private companion object {
-            const val STOP_TIMEOUT_MS = 5_000L
-        }
+    private companion object {
+        const val STOP_TIMEOUT_MS = 5_000L
     }
+}

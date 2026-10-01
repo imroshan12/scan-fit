@@ -25,22 +25,20 @@ class SettingsViewModelTest {
     fun tearDown() = Dispatchers.resetMain()
 
     @Test
-    fun showsTheInstalledPresetsVersionOnceVerified() =
-        runTest {
-            val presets = FakePresetsRepository(initial = null)
-            SettingsViewModel(presets).uiState.test {
-                assertEquals(SettingsUiState(presetsVersion = null), awaitItem())
-                presets.outcome.value = PresetsLoadOutcome.Ready(PresetsSummary(examCount = 55, version = 4))
-                assertEquals(SettingsUiState(presetsVersion = 4), awaitItem())
-            }
+    fun showsTheInstalledPresetsVersionOnceVerified() = runTest {
+        val presets = FakePresetsRepository(initial = null)
+        SettingsViewModel(presets).uiState.test {
+            assertEquals(SettingsUiState(presetsVersion = null), awaitItem())
+            presets.outcome.value = PresetsLoadOutcome.Ready(PresetsSummary(examCount = 55, version = 4))
+            assertEquals(SettingsUiState(presetsVersion = 4), awaitItem())
         }
+    }
 
     @Test
-    fun aRejectedBundleShowsNoVersion() =
-        runTest {
-            val presets = FakePresetsRepository(PresetsLoadOutcome.Failed(PresetLoadError.BAD_SIGNATURE))
-            SettingsViewModel(
-                presets,
-            ).uiState.test { assertEquals(SettingsUiState(presetsVersion = null), awaitItem()) }
-        }
+    fun aRejectedBundleShowsNoVersion() = runTest {
+        val presets = FakePresetsRepository(PresetsLoadOutcome.Failed(PresetLoadError.BAD_SIGNATURE))
+        SettingsViewModel(
+            presets,
+        ).uiState.test { assertEquals(SettingsUiState(presetsVersion = null), awaitItem()) }
+    }
 }

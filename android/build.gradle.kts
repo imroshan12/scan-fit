@@ -18,13 +18,25 @@ val generatedKotlin = listOf("**/ScanFitTheme.kt", "**/AnalyticsEvent.kt")
 
 spotless {
     kotlin {
-        target("**/*.kt")
-        targetExclude("**/build/**", *generatedKotlin.toTypedArray())
-        ktlint(libs.versions.ktlint.get())
+        // An explicit fileTree: targetExclude does not reach Gradle's generated sources under build-logic/**/build/.
+        target(
+            fileTree(projectDir) {
+                include("**/*.kt")
+                exclude("**/build/**", "**/bin/**", "**/.gradle/**", *generatedKotlin.toTypedArray())
+            },
+        )
+        ktlint(libs.versions.ktlint.get()).editorConfigOverride(
+            // Line length is enforced by detekt (production code only); test data has long JSON literals.
+            mapOf("ktlint_standard_max-line-length" to "disabled"),
+        )
     }
     kotlinGradle {
-        target("**/*.gradle.kts")
-        targetExclude("**/build/**")
+        target(
+            fileTree(projectDir) {
+                include("**/*.gradle.kts")
+                exclude("**/build/**", "**/bin/**", "**/.gradle/**")
+            },
+        )
         ktlint(libs.versions.ktlint.get())
     }
 }
@@ -35,7 +47,7 @@ detekt {
     source.setFrom(
         fileTree(projectDir) {
             include("**/src/**/*.kt")
-            exclude("**/build/**", *generatedKotlin.toTypedArray())
+            exclude("**/build/**", "**/bin/**", *generatedKotlin.toTypedArray())
         },
     )
 }

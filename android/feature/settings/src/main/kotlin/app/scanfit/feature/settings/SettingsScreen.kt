@@ -75,11 +75,11 @@ internal fun SettingsScreen(
     Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(vertical = ScanFitSpacing.sm)) {
         Row(
             modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = ScanFitSpacing.minTouchTarget)
-                    .clickable(role = Role.Button) { showLanguages = true }
-                    .padding(horizontal = ScanFitSpacing.screenMargin, vertical = ScanFitSpacing.md),
+            Modifier
+                .fillMaxWidth()
+                .heightIn(min = ScanFitSpacing.minTouchTarget)
+                .clickable(role = Role.Button) { showLanguages = true }
+                .padding(horizontal = ScanFitSpacing.screenMargin, vertical = ScanFitSpacing.md),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
@@ -106,9 +106,9 @@ internal fun SettingsScreen(
             style = ScanFitType.label,
             color = MaterialTheme.colorScheme.primary,
             modifier =
-                Modifier
-                    .padding(horizontal = ScanFitSpacing.screenMargin, vertical = ScanFitSpacing.lg)
-                    .semantics { heading() },
+            Modifier
+                .padding(horizontal = ScanFitSpacing.screenMargin, vertical = ScanFitSpacing.lg)
+                .semantics { heading() },
         )
         Text(
             stringResource(R.string.legal_disclaimer),
@@ -127,13 +127,13 @@ internal fun SettingsScreen(
                     AppLanguage.entries.forEach { language ->
                         Row(
                             modifier =
-                                Modifier
-                                    .fillMaxWidth()
-                                    .heightIn(min = ScanFitSpacing.minTouchTarget)
-                                    .selectable(selected = language == current, role = Role.RadioButton) {
-                                        showLanguages = false
-                                        onLanguageChosen(language.tag)
-                                    },
+                            Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = ScanFitSpacing.minTouchTarget)
+                                .selectable(selected = language == current, role = Role.RadioButton) {
+                                    showLanguages = false
+                                    onLanguageChosen(language.tag)
+                                },
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             RadioButton(selected = language == current, onClick = null)

@@ -25,28 +25,25 @@ class HomeViewModelTest {
     fun tearDown() = Dispatchers.resetMain()
 
     @Test
-    fun startsLoadingThenShowsTheVerifiedPresetsSummary() =
-        runTest {
-            val presets = FakePresetsRepository(initial = null)
-            val model = HomeViewModel(presets)
-            model.uiState.test {
-                assertEquals(HomeUiState.Loading, awaitItem())
-                presets.outcome.value = PresetsLoadOutcome.Ready(PresetsSummary(examCount = 55, version = 3))
-                assertEquals(HomeUiState.Ready(examCount = 55, version = 3), awaitItem())
-            }
+    fun startsLoadingThenShowsTheVerifiedPresetsSummary() = runTest {
+        val presets = FakePresetsRepository(initial = null)
+        val model = HomeViewModel(presets)
+        model.uiState.test {
+            assertEquals(HomeUiState.Loading, awaitItem())
+            presets.outcome.value = PresetsLoadOutcome.Ready(PresetsSummary(examCount = 55, version = 3))
+            assertEquals(HomeUiState.Ready(examCount = 55, version = 3), awaitItem())
         }
+    }
 
     @Test
-    fun aBadSignatureIsAPlainFailedStateNeverACrashOrAHalfTrustedBundle() =
-        runTest {
-            val model = HomeViewModel(FakePresetsRepository(PresetsLoadOutcome.Failed(PresetLoadError.BAD_SIGNATURE)))
-            model.uiState.test { assertEquals(HomeUiState.Failed, awaitItem()) }
-        }
+    fun aBadSignatureIsAPlainFailedStateNeverACrashOrAHalfTrustedBundle() = runTest {
+        val model = HomeViewModel(FakePresetsRepository(PresetsLoadOutcome.Failed(PresetLoadError.BAD_SIGNATURE)))
+        model.uiState.test { assertEquals(HomeUiState.Failed, awaitItem()) }
+    }
 
     @Test
-    fun aMissingEmbeddedSnapshotIsAFailedState() =
-        runTest {
-            val model = HomeViewModel(FakePresetsRepository(PresetsLoadOutcome.MissingEmbedded))
-            model.uiState.test { assertEquals(HomeUiState.Failed, awaitItem()) }
-        }
+    fun aMissingEmbeddedSnapshotIsAFailedState() = runTest {
+        val model = HomeViewModel(FakePresetsRepository(PresetsLoadOutcome.MissingEmbedded))
+        model.uiState.test { assertEquals(HomeUiState.Failed, awaitItem()) }
+    }
 }

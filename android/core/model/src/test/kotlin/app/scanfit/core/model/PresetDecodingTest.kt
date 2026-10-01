@@ -14,12 +14,11 @@ import java.io.File
 class PresetDecodingTest {
     private val specDir = File(checkNotNull(System.getProperty("scanfit.spec.dir")))
 
-    private fun presetFiles() =
-        File(specDir, "presets/exams")
-            .walkTopDown()
-            .filter { it.isFile && it.extension == "json" }
-            .sortedBy { it.path }
-            .toList()
+    private fun presetFiles() = File(specDir, "presets/exams")
+        .walkTopDown()
+        .filter { it.isFile && it.extension == "json" }
+        .sortedBy { it.path }
+        .toList()
 
     private fun exam(path: String) = PresetBundle.decodeExam(File(specDir, path).readText())
 

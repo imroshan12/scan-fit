@@ -92,6 +92,7 @@
     </plurals>
     <string name="home_presets_unverified">Spec data could not be verified</string>
     <string name="home_presets_verified">Specs verified</string>
+    <string name="home_presets_verifying">Verifying exam specs…</string>
     <string name="home_search_hint">Search %1$d+ exams — IBPS, SSC, NEET…</string>
     <string name="home_section_pinned">My exams</string>
     <string name="home_section_popular">Popular now</string>

@@ -3,7 +3,6 @@ package app.scanfit.feature.home
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,12 +28,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.scanfit.core.designsystem.R
@@ -60,10 +59,10 @@ internal fun HomeScreen(
 ) {
     Column(
         modifier =
-            modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(ScanFitSpacing.screenMargin),
+        modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(ScanFitSpacing.screenMargin),
         verticalArrangement = Arrangement.spacedBy(ScanFitSpacing.lg),
     ) {
         Text(
@@ -82,12 +81,12 @@ internal fun HomeScreen(
 private fun SearchPlaceholder(examCount: Int) {
     Row(
         modifier =
-            Modifier
-                .fillMaxWidth()
-                .heightIn(min = ScanFitSpacing.minTouchTarget)
-                .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(ScanFitRadius.card))
-                .padding(ScanFitSpacing.lg)
-                .semantics(mergeDescendants = true) {},
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = ScanFitSpacing.minTouchTarget)
+            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(ScanFitRadius.card))
+            .padding(ScanFitSpacing.lg)
+            .semantics(mergeDescendants = true) {},
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(ScanFitSpacing.sm),
     ) {
@@ -104,14 +103,23 @@ private fun SearchPlaceholder(examCount: Int) {
 private fun PresetsStatus(state: HomeUiState) {
     val colors = ScanFitTheme.colors
     when (state) {
+        // Same card shape as the loaded state, so nothing jumps when the result arrives.
         HomeUiState.Loading -> {
-            Box(Modifier.fillMaxWidth().padding(ScanFitSpacing.lg), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(Modifier.size(ScanFitSpacing.xl))
+            StatusCard(
+                container = MaterialTheme.colorScheme.surfaceVariant,
+                content = MaterialTheme.colorScheme.onSurfaceVariant,
+                leading = { CircularProgressIndicator(Modifier.size(ScanFitSpacing.xl), strokeWidth = LOADER_STROKE) },
+            ) {
+                Text(stringResource(R.string.home_presets_verifying), style = ScanFitType.label)
             }
         }
 
         is HomeUiState.Ready -> {
-            StatusCard(Icons.Filled.CheckCircle, colors.success, colors.successContainer, colors.onSuccessContainer) {
+            StatusCard(
+                container = colors.successContainer,
+                content = colors.onSuccessContainer,
+                leading = { Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = colors.success) },
+            ) {
                 Text(stringResource(R.string.home_presets_verified), style = ScanFitType.label)
                 Text(
                     pluralStringResource(
@@ -126,7 +134,11 @@ private fun PresetsStatus(state: HomeUiState) {
         }
 
         HomeUiState.Failed -> {
-            StatusCard(Icons.Filled.Warning, colors.error, colors.errorContainer, colors.onErrorContainer) {
+            StatusCard(
+                container = colors.errorContainer,
+                content = colors.onErrorContainer,
+                leading = { Icon(Icons.Filled.Warning, contentDescription = null, tint = colors.error) },
+            ) {
                 Text(stringResource(R.string.home_presets_unverified), style = ScanFitType.label)
             }
         }
@@ -135,28 +147,30 @@ private fun PresetsStatus(state: HomeUiState) {
 
 @Composable
 private fun StatusCard(
-    icon: ImageVector,
-    iconTint: Color,
     container: Color,
     content: Color,
+    leading: @Composable () -> Unit,
     text: @Composable () -> Unit,
 ) {
     Row(
         modifier =
-            Modifier
-                .fillMaxWidth()
-                .background(container, RoundedCornerShape(ScanFitRadius.card))
-                .padding(ScanFitSpacing.lg)
-                .semantics(mergeDescendants = true) {},
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = ScanFitSpacing.minTouchTarget)
+            .background(container, RoundedCornerShape(ScanFitRadius.card))
+            .padding(ScanFitSpacing.lg)
+            .semantics(mergeDescendants = true) {},
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(ScanFitSpacing.sm),
     ) {
-        Icon(icon, contentDescription = null, tint = iconTint)
+        leading()
         CompositionLocalProvider(LocalContentColor provides content) {
             Column(verticalArrangement = Arrangement.spacedBy(ScanFitSpacing.xs)) { text() }
         }
     }
 }
+
+private val LOADER_STROKE = 3.dp
 
 private const val DEFAULT_EXAM_COUNT = 55
 

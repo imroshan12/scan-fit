@@ -69,21 +69,20 @@ abstract class EmbedPresetsTask : DefaultTask() {
         presetsFile: File,
         sigFile: File,
         keyFile: File,
-    ): String? =
-        when {
-            !keyFile.exists() -> {
-                "${keyFile.path} is missing. Release builds must embed the production public key " +
-                    "(see spec/signing/README.md)."
-            }
-
-            !presetsFile.exists() || !sigFile.exists() -> {
-                "spec/dist/presets.json(.sig) not found. Run spec/tools/build_all.sh first."
-            }
-
-            else -> {
-                null
-            }
+    ): String? = when {
+        !keyFile.exists() -> {
+            "${keyFile.path} is missing. Release builds must embed the production public key " +
+                "(see spec/signing/README.md)."
         }
+
+        !presetsFile.exists() || !sigFile.exists() -> {
+            "spec/dist/presets.json(.sig) not found. Run spec/tools/build_all.sh first."
+        }
+
+        else -> {
+            null
+        }
+    }
 
     private fun isValidEd25519(
         rawPublicKey: ByteArray,

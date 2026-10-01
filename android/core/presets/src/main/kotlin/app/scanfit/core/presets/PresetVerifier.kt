@@ -29,12 +29,11 @@ class PresetPublicKey private constructor(
     }
 }
 
-internal fun decodeStrict(base64: String): ByteArray? =
-    try {
-        Base64.getDecoder().decode(base64)
-    } catch (_: IllegalArgumentException) {
-        null
-    }
+internal fun decodeStrict(base64: String): ByteArray? = try {
+    Base64.getDecoder().decode(base64)
+} catch (_: IllegalArgumentException) {
+    null
+}
 
 object PresetVerifier {
     private const val SIGNATURE_BYTES = 64

@@ -29,32 +29,32 @@ sealed interface HomeUiState {
 
 @HiltViewModel
 class HomeViewModel
-    @Inject
-    constructor(
-        presets: PresetsRepository,
-    ) : ViewModel() {
-        val uiState: StateFlow<HomeUiState> =
-            presets.outcome
-                .map { outcome ->
-                    when (outcome) {
-                        null -> {
-                            HomeUiState.Loading
-                        }
-
-                        is PresetsLoadOutcome.Ready -> {
-                            HomeUiState.Ready(
-                                outcome.summary.examCount,
-                                outcome.summary.version,
-                            )
-                        }
-
-                        is PresetsLoadOutcome.Failed, PresetsLoadOutcome.MissingEmbedded -> {
-                            HomeUiState.Failed
-                        }
+@Inject
+constructor(
+    presets: PresetsRepository,
+) : ViewModel() {
+    val uiState: StateFlow<HomeUiState> =
+        presets.outcome
+            .map { outcome ->
+                when (outcome) {
+                    null -> {
+                        HomeUiState.Loading
                     }
-                }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), HomeUiState.Loading)
 
-        private companion object {
-            const val STOP_TIMEOUT_MS = 5_000L
-        }
+                    is PresetsLoadOutcome.Ready -> {
+                        HomeUiState.Ready(
+                            outcome.summary.examCount,
+                            outcome.summary.version,
+                        )
+                    }
+
+                    is PresetsLoadOutcome.Failed, PresetsLoadOutcome.MissingEmbedded -> {
+                        HomeUiState.Failed
+                    }
+                }
+            }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), HomeUiState.Loading)
+
+    private companion object {
+        const val STOP_TIMEOUT_MS = 5_000L
     }
+}

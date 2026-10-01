@@ -12,12 +12,11 @@ import java.io.File
 class VerifiedDigestStoreTest {
     private val spec = File(checkNotNull(System.getProperty("scanfit.spec.dir")), "fixtures/signing")
 
-    private fun files() =
-        PresetFiles(
-            bundle = File(spec, "sample_presets.json").readBytes(),
-            signatureText = File(spec, "sample_presets.json.sig").readText(),
-            publicKeyBase64 = File(spec, "dev_public_key.b64").readText(),
-        )
+    private fun files() = PresetFiles(
+        bundle = File(spec, "sample_presets.json").readBytes(),
+        signatureText = File(spec, "sample_presets.json.sig").readText(),
+        publicKeyBase64 = File(spec, "dev_public_key.b64").readText(),
+    )
 
     private class RecordingStore : VerifiedDigestStore {
         val digests = mutableSetOf<String>()
@@ -37,45 +36,42 @@ class VerifiedDigestStoreTest {
     ) = DefaultPresetsRepository({ files }, Dispatchers.Unconfined, store)
 
     @Test
-    fun aSuccessfulFullVerificationIsRemembered() =
-        runBlocking {
-            val store = RecordingStore()
-            assertTrue(repo(files(), store).loadEmbedded() is PresetsLoadOutcome.Ready)
-            assertEquals(1, store.adds)
-            // A fresh process with the same store skips the slow verify but still loads, and does not re-add.
-            assertTrue(repo(files(), store).loadEmbedded() is PresetsLoadOutcome.Ready)
-            assertEquals(1, store.adds)
-        }
+    fun aSuccessfulFullVerificationIsRemembered() = runBlocking {
+        val store = RecordingStore()
+        assertTrue(repo(files(), store).loadEmbedded() is PresetsLoadOutcome.Ready)
+        assertEquals(1, store.adds)
+        // A fresh process with the same store skips the slow verify but still loads, and does not re-add.
+        assertTrue(repo(files(), store).loadEmbedded() is PresetsLoadOutcome.Ready)
+        assertEquals(1, store.adds)
+    }
 
     @Test
-    fun aFailedVerificationIsNeverRemembered() =
-        runBlocking {
-            val store = RecordingStore()
-            val bad =
-                files().also {
-                    it.bundle[it.bundle.size / 2] = (it.bundle[it.bundle.size / 2].toInt() xor 1).toByte()
-                }
-            assertEquals(PresetsLoadOutcome.Failed(PresetLoadError.BAD_SIGNATURE), repo(bad, store).loadEmbedded())
-            assertEquals(0, store.adds)
-        }
+    fun aFailedVerificationIsNeverRemembered() = runBlocking {
+        val store = RecordingStore()
+        val bad =
+            files().also {
+                it.bundle[it.bundle.size / 2] = (it.bundle[it.bundle.size / 2].toInt() xor 1).toByte()
+            }
+        assertEquals(PresetsLoadOutcome.Failed(PresetLoadError.BAD_SIGNATURE), repo(bad, store).loadEmbedded())
+        assertEquals(0, store.adds)
+    }
 
     @Test
-    fun changingOneByteMissesTheCacheAndIsFullyReverified() =
-        runBlocking {
-            val store = RecordingStore()
-            repo(files(), store).loadEmbedded() // remembers the good digest
-            val tampered =
-                files().also {
-                    it.bundle[it.bundle.size / 2] =
-                        (it.bundle[it.bundle.size / 2].toInt() xor 1).toByte()
-                }
-            assertFalse(
-                store.contains(
-                    VerifiedDigestStore.digestOf(tampered.bundle, tampered.signatureText, tampered.publicKeyBase64),
-                ),
-            )
-            assertEquals(PresetsLoadOutcome.Failed(PresetLoadError.BAD_SIGNATURE), repo(tampered, store).loadEmbedded())
-        }
+    fun changingOneByteMissesTheCacheAndIsFullyReverified() = runBlocking {
+        val store = RecordingStore()
+        repo(files(), store).loadEmbedded() // remembers the good digest
+        val tampered =
+            files().also {
+                it.bundle[it.bundle.size / 2] =
+                    (it.bundle[it.bundle.size / 2].toInt() xor 1).toByte()
+            }
+        assertFalse(
+            store.contains(
+                VerifiedDigestStore.digestOf(tampered.bundle, tampered.signatureText, tampered.publicKeyBase64),
+            ),
+        )
+        assertEquals(PresetsLoadOutcome.Failed(PresetLoadError.BAD_SIGNATURE), repo(tampered, store).loadEmbedded())
+    }
 
     @Test
     fun theDigestBindsBundleSignatureAndKey() {

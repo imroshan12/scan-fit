@@ -1,5 +1,9 @@
 # Layered on detekt's defaults (buildUponDefaultConfig). CLAUDE.md rule 8: no `!!`, no GlobalScope,
 # state exposed as immutable StateFlow<UiState>.
+#
+# The engines (core:inspect, core:imaging, core:match) are byte-format parsers and pixel loops. detekt's app-code defaults for
+# nesting, branching and early returns fight guard-clause style there, so those thresholds are raised on purpose (not turned off).
+# Tests are exempt from the numeric and length rules: test data is full of literals and long JSON strings.
 potential-bugs:
   UnsafeCallOnNullableType:
     active: true            # no `!!`
@@ -9,25 +13,46 @@ coroutines:
 style:
   MagicNumber:
     active: true
+    excludes: ['**/test/**', '**/androidTest/**']
     ignoreAnnotated: ['Composable', 'Preview']
     ignorePropertyDeclaration: true
     ignoreCompanionObjectPropertyDeclaration: true
     ignoreNamedArgument: true
     ignoreExtensionFunctions: true
+    ignoreRanges: true
+    ignoreNumbers: ['-1', '0', '1', '2', '3', '4', '8', '16', '255', '0xFF', '0xFFFF']
   MaxLineLength:
     maxLineLength: 120
+    excludes: ['**/test/**', '**/androidTest/**']
   ReturnCount:
-    max: 4
+    max: 10                 # guard clauses
+    excludeGuardClauses: true
   UnusedPrivateFunction:
     ignoreAnnotated: ['Preview']
+  LoopWithTooManyJumpStatements:
+    maxJumpCount: 3
+  UnusedParameter:
+    active: true
 naming:
   FunctionNaming:
     ignoreAnnotated: ['Composable']
 complexity:
+  CyclomaticComplexMethod:
+    allowedComplexity: 25
+    excludes: ['**/test/**']
   LongMethod:
+    allowedLines: 100
     ignoreAnnotated: ['Composable']
+    excludes: ['**/test/**']
   LongParameterList:
     ignoreDefaultParameters: true
     ignoreAnnotated: ['Composable']
+  ComplexCondition:
+    allowedConditions: 5
+  NestedBlockDepth:
+    allowedDepth: 6
   TooManyFunctions:
+    allowedFunctionsPerObject: 20
+    allowedFunctionsPerClass: 20
     ignoreAnnotated: ['Composable']
+    excludes: ['**/test/**']

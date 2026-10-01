@@ -33,7 +33,7 @@ through the year). Check the actual 2027 dates when scheduling the launch.
 - [ ] Spikes 1, 4, 5 → `docs/spikes/*.md`
   - *Not done:* see `docs/spikes/README.md`. Spike 1's tool is built; none needs the devices run yet.
 - [ ] [Ops] Register the Play Console account (**organisation account if you can get a D-U-N-S number** — it skips the 12-tester rule; otherwise plan the closed test in Phase 3) and Apple Developer account; reserve the app names
-  - *Not done:* needs your accounts and a D-U-N-S decision.
+  - *Not done:* owner handles this (both store accounts already exist); not tracked by engineering.
 
 **Exit gate:** both empty apps build, launch, show generated theme + strings in EN/HI, load and
 verify the embedded presets. CI is green on all three workflows.
@@ -42,19 +42,42 @@ verify the embedded presets. CI is green on all three workflows.
 > CI ✘ unverified (see above). DoD gaps: the Android low-end profile is API 35 not API 29 (no API 29 arm64 image installed).
 
 ## Phase 1 — Engines + conformance (W2–W3)
-- [ ] [A][I] `Inspector` (ALGORITHMS §5) + all `inspect_cases`
-- [ ] [A][I] `JpegPatcher` (§1.5): APP0 density insert/patch, strip APPn, COM padding, SOF assertions — unit tests with hand-built byte arrays
-- [ ] [A][I] Decoder + downsample + EXIF orientation (§1.1): tests with 8 orientation fixtures (add to `make_fixtures.py`)
-- [ ] [A][I] Geometry per dims mode (§1.2)
-- [ ] [A][I] `FitEngine` search + minimum-size strategy (§1.3–1.4); `FitResult` report
-- [ ] [A][I] `InkCleanup` (§3) signature/declaration/thumb variants + quality gate
-- [ ] [A][I] `PhotoPipeline` pieces: face detect wrapper (interface + fake), auto-framing math (pure, unit-tested), segmentation wrapper, name/date strip renderer
-- [ ] [A][I] `MatchEngine` (§4) pure + all `match_cases`; property tests: "a file produced by fit() for slot X always matches X as EXACT/ACCEPTED"
-- [ ] [A][I] Conformance runner reading `spec/fixtures/cases.json`
+> Spec first (CLAUDE.md rule 1): `ALGORITHMS.md` §9 pins every number both platforms must agree on, and `cases.json` grew from 15 to ~70
+> cases (new sections `decode_cases`, `patch_cases`, `geometry_cases`; 13 new fixtures incl. the 8 EXIF orientations). Writing §9 and the second
+> platform found real gaps in the original text, all resolved in the spec: the q range (§1.3 vs §1.4), the pad target, `range`-mode start size, windows
+> narrower than 2 KB, sRGB ICC detection in UTF-16 (v4 profiles), the box-blur formula, morphology borders, and how a crop maps onto a downsampled image.
+
+- [x] [A][I] `Inspector` (ALGORITHMS §5) + all `inspect_cases`
+  - *Done:* 16 cases + hostile/truncated-input tests on both platforms. Swift reads through bounds-safe accessors (it traps where the JVM throws).
+- [x] [A][I] `JpegPatcher` (§1.5): APP0 density insert/patch, strip APPn, COM padding, SOF assertions — unit tests with hand-built byte arrays
+  - *Done:* 10 shared `patch_cases` + byte-array tests; padding hits the exact byte target for gaps of 4 B to 200 KB.
+- [x] [A][I] Decoder + downsample + EXIF orientation (§1.1): tests with 8 orientation fixtures (add to `make_fixtures.py`)
+  - *Done:* the 8 fixtures are self-verified by the generator; production decoders (BitmapFactory + `Orientation`, ImageIO) pass all 10 `decode_cases`.
+- [x] [A][I] Geometry per dims mode (§1.2)
+  - *Done:* pure functions, 8 shared `geometry_cases` re-derived independently in Python (`test_tools.py`).
+- [x] [A][I] `FitEngine` search + minimum-size strategy (§1.3–1.4); `FitResult` report
+  - *Done:* all paths covered (search, downscale, upscale, upscale-then-pad, pad, `pad_only`, exact mode, range floors, typed errors).
+- [x] [A][I] `InkCleanup` (§3) signature/declaration/thumb variants + quality gate
+  - *Done:* signature/document/thumb + coverage gate; real paper-shadow and thumb fixtures clean up on both platforms.
+- [x] [A][I] `PhotoPipeline` pieces: face detect wrapper (interface + fake), auto-framing math (pure, unit-tested), segmentation wrapper, name/date strip renderer
+  - *Done:* interfaces + fakes (`core:vision`/`ScanVision`, fakes in `core:testing`/`TestSupport`), `AutoFraming`, `BackgroundWhitening`, strip layout + real text rendering (Skia / CoreText). *Not done:* the ML Kit / Vision implementations (Phase 2, behind the same interfaces).
+- [x] [A][I] `MatchEngine` (§4) pure + all `match_cases`; property tests: "a file produced by fit() for slot X always matches X as EXACT/ACCEPTED"
+  - *Done:* 16 cases against the real presets; the property runs over every distinct real slot × 4 sources on both platforms (with a non-vacuity guard).
+- [x] [A][I] Conformance runner reading `spec/fixtures/cases.json`
+  - *Done:* `fit_cases` run end to end through the production codecs (Skia under Robolectric native graphics; ImageIO). Mutation checks confirmed each runner fails when behaviour changes.
 - [ ] Spikes 2, 3
+  - *Not done:* spike 2 needs real portal validators, spike 3 needs consented real photos. Spike 5 got its answer for the JVM half: Robolectric native graphics gives real Skia JPEG encoding (`docs/spikes/05-robolectric-native-graphics.md`); the ±10% comparison with a device is still open.
 
 **Exit gate:** 100% of `cases.json` passes on both platforms in CI. Engine coverage ≥ 90%. Fit
 of the photo fixture ≤ 800 ms on a mid device (benchmark test).
+
+> **Gate status (2026-10-01), local runs only:**
+> - `cases.json`: every section passes on both platforms (Android 160 unit tests, 0 failures; Swift Core + Features + the app target on iPhone 17).
+> - Engine line coverage (rule 10, ≥ 90%), measured: Android `inspect` 95.1%, `match` 98.4%, `imaging` 98.8% (JaCoCo, `android/config/coverage/check_coverage.py`);
+>   iOS `Inspect` 96.2%, `Imaging` 97.8%, `Match` 96.4% (`ios/Scripts/check_coverage.py`). Both scripts fail on a missing report or zero measured lines.
+> - Fit benchmark (`ibps_photo_from_phone`, budget 800 ms): Android 138 ms median (Robolectric on the build machine), Swift 48 ms (release build, same machine).
+>   These guard against regressions. They are **not** mid-device numbers; the on-device figure needs the Macrobenchmark/XCTest-on-device run (Phase 2, with a real flow to drive).
+> - CI ✘ unverified: `android.yml` (coverage step now enabled), `ios.yml` and `spec.yml` have never run, so "in CI" is not yet true.
 
 ## Phase 2 — Core flows (A: W3–W5, I: W4–W6)
 - [ ] Home: search (EN + Hindi aliases, fuzzy), categories, pinned exams, popular list

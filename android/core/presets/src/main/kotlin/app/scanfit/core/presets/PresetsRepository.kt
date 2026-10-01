@@ -47,17 +47,16 @@ fun interface EmbeddedPresetSource {
 class AssetEmbeddedPresetSource(
     private val context: Context,
 ) : EmbeddedPresetSource {
-    override fun read(): PresetFiles? =
-        try {
-            fun text(name: String) = context.assets.open("presets/$name").use { it.readBytes() }
-            PresetFiles(
-                bundle = text("presets.json"),
-                signatureText = text("presets.json.sig").decodeToString(),
-                publicKeyBase64 = text("presets_public_key.b64").decodeToString(),
-            )
-        } catch (_: IOException) {
-            null
-        }
+    override fun read(): PresetFiles? = try {
+        fun text(name: String) = context.assets.open("presets/$name").use { it.readBytes() }
+        PresetFiles(
+            bundle = text("presets.json"),
+            signatureText = text("presets.json.sig").decodeToString(),
+            publicKeyBase64 = text("presets_public_key.b64").decodeToString(),
+        )
+    } catch (_: IOException) {
+        null
+    }
 }
 
 /** Holds the trusted presets. UIs observe [outcome]: `null` while the snapshot is still being verified. */
@@ -85,15 +84,14 @@ class DefaultPresetsRepository(
     override val outcome: StateFlow<PresetsLoadOutcome?> = _outcome.asStateFlow()
     override val bundle: StateFlow<PresetBundle?> = _bundle.asStateFlow()
 
-    override suspend fun loadEmbedded(): PresetsLoadOutcome =
-        withContext(dispatcher) {
-            lock.withLock {
-                val result = attempt()
-                // A rejected later load must not replace a good earlier outcome that the UI is already showing.
-                if (_bundle.value == null || result is PresetsLoadOutcome.Ready) _outcome.value = result
-                result
-            }
+    override suspend fun loadEmbedded(): PresetsLoadOutcome = withContext(dispatcher) {
+        lock.withLock {
+            val result = attempt()
+            // A rejected later load must not replace a good earlier outcome that the UI is already showing.
+            if (_bundle.value == null || result is PresetsLoadOutcome.Ready) _outcome.value = result
+            result
         }
+    }
 
     private fun attempt(): PresetsLoadOutcome {
         val files = source.read() ?: return PresetsLoadOutcome.MissingEmbedded

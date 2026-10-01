@@ -194,6 +194,8 @@ public struct Strings: Sendable {
     public var homePresetsUnverified: String { tr("home.presets_unverified") }
     /// "Specs verified"
     public var homePresetsVerified: String { tr("home.presets_verified") }
+    /// "Verifying exam specs…"
+    public var homePresetsVerifying: String { tr("home.presets_verifying") }
     /// "Search {count:int}+ exams — IBPS, SSC, NEET…"
     public func homeSearchHint(count: Int) -> String { fmt("home.search_hint", [count]) }
     /// "My exams"

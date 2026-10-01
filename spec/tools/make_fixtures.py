@@ -62,4 +62,59 @@ p.save(f"{OUT}/declaration_paper.jpg", quality=90)
 Image.new("CMYK", (200, 230), (0, 40, 60, 10)).save(f"{OUT}/cmyk_photo_200x230.jpg", quality=90)
 img.resize((200, 230)).save(f"{OUT}/progressive_200x230.jpg", quality=85, progressive=True)
 img.resize((200, 230)).save(f"{OUT}/png_named_as_jpg.jpg", format="PNG")   # wrong extension on purpose
+
+# ---- Phase 1 fixtures ------------------------------------------------------------------------------------
+# 7. Eight EXIF-orientation images (ALGORITHMS 1.1). Every file, once its EXIF orientation is applied, must show
+#    the same upright picture: 4 coloured quadrants (TL red, TR green, BL blue, BR yellow) and a white corner mark.
+#    The stored pixels are the *inverse* transform, so a decoder that ignores EXIF shows a rotated/mirrored image.
+from PIL import ImageOps
+UP_W, UP_H = 200, 120
+QUAD = {"TL": (220, 30, 30), "TR": (30, 180, 60), "BL": (30, 60, 220), "BR": (240, 220, 30)}
+
+def upright():
+    im = Image.new("RGB", (UP_W, UP_H))
+    d = ImageDraw.Draw(im)
+    d.rectangle([0, 0, UP_W // 2 - 1, UP_H // 2 - 1], fill=QUAD["TL"])
+    d.rectangle([UP_W // 2, 0, UP_W - 1, UP_H // 2 - 1], fill=QUAD["TR"])
+    d.rectangle([0, UP_H // 2, UP_W // 2 - 1, UP_H - 1], fill=QUAD["BL"])
+    d.rectangle([UP_W // 2, UP_H // 2, UP_W - 1, UP_H - 1], fill=QUAD["BR"])
+    d.rectangle([4, 4, 19, 19], fill=(255, 255, 255))      # mark in the top-left corner
+    return im
+
+# EXIF orientation k -> the PIL op that DISPLAYS it upright; the stored image is that op's inverse.
+INVERSE = {1: None, 2: Image.Transpose.FLIP_LEFT_RIGHT, 3: Image.Transpose.ROTATE_180,
+           4: Image.Transpose.FLIP_TOP_BOTTOM, 5: Image.Transpose.TRANSPOSE, 6: Image.Transpose.ROTATE_90,
+           7: Image.Transpose.TRANSVERSE, 8: Image.Transpose.ROTATE_270}
+for k in range(1, 9):
+    base = upright()
+    stored = base.transpose(INVERSE[k]) if INVERSE[k] is not None else base
+    ex = Image.Exif(); ex[0x0112] = k
+    path = f"{OUT}/orientation_{k}.jpg"
+    stored.save(path, quality=95, subsampling=0, exif=ex)
+    # self-check: applying EXIF must give back the upright picture (JPEG tolerance)
+    back = ImageOps.exif_transpose(Image.open(path)).convert("RGB")
+    assert back.size == (UP_W, UP_H), (k, back.size)
+    for name, (cx, cy) in {"TL": (60, 40), "TR": (140, 40), "BL": (60, 90), "BR": (140, 90)}.items():
+        got, want = back.getpixel((cx, cy)), QUAD[name]
+        assert all(abs(a - b) < 30 for a, b in zip(got, want)), (k, name, got, want)
+
+# 8. A phone photo that carries GPS + orientation 1 (ALGORITHMS 1.5: must be stripped, HAS_GPS_EXIF reported)
+gps_img = Image.new("RGB", (400, 300), (90, 120, 150))
+ImageDraw.Draw(gps_img).ellipse([120, 60, 280, 240], fill=(205, 160, 130))
+ex = Image.Exif(); ex[0x0112] = 1; ex[0x010F] = "FixtureMake"; ex[0x0110] = "FixtureModel"
+gps = ex.get_ifd(0x8825)
+gps[1] = "N"; gps[2] = (12.0, 57.0, 3.0); gps[3] = "E"; gps[4] = (77.0, 35.0, 10.0)
+ex[0x8825] = gps
+gps_img.save(f"{OUT}/photo_exif_gps_400x300.jpg", quality=90, exif=ex)
+
+# 9. ICC profiles: sRGB (strippable) and a non-sRGB one (must be refused: pipeline bug guard, ALGORITHMS 1.5)
+from PIL import ImageCms
+icc_img = Image.new("RGB", (100, 100), (150, 90, 200))
+icc_img.save(f"{OUT}/icc_srgb_100x100.jpg", quality=90, icc_profile=ImageCms.ImageCmsProfile(ImageCms.createProfile("sRGB")).tobytes())
+icc_img.save(f"{OUT}/icc_not_srgb_100x100.jpg", quality=90, icc_profile=ImageCms.ImageCmsProfile(ImageCms.createProfile("LAB")).tobytes())
+
+# 10. Greyscale signature JPEG (1 component): allowed only when the allow_grayscale_docs flag is on
+gray = Image.new("L", (140, 60), 255); scribble(ImageDraw.Draw(gray), (10, 10, 130, 50), width=3, color=0)
+gray.save(f"{OUT}/gray_signature_140x60.jpg", quality=90)
+
 print("fixtures written to", OUT)

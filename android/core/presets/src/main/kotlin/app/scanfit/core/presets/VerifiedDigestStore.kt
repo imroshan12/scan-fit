@@ -50,12 +50,11 @@ interface VerifiedDigestStore {
 class FileVerifiedDigestStore(
     private val file: File,
 ) : VerifiedDigestStore {
-    override fun contains(digest: String): Boolean =
-        try {
-            file.isFile && file.readText().trim() == digest
-        } catch (_: IOException) {
-            false
-        }
+    override fun contains(digest: String): Boolean = try {
+        file.isFile && file.readText().trim() == digest
+    } catch (_: IOException) {
+        false
+    }
 
     override fun add(digest: String) {
         try {

@@ -53,7 +53,16 @@ public struct HomeView: View {
     private var status: some View {
         switch model.state {
         case .loading:
-            ProgressView().frame(maxWidth: .infinity)
+            // Same card shape as the loaded state, so nothing jumps when the result arrives.
+            HStack(spacing: ScanFitSpacing.sm) {
+                ProgressView()
+                Text(strings.homePresetsVerifying).scanFitText(.label)
+                    .foregroundStyle(ScanFitColor.onSurfaceVariant)
+            }
+            .padding(ScanFitSpacing.lg)
+            .frame(maxWidth: .infinity, minHeight: ScanFitSpacing.minTouchTarget, alignment: .leading)
+            .background(ScanFitColor.surfaceVariant, in: RoundedRectangle(cornerRadius: ScanFitRadius.card))
+            .accessibilityElement(children: .combine)
         case let .ready(summary):
             HStack(spacing: ScanFitSpacing.sm) {
                 Image(systemName: "checkmark.seal.fill")
