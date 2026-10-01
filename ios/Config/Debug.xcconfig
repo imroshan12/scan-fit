@@ -1,0 +1,4 @@
+// Debug configuration (simulator and local device runs). Signing stays off for the simulator.
+// Your personal signing team goes in Local.xcconfig (git-ignored), never in this file.
+DEVELOPMENT_TEAM =
+#include? "Local.xcconfig"

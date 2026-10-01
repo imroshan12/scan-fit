@@ -38,6 +38,7 @@ web/            Static site: presets CDN, SEO exam pages, upload echo test page
 # spec
 python3 spec/tools/build_presets.py            # validate + bundle presets (must pass before any commit touching spec/)
 python3 spec/tools/gen_strings.py && python3 spec/tools/gen_tokens.py
+python3 spec/tools/release_preflight.py        # what still blocks a release build (docs/RELEASE_CHECKLIST.md)
 
 # android (from android/)
 ./gradlew spotlessCheck detekt testDebugUnitTest verifyRoborazziDebug

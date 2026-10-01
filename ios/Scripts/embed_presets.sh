@@ -17,6 +17,11 @@ if [[ "${CONFIGURATION}" == "Release" ]]; then
     echo "error: ${KEY} is missing. Release builds must embed the production public key (see spec/signing/README.md)." >&2
     exit 1
   fi
+  # The DEV key is public: anyone can sign presets with it. Never let it into a release build, even if it was copied here.
+  if [[ "$(tr -d '[:space:]' < "${KEY}")" == "$(tr -d '[:space:]' < "${SPEC}/signing/dev_public_key.b64")" ]]; then
+    echo "error: ${KEY} is the public DEV key. Release builds must embed the production key (python3 spec/tools/build_presets.py --genkey; see spec/signing/README.md)." >&2
+    exit 1
+  fi
 else
   KEY="${SPEC}/signing/dev_public_key.b64"
 fi

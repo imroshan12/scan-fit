@@ -49,3 +49,71 @@ jobs:
           RUNTIME=$(xcrun simctl list runtimes -j | python3 -c "import json,sys; r=[x for x in json.load(sys.stdin)['runtimes'] if x['platform']=='iOS' and x['isAvailable']]; print(sorted(r,key=lambda x:x['version'])[-1]['identifier'])")
           UDID=$(xcrun simctl create "ScanFit SE3" com.apple.CoreSimulator.SimDeviceType.iPhone-SE-3rd-generation "$RUNTIME")
           xcodebuild -scheme ScanFit -destination "id=$UDID" CODE_SIGNING_ALLOWED=NO test
+      # Release configuration only runs at archive time (Release warnings-as-errors, dSYM, the embed checks, Info.plist
+      # versions), so rehearse it on every PR with a throwaway presets key (spec/tools/rehearsal_key.sh is CI-only).
+      # Unsigned: no Apple account or secret is needed or used.
+      - name: Release archive rehearsal (unsigned, throwaway key)
+        working-directory: .
+        env:
+          PYTHON: python3
+        run: |
+          spec/tools/rehearsal_key.sh
+          cd ios && Scripts/archive.sh --no-sign --version 0.0.1 --build 1
+
+  # Tags: ios-v1.2.3 is a final release (Hindi must be reviewed: no TODO_HI). ios-v1.2.3-rc1 / -beta1 is a pre-release for
+  # TestFlight testing (machine-drafted Hindi allowed). docs/RELEASE_CHECKLIST.md lists the secrets and App Store Connect setup.
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/ios-v')
+    runs-on: macos-latest
+    timeout-minutes: 60
+    environment: ios-release          # protect with required reviewers in repo settings
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Version and channel from the tag
+        id: tag
+        run: |
+          VERSION="${GITHUB_REF_NAME#ios-v}"
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]] || { echo "::error::tag must look like ios-v1.2.3 or ios-v1.2.3-rc1"; exit 1; }
+          # CFBundleShortVersionString takes dotted numbers only: the -rc suffix stays in the tag.
+          echo "version=${VERSION%%-*}" >> "$GITHUB_OUTPUT"
+          if [[ "$VERSION" == *-* ]]; then
+            echo "hindi_flag=--allow-todo-hi" >> "$GITHUB_OUTPUT"; echo "final=" >> "$GITHUB_OUTPUT"
+          else
+            echo "hindi_flag=" >> "$GITHUB_OUTPUT"; echo "final=--final" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Presets signed with the production key
+        env:
+          PRESETS_SIGNING_KEY: ${{ secrets.PRESETS_SIGNING_KEY }}
+        run: |
+          pip install -r spec/tools/requirements.txt
+          spec/tools/build_all.sh --release ${{ steps.tag.outputs.hindi_flag }}
+      - name: Preflight (fails on anything a release still needs)
+        env:
+          DEVELOPMENT_TEAM: ${{ secrets.APPLE_TEAM_ID }}
+        run: python3 spec/tools/release_preflight.py --platform ios ${{ steps.tag.outputs.final }}
+      - name: App Store Connect API key
+        env:
+          ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+        run: |
+          echo "$ASC_KEY_P8_BASE64" | base64 --decode > "$RUNNER_TEMP/AuthKey.p8"
+          echo "ASC_KEY_PATH=$RUNNER_TEMP/AuthKey.p8" >> "$GITHUB_ENV"
+      - run: brew install xcodegen
+      - name: Archive, sign (cloud-managed, via the API key) and upload to TestFlight
+        working-directory: ios
+        env:
+          PYTHON: python3
+          DEVELOPMENT_TEAM: ${{ secrets.APPLE_TEAM_ID }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+        run: Scripts/archive.sh --version ${{ steps.tag.outputs.version }} --build ${{ github.run_number }} --upload
+      - name: Remove the API key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/AuthKey.p8"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ios-dsyms-${{ steps.tag.outputs.version }}
+          path: ios/build/ScanFit.xcarchive/dSYMs

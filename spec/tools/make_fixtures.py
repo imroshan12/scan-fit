@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """Generate deterministic synthetic fixture images for the cross-platform conformance suite.
 Real-world photos (faces, real signatures) must be added by a human with consent - see fixtures/README.md."""
-import os, random, math
+import os, random, math, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _common import require
+require("PIL")
 from PIL import Image, ImageDraw, ImageFilter
 random.seed(42)
 OUT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "fixtures", "images")

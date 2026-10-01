@@ -64,7 +64,9 @@ jobs:
           PRESETS_SIGNING_KEY: ${{ secrets.PRESETS_SIGNING_KEY }}
         run: |
           test -f spec/signing/prod_public_key.b64 || { echo "::error::spec/signing/prod_public_key.b64 is missing (spec/signing/README.md)"; exit 1; }
-          spec/tools/build_all.sh --release
+          # The CDN gets presets only, never UI strings, so machine-drafted Hindi must not block publishing them
+          # (the Hindi gate belongs to the app release jobs).
+          spec/tools/build_all.sh --release --allow-todo-hi
       - name: Stage for the CDN
         run: |
           mkdir -p web/presets/v2

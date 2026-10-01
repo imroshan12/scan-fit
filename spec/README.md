@@ -33,9 +33,10 @@ live notice. Don't guess numbers.
 
 ## Building everything generated from spec/
 ```bash
+python3 -m venv .venv && source .venv/bin/activate   # once; macOS Python is externally managed, so pip needs a venv
 pip install -r spec/tools/requirements.txt
 spec/tools/build_all.sh              # presets (signed with the public DEV key), strings, tokens, analytics
-PRESETS_SIGNING_KEY=<seed> spec/tools/build_all.sh --release   # CI/release: real key, TODO_HI is an error
+PRESETS_SIGNING_KEY=<seed> spec/tools/build_all.sh --release   # CI/release: real key, TODO_HI is an error (add --allow-todo-hi for pre-releases)
 python3 -m unittest spec/tools/test_tools.py                   # validator + signing-vector tests
 ```
 `spec/dist/` is git-ignored and must exist before either app builds (both embed it). Generated app files

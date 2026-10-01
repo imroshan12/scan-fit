@@ -29,3 +29,11 @@ __pycache__/
 *.pyc
 web/presets/v2/presets.json
 web/presets/v2/presets.json.sig
+# release secrets (never commit; templates are *.example)
+android/keystore.properties
+*.jks
+*.p12
+*.p8
+*.mobileprovision
+ios/Config/Local.xcconfig
+ios/build/

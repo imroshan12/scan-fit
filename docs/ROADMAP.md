@@ -122,6 +122,8 @@ ads render and can be killed remotely; a preset change published to the CDN appe
 one foreground cycle, and a tampered bundle is rejected.
 
 ## Phase 5 — Hardening + store readiness (W9–W10)
+- [x] [A][I] Release build plumbing (pulled forward on request): signed AAB/APK with an upload key from env or `keystore.properties`, version from tag and run number, dev presets key refused in release, iOS Release archive/export script, `release_preflight.py`, tag-driven CI release jobs, PR release rehearsal. See `docs/RELEASE_CHECKLIST.md`
+  - *Done:* verified locally with throwaway keys (R8 APK runs on an API 35 emulator; unsigned iOS Release archive). *Not verified:* signed iOS export, TestFlight upload, the CI release jobs (need your credentials and a tag). Placeholders you replace are listed in the checklist.
 - [ ] Performance budgets (ARCHITECTURE §11) on reference devices; Baseline Profiles; memory with 48–200 MP inputs
 - [ ] Accessibility audit (TalkBack, VoiceOver, 200% font, contrast)
 - [ ] Device matrix run (TESTING §4); fix every P0/P1

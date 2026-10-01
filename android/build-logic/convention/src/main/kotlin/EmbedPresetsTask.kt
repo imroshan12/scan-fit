@@ -2,7 +2,9 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
@@ -19,7 +21,7 @@ import java.util.Base64
  *
  * Before copying, it verifies `presets.json.sig` against the public key being embedded, so a stale or
  * wrongly-signed snapshot fails the build instead of shipping. Debug builds embed the public DEV key,
- * release builds the production key (spec/signing/README.md).
+ * release builds the production key (spec/signing/README.md) and refuse the DEV key: anyone can sign with it.
  */
 @CacheableTask
 abstract class EmbedPresetsTask : DefaultTask() {
@@ -36,6 +38,14 @@ abstract class EmbedPresetsTask : DefaultTask() {
     @get:PathSensitive(PathSensitivity.NONE)
     abstract val publicKey: ConfigurableFileCollection
 
+    /** The public DEV key: a release build must never embed it, even if it was copied into prod_public_key.b64. */
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val devPublicKey: ConfigurableFileCollection
+
+    @get:Input
+    abstract val releaseBuild: Property<Boolean>
+
     @get:OutputDirectory
     abstract val outputDir: DirectoryProperty
 
@@ -48,12 +58,7 @@ abstract class EmbedPresetsTask : DefaultTask() {
         val bytes = presetsFile.readBytes()
         val sig = Base64.getDecoder().decode(sigFile.readText().trim())
         val key = Base64.getDecoder().decode(keyFile.readText().trim())
-        if (!isValidEd25519(key, bytes, sig)) {
-            throw GradleException(
-                "spec/dist/presets.json does not verify against ${keyFile.name}. Re-run spec/tools/build_all.sh " +
-                    "(debug) or sign with the production key (release). Refusing to embed it.",
-            )
-        }
+        refusalMessage(keyFile, key, bytes, sig)?.let { throw GradleException(it) }
         val out =
             outputDir
                 .get()
@@ -63,6 +68,31 @@ abstract class EmbedPresetsTask : DefaultTask() {
         out.resolve("presets.json").writeBytes(bytes)
         out.resolve("presets.json.sig").writeText(sigFile.readText().trim())
         out.resolve("presets_public_key.b64").writeText(keyFile.readText().trim())
+    }
+
+    /** Why this snapshot must not be embedded, or null when it may be. */
+    private fun refusalMessage(
+        keyFile: File,
+        key: ByteArray,
+        presetsBytes: ByteArray,
+        sig: ByteArray,
+    ): String? {
+        val dev = devPublicKey.files.singleOrNull { it.exists() }
+        return when {
+            releaseBuild.get() && dev != null && dev.readText().trim() == keyFile.readText().trim() -> {
+                "${keyFile.name} is the public DEV key (anyone can sign presets with it). Release builds must " +
+                    "embed the production key: python3 spec/tools/build_presets.py --genkey (spec/signing/README.md)."
+            }
+
+            !isValidEd25519(key, presetsBytes, sig) -> {
+                "spec/dist/presets.json does not verify against ${keyFile.name}. Re-run spec/tools/build_all.sh " +
+                    "(debug) or sign with the production key (release). Refusing to embed it."
+            }
+
+            else -> {
+                null
+            }
+        }
     }
 
     private fun missingInputMessage(

@@ -11,6 +11,8 @@ extensions.configure<AndroidComponentsExtension<*, *, *>>("androidComponents") {
                 presets.from(specDir.file("dist/presets.json"))
                 signature.from(specDir.file("dist/presets.json.sig"))
                 publicKey.from(specDir.file("signing/$keyName"))
+                devPublicKey.from(specDir.file("signing/dev_public_key.b64"))
+                releaseBuild.set(variant.buildType == "release")
             }
         variant.sources.assets?.addGeneratedSourceDirectory(embed, EmbedPresetsTask::outputDir)
     }

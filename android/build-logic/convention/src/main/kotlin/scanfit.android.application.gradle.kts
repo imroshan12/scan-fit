@@ -7,6 +7,8 @@ plugins {
 extensions.configure<ApplicationExtension> {
     configureAndroid(this)
     defaultConfig.targetSdk = 36
+    configureReleaseSigning(this)
+    configureVersioning(this)
 }
 
 dependencies {

@@ -1,0 +1,3 @@
+// Copy to ios/Config/Local.xcconfig (git-ignored) and replace the placeholder.
+// Your 10-character Team ID: developer.apple.com > Membership details.
+DEVELOPMENT_TEAM = ABCDE12345

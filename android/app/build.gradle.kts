@@ -11,8 +11,7 @@ android {
         // Placeholder id: it is permanent once published on Play. Confirm it (and the iOS bundle id in
         // ios/project.yml) before the first upload.
         applicationId = "app.scanfit"
-        versionCode = 1
-        versionName = "0.1.0" // shared semver per release (ARCHITECTURE section 12)
+        // versionName/versionCode come from gradle.properties / -P flags (ReleaseConfig.kt in build-logic).
     }
 
     androidResources {

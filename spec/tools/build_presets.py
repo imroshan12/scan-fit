@@ -17,6 +17,7 @@ Exit code != 0 on any validation failure. CI must run this on every PR touching 
 import argparse, base64, glob, json, os, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _common import require
 from datetime import date
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -71,6 +72,7 @@ def main():
     ap.add_argument("--verify", metavar="PUBKEY_B64_FILE", help="verify dist/presets.json(.sig) and exit")
     ap.add_argument("--genkey", action="store_true")
     args = ap.parse_args()
+    require("cryptography") if (args.verify or args.genkey) else require("cryptography", "jsonschema")
 
     if args.verify:
         verify_dist(args.verify)

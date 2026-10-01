@@ -4,6 +4,7 @@ Every generator writes through `Output.write`, which supports a `--check` mode: 
 written, and the process exits non-zero if any generated file on disk differs from what the
 generator would produce. CI runs the generators with --check so generated code never drifts.
 """
+import importlib.util
 import os
 import sys
 
@@ -18,6 +19,24 @@ IOS_CORE = os.path.join(REPO, "ios", "Packages", "Core", "Sources")
 
 KOTLIN_PKG_DESIGNSYSTEM = "app.scanfit.core.designsystem"
 KOTLIN_PKG_ANALYTICS = "app.scanfit.core.analytics"
+
+
+PIP_NAMES = {"PIL": "pillow"}
+
+
+def require(*modules: str):
+    """Exit with the setup steps (not a traceback) when a third-party package the tool needs is missing."""
+    missing = [m for m in modules if importlib.util.find_spec(m) is None]
+    if not missing:
+        return
+    names = ", ".join(PIP_NAMES.get(m, m) for m in missing)
+    print(f"error: missing Python package(s): {names}\n"
+          "Set up once from the repo root (macOS Python is 'externally managed', so use a virtual environment; "
+          ".venv/ is git-ignored):\n"
+          "    python3 -m venv .venv && source .venv/bin/activate\n"
+          "    pip install -r spec/tools/requirements.txt\n"
+          "Then re-run this command in the same shell.", file=sys.stderr)
+    sys.exit(2)
 
 
 def banner(generator: str, comment: str = "//") -> str:

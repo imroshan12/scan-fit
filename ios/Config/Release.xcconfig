@@ -1,0 +1,6 @@
+// Release configuration (archive -> TestFlight / App Store). See docs/RELEASE_CHECKLIST.md.
+// The signing team comes from Local.xcconfig (git-ignored, template: Local.xcconfig.example) or from
+// `DEVELOPMENT_TEAM=<id>` on the xcodebuild command line (CI does this).
+DEVELOPMENT_TEAM =
+DEBUG_INFORMATION_FORMAT = dwarf-with-dsym
+#include? "Local.xcconfig"

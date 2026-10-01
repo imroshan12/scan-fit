@@ -171,13 +171,18 @@ from Play services).
 - `.github/workflows/spec.yml` (paths `spec/**`): validate presets, run the fixture generator
   diff, build + sign + publish presets to `web/` (on main).
 - `android.yml` (paths `android/**`, `spec/**`): spotless, detekt, unit + conformance, Roborazzi
-  screenshots, lint, assemble release AAB, upload to Play **internal** track on tag `android-v*`
-  (Gradle Play Publisher or fastlane `supply`).
+  screenshots, lint, a **release-configuration rehearsal** on every PR (R8 + lint vital, throwaway key), and on tag
+  `android-v*` a signed AAB + APK + `mapping.txt` as artifacts. The first Play upload is manual (Google opens the
+  publishing API only after it); automating later means a Play service-account secret and one upload step.
 - `ios.yml` (paths `ios/**`, `spec/**`, macOS runner): swiftlint, unit + conformance, snapshot
-  tests, archive, upload to TestFlight on tag `ios-v*` (fastlane `pilot`, App Store Connect API key).
-- Versioning: marketing version is shared semver per release (`1.0.0`). Build numbers are
-  per platform, from CI run numbers.
-- Secrets: signing keys in GitHub Actions secrets. Android upload key via Play App Signing.
+  tests, an unsigned **Release archive rehearsal** on every PR, and on tag `ios-v*` archive, sign through an App Store Connect
+  API key (cloud-managed signing, no certificates in secrets) and upload to TestFlight with `xcodebuild -exportArchive`.
+- Versioning: marketing version is shared semver per release (`1.0.0`), taken from the tag (`android-v1.0.0`, `ios-v1.0.0`);
+  a suffix (`-rc1`, `-beta1`) marks a pre-release, which may still carry machine-drafted Hindi (`build_all.sh --release
+  --allow-todo-hi`). iOS takes digits only, so the suffix stays in the tag. Build numbers are per platform, from CI run
+  numbers (`-Pscanfit.versionCode`, `--build`). Defaults live in `android/gradle.properties` and `ios/project.yml`.
+- Secrets: signing keys in GitHub Actions secrets behind protected environments; the full list is in
+  `docs/RELEASE_CHECKLIST.md`. Android upload key via Play App Signing. `release_preflight.py` reports what is missing.
 
 ## 13. Scalability checklist
 Presets can grow 10× without code changes (§6). New languages: add `spec/strings/<lang>.json`.

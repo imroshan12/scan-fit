@@ -20,6 +20,7 @@ sharing a spec rather than code.
 
 ## Getting started
 ```bash
+python3 -m venv .venv && source .venv/bin/activate   # macOS Python is externally managed: use a venv (.venv/ is git-ignored)
 pip install -r spec/tools/requirements.txt
 spec/tools/build_all.sh                       # builds + dev-signs the presets both apps embed
 
@@ -27,8 +28,9 @@ spec/tools/build_all.sh                       # builds + dev-signs the presets b
 (cd ios && xcodegen generate && xcodebuild -scheme ScanFit -destination 'platform=iOS Simulator,name=<a simulator you have>' test)
 swift test --package-path ios/Packages/Core
 ```
-Then the current phase in `docs/ROADMAP.md` (status notes are inline). Before the first release: create the production signing key
-(`spec/signing/README.md`) and confirm the app ids (`app.scanfit` on Android, `app.scanfit.ios` on iOS).
+Then the current phase in `docs/ROADMAP.md` (status notes are inline). Before the first release: follow [docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md) (production presets key, Android upload
+keystore, app ids, Apple team) and run `python3 spec/tools/release_preflight.py`, which lists what is still missing.
+Android Studio **Quail 4 (2026.1.4) or newer** is needed to sync the Android project (AGP 9.4).
 
 ## Troubleshooting
 - **Gradle fails with "implementation class `Scanfit_…Plugin` was not found in the jar", or an unresolved `java {}` accessor in a

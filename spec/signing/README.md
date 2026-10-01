@@ -10,12 +10,21 @@ and refuse any bundle (embedded or downloaded) whose signature does not verify.
 
 ## Creating the production key (once, before the first release)
 ```bash
+# once, from the repo root (macOS Python is externally managed, so a virtual environment is required; .venv/ is git-ignored)
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r spec/tools/requirements.txt
+
 python3 spec/tools/build_presets.py --genkey
 ```
 1. Store the printed **PRIVATE** value as the GitHub Actions secret `PRESETS_SIGNING_KEY`. Keep an offline backup:
    losing it means shipping a new app build with a new public key.
 2. Write the printed **PUBLIC** value (one line, base64) to `spec/signing/prod_public_key.b64` and commit it.
 3. `.github/workflows/spec.yml` signs with the secret; the release builds embed `prod_public_key.b64`.
+
+Check what is still missing at any time with `python3 spec/tools/release_preflight.py` (it never prints a secret). Release builds
+also refuse the DEV key even if it is copied into `prod_public_key.b64` (Android embed task, iOS embed script, preflight).
+Pull-request CI builds the release configuration with a throwaway key (`tools/rehearsal_key.sh`, CI only); that key is never published.
+The full release walk-through is `docs/RELEASE_CHECKLIST.md`.
 
 Rotating the key requires an app release (the key is compiled in). Plan an overlap if you ever need to.
 

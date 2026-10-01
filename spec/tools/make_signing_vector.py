@@ -26,7 +26,9 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from _common import SPEC  # noqa: E402
+from _common import SPEC, require  # noqa: E402
+
+require("cryptography")
 
 from cryptography.hazmat.primitives import serialization as ser  # noqa: E402
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey  # noqa: E402
