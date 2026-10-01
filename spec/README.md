@@ -33,6 +33,7 @@ live notice. Don't guess numbers.
 
 ## Building everything generated from spec/
 ```bash
+# Python is only needed to PRODUCE spec/dist and the generated files; Gradle and Xcode builds run no Python.
 python3 -m venv .venv && source .venv/bin/activate   # once; macOS Python is externally managed, so pip needs a venv
 pip install -r spec/tools/requirements.txt
 spec/tools/build_all.sh              # presets (signed with the public DEV key), strings, tokens, analytics

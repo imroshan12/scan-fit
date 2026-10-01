@@ -8,7 +8,8 @@
 #
 # The team may also live in ios/Config/Local.xcconfig. CI authenticates with an App Store Connect API key instead of an
 # Xcode login: ASC_KEY_PATH (the .p8 file), ASC_KEY_ID, ASC_ISSUER_ID.
-# Needs spec/dist signed with the PRODUCTION key (PRESETS_SIGNING_KEY=... spec/tools/build_all.sh --release).
+# Needs spec/dist signed with the PRODUCTION key (PRESETS_SIGNING_KEY=... spec/tools/build_all.sh --release). No Python runs in
+# the build itself: the presets signature is checked by Scripts/verify_presets.swift.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -29,11 +30,6 @@ if [[ -n "${VERSION}" && ! "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
 fi
 if [[ -n "${BUILD}" && ! "${BUILD}" =~ ^[0-9]+$ ]]; then echo "error: --build must be an integer" >&2; exit 2; fi
 if [[ "${UPLOAD}" == 1 && "${SIGN}" == 0 ]]; then echo "error: --upload needs a signed build" >&2; exit 2; fi
-
-# Xcode's script phases do not inherit the caller's PATH (a venv or setup-python interpreter is invisible to them), so
-# hand the "Embed signed presets" phase an absolute interpreter. It needs `cryptography` to verify the signature.
-PYTHON="$(command -v "${PYTHON:-python3}")" || { echo "error: python3 not found" >&2; exit 1; }
-export PYTHON
 
 DEV_KEY="../spec/signing/dev_public_key.b64"
 OUT="build"

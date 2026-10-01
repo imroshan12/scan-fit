@@ -14,9 +14,11 @@ python3 spec/tools/release_preflight.py                 # both platforms; --plat
   ("incompatible version of the Android Gradle plugin"). Android Studio 2024.2 (Ladybug) stops at AGP 8.8. Command-line builds
   (`./gradlew`) never needed Studio.
 - Xcode 26 (iOS) and `brew install xcodegen`.
-- **Python tools, once, from the repo root.** The spec tools (key generation, presets signing, the preflight's signature check) need
-  `cryptography`, `jsonschema` and `pillow`. macOS Python is "externally managed", so a plain `pip install` fails; use a virtual
-  environment (`.venv/` is git-ignored) and keep it activated in the shell where you run the commands below:
+- **Python is not needed to build.** Gradle and Xcode builds, archives and `ios/Scripts/archive.sh` run no Python: Android verifies
+  the presets signature with the JDK, iOS with `ios/Scripts/verify_presets.swift` (CryptoKit). Python is only for the spec tools
+  that *produce* inputs: `spec/tools/build_all.sh` (validate, bundle and sign `spec/dist`, once per presets change), key generation,
+  and the preflight. Those need `cryptography`, `jsonschema` and `pillow`. macOS Python is "externally managed", so a plain
+  `pip install` fails; use a virtual environment (`.venv/` is git-ignored) and activate it in the shell where you run them:
   ```bash
   python3 -m venv .venv && source .venv/bin/activate
   pip install -r spec/tools/requirements.txt
