@@ -1,0 +1,33 @@
+# Layered on detekt's defaults (buildUponDefaultConfig). CLAUDE.md rule 8: no `!!`, no GlobalScope,
+# state exposed as immutable StateFlow<UiState>.
+potential-bugs:
+  UnsafeCallOnNullableType:
+    active: true            # no `!!`
+coroutines:
+  GlobalCoroutineUsage:
+    active: true            # no GlobalScope
+style:
+  MagicNumber:
+    active: true
+    ignoreAnnotated: ['Composable', 'Preview']
+    ignorePropertyDeclaration: true
+    ignoreCompanionObjectPropertyDeclaration: true
+    ignoreNamedArgument: true
+    ignoreExtensionFunctions: true
+  MaxLineLength:
+    maxLineLength: 120
+  ReturnCount:
+    max: 4
+  UnusedPrivateFunction:
+    ignoreAnnotated: ['Preview']
+naming:
+  FunctionNaming:
+    ignoreAnnotated: ['Composable']
+complexity:
+  LongMethod:
+    ignoreAnnotated: ['Composable']
+  LongParameterList:
+    ignoreDefaultParameters: true
+    ignoreAnnotated: ['Composable']
+  TooManyFunctions:
+    ignoreAnnotated: ['Composable']

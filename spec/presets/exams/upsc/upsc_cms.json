@@ -1,0 +1,94 @@
+{
+  "id": "upsc_cms",
+  "name": "UPSC Combined Medical Services",
+  "body": "UPSC",
+  "category": "upsc",
+  "portal": "upsconline.nic.in",
+  "live_photo_capture": true,
+  "status": "active",
+  "documents": [
+    {
+      "type": "photo",
+      "required": true,
+      "formats": [
+        "jpg",
+        "jpeg"
+      ],
+      "size_kb": {
+        "min": 20,
+        "max": 200,
+        "target": 128
+      },
+      "dimensions": {
+        "mode": "none"
+      },
+      "name_date_strip": {
+        "required": true,
+        "verified": false,
+        "note": "Guides disagree whether CSE currently requires it - verify in notice"
+      },
+      "notes": "Recent colour photo, white background, face ~75% of frame",
+      "rules": [
+        "Several guides say max 300 KB; 200 KB used as the safe cap"
+      ]
+    },
+    {
+      "type": "triple_signature",
+      "required": true,
+      "formats": [
+        "jpg",
+        "jpeg"
+      ],
+      "size_kb": {
+        "min": 20,
+        "max": 100,
+        "target": 68
+      },
+      "dimensions": {
+        "mode": "none"
+      },
+      "notes": "Sign 3 times one below the other on one white sheet",
+      "rules": [
+        "Black ink",
+        "Running handwriting only - signatures/declarations in CAPITAL letters are rejected"
+      ]
+    },
+    {
+      "type": "photo_id",
+      "required": true,
+      "formats": [
+        "pdf"
+      ],
+      "size_kb": {
+        "min": null,
+        "max": 300,
+        "target": 210
+      },
+      "dimensions": {
+        "mode": "none"
+      },
+      "notes": "Photo ID used in the form"
+    }
+  ],
+  "special_rules": [
+    "Live photo capture is mandatory and is matched against the uploaded photo",
+    "Name and date of photograph printed at the bottom of the photo (verify - sources disagree for some exams)"
+  ],
+  "sources": [
+    {
+      "url": "https://vajiramandravi.com/upsc-exam/upsc-photo-and-signature-guidelines/",
+      "kind": "secondary"
+    },
+    {
+      "url": "https://bharatnotes.com/faq/application/upsc-photograph-signature-specs/",
+      "kind": "secondary"
+    },
+    {
+      "url": "https://examtoolpro.com/exams/upsc-cse-photo-requirements.html",
+      "kind": "secondary"
+    }
+  ],
+  "confidence": "low",
+  "confidence_note": "Assumed common UPSC portal rules; not individually verified",
+  "last_verified": "2026-09-30"
+}

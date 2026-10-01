@@ -1,0 +1,41 @@
+{
+  "_doc": "Closed set of analytics events (ARCHITECTURE §9). Params are enums, bounded ints, bools or a public exam_id: NEVER free text, file names, paths, sizes of user files beyond buckets, or anything the user captured (CLAUDE.md rule 2). Run spec/tools/gen_analytics.py after editing.",
+
+  "enums": {
+    "doc_type": ["photo", "postcard_photo", "signature", "triple_signature", "left_thumb", "thumb_impression",
+                 "fingers", "handwritten_declaration", "pdf_document", "other"],
+    "fit_strategy": ["quality_search", "downscale", "upscale", "pad", "upscale_then_pad"],
+    "fit_result": ["ok", "too_detailed", "cannot_reach", "error"],
+    "ms_bucket": ["lt_250", "lt_500", "lt_1000", "lt_2000", "gte_2000"],
+    "seconds_bucket": ["lt_5", "lt_15", "lt_30", "lt_60", "gte_60"],
+    "count_bucket": ["n0", "n1_5", "n6_10", "n11_20", "n21_plus"],
+    "paywall_variant": ["a", "b", "c"],
+    "paywall_trigger": ["free_limit", "pro_feature", "settings"],
+    "product": ["pro_yearly", "pro_lifetime"],
+    "sync_result": ["updated", "not_modified", "failed"],
+    "sync_failure_reason": ["network", "bad_signature", "stale_version", "bad_schema", "parse"]
+  },
+
+  "events": {
+    "exam_opened":        { "params": { "exam_id": { "type": "exam_id" } } },
+    "flow_started":       { "params": { "doc_type": { "type": "enum", "enum": "doc_type" } } },
+    "fit_completed":      { "params": { "doc_type": { "type": "enum", "enum": "doc_type" },
+                                        "strategy": { "type": "enum", "enum": "fit_strategy" },
+                                        "ms_bucket": { "type": "enum", "enum": "ms_bucket" },
+                                        "result": { "type": "enum", "enum": "fit_result" } } },
+    "export_saved":       { "params": { "doc_type": { "type": "enum", "enum": "doc_type" },
+                                        "verified": { "type": "bool" } } },
+    "match_shown":        { "params": { "n_exact_bucket": { "type": "enum", "enum": "count_bucket" },
+                                        "n_fix": { "type": "int", "max": 99 } } },
+    "fix_tapped":         { "params": {} },
+    "checker_run":        { "params": { "issues_count": { "type": "int", "max": 13 } } },
+    "coach_all_green":    { "params": { "seconds_bucket": { "type": "enum", "enum": "seconds_bucket" } } },
+    "paywall_shown":      { "params": { "variant": { "type": "enum", "enum": "paywall_variant" },
+                                        "trigger": { "type": "enum", "enum": "paywall_trigger" } } },
+    "purchase":           { "params": { "product": { "type": "enum", "enum": "product" } } },
+    "rewarded_completed": { "params": {} },
+    "preset_sync":        { "params": { "result": { "type": "enum", "enum": "sync_result" } } },
+    "preset_sync_failed": { "params": { "reason": { "type": "enum", "enum": "sync_failure_reason" } } },
+    "portal_feedback":    { "params": { "accepted": { "type": "bool" } } }
+  }
+}

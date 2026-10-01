@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand indigo (spec/tokens/tokens.json primary) for the launcher icon background. -->
+    <color name="ic_launcher_background">#3F4DB8</color>
+    <color name="window_background">#FAFAFC</color>
+</resources>

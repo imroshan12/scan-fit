@@ -1,0 +1,27 @@
+spec/dist/
+spec/fixtures/images/real/
+**/.DS_Store
+# android
+android/.gradle/
+android/**/build/
+android/local.properties
+*.keystore
+# ios
+ios/**/xcuserdata/
+ios/**/DerivedData/
+ios/.build/
+*.xcuserstate
+# secrets
+**/google-services.json
+**/GoogleService-Info.plist
+.env*
+ios/ScanFit.xcodeproj/
+ios/**/.build/
+ios/Packages/**/.swiftpm/
+ios/ScanFit/Info.plist
+# python
+.venv/
+__pycache__/
+*.pyc
+web/presets/v2/presets.json
+web/presets/v2/presets.json.sig

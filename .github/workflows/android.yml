@@ -1,0 +1,78 @@
+name: android
+on:
+  pull_request:
+    paths: ['android/**', 'spec/**', '.github/workflows/android.yml']
+  push:
+    branches: [main]
+    tags: ['android-v*']
+    paths: ['android/**', 'spec/**', '.github/workflows/android.yml']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Build the signed presets snapshot the app embeds (dev key; release tags use the real key below)
+        working-directory: .
+        run: |
+          pip install -r spec/tools/requirements.txt
+          spec/tools/build_all.sh
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Format, static analysis, unit + conformance tests
+        run: ./gradlew spotlessCheck detekt testDebugUnitTest lint --continue
+      - name: Assemble debug
+        run: ./gradlew :app:assembleDebug
+      - name: Upload test reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-reports
+          path: |
+            android/**/build/reports/**
+            android/**/build/test-results/**
+
+  # Release builds embed spec/signing/prod_public_key.b64 and refuse the dev key (EmbedPresetsTask).
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/android-v')
+    runs-on: ubuntu-latest
+    environment: android-release
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Presets signed with the production key
+        env:
+          PRESETS_SIGNING_KEY: ${{ secrets.PRESETS_SIGNING_KEY }}
+        run: |
+          pip install -r spec/tools/requirements.txt
+          spec/tools/build_all.sh --release
+      - name: Bundle release AAB
+        working-directory: android
+        run: ./gradlew :app:bundleRelease -Pandroid.injected.version.code=${{ github.run_number }}
+      # Signing + upload to the Play *internal* track is added with the Play Console account
+      # (Gradle Play Publisher or fastlane supply; upload key via Play App Signing). ROADMAP Phase 0 [Ops].

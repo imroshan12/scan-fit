@@ -1,0 +1,48 @@
+name: ios
+on:
+  pull_request:
+    paths: ['ios/**', 'spec/**', '.github/workflows/ios.yml']
+  push:
+    branches: [main]
+    tags: ['ios-v*']
+    paths: ['ios/**', 'spec/**', '.github/workflows/ios.yml']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: ios
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Build the signed presets snapshot the app embeds (dev key)
+        working-directory: .
+        run: |
+          pip install -r spec/tools/requirements.txt
+          spec/tools/build_all.sh
+      - name: Tools
+        run: brew install xcodegen swiftlint
+      - run: swiftlint --strict
+      - name: Engine + conformance tests (Core, fast)
+        run: swift test --package-path Packages/Core
+      - name: Feature tests
+        run: swift test --package-path Packages/Features
+      - name: App build + tests on an iPhone SE (3rd gen) simulator, the low-end profile
+        env:
+          PYTHON: python3
+        run: |
+          xcodegen generate
+          RUNTIME=$(xcrun simctl list runtimes -j | python3 -c "import json,sys; r=[x for x in json.load(sys.stdin)['runtimes'] if x['platform']=='iOS' and x['isAvailable']]; print(sorted(r,key=lambda x:x['version'])[-1]['identifier'])")
+          UDID=$(xcrun simctl create "ScanFit SE3" com.apple.CoreSimulator.SimDeviceType.iPhone-SE-3rd-generation "$RUNTIME")
+          xcodebuild -scheme ScanFit -destination "id=$UDID" CODE_SIGNING_ALLOWED=NO test

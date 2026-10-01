@@ -1,0 +1,77 @@
+name: spec
+# Validates the shared contract, regenerates nothing silently (drift = failure), and on main publishes the
+# signed presets bundle to web/. Path-filtered: only runs when the contract or the site changes.
+on:
+  pull_request:
+    paths: ['spec/**', 'web/**', '.github/workflows/spec.yml']
+  push:
+    branches: [main]
+    paths: ['spec/**', 'web/**', '.github/workflows/spec.yml']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: spec-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: spec/tools/requirements.txt
+      - run: pip install -r spec/tools/requirements.txt
+      - name: Validate and bundle presets (dev-signed, for checks only)
+        run: |
+          python3 spec/tools/build_presets.py --sign-dev
+          python3 spec/tools/build_presets.py --verify spec/signing/dev_public_key.b64
+      - name: Generated files are up to date (no drift)
+        run: |
+          python3 spec/tools/make_signing_vector.py --check
+          python3 spec/tools/gen_strings.py --check
+          python3 spec/tools/gen_tokens.py --check
+          python3 spec/tools/gen_analytics.py --check
+      - name: Generator and signing-vector tests
+        run: python3 -m unittest spec/tools/test_tools.py -v
+      # Not a byte-diff: PNG/JPEG bytes depend on the Pillow/zlib version (verified: two fixtures differ across
+      # versions). Fixtures are committed; the echo-page tests below assert their *properties* (CMYK, progressive, ...).
+      - name: Fixture generator still runs
+        run: python3 spec/tools/make_fixtures.py
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Echo-page inspector tests
+        run: node --test web/upload-test/inspect.test.mjs
+
+  publish-presets:
+    needs: validate
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: presets-production      # protect with required reviewers in repo settings
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: pip install -r spec/tools/requirements.txt
+      - name: Build, sign with the production key, verify
+        env:
+          PRESETS_SIGNING_KEY: ${{ secrets.PRESETS_SIGNING_KEY }}
+        run: |
+          test -f spec/signing/prod_public_key.b64 || { echo "::error::spec/signing/prod_public_key.b64 is missing (spec/signing/README.md)"; exit 1; }
+          spec/tools/build_all.sh --release
+      - name: Stage for the CDN
+        run: |
+          mkdir -p web/presets/v2
+          cp spec/dist/presets.json spec/dist/presets.json.sig web/presets/v2/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: web
+      # Deploy step is added when the Cloudflare Pages project exists (ROADMAP Phase 0 [Ops]):
+      #   - uses: cloudflare/wrangler-action@v3 with apiToken/accountId secrets, command: pages deploy web

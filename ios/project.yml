@@ -1,0 +1,103 @@
+# XcodeGen spec: `xcodegen generate` writes ScanFit.xcodeproj (git-ignored; the spec is the source of truth).
+# Why XcodeGen: the project file is generated, so merges never conflict on pbxproj, and CI regenerates it.
+name: ScanFit
+
+options:
+  bundleIdPrefix: app.scanfit
+  deploymentTarget:
+    iOS: "17.0"
+  developmentLanguage: en
+  createIntermediateGroups: true
+  generateEmptyDirectories: false
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    MARKETING_VERSION: "0.1.0"        # shared semver per release (ARCHITECTURE §12)
+    CURRENT_PROJECT_VERSION: "1"      # CI overrides with the run number
+    ENABLE_USER_SCRIPT_SANDBOXING: NO # embed_presets.sh reads ../spec
+    SWIFT_TREAT_WARNINGS_AS_ERRORS: YES
+    GCC_TREAT_WARNINGS_AS_ERRORS: YES
+    CLANG_ANALYZER_NONNULL: YES
+    DEVELOPMENT_TEAM: ""              # set locally / in CI; signing is off for simulator builds
+    CODE_SIGN_STYLE: Automatic
+
+packages:
+  Core:
+    path: Packages/Core
+  Features:
+    path: Packages/Features
+
+targets:
+  ScanFit:
+    type: application
+    platform: iOS
+    sources:
+      - path: ScanFit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.scanfit.ios
+        TARGETED_DEVICE_FAMILY: "1,2"          # iPad must not break, even if not optimised (TESTING §4)
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        SWIFT_EMIT_LOC_STRINGS: YES
+        STRING_CATALOG_GENERATE_SYMBOLS: NO    # strings are typed by spec/tools/gen_strings.py instead
+    info:
+      path: ScanFit/Info.plist
+      properties:
+        CFBundleDisplayName: ScanFit
+        CFBundleLocalizations: [en, hi]
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        ITSAppUsesNonExemptEncryption: false   # only Ed25519 signature verification + HTTPS
+    dependencies:
+      - package: Core
+        product: DesignSystem
+      - package: Core
+        product: ScanModel
+      - package: Core
+        product: Presets
+      - package: Features
+        product: Home
+      - package: Features
+        product: Kit
+      - package: Features
+        product: Settings
+    postBuildScripts:
+      - name: Embed signed presets
+        script: '"${SRCROOT}/Scripts/embed_presets.sh"'
+        basedOnDependencyAnalysis: false
+
+  ScanFitTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: ScanFitTests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.scanfit.ios.tests
+        GENERATE_INFOPLIST_FILE: YES
+    dependencies:
+      - target: ScanFit
+      - package: Core
+        product: Presets
+
+schemes:
+  ScanFit:
+    build:
+      targets:
+        ScanFit: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - ScanFitTests
+    archive:
+      config: Release

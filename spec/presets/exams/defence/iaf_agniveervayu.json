@@ -1,0 +1,77 @@
+{
+  "id": "iaf_agniveervayu",
+  "name": "IAF Agniveervayu",
+  "body": "Indian Air Force",
+  "category": "defence",
+  "portal": null,
+  "live_photo_capture": null,
+  "status": "active",
+  "documents": [
+    {
+      "type": "photo",
+      "required": true,
+      "formats": [
+        "jpg",
+        "jpeg"
+      ],
+      "size_kb": {
+        "min": 10,
+        "max": 20,
+        "target": 16
+      },
+      "dimensions": {
+        "mode": "none"
+      },
+      "notes": "White background - SOURCES CONFLICT (10-20 KB vs 20-50 KB)"
+    },
+    {
+      "type": "signature",
+      "required": true,
+      "formats": [
+        "jpg",
+        "jpeg"
+      ],
+      "size_kb": {
+        "min": 5,
+        "max": 20,
+        "target": 14
+      },
+      "dimensions": {
+        "mode": "none"
+      },
+      "notes": "SOURCES CONFLICT (5-10 KB vs 10-20 KB)"
+    },
+    {
+      "type": "left_thumb",
+      "required": true,
+      "formats": [
+        "jpg",
+        "jpeg"
+      ],
+      "size_kb": {
+        "min": 10,
+        "max": 20,
+        "target": 16
+      },
+      "dimensions": {
+        "mode": "none"
+      }
+    }
+  ],
+  "special_rules": [
+    "Photo must show candidate holding a black slate with NAME and DATE OF PHOTO in white chalk, CAPITAL letters"
+  ],
+  "sources": [
+    {
+      "url": "https://tnexamtools.in/tools/agniveer-photo-resizer",
+      "kind": "secondary"
+    },
+    {
+      "url": "https://resizer.exammint.in/agniveer/",
+      "kind": "secondary"
+    }
+  ],
+  "confidence": "low",
+  "confidence_note": "Guides agree on the slate rule, not on KB limits",
+  "last_verified": "2026-09-30"
+}

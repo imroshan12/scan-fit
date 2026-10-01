@@ -1,0 +1,94 @@
+{
+  "id": "cuet_ug",
+  "name": "CUET UG",
+  "body": "NTA",
+  "category": "entrance",
+  "portal": null,
+  "live_photo_capture": true,
+  "status": "active",
+  "documents": [
+    {
+      "type": "photo",
+      "required": true,
+      "formats": [
+        "jpg",
+        "jpeg"
+      ],
+      "size_kb": {
+        "min": 10,
+        "max": 200,
+        "target": 124
+      },
+      "dimensions": {
+        "mode": "none"
+      },
+      "filename": "Photograph",
+      "notes": "Passport size, 80% face incl. ears, white background, no name/date on photo"
+    },
+    {
+      "type": "signature",
+      "required": true,
+      "formats": [
+        "jpg",
+        "jpeg"
+      ],
+      "size_kb": {
+        "min": 10,
+        "max": 50,
+        "target": 34
+      },
+      "dimensions": {
+        "mode": "none"
+      },
+      "filename": "Signature"
+    },
+    {
+      "type": "pwd_certificate",
+      "required": false,
+      "formats": [
+        "pdf"
+      ],
+      "size_kb": {
+        "min": 50,
+        "max": 300,
+        "target": 200
+      },
+      "dimensions": {
+        "mode": "none"
+      }
+    },
+    {
+      "type": "id_proof",
+      "required": false,
+      "formats": [
+        "jpg",
+        "jpeg"
+      ],
+      "size_kb": {
+        "min": 10,
+        "max": 200,
+        "target": 124
+      },
+      "dimensions": {
+        "mode": "none"
+      }
+    }
+  ],
+  "special_rules": [
+    "Live photo capture during the form",
+    "Name files 'Photograph' and 'Signature'"
+  ],
+  "sources": [
+    {
+      "url": "https://tools.indgovtjobs.net/cuet/",
+      "kind": "secondary"
+    },
+    {
+      "url": "https://university.careers360.com/articles/cuet-photo-size-2026",
+      "kind": "secondary"
+    }
+  ],
+  "confidence": "high",
+  "confidence_note": "CUET(UG)-2026 bulletin as cited",
+  "last_verified": "2026-09-30"
+}

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12+. User documents stay out of cloud backup and device transfer (ARCHITECTURE section 10);
+     the v1.1 backup feature will be an explicit opt-in to the user's own Drive instead. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="file" path="kit/" />
+        <exclude domain="file" path="exports/" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="file" path="kit/" />
+        <exclude domain="file" path="exports/" />
+    </device-transfer>
+</data-extraction-rules>

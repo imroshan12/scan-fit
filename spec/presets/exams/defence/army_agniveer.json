@@ -1,0 +1,59 @@
+{
+  "id": "army_agniveer",
+  "name": "Indian Army Agniveer (CEE)",
+  "body": "Indian Army",
+  "category": "defence",
+  "portal": "joinindianarmy.nic.in",
+  "live_photo_capture": null,
+  "status": "active",
+  "documents": [
+    {
+      "type": "photo",
+      "required": true,
+      "formats": [
+        "jpg",
+        "jpeg"
+      ],
+      "size_kb": {
+        "min": 10,
+        "max": 20,
+        "target": 16
+      },
+      "dimensions": {
+        "mode": "none"
+      },
+      "notes": "White background - SOURCES CONFLICT (10-20 KB vs 20-50 KB)"
+    },
+    {
+      "type": "signature",
+      "required": true,
+      "formats": [
+        "jpg",
+        "jpeg"
+      ],
+      "size_kb": {
+        "min": 5,
+        "max": 20,
+        "target": 14
+      },
+      "dimensions": {
+        "mode": "none"
+      },
+      "notes": "SOURCES CONFLICT (5-10 KB vs 10-20 KB)"
+    }
+  ],
+  "special_rules": [],
+  "sources": [
+    {
+      "url": "https://easyphoto.in/exam-requirements/army-agniveer/",
+      "kind": "secondary"
+    },
+    {
+      "url": "https://resizer.exammint.in/agniveer/",
+      "kind": "secondary"
+    }
+  ],
+  "confidence": "low",
+  "confidence_note": "Official notice publishes no KB/pixel spec; guides disagree - check portal",
+  "last_verified": "2026-09-30"
+}

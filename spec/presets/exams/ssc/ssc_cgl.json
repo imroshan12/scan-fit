@@ -1,0 +1,52 @@
+{
+  "id": "ssc_cgl",
+  "name": "SSC CGL",
+  "body": "SSC",
+  "category": "ssc",
+  "portal": "ssc.gov.in",
+  "live_photo_capture": true,
+  "status": "active",
+  "documents": [
+    {
+      "type": "signature",
+      "required": true,
+      "formats": [
+        "jpg",
+        "jpeg"
+      ],
+      "size_kb": {
+        "min": 10,
+        "max": 20,
+        "target": 16
+      },
+      "dimensions": {
+        "mode": "preferred",
+        "width": 140,
+        "height": 60
+      },
+      "notes": "~4.0 x 2.0 cm (CGL) / ~6.0 x 2.0 cm (CHSL) - check notice",
+      "rules": [
+        "Black ink on white paper",
+        "Running handwriting only - signatures/declarations in CAPITAL letters are rejected"
+      ]
+    }
+  ],
+  "special_rules": [
+    "Photo is captured LIVE in the ssc.gov.in / MySSC app - no photo file upload",
+    "Live photo: plain light background, no spectacles/cap/mask, face ~80% of frame",
+    "Do not point the camera at an existing printed photo"
+  ],
+  "sources": [
+    {
+      "url": "https://www.pw.live/ssc/exams/ssc-cgl-photo-and-signature-size-2026",
+      "kind": "secondary"
+    },
+    {
+      "url": "https://signresize.in/blog/ssc-cgl-2026-top-10-faq-aspirants-guide/",
+      "kind": "secondary"
+    }
+  ],
+  "confidence": "high",
+  "confidence_note": "2026 notice: live photo + 10-20 KB signature",
+  "last_verified": "2026-09-30"
+}

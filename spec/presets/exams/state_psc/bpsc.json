@@ -1,0 +1,38 @@
+{
+  "id": "bpsc",
+  "name": "BPSC",
+  "body": "BPSC",
+  "category": "state_psc",
+  "portal": null,
+  "live_photo_capture": true,
+  "status": "active",
+  "documents": [
+    {
+      "type": "signature",
+      "required": true,
+      "formats": [
+        "jpg",
+        "jpeg"
+      ],
+      "size_kb": {
+        "min": null,
+        "max": null,
+        "target": null
+      },
+      "dimensions": {
+        "mode": "none"
+      },
+      "notes": "Check current notice"
+    }
+  ],
+  "special_rules": [],
+  "sources": [
+    {
+      "url": "https://sarkaridoc.com/exams/uppsc/",
+      "kind": "secondary"
+    }
+  ],
+  "confidence": "low",
+  "confidence_note": "Only confirmed that BPSC captures the photo live; file specs not verified",
+  "last_verified": "2026-09-30"
+}

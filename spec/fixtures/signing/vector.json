@@ -1,0 +1,134 @@
+{
+  "_doc": "Run by Android (:core:presets) and iOS (Presets) unit tests. Files are in this directory. verify_cases test raw Ed25519 verification; load_cases test the full loader order. DEV KEY: derived from a public string, for tests and local dev builds only.",
+  "supported_schema_version": 2,
+  "supported_failure_reasons": [
+    "bad_signature",
+    "bad_schema",
+    "stale_version",
+    "parse"
+  ],
+  "verify_cases": [
+    {
+      "id": "valid",
+      "bundle": "sample_presets.json",
+      "signature": "sample_presets.json.sig",
+      "public_key": "dev_public_key.b64",
+      "valid": true
+    },
+    {
+      "id": "valid_signature_with_trailing_newline",
+      "bundle": "sample_presets.json",
+      "signature": "sample_presets.sig_trailing_newline",
+      "public_key": "dev_public_key.b64",
+      "valid": true
+    },
+    {
+      "id": "tampered_body",
+      "bundle": "tampered_presets.json",
+      "signature": "sample_presets.json.sig",
+      "public_key": "dev_public_key.b64",
+      "valid": false
+    },
+    {
+      "id": "signed_by_other_key",
+      "bundle": "sample_presets.json",
+      "signature": "other_key_signature.b64",
+      "public_key": "dev_public_key.b64",
+      "valid": false
+    },
+    {
+      "id": "verified_with_wrong_public_key",
+      "bundle": "sample_presets.json",
+      "signature": "sample_presets.json.sig",
+      "public_key": "other_public_key.b64",
+      "valid": false
+    },
+    {
+      "id": "signature_truncated",
+      "bundle": "sample_presets.json",
+      "signature": "sig_truncated.b64",
+      "public_key": "dev_public_key.b64",
+      "valid": false
+    },
+    {
+      "id": "signature_not_base64",
+      "bundle": "sample_presets.json",
+      "signature": "sig_not_base64.txt",
+      "public_key": "dev_public_key.b64",
+      "valid": false
+    },
+    {
+      "id": "signature_empty",
+      "bundle": "sample_presets.json",
+      "signature": "sig_empty.txt",
+      "public_key": "dev_public_key.b64",
+      "valid": false
+    }
+  ],
+  "load_cases": [
+    {
+      "id": "newer_version_accepted",
+      "bundle": "sample_presets.json",
+      "signature": "sample_presets.json.sig",
+      "public_key": "dev_public_key.b64",
+      "current_version": 6,
+      "expect": "ok"
+    },
+    {
+      "id": "first_install_accepted",
+      "bundle": "sample_presets.json",
+      "signature": "sample_presets.json.sig",
+      "public_key": "dev_public_key.b64",
+      "current_version": 0,
+      "expect": "ok"
+    },
+    {
+      "id": "same_version_rejected",
+      "bundle": "sample_presets.json",
+      "signature": "sample_presets.json.sig",
+      "public_key": "dev_public_key.b64",
+      "current_version": 7,
+      "expect": "stale_version"
+    },
+    {
+      "id": "older_version_rejected",
+      "bundle": "sample_presets.json",
+      "signature": "sample_presets.json.sig",
+      "public_key": "dev_public_key.b64",
+      "current_version": 9,
+      "expect": "stale_version"
+    },
+    {
+      "id": "tampered_rejected",
+      "bundle": "tampered_presets.json",
+      "signature": "sample_presets.json.sig",
+      "public_key": "dev_public_key.b64",
+      "current_version": 0,
+      "expect": "bad_signature"
+    },
+    {
+      "id": "unsupported_schema_rejected",
+      "bundle": "schema3_presets.json",
+      "signature": "schema3_presets.json.sig",
+      "public_key": "dev_public_key.b64",
+      "current_version": 0,
+      "expect": "bad_schema"
+    },
+    {
+      "id": "signed_garbage_rejected",
+      "bundle": "malformed_presets.json",
+      "signature": "malformed_presets.json.sig",
+      "public_key": "dev_public_key.b64",
+      "current_version": 0,
+      "expect": "parse"
+    },
+    {
+      "id": "signed_wrong_shape_rejected",
+      "bundle": "bad_shape_presets.json",
+      "signature": "bad_shape_presets.json.sig",
+      "public_key": "dev_public_key.b64",
+      "current_version": 0,
+      "expect": "parse"
+    }
+  ]
+}

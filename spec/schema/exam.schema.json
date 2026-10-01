@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://examkit.app/schema/exam.schema.json",
+  "title": "Exam upload preset (schema v2)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "name", "body", "category", "live_photo_capture", "status", "documents",
+               "special_rules", "sources", "confidence", "confidence_note", "last_verified"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+    "name": { "type": "string", "minLength": 2 },
+    "body": { "type": "string" },
+    "category": { "enum": ["banking", "insurance", "regulator", "ssc", "upsc", "railway", "defence",
+                           "teaching", "state_psc", "entrance"] },
+    "portal": { "type": ["string", "null"] },
+    "live_photo_capture": { "type": ["boolean", "null"],
+      "description": "true = portal captures a live photo; null = not stated in sources" },
+    "status": { "enum": ["active", "hidden", "retired"] },
+    "documents": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/document" } },
+    "special_rules": { "type": "array", "items": { "type": "string" } },
+    "sources": { "type": "array", "minItems": 1, "items": {
+      "type": "object", "additionalProperties": false, "required": ["url", "kind"],
+      "properties": { "url": { "type": "string", "format": "uri" },
+                      "kind": { "enum": ["official", "secondary"] } } } },
+    "confidence": { "enum": ["high", "medium", "low"] },
+    "confidence_note": { "type": "string" },
+    "last_verified": { "type": "string", "format": "date" }
+  },
+  "$defs": {
+    "document": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "required", "formats", "size_kb", "dimensions"],
+      "properties": {
+        "type": { "enum": ["photo", "postcard_photo", "signature", "triple_signature", "left_thumb",
+                           "thumb_impression", "left_hand_fingers_thumb", "right_hand_fingers_thumb",
+                           "handwritten_declaration", "photo_id", "id_proof", "class10_certificate",
+                           "category_certificate", "pwd_certificate", "sc_st_certificate"] },
+        "required": { "type": "boolean" },
+        "formats": { "type": "array", "minItems": 1, "items": { "enum": ["jpg", "jpeg", "png", "pdf"] } },
+        "size_kb": {
+          "type": "object", "additionalProperties": false, "required": ["min", "max", "target"],
+          "properties": {
+            "min": { "type": ["number", "null"], "minimum": 0 },
+            "max": { "type": ["number", "null"], "exclusiveMinimum": 0 },
+            "target": { "type": ["number", "null"], "exclusiveMinimum": 0 }
+          }
+        },
+        "dimensions": {
+          "type": "object",
+          "required": ["mode"],
+          "properties": {
+            "mode": { "enum": ["exact", "preferred", "range", "none"],
+              "description": "exact = must match; preferred = aim for it, portal tolerates others; range = min/max box; none = unspecified" },
+            "width": { "type": "integer", "minimum": 1 },
+            "height": { "type": "integer", "minimum": 1 },
+            "min_w": { "type": "integer" }, "min_h": { "type": "integer" },
+            "max_w": { "type": "integer" }, "max_h": { "type": "integer" },
+            "aspect_w_over_h": { "type": "object", "properties": {
+              "min": { "type": "number" }, "max": { "type": "number" } } }
+          },
+          "allOf": [
+            { "if": { "properties": { "mode": { "enum": ["exact", "preferred"] } } },
+              "then": { "required": ["width", "height"] } },
+            { "if": { "properties": { "mode": { "const": "range" } } },
+              "then": { "required": ["min_w", "min_h", "max_w", "max_h"] } }
+          ]
+        },
+        "dpi": { "type": "integer", "minimum": 72, "maximum": 600 },
+        "physical_cm": { "type": "object", "properties": { "w": { "type": "number" }, "h": { "type": "number" } } },
+        "filename": { "type": "string", "description": "Base name without extension, if the portal expects one" },
+        "name_date_strip": { "type": "object", "properties": {
+          "required": { "type": "boolean" }, "verified": { "type": "boolean" }, "note": { "type": "string" } } },
+        "declaration_text": { "type": ["string", "null"],
+          "description": "Verbatim text from the official notice. null = not yet transcribed (UI must show 'copy from notice')" },
+        "notes": { "type": "string" },
+        "rules": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

@@ -1,0 +1,29 @@
+:root {
+  --bg: #fafafc; --fg: #1a1a21; --muted: #4a4a58; --line: #cfcfd9; --card: #fff;
+  --accent: #3f4db8; --ok: #1b7a3a; --warn: #9a5a00; --bad: #ba1a1a;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #121217; --fg: #e4e4ec; --muted: #c5c5d3; --line: #454553; --card: #1a1a21;
+          --accent: #b8c1ff; --ok: #7ed79a; --warn: #ffb95c; --bad: #ffb4ab; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.5 system-ui, sans-serif; }
+main { max-width: 42rem; margin: 0 auto; padding: 1rem; }
+h1 { font-size: 1.5rem; margin: 1rem 0 .5rem; }
+h2 { font-size: 1.125rem; word-break: break-all; }
+.lede, .muted { color: var(--muted); }
+.pick { display: block; font-weight: 600; margin: 1.25rem 0 .5rem; }
+input[type=file] { width: 100%; padding: .75rem; border: 2px dashed var(--line); border-radius: 12px; background: var(--card); color: var(--fg); min-height: 48px; }
+section { margin: 1.5rem 0; padding: 1rem; border: 1px solid var(--line); border-radius: 16px; background: var(--card); }
+dl { display: grid; grid-template-columns: max-content 1fr; gap: .25rem 1rem; margin: 1rem 0; }
+dt { color: var(--muted); }
+dd { margin: 0; font-variant-numeric: tabular-nums; word-break: break-all; }
+.issues { list-style: none; padding: 0; margin: 0; display: grid; gap: .25rem; }
+.issues li { padding: .25rem .5rem; border-radius: 8px; border: 1px solid var(--line); }
+.issues li.bad::before { content: "✗ "; color: var(--bad); font-weight: 700; }
+.issues li.ok::before { content: "✓ "; color: var(--ok); font-weight: 700; }
+.issues li.warn::before { content: "⚠ "; color: var(--warn); font-weight: 700; }
+button { min-height: 48px; padding: 0 1rem; border-radius: 12px; border: 0; background: var(--accent); color: var(--bg); font: inherit; font-weight: 600; }
+details { margin: 1.5rem 0; }
+summary { min-height: 48px; display: flex; align-items: center; cursor: pointer; }
+code { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 0 .25rem; }

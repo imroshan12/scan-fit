@@ -1,0 +1,142 @@
+{
+  "id": "neet_ug",
+  "name": "NEET UG",
+  "body": "NTA",
+  "category": "entrance",
+  "portal": null,
+  "live_photo_capture": true,
+  "status": "active",
+  "documents": [
+    {
+      "type": "photo",
+      "required": true,
+      "formats": [
+        "jpg",
+        "jpeg"
+      ],
+      "size_kb": {
+        "min": 10,
+        "max": 200,
+        "target": 124
+      },
+      "dimensions": {
+        "mode": "none"
+      },
+      "filename": "Photograph",
+      "notes": "Passport size, 80% face incl. ears, white background, no name/date on photo"
+    },
+    {
+      "type": "postcard_photo",
+      "required": true,
+      "formats": [
+        "jpg",
+        "jpeg"
+      ],
+      "size_kb": {
+        "min": 10,
+        "max": 200,
+        "target": 124
+      },
+      "dimensions": {
+        "mode": "none"
+      },
+      "notes": "4 x 6 inch, same photo as passport photo, white background"
+    },
+    {
+      "type": "signature",
+      "required": true,
+      "formats": [
+        "jpg",
+        "jpeg"
+      ],
+      "size_kb": {
+        "min": 10,
+        "max": 100,
+        "target": 64
+      },
+      "dimensions": {
+        "mode": "none"
+      },
+      "filename": "Signature"
+    },
+    {
+      "type": "left_hand_fingers_thumb",
+      "required": true,
+      "formats": [
+        "jpg",
+        "jpeg"
+      ],
+      "size_kb": {
+        "min": 10,
+        "max": 200,
+        "target": 124
+      },
+      "dimensions": {
+        "mode": "none"
+      }
+    },
+    {
+      "type": "right_hand_fingers_thumb",
+      "required": true,
+      "formats": [
+        "jpg",
+        "jpeg"
+      ],
+      "size_kb": {
+        "min": 10,
+        "max": 200,
+        "target": 124
+      },
+      "dimensions": {
+        "mode": "none"
+      }
+    },
+    {
+      "type": "category_certificate",
+      "required": false,
+      "formats": [
+        "pdf"
+      ],
+      "size_kb": {
+        "min": 50,
+        "max": 300,
+        "target": 200
+      },
+      "dimensions": {
+        "mode": "none"
+      }
+    },
+    {
+      "type": "class10_certificate",
+      "required": true,
+      "formats": [
+        "pdf"
+      ],
+      "size_kb": {
+        "min": 50,
+        "max": 300,
+        "target": 200
+      },
+      "dimensions": {
+        "mode": "none"
+      }
+    }
+  ],
+  "special_rules": [
+    "Live photo capture during the form",
+    "Name files 'Photograph' and 'Signature'"
+  ],
+  "sources": [
+    {
+      "url": "https://tools.indgovtjobs.net/neet/",
+      "kind": "secondary"
+    },
+    {
+      "url": "https://www.pw.live/neet/exams/neet-photo-size",
+      "kind": "secondary"
+    }
+  ],
+  "confidence": "high",
+  "confidence_note": "Verified against NEET(UG)-2026 bulletin by the cited guide",
+  "last_verified": "2026-09-30"
+}

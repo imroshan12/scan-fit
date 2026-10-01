@@ -1,0 +1,57 @@
+{
+  "id": "navy_agniveer",
+  "name": "Indian Navy Agniveer (SSR/MR)",
+  "body": "Indian Navy",
+  "category": "defence",
+  "portal": null,
+  "live_photo_capture": null,
+  "status": "active",
+  "documents": [
+    {
+      "type": "photo",
+      "required": true,
+      "formats": [
+        "jpg",
+        "jpeg"
+      ],
+      "size_kb": {
+        "min": 10,
+        "max": 20,
+        "target": 16
+      },
+      "dimensions": {
+        "mode": "none"
+      },
+      "notes": "White background - SOURCES CONFLICT (10-20 KB vs 20-50 KB)"
+    },
+    {
+      "type": "signature",
+      "required": true,
+      "formats": [
+        "jpg",
+        "jpeg"
+      ],
+      "size_kb": {
+        "min": 5,
+        "max": 20,
+        "target": 14
+      },
+      "dimensions": {
+        "mode": "none"
+      },
+      "notes": "SOURCES CONFLICT (5-10 KB vs 10-20 KB)"
+    }
+  ],
+  "special_rules": [
+    "May require a slate with name and date of photo - check notice"
+  ],
+  "sources": [
+    {
+      "url": "https://tnexamtools.in/tools/agniveer-photo-resizer",
+      "kind": "secondary"
+    }
+  ],
+  "confidence": "low",
+  "confidence_note": "Guides disagree; slate rule sometimes applied - check notice",
+  "last_verified": "2026-09-30"
+}

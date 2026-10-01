@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src blob:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="robots" content="noindex">
+  <title>Upload echo test</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <h1>Upload echo test</h1>
+    <p class="lede">Pick a file the way you would on a real exam portal. This page reads it <strong>in your browser only</strong>
+      (nothing is uploaded) and prints exactly what the browser hands to a website: size, format, dimensions, JPEG type,
+      DPI and a SHA-256. Compare the SHA-256 with the one on your computer to see whether any save or pick path changed the bytes.</p>
+
+    <label class="pick" for="file">Choose a photo, signature or PDF</label>
+    <input id="file" type="file" accept="image/*,application/pdf,.heic,.heif">
+
+    <section id="result" hidden aria-live="polite">
+      <h2 id="name"></h2>
+      <ul id="issues" class="issues"></ul>
+      <dl id="facts"></dl>
+      <button id="copy" type="button">Copy report as JSON</button>
+      <p id="copied" class="muted" hidden>Copied.</p>
+    </section>
+
+    <details>
+      <summary>How to use this for QA (docs/TESTING.md section 5)</summary>
+      <ol>
+        <li>Save a file from ScanFit, note its SHA-256 (<code>shasum -a 256 file.jpg</code> on a computer, or the app's file details).</li>
+        <li>Open this page in Android Chrome, Samsung Internet and iOS Safari. Pick the file from each location the portal might use: Files / Downloads, the Photo Picker, and Photos.</li>
+        <li>Bytes, dimensions and "JPEG type" must be unchanged. A different SHA-256 or size means that path re-encoded the file.</li>
+      </ol>
+    </details>
+    <p class="muted">Independent tool. Not affiliated with any exam body or government. KB here means 1024 bytes.</p>
+  </main>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

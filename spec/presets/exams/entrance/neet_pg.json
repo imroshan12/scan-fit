@@ -1,0 +1,80 @@
+{
+  "id": "neet_pg",
+  "name": "NEET PG",
+  "body": "NBEMS",
+  "category": "entrance",
+  "portal": null,
+  "live_photo_capture": true,
+  "status": "active",
+  "documents": [
+    {
+      "type": "photo",
+      "required": true,
+      "formats": [
+        "jpg",
+        "jpeg"
+      ],
+      "size_kb": {
+        "min": null,
+        "max": 80,
+        "target": 56
+      },
+      "dimensions": {
+        "mode": "none"
+      },
+      "rules": [
+        "Taken within 3 months of applying"
+      ]
+    },
+    {
+      "type": "signature",
+      "required": true,
+      "formats": [
+        "jpg",
+        "jpeg"
+      ],
+      "size_kb": {
+        "min": null,
+        "max": 80,
+        "target": 56
+      },
+      "dimensions": {
+        "mode": "none"
+      },
+      "notes": "Sign inside a 3.5 x 1.5 cm box on unruled white paper",
+      "rules": [
+        "Full signature, not initials"
+      ]
+    },
+    {
+      "type": "thumb_impression",
+      "required": true,
+      "formats": [
+        "jpg",
+        "jpeg"
+      ],
+      "size_kb": {
+        "min": null,
+        "max": 80,
+        "target": 56
+      },
+      "dimensions": {
+        "mode": "none"
+      }
+    }
+  ],
+  "special_rules": [],
+  "sources": [
+    {
+      "url": "https://medicaldialogues.in/news/education/medical-admissions/neet-pg-2026-upload-recent-photograph-correct-signature-thumb-impression-or-risk-application-rejection-check-nbe-guidelines-174667",
+      "kind": "secondary"
+    },
+    {
+      "url": "https://collegedunia.com/exams/neet-pg/photo-size-and-signature-guidelines",
+      "kind": "secondary"
+    }
+  ],
+  "confidence": "medium",
+  "confidence_note": "From NEET PG 2026 bulletin excerpts",
+  "last_verified": "2026-09-30"
+}

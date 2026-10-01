@@ -1,0 +1,63 @@
+{
+  "id": "ctet",
+  "name": "CTET",
+  "body": "CBSE",
+  "category": "teaching",
+  "portal": null,
+  "live_photo_capture": null,
+  "status": "active",
+  "documents": [
+    {
+      "type": "photo",
+      "required": true,
+      "formats": [
+        "jpg",
+        "jpeg"
+      ],
+      "size_kb": {
+        "min": 10,
+        "max": 100,
+        "target": 64
+      },
+      "dimensions": {
+        "mode": "preferred",
+        "width": 350,
+        "height": 450
+      },
+      "notes": "3.5 x 4.5 cm"
+    },
+    {
+      "type": "signature",
+      "required": true,
+      "formats": [
+        "jpg",
+        "jpeg"
+      ],
+      "size_kb": {
+        "min": 3,
+        "max": 30,
+        "target": 19
+      },
+      "dimensions": {
+        "mode": "preferred",
+        "width": 350,
+        "height": 150
+      },
+      "notes": "3.5 x 1.5 cm - SOURCES CONFLICT (3-30 KB vs 10-100 KB)"
+    }
+  ],
+  "special_rules": [],
+  "sources": [
+    {
+      "url": "https://resizer.exammint.in/ctet/",
+      "kind": "secondary"
+    },
+    {
+      "url": "https://docset.in/blog/ctet-photo-signature-size-2026/",
+      "kind": "secondary"
+    }
+  ],
+  "confidence": "medium",
+  "confidence_note": "Photo consistent; signature KB range conflicts",
+  "last_verified": "2026-09-30"
+}

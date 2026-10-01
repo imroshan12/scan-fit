@@ -1,0 +1,42 @@
+# Run from ios/: swiftlint --strict   (CLAUDE.md rule 8: Swift 6 strict concurrency, no force unwraps outside tests)
+included:
+  - ScanFit
+  - Packages
+excluded:
+  - Packages/**/.build
+  - "**/Generated"       # produced by spec/tools/*.py
+  - "**/.build"
+opt_in_rules:
+  - force_unwrapping
+  - explicit_init
+  - empty_count
+  - first_where
+  - contains_over_first_not_nil
+  - sorted_first_last
+  - unneeded_parentheses_in_closure_argument
+  - redundant_nil_coalescing
+  - overridden_super_call
+force_unwrapping: error
+force_cast: error
+force_try: error
+identifier_name:
+  min_length: 2
+  excluded: [id, x, y, w, h, kb, db, ok, hi, en]
+line_length:
+  warning: 120
+  error: 160
+  ignores_urls: true
+type_body_length:
+  warning: 300
+  error: 500
+file_length:
+  warning: 400
+  error: 700
+nesting:
+  type_level: 3
+custom_rules:
+  no_global_actor_unsafe:
+    name: "No nonisolated(unsafe)"
+    regex: 'nonisolated\(unsafe\)'
+    message: "Use an actor or @MainActor instead of nonisolated(unsafe) (Swift 6 strict concurrency)."
+    severity: error

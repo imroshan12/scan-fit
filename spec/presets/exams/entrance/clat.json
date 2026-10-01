@@ -1,0 +1,53 @@
+{
+  "id": "clat",
+  "name": "CLAT 2027",
+  "body": "Consortium of NLUs",
+  "category": "entrance",
+  "portal": null,
+  "live_photo_capture": null,
+  "status": "active",
+  "documents": [
+    {
+      "type": "photo",
+      "required": true,
+      "formats": [
+        "jpg",
+        "jpeg"
+      ],
+      "size_kb": {
+        "min": null,
+        "max": 500,
+        "target": 250
+      },
+      "dimensions": {
+        "mode": "none"
+      }
+    },
+    {
+      "type": "signature",
+      "required": true,
+      "formats": [
+        "jpg",
+        "jpeg"
+      ],
+      "size_kb": {
+        "min": null,
+        "max": 100,
+        "target": 70
+      },
+      "dimensions": {
+        "mode": "none"
+      }
+    }
+  ],
+  "special_rules": [],
+  "sources": [
+    {
+      "url": "https://www.toprankers.com/clat-photo-size-signature",
+      "kind": "secondary"
+    }
+  ],
+  "confidence": "medium",
+  "confidence_note": "Portal caps as cited; 200x230 / 140x60 are recommended, not mandatory",
+  "last_verified": "2026-09-30"
+}

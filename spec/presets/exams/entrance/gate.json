@@ -1,0 +1,108 @@
+{
+  "id": "gate",
+  "name": "GATE 2027",
+  "body": "IIT Madras (GOAPS)",
+  "category": "entrance",
+  "portal": "goaps",
+  "live_photo_capture": null,
+  "status": "active",
+  "documents": [
+    {
+      "type": "photo",
+      "required": true,
+      "formats": [
+        "jpg",
+        "jpeg"
+      ],
+      "size_kb": {
+        "min": 5,
+        "max": 600,
+        "target": 250
+      },
+      "dimensions": {
+        "mode": "range",
+        "min_w": 200,
+        "min_h": 260,
+        "max_w": 530,
+        "max_h": 690,
+        "aspect_w_over_h": {
+          "min": 0.66,
+          "max": 0.89
+        }
+      },
+      "notes": "200x260 to 530x690 px, aspect 0.66-0.89"
+    },
+    {
+      "type": "signature",
+      "required": true,
+      "formats": [
+        "jpg",
+        "jpeg"
+      ],
+      "size_kb": {
+        "min": 3,
+        "max": 300,
+        "target": 181
+      },
+      "dimensions": {
+        "mode": "range",
+        "min_w": 250,
+        "min_h": 80,
+        "max_w": 580,
+        "max_h": 180,
+        "aspect_w_over_h": {
+          "min": 2.75,
+          "max": 3.75
+        }
+      },
+      "notes": "250x80 to 580x180 px, width:height 2.75-3.75",
+      "rules": [
+        "Black or dark blue ink"
+      ]
+    },
+    {
+      "type": "photo_id",
+      "required": true,
+      "formats": [
+        "pdf"
+      ],
+      "size_kb": {
+        "min": null,
+        "max": 300,
+        "target": 210
+      },
+      "dimensions": {
+        "mode": "none"
+      }
+    },
+    {
+      "type": "category_certificate",
+      "required": false,
+      "formats": [
+        "pdf"
+      ],
+      "size_kb": {
+        "min": null,
+        "max": 300,
+        "target": 210
+      },
+      "dimensions": {
+        "mode": "none"
+      }
+    }
+  ],
+  "special_rules": [],
+  "sources": [
+    {
+      "url": "https://gate2027.iitm.ac.in/photograph_and_signature",
+      "kind": "official"
+    },
+    {
+      "url": "https://sarkaridoc.com/exams/gate/",
+      "kind": "secondary"
+    }
+  ],
+  "confidence": "high",
+  "confidence_note": "Official GATE 2027 site",
+  "last_verified": "2026-09-30"
+}

@@ -1,0 +1,76 @@
+{
+  "id": "cat",
+  "name": "CAT 2026",
+  "body": "IIM",
+  "category": "entrance",
+  "portal": null,
+  "live_photo_capture": null,
+  "status": "active",
+  "documents": [
+    {
+      "type": "photo",
+      "required": true,
+      "formats": [
+        "jpg",
+        "jpeg"
+      ],
+      "size_kb": {
+        "min": 10,
+        "max": 80,
+        "target": 52
+      },
+      "dimensions": {
+        "mode": "preferred",
+        "width": 1200,
+        "height": 1200
+      },
+      "notes": "White background, min 150 ppi"
+    },
+    {
+      "type": "signature",
+      "required": true,
+      "formats": [
+        "jpg",
+        "jpeg"
+      ],
+      "size_kb": {
+        "min": 10,
+        "max": 80,
+        "target": 52
+      },
+      "dimensions": {
+        "mode": "none"
+      },
+      "notes": "80 mm x 35 mm, running hand"
+    },
+    {
+      "type": "category_certificate",
+      "required": false,
+      "formats": [
+        "pdf"
+      ],
+      "size_kb": {
+        "min": null,
+        "max": 200,
+        "target": 140
+      },
+      "dimensions": {
+        "mode": "none"
+      }
+    }
+  ],
+  "special_rules": [],
+  "sources": [
+    {
+      "url": "https://collegedunia.com/articles/e-242-cat-2026-documents-upload-guidelines",
+      "kind": "secondary"
+    },
+    {
+      "url": "https://www.shiksha.com/mba/articles/cat-2026-photo-signature-specifications-upload-guidelines-blogId-237863",
+      "kind": "secondary"
+    }
+  ],
+  "confidence": "medium",
+  "confidence_note": "80 KB cap consistent; minimum KB not confirmed",
+  "last_verified": "2026-09-30"
+}

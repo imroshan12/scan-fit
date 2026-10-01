@@ -1,0 +1,48 @@
+{
+  "_doc": "Cross-platform conformance cases. Both apps run every case in unit tests (Android: :core:imaging test, iOS: ImagingTests). Outputs need not be byte-identical across platforms; they must satisfy every assertion. Add real-photo cases under images/real/ (gitignored unless consented).",
+  "fit_cases": [
+    { "id": "ibps_photo_from_phone", "input": "photo_phone_3000x4000.jpg", "preset": "ibps_po", "doc": "photo",
+      "crop": { "x": 700, "y": 700, "w": 1600, "h": 1840 },
+      "expect": { "format": "jpeg_baseline", "color": "rgb", "kb_min": 20, "kb_max": 50,
+                  "width": 200, "height": 230, "allow_upscaled_preferred": true, "exif": "none", "max_ms_midrange": 800 } },
+    { "id": "ibps_signature_from_paper", "input": "signature_paper_shadow.jpg", "preset": "ibps_po", "doc": "signature",
+      "pipeline": "signature_cleanup",
+      "expect": { "format": "jpeg_baseline", "kb_min": 10, "kb_max": 20, "aspect": 2.333, "aspect_tol": 0.02,
+                  "background_mean_min": 235, "ink_pixels_min_pct": 1.0, "allow_upscaled_preferred": true } },
+    { "id": "tiny_signature_hits_minimum", "input": "signature_clean_420x180.png", "preset": "ibps_po", "doc": "signature",
+      "_why": "At 140x60 even q=100 is ~6 KB. Engine must use the minimum-size strategy (ALGORITHMS.md §1.4).",
+      "expect": { "kb_min": 10, "kb_max": 20, "aspect": 2.333, "aspect_tol": 0.02, "decodes": true } },
+    { "id": "ibps_thumb", "input": "thumb_ink.jpg", "preset": "ibps_po", "doc": "left_thumb",
+      "pipeline": "thumb_cleanup",
+      "expect": { "kb_min": 20, "kb_max": 50, "width": 240, "height": 240, "allow_upscaled_preferred": true, "dpi": 200 } },
+    { "id": "ibps_declaration", "input": "declaration_paper.jpg", "preset": "ibps_po", "doc": "handwritten_declaration",
+      "pipeline": "document_cleanup",
+      "expect": { "kb_min": 50, "kb_max": 100, "width": 800, "height": 400, "allow_upscaled_preferred": true, "dpi": 200 } },
+    { "id": "gate_photo_range", "input": "photo_phone_3000x4000.jpg", "preset": "gate", "doc": "photo",
+      "expect": { "kb_min": 5, "kb_max": 600, "w_range": [200, 530], "h_range": [260, 690], "aspect_range": [0.66, 0.89] } },
+    { "id": "gate_signature_range", "input": "signature_paper_shadow.jpg", "preset": "gate", "doc": "signature",
+      "pipeline": "signature_cleanup",
+      "expect": { "kb_min": 3, "kb_max": 300, "w_range": [250, 580], "h_range": [80, 180], "aspect_range": [2.75, 3.75] } },
+    { "id": "jee_photo_filename", "input": "photo_phone_3000x4000.jpg", "preset": "jee_main", "doc": "photo",
+      "expect": { "kb_min": 10, "kb_max": 200, "export_filename": "Photograph.jpg" } },
+    { "id": "uppsc_photo_no_min", "input": "photo_phone_3000x4000.jpg", "preset": "uppsc", "doc": "photo",
+      "expect": { "kb_max": 50, "dpi": 200 } }
+  ],
+  "inspect_cases": [
+    { "id": "detect_cmyk", "input": "cmyk_photo_200x230.jpg",
+      "expect": { "format": "jpeg", "color": "cmyk", "issues": ["CMYK_COLOR"] } },
+    { "id": "detect_progressive", "input": "progressive_200x230.jpg",
+      "expect": { "format": "jpeg", "progressive": true, "issues": ["PROGRESSIVE_JPEG"] } },
+    { "id": "detect_wrong_extension", "input": "png_named_as_jpg.jpg",
+      "expect": { "format": "png", "issues": ["EXTENSION_MISMATCH"] } }
+  ],
+  "match_cases": [
+    { "id": "ibps_family_photo", "file": { "format": "jpeg", "kb": 35, "width": 200, "height": 230, "doc": "photo" },
+      "expect_exact_includes": ["ibps_po", "sbi_po", "rbi_grade_b", "lic_aao"],
+      "expect_not_includes": ["ssc_cgl"], "_why": "SSC captures the photo live - no photo upload slot" },
+    { "id": "near_miss_signature", "file": { "format": "jpeg", "kb": 22, "width": 140, "height": 60, "doc": "signature" },
+      "expect_near_miss": [{ "exam": "ibps_po", "param": "size_kb", "fix": "compress_to_target" }] },
+    { "id": "wide_signature_gate_not_ibps", "file": { "format": "jpeg", "kb": 40, "width": 500, "height": 150, "doc": "signature" },
+      "expect_exact_includes": ["gate"], "expect_not_includes": ["ibps_po"] }
+  ]
+}

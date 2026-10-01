@@ -1,0 +1,112 @@
+{
+  "id": "niacl_ao",
+  "name": "NIACL AO",
+  "body": "NIACL",
+  "category": "insurance",
+  "portal": null,
+  "live_photo_capture": null,
+  "status": "active",
+  "documents": [
+    {
+      "type": "photo",
+      "required": true,
+      "formats": [
+        "jpg",
+        "jpeg"
+      ],
+      "size_kb": {
+        "min": 20,
+        "max": 50,
+        "target": 38
+      },
+      "dimensions": {
+        "mode": "preferred",
+        "width": 200,
+        "height": 230
+      },
+      "notes": "4.5 x 3.5 cm, light/white background"
+    },
+    {
+      "type": "signature",
+      "required": true,
+      "formats": [
+        "jpg",
+        "jpeg"
+      ],
+      "size_kb": {
+        "min": 10,
+        "max": 20,
+        "target": 16
+      },
+      "dimensions": {
+        "mode": "preferred",
+        "width": 140,
+        "height": 60
+      },
+      "rules": [
+        "Black ink on white paper",
+        "Running handwriting only - signatures/declarations in CAPITAL letters are rejected"
+      ]
+    },
+    {
+      "type": "left_thumb",
+      "required": true,
+      "formats": [
+        "jpg",
+        "jpeg"
+      ],
+      "size_kb": {
+        "min": 20,
+        "max": 50,
+        "target": 38
+      },
+      "dimensions": {
+        "mode": "preferred",
+        "width": 240,
+        "height": 240
+      },
+      "dpi": 200,
+      "notes": "3 x 3 cm at 200 DPI",
+      "rules": [
+        "Black or blue ink on white paper",
+        "Right thumb allowed only if left thumb is unavailable"
+      ]
+    },
+    {
+      "type": "handwritten_declaration",
+      "required": true,
+      "formats": [
+        "jpg",
+        "jpeg"
+      ],
+      "size_kb": {
+        "min": 50,
+        "max": 100,
+        "target": 80
+      },
+      "dimensions": {
+        "mode": "preferred",
+        "width": 800,
+        "height": 400
+      },
+      "dpi": 200,
+      "declaration_text": null,
+      "notes": "10 x 5 cm at 200 DPI",
+      "rules": [
+        "English, own handwriting, black ink",
+        "Copy exact text from the current notification",
+        "Running handwriting only - signatures/declarations in CAPITAL letters are rejected"
+      ]
+    }
+  ],
+  "special_rules": [],
+  "sources": [
+    {
+      "url": "https://www.sarkarieasy.com/exams/uiic-ao-photo-signature-thumb-declaration-resizer",
+      "kind": "secondary"
+    }
+  ],
+  "confidence": "low",
+  "confidence_note": "Family-inferred from PSU insurer pattern; not individually verified",
+  "last_verified": "2026-09-30"
+}

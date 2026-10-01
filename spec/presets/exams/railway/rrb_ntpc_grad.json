@@ -1,0 +1,63 @@
+{
+  "id": "rrb_ntpc_grad",
+  "name": "RRB NTPC (Graduate)",
+  "body": "RRB",
+  "category": "railway",
+  "portal": "rrbapply.gov.in",
+  "live_photo_capture": true,
+  "status": "active",
+  "documents": [
+    {
+      "type": "signature",
+      "required": true,
+      "formats": [
+        "jpg",
+        "jpeg"
+      ],
+      "size_kb": {
+        "min": 30,
+        "max": 49,
+        "target": 41
+      },
+      "dimensions": {
+        "mode": "none"
+      },
+      "notes": "Running hand, black ink - sources conflict (30-49 KB per CEN 06/2025 vs 10-20 KB)",
+      "rules": [
+        "Running handwriting only - signatures/declarations in CAPITAL letters are rejected"
+      ]
+    },
+    {
+      "type": "sc_st_certificate",
+      "required": false,
+      "formats": [
+        "pdf"
+      ],
+      "size_kb": {
+        "min": null,
+        "max": 400,
+        "target": 250
+      },
+      "dimensions": {
+        "mode": "none"
+      },
+      "notes": "Only for SC/ST candidates opting for free railway travel pass"
+    }
+  ],
+  "special_rules": [
+    "Photo is captured LIVE on rrbapply.gov.in - no photo file upload"
+  ],
+  "sources": [
+    {
+      "url": "https://sarkaridoc.com/exams/rrb-ntpc/",
+      "kind": "secondary"
+    },
+    {
+      "url": "https://www.thebulletinbriefs.in/article/rrb-ntpc-application-process-step-by-step-guide",
+      "kind": "secondary"
+    }
+  ],
+  "confidence": "medium",
+  "confidence_note": "Signature range cited from CEN 06/2025 para 14.5.1; older guides say 10-20 KB",
+  "last_verified": "2026-09-30"
+}

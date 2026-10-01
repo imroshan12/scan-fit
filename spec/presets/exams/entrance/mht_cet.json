@@ -1,0 +1,56 @@
+{
+  "id": "mht_cet",
+  "name": "MHT CET",
+  "body": "Maharashtra CET Cell",
+  "category": "entrance",
+  "portal": null,
+  "live_photo_capture": null,
+  "status": "active",
+  "documents": [
+    {
+      "type": "photo",
+      "required": true,
+      "formats": [
+        "jpg",
+        "jpeg"
+      ],
+      "size_kb": {
+        "min": 20,
+        "max": 5000,
+        "target": 250
+      },
+      "dimensions": {
+        "mode": "none"
+      },
+      "rules": [
+        "Not older than 3 months"
+      ]
+    },
+    {
+      "type": "signature",
+      "required": true,
+      "formats": [
+        "jpg",
+        "jpeg"
+      ],
+      "size_kb": {
+        "min": null,
+        "max": null,
+        "target": null
+      },
+      "dimensions": {
+        "mode": "none"
+      }
+    }
+  ],
+  "special_rules": [],
+  "sources": [
+    {
+      "url": "https://www.shiksha.com/engineering/articles/mht-cet-photo-size-specification-and-guidelines-blogId-216554",
+      "kind": "secondary"
+    }
+  ],
+  "confidence": "low",
+  "confidence_note": "Photo range from one guide; signature spec not verified",
+  "last_verified": "2026-09-30"
+}

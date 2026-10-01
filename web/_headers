@@ -1,0 +1,9 @@
+# Cloudflare Pages / Netlify-style headers. GitHub Pages ignores this file (and cannot set headers: prefer Cloudflare).
+/presets/v2/*
+  Cache-Control: public, max-age=300, must-revalidate
+  Access-Control-Allow-Origin: *
+  X-Content-Type-Options: nosniff
+
+/upload-test/*
+  X-Robots-Tag: noindex
+  Referrer-Policy: no-referrer

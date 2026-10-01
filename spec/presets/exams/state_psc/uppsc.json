@@ -1,0 +1,69 @@
+{
+  "id": "uppsc",
+  "name": "UPPSC (OTR - PCS, RO/ARO etc.)",
+  "body": "UPPSC",
+  "category": "state_psc",
+  "portal": null,
+  "live_photo_capture": false,
+  "status": "active",
+  "documents": [
+    {
+      "type": "photo",
+      "required": true,
+      "formats": [
+        "jpg",
+        "jpeg"
+      ],
+      "size_kb": {
+        "min": null,
+        "max": 50,
+        "target": 35
+      },
+      "dimensions": {
+        "mode": "none"
+      },
+      "dpi": 200,
+      "physical_cm": {
+        "w": 5,
+        "h": 6
+      },
+      "notes": "5 x 6 cm at 200 DPI (~394 x 472 px), true colour"
+    },
+    {
+      "type": "signature",
+      "required": true,
+      "formats": [
+        "jpg",
+        "jpeg"
+      ],
+      "size_kb": {
+        "min": null,
+        "max": 30,
+        "target": 21
+      },
+      "dimensions": {
+        "mode": "none"
+      },
+      "dpi": 200,
+      "physical_cm": {
+        "w": 6,
+        "h": 3
+      },
+      "notes": "6 x 3 cm at 200 DPI (~472 x 236 px)"
+    }
+  ],
+  "special_rules": [],
+  "sources": [
+    {
+      "url": "https://sarkaridoc.com/exams/uppsc/",
+      "kind": "secondary"
+    },
+    {
+      "url": "https://quickpdfnow.com/uppsc-photo-signature-size-2026/",
+      "kind": "secondary"
+    }
+  ],
+  "confidence": "high",
+  "confidence_note": "From UPPSC OTR scanning instructions; no minimum KB stated",
+  "last_verified": "2026-09-30"
+}

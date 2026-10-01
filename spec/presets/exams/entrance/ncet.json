@@ -1,0 +1,77 @@
+{
+  "id": "ncet",
+  "name": "NCET (ITEP)",
+  "body": "NTA",
+  "category": "entrance",
+  "portal": null,
+  "live_photo_capture": true,
+  "status": "active",
+  "documents": [
+    {
+      "type": "photo",
+      "required": true,
+      "formats": [
+        "jpg",
+        "jpeg"
+      ],
+      "size_kb": {
+        "min": 10,
+        "max": 200,
+        "target": 124
+      },
+      "dimensions": {
+        "mode": "none"
+      },
+      "filename": "Photograph",
+      "notes": "Passport size, 80% face incl. ears, white background, no name/date on photo"
+    },
+    {
+      "type": "signature",
+      "required": true,
+      "formats": [
+        "jpg",
+        "jpeg"
+      ],
+      "size_kb": {
+        "min": 4,
+        "max": 30,
+        "target": 20
+      },
+      "dimensions": {
+        "mode": "none"
+      },
+      "filename": "Signature",
+      "rules": [
+        "Running letters, not capitals"
+      ]
+    },
+    {
+      "type": "category_certificate",
+      "required": false,
+      "formats": [
+        "pdf"
+      ],
+      "size_kb": {
+        "min": 50,
+        "max": 300,
+        "target": 200
+      },
+      "dimensions": {
+        "mode": "none"
+      }
+    }
+  ],
+  "special_rules": [
+    "Live photo capture during the form",
+    "Name files 'Photograph' and 'Signature'"
+  ],
+  "sources": [
+    {
+      "url": "https://tools.indgovtjobs.net/ugc-net/",
+      "kind": "secondary"
+    }
+  ],
+  "confidence": "low",
+  "confidence_note": "Family-inferred from NTA pattern; not individually verified",
+  "last_verified": "2026-09-30"
+}
