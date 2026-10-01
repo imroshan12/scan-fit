@@ -29,7 +29,11 @@ public struct Raster: Sendable, Equatable {
         var out = [UInt8](repeating: 0, count: width * height)
         var i = 0
         for p in 0..<(width * height) {
-            out[p] = UInt8((299 * Int(rgb[i]) + 587 * Int(rgb[i + 1]) + 114 * Int(rgb[i + 2]) + 500) / 1000)
+            // Split on purpose: one long mixed Int()/literal expression defeats older Swift
+            // type checkers (the CI runner timed out on it).
+            let red = Int(rgb[i]), green = Int(rgb[i + 1]), blue = Int(rgb[i + 2])
+            let weighted: Int = 299 * red + 587 * green + 114 * blue
+            out[p] = UInt8((weighted + 500) / 1000)
             i += 3
         }
         return out

@@ -114,7 +114,9 @@ public enum MatchEngine {
 
     private static func aspectClose(_ w: Int, _ h: Int, _ pw: Int?, _ ph: Int?) -> Bool {
         guard let pw, let ph, h != 0, ph != 0 else { return false }
-        return abs((Double(w) / Double(h)) / (Double(pw) / Double(ph)) - 1.0) <= aspectTolerance
+        let actual: Double = Double(w) / Double(h)
+        let wanted: Double = Double(pw) / Double(ph)
+        return abs(actual / wanted - 1.0) <= aspectTolerance
     }
 
     private static func insideBox(_ slot: DocSpec, _ w: Int, _ h: Int) -> Bool {

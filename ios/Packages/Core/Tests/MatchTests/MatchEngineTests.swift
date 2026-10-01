@@ -36,7 +36,8 @@ struct MatchEngineTests {
     @Test("exact mode needs an exact pixel match")
     func exactMode() throws {
         let s = try slot(dims: #"{"mode":"exact","width":100,"height":40}"#)
-        #expect(verdict(s, jpeg(w: 100, h: 40)).verdict == .exact)
+        let exact = verdict(s, jpeg(w: 100, h: 40))
+        #expect(exact.verdict == .exact)
         let off = verdict(s, jpeg(w: 101, h: 40))
         #expect(off.verdict == .no)
         #expect(off.issues == [.wrongDimensions])
@@ -156,7 +157,8 @@ struct MatchEngineTests {
                      try exam("hidden", "Hidden", status: "hidden"), try exam("near", "Near", slotJSON: slotJSON(max: "14")),
                      try exam("low", "Low", confidence: "low")]
         let r = MatchEngine.match(jpeg(kb: 15), exams: exams, options: MatchOptions(popularity: ["c", "a"]))
-        #expect(r.entries.filter { $0.verdict != .nearMiss }.map(\.examId) == ["c", "a", "b", "low"])
+        let ids = r.entries.filter { $0.verdict != .nearMiss }.map(\.examId)
+        #expect(ids == ["c", "a", "b", "low"])
         #expect(r.entries.first { $0.examId == "low" }?.verdict == .accepted)
         #expect(!r.entries.contains { $0.examId == "hidden" })
         #expect(r.entries.last?.verdict == .nearMiss)

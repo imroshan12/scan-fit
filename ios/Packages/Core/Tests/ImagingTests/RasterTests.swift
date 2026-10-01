@@ -6,7 +6,8 @@ struct RasterTests {
     @Test("luma uses the integer formula")
     func luma() {
         let r = Raster.make(3, 1) { x, _ in [0xFFFFFF, 0x000000, 0xFF0000][x] }
-        #expect(r.luma() == [255, 0, 76])
+        let expectedLuma: [UInt8] = [255, 0, 76]
+        #expect(r.luma() == expectedLuma)
     }
 
     @Test("crop fills outside with white and handles negative origins")

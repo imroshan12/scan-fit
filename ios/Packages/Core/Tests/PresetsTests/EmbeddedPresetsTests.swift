@@ -31,7 +31,8 @@ struct EmbeddedPresetsTests {
         #expect(summary.version >= 1)
         let bundle = try #require(await repo.bundle)
         #expect(bundle.exams.contains { $0.id == "ibps_po" })
-        #expect(Set(bundle.exams.map(\.id)).count == bundle.exams.count, "exam ids are unique")
+        let uniqueIds = Set(bundle.exams.map(\.id))
+        #expect(uniqueIds.count == bundle.exams.count, "exam ids are unique")
     }
 
     @Test("a bundle signed by another key is rejected and nothing is installed")

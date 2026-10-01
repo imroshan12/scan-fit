@@ -34,7 +34,8 @@ struct InspectorTests {
 
     @Test("format comes from magic bytes, not the extension")
     func formats() {
-        #expect(Inspector.detectFormat([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A]) == .png)
+        let pngSignature: [UInt8] = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A]
+        #expect(Inspector.detectFormat(pngSignature) == .png)
         #expect(Inspector.detectFormat(ascii("%PDF-1.7\n")) == .pdf)
         #expect(Inspector.detectFormat([0xFF, 0xD8, 0xFF, 0xE0]) == .jpeg)
         #expect(Inspector.detectFormat([1, 2, 3]) == .unknown)

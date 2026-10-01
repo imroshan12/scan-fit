@@ -79,7 +79,8 @@ struct JpegPatcherTests {
         #expect(Inspector.inspect(bare).jfif == JfifDensity(units: 1, xDensity: 300, yDensity: 300))
         let old = app(0xE0, ascii("JFIF\0") + [1, 2, 0, 0, 72, 0, 72, 0, 0])
         let rewritten = try ok(JpegPatcher.patch(jpeg(extra: [old]), dpi: 200))
-        #expect(markers(rewritten).filter { $0 == 0xE0 }.count == 1)
+        let app0Markers = markers(rewritten).filter { $0 == 0xE0 }
+        #expect(app0Markers.count == 1)
         #expect(Inspector.inspect(rewritten).jfif == JfifDensity(units: 1, xDensity: 200, yDensity: 200))
     }
 

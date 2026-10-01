@@ -31,6 +31,8 @@ jobs:
         run: |
           pip install -r spec/tools/requirements.txt
           spec/tools/build_all.sh
+      - name: Toolchain (a compiler difference from the dev machine shows up here first)
+        run: swift --version && xcodebuild -version
       - name: Tools
         run: brew install xcodegen swiftlint
       - run: swiftlint --strict
