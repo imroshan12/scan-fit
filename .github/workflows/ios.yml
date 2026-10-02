@@ -112,9 +112,22 @@ jobs:
       - name: App Store Connect API key
         env:
           ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
         run: |
-          echo "$ASC_KEY_P8_BASE64" | base64 --decode > "$RUNNER_TEMP/AuthKey.p8"
-          echo "ASC_KEY_PATH=$RUNNER_TEMP/AuthKey.p8" >> "$GITHUB_ENV"
+          # Accepts the secret as base64 of the .p8 (as documented) or as the raw .p8 text, and checks the result is a real
+          # private key before xcodebuild sees it. Never prints the key.
+          KEY="$RUNNER_TEMP/AuthKey_${ASC_KEY_ID}.p8"
+          if printf '%s' "$ASC_KEY_P8_BASE64" | grep -q "BEGIN PRIVATE KEY"; then
+            printf '%s\n' "$ASC_KEY_P8_BASE64" > "$KEY"
+          else
+            printf '%s' "$ASC_KEY_P8_BASE64" | tr -d ' \r\n' | base64 --decode > "$KEY" 2>/dev/null || true
+          fi
+          chmod 600 "$KEY"
+          if ! grep -q "BEGIN PRIVATE KEY" "$KEY" || ! openssl pkey -in "$KEY" -noout 2>/dev/null; then
+            echo "::error::ASC_KEY_P8_BASE64 is not a valid App Store Connect key. Set it to the output of: base64 -i AuthKey_<KEYID>.p8"
+            exit 1
+          fi
+          echo "ASC_KEY_PATH=$KEY" >> "$GITHUB_ENV"
       - run: brew install xcodegen
       - name: Archive, sign (cloud-managed, via the API key) and upload to TestFlight
         working-directory: ios
@@ -125,7 +138,7 @@ jobs:
         run: Scripts/archive.sh --version ${{ steps.tag.outputs.version }} --build ${{ github.run_number }} --upload
       - name: Remove the API key
         if: always()
-        run: rm -f "$RUNNER_TEMP/AuthKey.p8"
+        run: rm -f "$RUNNER_TEMP"/AuthKey*.p8
       - uses: actions/upload-artifact@v4
         with:
           name: ios-dsyms-${{ steps.tag.outputs.version }}
