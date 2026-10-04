@@ -1,196 +1,1273 @@
 {
-  "_doc": "Cross-platform conformance cases. Both apps run every case in unit tests (Android: :core:imaging test, iOS: ImagingTests). Outputs need not be byte-identical across platforms; they must satisfy every assertion. Add real-photo cases under images/real/ (gitignored unless consented).",
-  "fit_cases": [
-    { "id": "ibps_photo_from_phone", "input": "photo_phone_3000x4000.jpg", "preset": "ibps_po", "doc": "photo",
-      "crop": { "x": 700, "y": 700, "w": 1600, "h": 1840 },
-      "expect": { "format": "jpeg_baseline", "color": "rgb", "kb_min": 20, "kb_max": 50,
-                  "width": 200, "height": 230, "allow_upscaled_preferred": true, "exif": "none", "max_ms_midrange": 800 } },
-    { "id": "ibps_signature_from_paper", "input": "signature_paper_shadow.jpg", "preset": "ibps_po", "doc": "signature",
-      "pipeline": "signature_cleanup",
-      "expect": { "format": "jpeg_baseline", "kb_min": 10, "kb_max": 20, "aspect": 2.333, "aspect_tol": 0.02,
-                  "background_mean_min": 235, "ink_pixels_min_pct": 1.0, "allow_upscaled_preferred": true } },
-    { "id": "tiny_signature_hits_minimum", "input": "signature_clean_420x180.png", "preset": "ibps_po", "doc": "signature",
-      "_why": "At 140x60 even q=100 is ~6 KB. Engine must use the minimum-size strategy (ALGORITHMS.md §1.4).",
-      "expect": { "kb_min": 10, "kb_max": 20, "aspect": 2.333, "aspect_tol": 0.02, "decodes": true } },
-    { "id": "ibps_thumb", "input": "thumb_ink.jpg", "preset": "ibps_po", "doc": "left_thumb",
-      "pipeline": "thumb_cleanup",
-      "expect": { "kb_min": 20, "kb_max": 50, "width": 240, "height": 240, "allow_upscaled_preferred": true, "dpi": 200 } },
-    { "id": "ibps_declaration", "input": "declaration_paper.jpg", "preset": "ibps_po", "doc": "handwritten_declaration",
-      "pipeline": "document_cleanup",
-      "expect": { "kb_min": 50, "kb_max": 100, "width": 800, "height": 400, "allow_upscaled_preferred": true, "dpi": 200 } },
-    { "id": "gate_photo_range", "input": "photo_phone_3000x4000.jpg", "preset": "gate", "doc": "photo",
-      "expect": { "kb_min": 5, "kb_max": 600, "w_range": [200, 530], "h_range": [260, 690], "aspect_range": [0.66, 0.89] } },
-    { "id": "gate_signature_range", "input": "signature_paper_shadow.jpg", "preset": "gate", "doc": "signature",
-      "pipeline": "signature_cleanup",
-      "expect": { "kb_min": 3, "kb_max": 300, "w_range": [250, 580], "h_range": [80, 180], "aspect_range": [2.75, 3.75] } },
-    { "id": "jee_photo_filename", "input": "photo_phone_3000x4000.jpg", "preset": "jee_main", "doc": "photo",
-      "expect": { "kb_min": 10, "kb_max": 200, "export_filename": "Photograph.jpg" } },
-    { "id": "uppsc_photo_no_min", "input": "photo_phone_3000x4000.jpg", "preset": "uppsc", "doc": "photo",
-      "expect": { "kb_max": 50, "dpi": 200 } },
-    { "id": "exact_mode_pads_and_never_scales", "input": "signature_clean_420x180.png", "doc": "signature",
-      "spec": { "type": "signature", "required": true, "formats": ["jpg"], "size_kb": { "min": 12, "max": 20, "target": 16 },
-                "dimensions": { "mode": "exact", "width": 100, "height": 40 } },
-      "_why": "No real preset uses exact mode. An exact slot can only be padded (ALGORITHMS 9.4): the pixel size must stay 100x40.",
-      "expect": { "format": "jpeg_baseline", "kb_min": 12, "kb_max": 20, "width": 100, "height": 40, "decodes": true } },
-    { "id": "pad_only_option_keeps_preferred_size", "input": "signature_clean_420x180.png", "preset": "ibps_po", "doc": "signature",
-      "options": { "min_fill_strategy": "pad_only" },
-      "expect": { "kb_min": 10, "kb_max": 20, "width": 140, "height": 60, "decodes": true } }
-  ],
-  "decode_cases": [
-    { "_doc": "Decode applies EXIF orientation (1.1). Every orientation fixture shows the same upright 200x120 picture; quadrant centres are sampled at (25%,25%),(75%,25%),(25%,75%),(75%,75%) with a per-channel tolerance.",
-      "id": "orientation_1", "input": "orientation_1.jpg", "target_max_dim": 230, "expect": { "width": 200, "height": 120, "tolerance": 40, "TL": [220, 30, 30], "TR": [30, 180, 60], "BL": [30, 60, 220], "BR": [240, 220, 30] } },
-    { "id": "orientation_2", "input": "orientation_2.jpg", "target_max_dim": 230, "expect": { "width": 200, "height": 120, "tolerance": 40, "TL": [220, 30, 30], "TR": [30, 180, 60], "BL": [30, 60, 220], "BR": [240, 220, 30] } },
-    { "id": "orientation_3", "input": "orientation_3.jpg", "target_max_dim": 230, "expect": { "width": 200, "height": 120, "tolerance": 40, "TL": [220, 30, 30], "TR": [30, 180, 60], "BL": [30, 60, 220], "BR": [240, 220, 30] } },
-    { "id": "orientation_4", "input": "orientation_4.jpg", "target_max_dim": 230, "expect": { "width": 200, "height": 120, "tolerance": 40, "TL": [220, 30, 30], "TR": [30, 180, 60], "BL": [30, 60, 220], "BR": [240, 220, 30] } },
-    { "id": "orientation_5", "input": "orientation_5.jpg", "target_max_dim": 230, "expect": { "width": 200, "height": 120, "tolerance": 40, "TL": [220, 30, 30], "TR": [30, 180, 60], "BL": [30, 60, 220], "BR": [240, 220, 30] } },
-    { "id": "orientation_6", "input": "orientation_6.jpg", "target_max_dim": 230, "expect": { "width": 200, "height": 120, "tolerance": 40, "TL": [220, 30, 30], "TR": [30, 180, 60], "BL": [30, 60, 220], "BR": [240, 220, 30] } },
-    { "id": "orientation_7", "input": "orientation_7.jpg", "target_max_dim": 230, "expect": { "width": 200, "height": 120, "tolerance": 40, "TL": [220, 30, 30], "TR": [30, 180, 60], "BL": [30, 60, 220], "BR": [240, 220, 30] } },
-    { "id": "orientation_8", "input": "orientation_8.jpg", "target_max_dim": 230, "expect": { "width": 200, "height": 120, "tolerance": 40, "TL": [220, 30, 30], "TR": [30, 180, 60], "BL": [30, 60, 220], "BR": [240, 220, 30] } },
-    { "_why": "Never decode 12 MP at full size: long side is capped at max(2 x largest target dimension, 1600) = 1600 here.",
-      "id": "downsample_phone_photo", "input": "photo_phone_3000x4000.jpg", "target_max_dim": 230, "expect": { "width": 1200, "height": 1600 } },
-    { "id": "no_upscale_on_decode", "input": "orientation_1.jpg", "target_max_dim": 4000, "expect": { "width": 200, "height": 120 } }
-  ],
-  "patch_cases": [
-    { "_doc": "JpegPatcher (1.5, 9.3). ok cases list what must hold on the output; error cases expect that typed error. pad_to_bytes applies pad() after patch().",
-      "id": "strips_exif_gps_and_sets_dpi", "input": "photo_exif_gps_400x300.jpg", "dpi": 200,
-      "expect": { "ok": true, "no_app1": true, "jfif": { "units": 1, "x": 200, "y": 200 }, "sof": "SOF0", "components": 3, "decodes": true } },
-    { "id": "dpi_comes_from_the_argument", "input": "photo_exif_gps_400x300.jpg", "dpi": 300,
-      "expect": { "ok": true, "jfif": { "units": 1, "x": 300, "y": 300 } } },
-    { "id": "removes_srgb_icc", "input": "icc_srgb_100x100.jpg", "dpi": 200, "expect": { "ok": true, "no_icc": true, "decodes": true } },
-    { "id": "refuses_non_srgb_icc", "input": "icc_not_srgb_100x100.jpg", "dpi": 200, "expect_error": "NON_SRGB_PROFILE" },
-    { "id": "refuses_progressive", "input": "progressive_200x230.jpg", "dpi": 200, "expect_error": "NOT_BASELINE" },
-    { "id": "refuses_cmyk", "input": "cmyk_photo_200x230.jpg", "dpi": 200, "expect_error": "CMYK" },
-    { "id": "refuses_png", "input": "png_named_as_jpg.jpg", "dpi": 200, "expect_error": "NOT_JPEG" },
-    { "id": "gray_refused_by_default", "input": "gray_signature_140x60.jpg", "dpi": 200, "allow_grayscale": false, "expect_error": "GRAYSCALE_NOT_ALLOWED" },
-    { "id": "gray_allowed_with_the_flag", "input": "gray_signature_140x60.jpg", "dpi": 200, "allow_grayscale": true, "expect": { "ok": true, "components": 1, "decodes": true } },
-    { "id": "pad_reaches_the_exact_size", "input": "photo_exif_gps_400x300.jpg", "dpi": 200, "pad_to_bytes": 20000,
-      "expect": { "ok": true, "size_bytes": 20000, "decodes": true, "sof": "SOF0" } }
-  ],
-  "geometry_cases": [
-    { "_doc": "Pure geometry (9.1, 9.4). Source is WxH. crop = default crop for photo kinds; start = fit start size; pad = pad-to-aspect canvas (ink kinds): {w,h,x,y}.",
-      "id": "ibps_photo_default_crop", "preset": "ibps_po", "doc": "photo", "source": { "w": 3000, "h": 4000 },
-      "expect": { "crop": { "x": 0, "y": 275, "w": 3000, "h": 3450 }, "start": { "w": 200, "h": 230 } } },
-    { "id": "gate_photo_range_midpoint", "preset": "gate", "doc": "photo", "source": { "w": 3000, "h": 4000 },
-      "expect": { "crop": { "x": 0, "y": 64, "w": 3000, "h": 3871 }, "start": { "w": 365, "h": 471 } } },
-    { "id": "gate_signature_range_midpoint", "preset": "gate", "doc": "signature", "source": { "w": 2000, "h": 700 },
-      "expect": { "start": { "w": 415, "h": 128 } } },
-    { "id": "jee_photo_none_mode_long_side_1200", "preset": "jee_main", "doc": "photo", "source": { "w": 3000, "h": 4000 },
-      "expect": { "start": { "w": 900, "h": 1200 } } },
-    { "id": "none_mode_never_upscales_the_start", "preset": "jee_main", "doc": "photo", "source": { "w": 800, "h": 600 },
-      "expect": { "start": { "w": 800, "h": 600 } } },
-    { "id": "ibps_signature_pad_to_aspect", "preset": "ibps_po", "doc": "signature", "source": { "w": 300, "h": 200 },
-      "expect": { "pad": { "w": 467, "h": 200, "x": 83, "y": 0 }, "start": { "w": 140, "h": 60 } } },
-    { "id": "ibps_signature_taller_source_pads_the_sides_not_the_top", "preset": "ibps_po", "doc": "signature", "source": { "w": 100, "h": 200 },
-      "expect": { "pad": { "w": 467, "h": 200, "x": 183, "y": 0 } } },
-    { "id": "ibps_signature_wider_source_pads_top_and_bottom", "preset": "ibps_po", "doc": "signature", "source": { "w": 700, "h": 100 },
-      "expect": { "pad": { "w": 700, "h": 300, "x": 0, "y": 100 } } }
-  ],
-  "inspect_cases": [
-    { "id": "detect_cmyk", "input": "cmyk_photo_200x230.jpg",
-      "expect": { "format": "jpeg", "color": "cmyk", "issues": ["CMYK_COLOR"] } },
-    { "id": "detect_progressive", "input": "progressive_200x230.jpg",
-      "expect": { "format": "jpeg", "progressive": true, "issues": ["PROGRESSIVE_JPEG"] } },
-    { "id": "detect_wrong_extension", "input": "png_named_as_jpg.jpg",
-      "expect": { "format": "png", "issues": ["EXTENSION_MISMATCH"] } },
-    { "id": "orientation_1_is_not_rotated", "input": "orientation_1.jpg", "expect": { "format": "jpeg", "color": "rgb", "exif_orientation": 1, "issues": [] } },
-    { "id": "orientation_2_flagged", "input": "orientation_2.jpg", "expect": { "format": "jpeg", "exif_orientation": 2, "issues": ["ROTATED_BY_EXIF"] } },
-    { "id": "orientation_3_flagged", "input": "orientation_3.jpg", "expect": { "format": "jpeg", "exif_orientation": 3, "issues": ["ROTATED_BY_EXIF"] } },
-    { "id": "orientation_4_flagged", "input": "orientation_4.jpg", "expect": { "format": "jpeg", "exif_orientation": 4, "issues": ["ROTATED_BY_EXIF"] } },
-    { "id": "orientation_5_flagged", "input": "orientation_5.jpg", "expect": { "format": "jpeg", "exif_orientation": 5, "issues": ["ROTATED_BY_EXIF"] } },
-    { "id": "orientation_6_flagged", "input": "orientation_6.jpg", "expect": { "format": "jpeg", "exif_orientation": 6, "issues": ["ROTATED_BY_EXIF"] } },
-    { "id": "orientation_7_flagged", "input": "orientation_7.jpg", "expect": { "format": "jpeg", "exif_orientation": 7, "issues": ["ROTATED_BY_EXIF"] } },
-    { "id": "orientation_8_flagged", "input": "orientation_8.jpg", "expect": { "format": "jpeg", "exif_orientation": 8, "issues": ["ROTATED_BY_EXIF"] } },
-    { "id": "detect_gps", "input": "photo_exif_gps_400x300.jpg", "expect": { "format": "jpeg", "width": 400, "height": 300, "has_exif": true, "has_gps": true, "issues": ["HAS_GPS_EXIF"] } },
-    { "id": "detect_icc", "input": "icc_srgb_100x100.jpg", "expect": { "format": "jpeg", "has_icc": true, "issues": [] } },
-    { "id": "detect_gray", "input": "gray_signature_140x60.jpg", "expect": { "format": "jpeg", "color": "gray", "width": 140, "height": 60, "issues": [] } },
-    { "id": "plain_baseline_photo", "input": "photo_phone_3000x4000.jpg", "expect": { "format": "jpeg", "color": "rgb", "progressive": false, "width": 3000, "height": 4000, "has_exif": false, "issues": [] } },
-    { "id": "png_dimensions", "input": "signature_clean_420x180.png", "expect": { "format": "png", "width": 420, "height": 180, "issues": [] } }
-  ],
-  "match_cases": [
-    { "id": "ibps_family_photo", "file": { "format": "jpeg", "kb": 35, "width": 200, "height": 230, "doc": "photo" },
-      "expect_exact_includes": ["ibps_po", "sbi_po", "rbi_grade_b", "lic_aao"],
-      "expect_not_includes": ["ssc_cgl"], "_why": "SSC captures the photo live - no photo upload slot" },
-    { "id": "near_miss_signature", "file": { "format": "jpeg", "kb": 22, "width": 140, "height": 60, "doc": "signature" },
-      "expect_near_miss": [{ "exam": "ibps_po", "param": "size_kb", "fix": "compress_to_target" }] },
-    { "id": "wide_signature_gate_not_ibps", "file": { "format": "jpeg", "kb": 40, "width": 500, "height": 150, "doc": "signature" },
-      "expect_exact_includes": ["gate"], "expect_not_includes": ["ibps_po"] },
-    { "id": "low_confidence_is_never_exact_or_counted", "file": { "format": "jpeg", "kb": 35, "width": 200, "height": 230, "doc": "photo" },
-      "expect_unverified_includes": ["nabard_grade_a", "niacl_ao"], "expect_headline_excludes": ["nabard_grade_a", "niacl_ao"],
-      "expect_exact_excludes": ["nabard_grade_a", "niacl_ao"], "_why": "CLAUDE.md rule 6: low-confidence presets say likely OK and never count in the headline N" },
-    { "id": "unknown_spec_never_accepts", "file": { "format": "jpeg", "kb": 15, "width": 140, "height": 60, "doc": "signature" },
-      "expect_not_includes": ["bpsc", "mht_cet"], "_why": "ALGORITHMS 4: no size limits and dims mode none = UNKNOWN, never listed as accepting" },
-    { "id": "progressive_is_a_near_miss", "file": { "format": "jpeg", "kb": 35, "width": 200, "height": 230, "doc": "photo", "progressive": true },
-      "expect_near_miss": [{ "exam": "ibps_po", "param": "encoding", "fix": "reencode_baseline" }], "expect_exact_excludes": ["ibps_po"] },
-    { "id": "png_is_a_near_miss", "file": { "format": "png", "kb": 35, "width": 200, "height": 230, "doc": "photo" },
-      "expect_near_miss": [{ "exam": "ibps_po", "param": "format", "fix": "convert_to_jpeg" }] },
-    { "id": "too_small_is_a_near_miss", "file": { "format": "jpeg", "kb": 15, "width": 200, "height": 230, "doc": "photo" },
-      "expect_near_miss": [{ "exam": "ibps_po", "param": "size_kb", "fix": "enlarge_to_target" }] },
-    { "id": "far_too_big_is_no_match", "file": { "format": "jpeg", "kb": 300, "width": 200, "height": 230, "doc": "photo" },
-      "expect_not_includes": ["ibps_po"], "_why": "250 KB over a 30 KB window is far beyond 50% of the window: not a one-tap fix" },
-    { "id": "wrong_aspect_is_never_a_near_miss", "file": { "format": "jpeg", "kb": 35, "width": 400, "height": 230, "doc": "photo" },
-      "expect_not_includes": ["ibps_po"], "_why": "a dims failure needs a new crop, not a one-tap fix" },
-    { "id": "preferred_dims_off_is_accepted_not_exact", "file": { "format": "jpeg", "kb": 15, "width": 280, "height": 120, "doc": "signature" },
-      "expect_accepted_includes": ["ibps_po"], "expect_exact_excludes": ["ibps_po"] },
-    { "id": "gray_signature_needs_the_flag", "file": { "format": "jpeg", "kb": 15, "width": 140, "height": 60, "doc": "signature", "color": "gray" },
-      "expect_near_miss": [{ "exam": "ibps_po", "param": "encoding", "fix": "reencode_baseline" }] },
-    { "id": "gray_signature_with_the_flag", "file": { "format": "jpeg", "kb": 15, "width": 140, "height": 60, "doc": "signature", "color": "gray" },
-      "options": { "allow_grayscale": true }, "expect_exact_includes": ["ibps_po", "ssc_cgl"] },
-    { "id": "pdf_matches_pdf_slots", "file": { "format": "pdf", "kb": 250, "doc": "pdf_document" },
-      "expect_exact_includes": ["rrb_ntpc_grad", "rrb_ntpc_ug"], "expect_unverified_includes": ["rrb_alp"], "expect_not_includes": ["ibps_po"] },
-    { "id": "popularity_then_name_ordering", "file": { "format": "jpeg", "kb": 35, "width": 200, "height": 230, "doc": "photo" },
-      "options": { "popularity": ["sbi_po", "ibps_po"] }, "expect_first_exact": ["sbi_po", "ibps_po"],
-      "_why": "listed exams first in list order, then the rest by name" },
-    { "id": "thumb_kind_maps_to_thumb_slots", "file": { "format": "jpeg", "kb": 35, "width": 240, "height": 240, "doc": "thumb" },
-      "expect_exact_includes": ["ibps_po"] }
-  ],
-  "search_cases": [
-    { "id": "body_query", "kind": "search", "query": "ibps", "expect_ids": ["ibps_po", "ibps_clerk", "ibps_rrb_po", "ibps_rrb_clerk", "ibps_so"] },
-    { "id": "two_tokens", "kind": "search", "query": "ssc cgl", "expect_ids": ["ssc_cgl"] },
-    { "id": "partial_name_token", "kind": "search", "query": "cgl", "expect_ids": ["ssc_cgl"] },
-    { "id": "joined_tokens", "kind": "search", "query": "sscchsl", "expect_ids": ["ssc_chsl"] },
-    { "id": "hindi_category_word", "kind": "search", "query": "बैंक", "expect_ids": ["ibps_po", "sbi_po", "ibps_clerk", "sbi_clerk", "ibps_rrb_po", "ibps_rrb_clerk", "rbi_grade_b", "ibps_so", "rbi_assistant"] },
-    { "id": "hindi_alias_phrase", "kind": "search", "query": "आईबीपीएस पीओ", "expect_ids": ["ibps_po", "ibps_rrb_po"] },
-    { "id": "hindi_alias_word", "kind": "search", "query": "नीट", "expect_ids": ["neet_ug", "neet_pg"] },
-    { "id": "typo_adjacent_swap", "kind": "search", "query": "ibsp", "expect_ids": ["ibps_po", "ibps_clerk", "ibps_rrb_po", "ibps_rrb_clerk", "ibps_so", "ssc_cpo"] },
-    { "id": "typo_extra_letter", "kind": "search", "query": "jeee", "expect_ids": ["jee_main"] },
-    { "id": "hindi_category_insurance", "kind": "search", "query": "बीमा", "expect_ids": ["lic_aao", "lic_ado", "uiic_ao"] },
-    { "id": "latin_alias", "kind": "search", "query": "ias", "expect_ids": ["upsc_cse"] },
-    { "id": "unverified_hidden_by_default", "kind": "search", "query": "rrb", "expect_ids": ["rrb_ntpc_grad", "rrb_ntpc_ug", "ibps_rrb_po", "ibps_rrb_clerk"] },
-    { "id": "unverified_shown_when_enabled", "kind": "search", "query": "rrb", "show_unverified": true, "expect_ids": ["rrb_ntpc_grad", "rrb_alp", "rrb_group_d", "rrb_je", "rrb_ntpc_ug", "ibps_rrb_po", "ibps_rrb_clerk", "rpf_constable"] },
-    { "id": "punctuation_is_a_separator", "kind": "search", "query": "IBPS-PO", "expect_ids": ["ibps_po", "ibps_rrb_po"] },
-    { "id": "fullwidth_letters", "kind": "search", "query": "ＳＳＣ ＣＧＬ", "expect_ids": ["ssc_cgl"] },
-    { "id": "short_prefix", "kind": "search", "query": "ss", "expect_ids": ["ssc_cgl", "ssc_chsl", "ssc_gd", "ssc_mts", "ssc_cpo", "ssc_je", "ssc_selection_post", "ssc_steno"] },
-    { "id": "within_category", "kind": "search", "query": "po", "category": "banking", "expect_ids": ["ibps_po", "sbi_po", "ibps_rrb_po"] },
-    { "id": "no_match", "kind": "search", "query": "zzzz", "expect_ids": [] },
-    { "id": "blank_query_gives_nothing", "kind": "search", "query": "   ", "expect_ids": [] },
-    { "id": "browse_banking", "kind": "browse", "category": "banking", "expect_ids": ["ibps_po", "sbi_po", "ibps_clerk", "sbi_clerk", "ibps_rrb_po", "ibps_rrb_clerk", "rbi_grade_b", "ibps_so", "rbi_assistant"] },
-    { "id": "browse_railway_with_unverified", "kind": "browse", "category": "railway", "show_unverified": true, "expect_ids": ["rrb_ntpc_grad", "rpf_constable", "rrb_alp", "rrb_group_d", "rrb_je", "rrb_ntpc_ug"] },
-    { "id": "popular_top_3", "kind": "popular", "n": 3, "expect_ids": ["ibps_po", "sbi_po", "ssc_cgl"] },
-    { "id": "popular_all", "kind": "popular", "n": 50, "expect_ids": ["ibps_po", "sbi_po", "ssc_cgl", "neet_ug", "jee_main", "cuet_ug", "ibps_clerk", "ssc_chsl", "ssc_gd", "rrb_ntpc_grad", "upsc_cse", "sbi_clerk", "ctet", "ugc_net", "ibps_rrb_po", "ibps_rrb_clerk", "rbi_grade_b", "lic_aao", "ssc_mts", "gate", "cat", "clat"] }
-  ],
-  "search_level_cases": [
-    { "id": "level_01", "q": "ibps", "t": "ibps", "level": 3 },
-    { "id": "level_02", "q": "ib", "t": "ibps", "level": 2 },
-    { "id": "level_03", "q": "ibsp", "t": "ibps", "level": 1 },
-    { "id": "level_04", "q": "ibp", "t": "ibsp", "level": 0 },
-    { "id": "level_05", "q": "jeee", "t": "jee", "level": 1 },
-    { "id": "level_06", "q": "abcd", "t": "wxyz", "level": 0 },
-    { "id": "level_07", "q": "neet", "t": "neetpg", "level": 2 },
-    { "id": "level_08", "q": "nept", "t": "neetpg", "level": 1 },
-    { "id": "level_09", "q": "बैंक", "t": "बैंकिंग", "level": 2 },
-    { "id": "level_10", "q": "cgl", "t": "sscgl", "level": 0 },
-    { "id": "level_11", "q": "ssc", "t": "s", "level": 0 },
-    { "id": "level_12", "q": "insp", "t": "inspector", "level": 2 },
-    { "id": "level_13", "q": "ibsp", "t": "inspector", "level": 1 }
-  ],
-  "search_norm_cases": [
-    { "id": "norm_01", "text": "IBPS PO / MT", "tokens": ["ibps", "po", "mt"] },
-    { "id": "norm_02", "text": "State_PSC", "tokens": ["state", "psc"] },
-    { "id": "norm_03", "text": "ज़ीरो", "tokens": ["जीरो"] },
-    { "id": "norm_04", "text": "ＳＳＣ", "tokens": ["ssc"] },
-    { "id": "norm_05", "text": "क्‍ष", "tokens": ["क्ष"] },
-    { "id": "norm_06", "text": "  Hello,World!! ", "tokens": ["hello", "world"] },
-    { "id": "norm_07", "text": "RRB Group D (Level 1)", "tokens": ["rrb", "group", "d", "level", "1"] },
-    { "id": "norm_08", "text": "NEET-UG 2026", "tokens": ["neet", "ug", "2026"] }
-  ]
+	"_doc": "Cross-platform conformance cases. Both apps run every case in unit tests (Android: :core:imaging test, iOS: ImagingTests). Outputs need not be byte-identical across platforms; they must satisfy every assertion. Add real-photo cases under images/real/ (gitignored unless consented).",
+	"export_cases": [
+		{
+			"id": "verified_destination",
+			"operation": "success",
+			"expect": { "state": "saved", "delete": false, "record": true }
+		},
+		{
+			"id": "picker_cancelled",
+			"operation": "cancel",
+			"expect": { "state": "idle", "delete": false, "record": false }
+		},
+		{
+			"id": "write_failed",
+			"operation": "write_failed",
+			"expect": {
+				"state": "save_failed",
+				"delete": true,
+				"record": false
+			}
+		},
+		{
+			"id": "read_failed",
+			"operation": "read_failed",
+			"expect": {
+				"state": "save_failed",
+				"delete": true,
+				"record": false
+			}
+		},
+		{
+			"id": "destination_corrupted",
+			"operation": "corrupt",
+			"expect": {
+				"state": "verify_failed",
+				"delete": true,
+				"record": false
+			}
+		},
+		{
+			"id": "wrong_density",
+			"operation": "wrong_dpi",
+			"expect": {
+				"state": "verify_failed",
+				"delete": true,
+				"record": false
+			}
+		},
+		{
+			"id": "private_metadata",
+			"operation": "exif",
+			"expect": {
+				"state": "verify_failed",
+				"delete": true,
+				"record": false
+			}
+		},
+		{
+			"id": "publication_failed",
+			"operation": "publish_failed",
+			"expect": {
+				"state": "save_failed",
+				"delete": true,
+				"record": false
+			}
+		}
+	],
+	"fit_cases": [
+		{
+			"id": "ibps_photo_from_phone",
+			"input": "photo_phone_3000x4000.jpg",
+			"preset": "ibps_po",
+			"doc": "photo",
+			"crop": { "x": 700, "y": 700, "w": 1600, "h": 1840 },
+			"expect": {
+				"format": "jpeg_baseline",
+				"color": "rgb",
+				"kb_min": 20,
+				"kb_max": 50,
+				"width": 200,
+				"height": 230,
+				"allow_upscaled_preferred": true,
+				"exif": "none",
+				"max_ms_midrange": 800
+			}
+		},
+		{
+			"id": "ibps_signature_from_paper",
+			"input": "signature_paper_shadow.jpg",
+			"preset": "ibps_po",
+			"doc": "signature",
+			"pipeline": "signature_cleanup",
+			"expect": {
+				"format": "jpeg_baseline",
+				"kb_min": 10,
+				"kb_max": 20,
+				"aspect": 2.333,
+				"aspect_tol": 0.02,
+				"background_mean_min": 235,
+				"ink_pixels_min_pct": 1.0,
+				"allow_upscaled_preferred": true
+			}
+		},
+		{
+			"id": "tiny_signature_hits_minimum",
+			"input": "signature_clean_420x180.png",
+			"preset": "ibps_po",
+			"doc": "signature",
+			"_why": "At 140x60 even q=100 is ~6 KB. Engine must use the minimum-size strategy (ALGORITHMS.md §1.4).",
+			"expect": {
+				"kb_min": 10,
+				"kb_max": 20,
+				"aspect": 2.333,
+				"aspect_tol": 0.02,
+				"decodes": true
+			}
+		},
+		{
+			"id": "ibps_thumb",
+			"input": "thumb_ink.jpg",
+			"preset": "ibps_po",
+			"doc": "left_thumb",
+			"pipeline": "thumb_cleanup",
+			"expect": {
+				"kb_min": 20,
+				"kb_max": 50,
+				"width": 240,
+				"height": 240,
+				"allow_upscaled_preferred": true,
+				"dpi": 200
+			}
+		},
+		{
+			"id": "ibps_declaration",
+			"input": "declaration_paper.jpg",
+			"preset": "ibps_po",
+			"doc": "handwritten_declaration",
+			"pipeline": "document_cleanup",
+			"expect": {
+				"kb_min": 50,
+				"kb_max": 100,
+				"width": 800,
+				"height": 400,
+				"allow_upscaled_preferred": true,
+				"dpi": 200
+			}
+		},
+		{
+			"id": "gate_photo_range",
+			"input": "photo_phone_3000x4000.jpg",
+			"preset": "gate",
+			"doc": "photo",
+			"expect": {
+				"kb_min": 5,
+				"kb_max": 600,
+				"w_range": [200, 530],
+				"h_range": [260, 690],
+				"aspect_range": [0.66, 0.89]
+			}
+		},
+		{
+			"id": "gate_signature_range",
+			"input": "signature_paper_shadow.jpg",
+			"preset": "gate",
+			"doc": "signature",
+			"pipeline": "signature_cleanup",
+			"expect": {
+				"kb_min": 3,
+				"kb_max": 300,
+				"w_range": [250, 580],
+				"h_range": [80, 180],
+				"aspect_range": [2.75, 3.75]
+			}
+		},
+		{
+			"id": "jee_photo_filename",
+			"input": "photo_phone_3000x4000.jpg",
+			"preset": "jee_main",
+			"doc": "photo",
+			"expect": {
+				"kb_min": 10,
+				"kb_max": 200,
+				"export_filename": "Photograph.jpg"
+			}
+		},
+		{
+			"id": "uppsc_photo_no_min",
+			"input": "photo_phone_3000x4000.jpg",
+			"preset": "uppsc",
+			"doc": "photo",
+			"expect": { "kb_max": 50, "dpi": 200 }
+		},
+		{
+			"id": "exact_mode_pads_and_never_scales",
+			"input": "signature_clean_420x180.png",
+			"doc": "signature",
+			"spec": {
+				"type": "signature",
+				"required": true,
+				"formats": ["jpg"],
+				"size_kb": { "min": 12, "max": 20, "target": 16 },
+				"dimensions": { "mode": "exact", "width": 100, "height": 40 }
+			},
+			"_why": "No real preset uses exact mode. An exact slot can only be padded (ALGORITHMS 9.4): the pixel size must stay 100x40.",
+			"expect": {
+				"format": "jpeg_baseline",
+				"kb_min": 12,
+				"kb_max": 20,
+				"width": 100,
+				"height": 40,
+				"decodes": true
+			}
+		},
+		{
+			"id": "pad_only_option_keeps_preferred_size",
+			"input": "signature_clean_420x180.png",
+			"preset": "ibps_po",
+			"doc": "signature",
+			"options": { "min_fill_strategy": "pad_only" },
+			"expect": {
+				"kb_min": 10,
+				"kb_max": 20,
+				"width": 140,
+				"height": 60,
+				"decodes": true
+			}
+		}
+	],
+	"decode_cases": [
+		{
+			"_doc": "Decode applies EXIF orientation (1.1). Every orientation fixture shows the same upright 200x120 picture; quadrant centres are sampled at (25%,25%),(75%,25%),(25%,75%),(75%,75%) with a per-channel tolerance.",
+			"id": "orientation_1",
+			"input": "orientation_1.jpg",
+			"target_max_dim": 230,
+			"expect": {
+				"width": 200,
+				"height": 120,
+				"tolerance": 40,
+				"TL": [220, 30, 30],
+				"TR": [30, 180, 60],
+				"BL": [30, 60, 220],
+				"BR": [240, 220, 30]
+			}
+		},
+		{
+			"id": "orientation_2",
+			"input": "orientation_2.jpg",
+			"target_max_dim": 230,
+			"expect": {
+				"width": 200,
+				"height": 120,
+				"tolerance": 40,
+				"TL": [220, 30, 30],
+				"TR": [30, 180, 60],
+				"BL": [30, 60, 220],
+				"BR": [240, 220, 30]
+			}
+		},
+		{
+			"id": "orientation_3",
+			"input": "orientation_3.jpg",
+			"target_max_dim": 230,
+			"expect": {
+				"width": 200,
+				"height": 120,
+				"tolerance": 40,
+				"TL": [220, 30, 30],
+				"TR": [30, 180, 60],
+				"BL": [30, 60, 220],
+				"BR": [240, 220, 30]
+			}
+		},
+		{
+			"id": "orientation_4",
+			"input": "orientation_4.jpg",
+			"target_max_dim": 230,
+			"expect": {
+				"width": 200,
+				"height": 120,
+				"tolerance": 40,
+				"TL": [220, 30, 30],
+				"TR": [30, 180, 60],
+				"BL": [30, 60, 220],
+				"BR": [240, 220, 30]
+			}
+		},
+		{
+			"id": "orientation_5",
+			"input": "orientation_5.jpg",
+			"target_max_dim": 230,
+			"expect": {
+				"width": 200,
+				"height": 120,
+				"tolerance": 40,
+				"TL": [220, 30, 30],
+				"TR": [30, 180, 60],
+				"BL": [30, 60, 220],
+				"BR": [240, 220, 30]
+			}
+		},
+		{
+			"id": "orientation_6",
+			"input": "orientation_6.jpg",
+			"target_max_dim": 230,
+			"expect": {
+				"width": 200,
+				"height": 120,
+				"tolerance": 40,
+				"TL": [220, 30, 30],
+				"TR": [30, 180, 60],
+				"BL": [30, 60, 220],
+				"BR": [240, 220, 30]
+			}
+		},
+		{
+			"id": "orientation_7",
+			"input": "orientation_7.jpg",
+			"target_max_dim": 230,
+			"expect": {
+				"width": 200,
+				"height": 120,
+				"tolerance": 40,
+				"TL": [220, 30, 30],
+				"TR": [30, 180, 60],
+				"BL": [30, 60, 220],
+				"BR": [240, 220, 30]
+			}
+		},
+		{
+			"id": "orientation_8",
+			"input": "orientation_8.jpg",
+			"target_max_dim": 230,
+			"expect": {
+				"width": 200,
+				"height": 120,
+				"tolerance": 40,
+				"TL": [220, 30, 30],
+				"TR": [30, 180, 60],
+				"BL": [30, 60, 220],
+				"BR": [240, 220, 30]
+			}
+		},
+		{
+			"_why": "Never decode 12 MP at full size: long side is capped at max(2 x largest target dimension, 1600) = 1600 here.",
+			"id": "downsample_phone_photo",
+			"input": "photo_phone_3000x4000.jpg",
+			"target_max_dim": 230,
+			"expect": { "width": 1200, "height": 1600 }
+		},
+		{
+			"id": "no_upscale_on_decode",
+			"input": "orientation_1.jpg",
+			"target_max_dim": 4000,
+			"expect": { "width": 200, "height": 120 }
+		}
+	],
+	"patch_cases": [
+		{
+			"_doc": "JpegPatcher (1.5, 9.3). ok cases list what must hold on the output; error cases expect that typed error. pad_to_bytes applies pad() after patch().",
+			"id": "strips_exif_gps_and_sets_dpi",
+			"input": "photo_exif_gps_400x300.jpg",
+			"dpi": 200,
+			"expect": {
+				"ok": true,
+				"no_app1": true,
+				"jfif": { "units": 1, "x": 200, "y": 200 },
+				"sof": "SOF0",
+				"components": 3,
+				"decodes": true
+			}
+		},
+		{
+			"id": "dpi_comes_from_the_argument",
+			"input": "photo_exif_gps_400x300.jpg",
+			"dpi": 300,
+			"expect": { "ok": true, "jfif": { "units": 1, "x": 300, "y": 300 } }
+		},
+		{
+			"id": "removes_srgb_icc",
+			"input": "icc_srgb_100x100.jpg",
+			"dpi": 200,
+			"expect": { "ok": true, "no_icc": true, "decodes": true }
+		},
+		{
+			"id": "refuses_non_srgb_icc",
+			"input": "icc_not_srgb_100x100.jpg",
+			"dpi": 200,
+			"expect_error": "NON_SRGB_PROFILE"
+		},
+		{
+			"id": "refuses_progressive",
+			"input": "progressive_200x230.jpg",
+			"dpi": 200,
+			"expect_error": "NOT_BASELINE"
+		},
+		{
+			"id": "refuses_cmyk",
+			"input": "cmyk_photo_200x230.jpg",
+			"dpi": 200,
+			"expect_error": "CMYK"
+		},
+		{
+			"id": "refuses_png",
+			"input": "png_named_as_jpg.jpg",
+			"dpi": 200,
+			"expect_error": "NOT_JPEG"
+		},
+		{
+			"id": "gray_refused_by_default",
+			"input": "gray_signature_140x60.jpg",
+			"dpi": 200,
+			"allow_grayscale": false,
+			"expect_error": "GRAYSCALE_NOT_ALLOWED"
+		},
+		{
+			"id": "gray_allowed_with_the_flag",
+			"input": "gray_signature_140x60.jpg",
+			"dpi": 200,
+			"allow_grayscale": true,
+			"expect": { "ok": true, "components": 1, "decodes": true }
+		},
+		{
+			"id": "pad_reaches_the_exact_size",
+			"input": "photo_exif_gps_400x300.jpg",
+			"dpi": 200,
+			"pad_to_bytes": 20000,
+			"expect": {
+				"ok": true,
+				"size_bytes": 20000,
+				"decodes": true,
+				"sof": "SOF0"
+			}
+		}
+	],
+	"geometry_cases": [
+		{
+			"_doc": "Pure geometry (9.1, 9.4). Source is WxH. crop = default crop for photo kinds; start = fit start size; pad = pad-to-aspect canvas (ink kinds): {w,h,x,y}.",
+			"id": "ibps_photo_default_crop",
+			"preset": "ibps_po",
+			"doc": "photo",
+			"source": { "w": 3000, "h": 4000 },
+			"expect": {
+				"crop": { "x": 0, "y": 275, "w": 3000, "h": 3450 },
+				"start": { "w": 200, "h": 230 }
+			}
+		},
+		{
+			"id": "gate_photo_range_midpoint",
+			"preset": "gate",
+			"doc": "photo",
+			"source": { "w": 3000, "h": 4000 },
+			"expect": {
+				"crop": { "x": 0, "y": 64, "w": 3000, "h": 3871 },
+				"start": { "w": 365, "h": 471 }
+			}
+		},
+		{
+			"id": "gate_signature_range_midpoint",
+			"preset": "gate",
+			"doc": "signature",
+			"source": { "w": 2000, "h": 700 },
+			"expect": { "start": { "w": 415, "h": 128 } }
+		},
+		{
+			"id": "jee_photo_none_mode_long_side_1200",
+			"preset": "jee_main",
+			"doc": "photo",
+			"source": { "w": 3000, "h": 4000 },
+			"expect": { "start": { "w": 900, "h": 1200 } }
+		},
+		{
+			"id": "none_mode_never_upscales_the_start",
+			"preset": "jee_main",
+			"doc": "photo",
+			"source": { "w": 800, "h": 600 },
+			"expect": { "start": { "w": 800, "h": 600 } }
+		},
+		{
+			"id": "ibps_signature_pad_to_aspect",
+			"preset": "ibps_po",
+			"doc": "signature",
+			"source": { "w": 300, "h": 200 },
+			"expect": {
+				"pad": { "w": 467, "h": 200, "x": 83, "y": 0 },
+				"start": { "w": 140, "h": 60 }
+			}
+		},
+		{
+			"id": "ibps_signature_taller_source_pads_the_sides_not_the_top",
+			"preset": "ibps_po",
+			"doc": "signature",
+			"source": { "w": 100, "h": 200 },
+			"expect": { "pad": { "w": 467, "h": 200, "x": 183, "y": 0 } }
+		},
+		{
+			"id": "ibps_signature_wider_source_pads_top_and_bottom",
+			"preset": "ibps_po",
+			"doc": "signature",
+			"source": { "w": 700, "h": 100 },
+			"expect": { "pad": { "w": 700, "h": 300, "x": 0, "y": 100 } }
+		}
+	],
+	"crop_cases": [
+		{
+			"_doc": "Photo crop math (ALGORITHMS 9.6). image = decoded raster WxH; aspect = [w, h] of the slot. op frame: auto-framing from a face box (coverage optional, default 0.675) -> rect + coverage_adjusted. op move: dx/dy in raster px. op zoom: factor > 1 zooms in. Expectations are computed by spec/tools/photo_crop.py --write-cases.",
+			"id": "frame_centred_face",
+			"op": "frame",
+			"image": { "w": 1000, "h": 1400 },
+			"aspect": [200, 230],
+			"face": { "x": 400, "y": 500, "w": 200, "h": 240 },
+			"expect": {
+				"rect": { "x": 307, "y": 426, "w": 386, "h": 444 },
+				"coverage_adjusted": false
+			}
+		},
+		{
+			"id": "frame_shifted_back_inside",
+			"op": "frame",
+			"image": { "w": 1000, "h": 1400 },
+			"aspect": [4, 5],
+			"face": { "x": 10, "y": 20, "w": 200, "h": 240 },
+			"expect": {
+				"rect": { "x": 0, "y": 0, "w": 355, "h": 444 },
+				"coverage_adjusted": false
+			}
+		},
+		{
+			"id": "frame_face_too_big_shrinks_and_flags",
+			"op": "frame",
+			"image": { "w": 1000, "h": 1200 },
+			"aspect": [4, 5],
+			"face": { "x": 50, "y": 100, "w": 900, "h": 1000 },
+			"expect": {
+				"rect": { "x": 20, "y": 0, "w": 960, "h": 1200 },
+				"coverage_adjusted": true
+			}
+		},
+		{
+			"id": "frame_wide_slot_limited_by_width",
+			"op": "frame",
+			"image": { "w": 300, "h": 1000 },
+			"aspect": [2, 1],
+			"face": { "x": 0, "y": 0, "w": 400, "h": 100 },
+			"expect": {
+				"rect": { "x": 0, "y": 0, "w": 300, "h": 150 },
+				"coverage_adjusted": true
+			}
+		},
+		{
+			"id": "frame_preset_coverage",
+			"op": "frame",
+			"image": { "w": 2000, "h": 2000 },
+			"aspect": [4, 5],
+			"face": { "x": 400, "y": 500, "w": 200, "h": 240 },
+			"coverage": 0.75,
+			"expect": {
+				"rect": { "x": 340, "y": 430, "w": 320, "h": 400 },
+				"coverage_adjusted": false
+			}
+		},
+		{
+			"id": "move_inside_rounds_half_up",
+			"op": "move",
+			"image": { "w": 1000, "h": 1400 },
+			"aspect": [200, 230],
+			"rect": { "x": 100, "y": 100, "w": 200, "h": 230 },
+			"dx": 50.5,
+			"dy": -20.6,
+			"expect": { "rect": { "x": 151, "y": 79, "w": 200, "h": 230 } }
+		},
+		{
+			"id": "move_clamps_to_the_image",
+			"op": "move",
+			"image": { "w": 1000, "h": 1400 },
+			"aspect": [200, 230],
+			"rect": { "x": 100, "y": 100, "w": 200, "h": 230 },
+			"dx": 2000,
+			"dy": -500,
+			"expect": { "rect": { "x": 800, "y": 0, "w": 200, "h": 230 } }
+		},
+		{
+			"id": "zoom_in_keeps_the_centre",
+			"op": "zoom",
+			"image": { "w": 1000, "h": 1400 },
+			"aspect": [200, 230],
+			"rect": { "x": 300, "y": 400, "w": 400, "h": 460 },
+			"factor": 2,
+			"expect": { "rect": { "x": 400, "y": 515, "w": 200, "h": 230 } }
+		},
+		{
+			"id": "zoom_out_stops_at_the_largest_crop",
+			"op": "zoom",
+			"image": { "w": 1000, "h": 1400 },
+			"aspect": [200, 230],
+			"rect": { "x": 300, "y": 400, "w": 400, "h": 460 },
+			"factor": 0.1,
+			"expect": { "rect": { "x": 0, "y": 55, "w": 1000, "h": 1150 } }
+		},
+		{
+			"id": "zoom_in_stops_at_64px_short_side_tall",
+			"op": "zoom",
+			"image": { "w": 1000, "h": 1400 },
+			"aspect": [200, 230],
+			"rect": { "x": 300, "y": 400, "w": 400, "h": 460 },
+			"factor": 100,
+			"expect": { "rect": { "x": 468, "y": 593, "w": 64, "h": 74 } }
+		},
+		{
+			"id": "zoom_in_stops_at_64px_short_side_wide",
+			"op": "zoom",
+			"image": { "w": 1600, "h": 1200 },
+			"aspect": [3, 2],
+			"rect": { "x": 0, "y": 0, "w": 600, "h": 400 },
+			"factor": 100,
+			"expect": { "rect": { "x": 252, "y": 168, "w": 96, "h": 64 } }
+		},
+		{
+			"id": "zoom_out_near_the_edge_shifts_inside",
+			"op": "zoom",
+			"image": { "w": 1000, "h": 1400 },
+			"aspect": [200, 230],
+			"rect": { "x": 780, "y": 1150, "w": 200, "h": 230 },
+			"factor": 0.5,
+			"expect": { "rect": { "x": 600, "y": 940, "w": 400, "h": 460 } }
+		}
+	],
+	"inspect_cases": [
+		{
+			"id": "detect_cmyk",
+			"input": "cmyk_photo_200x230.jpg",
+			"expect": {
+				"format": "jpeg",
+				"color": "cmyk",
+				"issues": ["CMYK_COLOR"]
+			}
+		},
+		{
+			"id": "detect_progressive",
+			"input": "progressive_200x230.jpg",
+			"expect": {
+				"format": "jpeg",
+				"progressive": true,
+				"issues": ["PROGRESSIVE_JPEG"]
+			}
+		},
+		{
+			"id": "detect_wrong_extension",
+			"input": "png_named_as_jpg.jpg",
+			"expect": { "format": "png", "issues": ["EXTENSION_MISMATCH"] }
+		},
+		{
+			"id": "orientation_1_is_not_rotated",
+			"input": "orientation_1.jpg",
+			"expect": {
+				"format": "jpeg",
+				"color": "rgb",
+				"exif_orientation": 1,
+				"issues": []
+			}
+		},
+		{
+			"id": "orientation_2_flagged",
+			"input": "orientation_2.jpg",
+			"expect": {
+				"format": "jpeg",
+				"exif_orientation": 2,
+				"issues": ["ROTATED_BY_EXIF"]
+			}
+		},
+		{
+			"id": "orientation_3_flagged",
+			"input": "orientation_3.jpg",
+			"expect": {
+				"format": "jpeg",
+				"exif_orientation": 3,
+				"issues": ["ROTATED_BY_EXIF"]
+			}
+		},
+		{
+			"id": "orientation_4_flagged",
+			"input": "orientation_4.jpg",
+			"expect": {
+				"format": "jpeg",
+				"exif_orientation": 4,
+				"issues": ["ROTATED_BY_EXIF"]
+			}
+		},
+		{
+			"id": "orientation_5_flagged",
+			"input": "orientation_5.jpg",
+			"expect": {
+				"format": "jpeg",
+				"exif_orientation": 5,
+				"issues": ["ROTATED_BY_EXIF"]
+			}
+		},
+		{
+			"id": "orientation_6_flagged",
+			"input": "orientation_6.jpg",
+			"expect": {
+				"format": "jpeg",
+				"exif_orientation": 6,
+				"issues": ["ROTATED_BY_EXIF"]
+			}
+		},
+		{
+			"id": "orientation_7_flagged",
+			"input": "orientation_7.jpg",
+			"expect": {
+				"format": "jpeg",
+				"exif_orientation": 7,
+				"issues": ["ROTATED_BY_EXIF"]
+			}
+		},
+		{
+			"id": "orientation_8_flagged",
+			"input": "orientation_8.jpg",
+			"expect": {
+				"format": "jpeg",
+				"exif_orientation": 8,
+				"issues": ["ROTATED_BY_EXIF"]
+			}
+		},
+		{
+			"id": "detect_gps",
+			"input": "photo_exif_gps_400x300.jpg",
+			"expect": {
+				"format": "jpeg",
+				"width": 400,
+				"height": 300,
+				"has_exif": true,
+				"has_gps": true,
+				"issues": ["HAS_GPS_EXIF"]
+			}
+		},
+		{
+			"id": "detect_icc",
+			"input": "icc_srgb_100x100.jpg",
+			"expect": { "format": "jpeg", "has_icc": true, "issues": [] }
+		},
+		{
+			"id": "detect_gray",
+			"input": "gray_signature_140x60.jpg",
+			"expect": {
+				"format": "jpeg",
+				"color": "gray",
+				"width": 140,
+				"height": 60,
+				"issues": []
+			}
+		},
+		{
+			"id": "plain_baseline_photo",
+			"input": "photo_phone_3000x4000.jpg",
+			"expect": {
+				"format": "jpeg",
+				"color": "rgb",
+				"progressive": false,
+				"width": 3000,
+				"height": 4000,
+				"has_exif": false,
+				"issues": []
+			}
+		},
+		{
+			"id": "png_dimensions",
+			"input": "signature_clean_420x180.png",
+			"expect": {
+				"format": "png",
+				"width": 420,
+				"height": 180,
+				"issues": []
+			}
+		}
+	],
+	"match_cases": [
+		{
+			"id": "ibps_family_photo",
+			"file": {
+				"format": "jpeg",
+				"kb": 35,
+				"width": 200,
+				"height": 230,
+				"doc": "photo"
+			},
+			"expect_exact_includes": [
+				"ibps_po",
+				"sbi_po",
+				"rbi_grade_b",
+				"lic_aao"
+			],
+			"expect_not_includes": ["ssc_cgl"],
+			"_why": "SSC captures the photo live - no photo upload slot"
+		},
+		{
+			"id": "near_miss_signature",
+			"file": {
+				"format": "jpeg",
+				"kb": 22,
+				"width": 140,
+				"height": 60,
+				"doc": "signature"
+			},
+			"expect_near_miss": [
+				{
+					"exam": "ibps_po",
+					"param": "size_kb",
+					"fix": "compress_to_target"
+				}
+			]
+		},
+		{
+			"id": "wide_signature_gate_not_ibps",
+			"file": {
+				"format": "jpeg",
+				"kb": 40,
+				"width": 500,
+				"height": 150,
+				"doc": "signature"
+			},
+			"expect_exact_includes": ["gate"],
+			"expect_not_includes": ["ibps_po"]
+		},
+		{
+			"id": "low_confidence_is_never_exact_or_counted",
+			"file": {
+				"format": "jpeg",
+				"kb": 35,
+				"width": 200,
+				"height": 230,
+				"doc": "photo"
+			},
+			"expect_unverified_includes": ["nabard_grade_a", "niacl_ao"],
+			"expect_headline_excludes": ["nabard_grade_a", "niacl_ao"],
+			"expect_exact_excludes": ["nabard_grade_a", "niacl_ao"],
+			"_why": "CLAUDE.md rule 6: low-confidence presets say likely OK and never count in the headline N"
+		},
+		{
+			"id": "unknown_spec_never_accepts",
+			"file": {
+				"format": "jpeg",
+				"kb": 15,
+				"width": 140,
+				"height": 60,
+				"doc": "signature"
+			},
+			"expect_not_includes": ["bpsc", "mht_cet"],
+			"_why": "ALGORITHMS 4: no size limits and dims mode none = UNKNOWN, never listed as accepting"
+		},
+		{
+			"id": "progressive_is_a_near_miss",
+			"file": {
+				"format": "jpeg",
+				"kb": 35,
+				"width": 200,
+				"height": 230,
+				"doc": "photo",
+				"progressive": true
+			},
+			"expect_near_miss": [
+				{
+					"exam": "ibps_po",
+					"param": "encoding",
+					"fix": "reencode_baseline"
+				}
+			],
+			"expect_exact_excludes": ["ibps_po"]
+		},
+		{
+			"id": "png_is_a_near_miss",
+			"file": {
+				"format": "png",
+				"kb": 35,
+				"width": 200,
+				"height": 230,
+				"doc": "photo"
+			},
+			"expect_near_miss": [
+				{
+					"exam": "ibps_po",
+					"param": "format",
+					"fix": "convert_to_jpeg"
+				}
+			]
+		},
+		{
+			"id": "too_small_is_a_near_miss",
+			"file": {
+				"format": "jpeg",
+				"kb": 15,
+				"width": 200,
+				"height": 230,
+				"doc": "photo"
+			},
+			"expect_near_miss": [
+				{
+					"exam": "ibps_po",
+					"param": "size_kb",
+					"fix": "enlarge_to_target"
+				}
+			]
+		},
+		{
+			"id": "far_too_big_is_no_match",
+			"file": {
+				"format": "jpeg",
+				"kb": 300,
+				"width": 200,
+				"height": 230,
+				"doc": "photo"
+			},
+			"expect_not_includes": ["ibps_po"],
+			"_why": "250 KB over a 30 KB window is far beyond 50% of the window: not a one-tap fix"
+		},
+		{
+			"id": "wrong_aspect_is_never_a_near_miss",
+			"file": {
+				"format": "jpeg",
+				"kb": 35,
+				"width": 400,
+				"height": 230,
+				"doc": "photo"
+			},
+			"expect_not_includes": ["ibps_po"],
+			"_why": "a dims failure needs a new crop, not a one-tap fix"
+		},
+		{
+			"id": "preferred_dims_off_is_accepted_not_exact",
+			"file": {
+				"format": "jpeg",
+				"kb": 15,
+				"width": 280,
+				"height": 120,
+				"doc": "signature"
+			},
+			"expect_accepted_includes": ["ibps_po"],
+			"expect_exact_excludes": ["ibps_po"]
+		},
+		{
+			"id": "gray_signature_needs_the_flag",
+			"file": {
+				"format": "jpeg",
+				"kb": 15,
+				"width": 140,
+				"height": 60,
+				"doc": "signature",
+				"color": "gray"
+			},
+			"expect_near_miss": [
+				{
+					"exam": "ibps_po",
+					"param": "encoding",
+					"fix": "reencode_baseline"
+				}
+			]
+		},
+		{
+			"id": "gray_signature_with_the_flag",
+			"file": {
+				"format": "jpeg",
+				"kb": 15,
+				"width": 140,
+				"height": 60,
+				"doc": "signature",
+				"color": "gray"
+			},
+			"options": { "allow_grayscale": true },
+			"expect_exact_includes": ["ibps_po", "ssc_cgl"]
+		},
+		{
+			"id": "pdf_matches_pdf_slots",
+			"file": { "format": "pdf", "kb": 250, "doc": "pdf_document" },
+			"expect_exact_includes": ["rrb_ntpc_grad", "rrb_ntpc_ug"],
+			"expect_unverified_includes": ["rrb_alp"],
+			"expect_not_includes": ["ibps_po"]
+		},
+		{
+			"id": "popularity_then_name_ordering",
+			"file": {
+				"format": "jpeg",
+				"kb": 35,
+				"width": 200,
+				"height": 230,
+				"doc": "photo"
+			},
+			"options": { "popularity": ["sbi_po", "ibps_po"] },
+			"expect_first_exact": ["sbi_po", "ibps_po"],
+			"_why": "listed exams first in list order, then the rest by name"
+		},
+		{
+			"id": "thumb_kind_maps_to_thumb_slots",
+			"file": {
+				"format": "jpeg",
+				"kb": 35,
+				"width": 240,
+				"height": 240,
+				"doc": "thumb"
+			},
+			"expect_exact_includes": ["ibps_po"]
+		}
+	],
+	"search_cases": [
+		{
+			"id": "body_query",
+			"kind": "search",
+			"query": "ibps",
+			"expect_ids": [
+				"ibps_po",
+				"ibps_clerk",
+				"ibps_rrb_po",
+				"ibps_rrb_clerk",
+				"ibps_so"
+			]
+		},
+		{
+			"id": "two_tokens",
+			"kind": "search",
+			"query": "ssc cgl",
+			"expect_ids": ["ssc_cgl"]
+		},
+		{
+			"id": "partial_name_token",
+			"kind": "search",
+			"query": "cgl",
+			"expect_ids": ["ssc_cgl"]
+		},
+		{
+			"id": "joined_tokens",
+			"kind": "search",
+			"query": "sscchsl",
+			"expect_ids": ["ssc_chsl"]
+		},
+		{
+			"id": "hindi_category_word",
+			"kind": "search",
+			"query": "बैंक",
+			"expect_ids": [
+				"ibps_po",
+				"sbi_po",
+				"ibps_clerk",
+				"sbi_clerk",
+				"ibps_rrb_po",
+				"ibps_rrb_clerk",
+				"rbi_grade_b",
+				"ibps_so",
+				"rbi_assistant"
+			]
+		},
+		{
+			"id": "hindi_alias_phrase",
+			"kind": "search",
+			"query": "आईबीपीएस पीओ",
+			"expect_ids": ["ibps_po", "ibps_rrb_po"]
+		},
+		{
+			"id": "hindi_alias_word",
+			"kind": "search",
+			"query": "नीट",
+			"expect_ids": ["neet_ug", "neet_pg"]
+		},
+		{
+			"id": "typo_adjacent_swap",
+			"kind": "search",
+			"query": "ibsp",
+			"expect_ids": [
+				"ibps_po",
+				"ibps_clerk",
+				"ibps_rrb_po",
+				"ibps_rrb_clerk",
+				"ibps_so",
+				"ssc_cpo"
+			]
+		},
+		{
+			"id": "typo_extra_letter",
+			"kind": "search",
+			"query": "jeee",
+			"expect_ids": ["jee_main"]
+		},
+		{
+			"id": "hindi_category_insurance",
+			"kind": "search",
+			"query": "बीमा",
+			"expect_ids": ["lic_aao", "lic_ado", "uiic_ao"]
+		},
+		{
+			"id": "latin_alias",
+			"kind": "search",
+			"query": "ias",
+			"expect_ids": ["upsc_cse"]
+		},
+		{
+			"id": "unverified_hidden_by_default",
+			"kind": "search",
+			"query": "rrb",
+			"expect_ids": [
+				"rrb_ntpc_grad",
+				"rrb_ntpc_ug",
+				"ibps_rrb_po",
+				"ibps_rrb_clerk"
+			]
+		},
+		{
+			"id": "unverified_shown_when_enabled",
+			"kind": "search",
+			"query": "rrb",
+			"show_unverified": true,
+			"expect_ids": [
+				"rrb_ntpc_grad",
+				"rrb_alp",
+				"rrb_group_d",
+				"rrb_je",
+				"rrb_ntpc_ug",
+				"ibps_rrb_po",
+				"ibps_rrb_clerk",
+				"rpf_constable"
+			]
+		},
+		{
+			"id": "punctuation_is_a_separator",
+			"kind": "search",
+			"query": "IBPS-PO",
+			"expect_ids": ["ibps_po", "ibps_rrb_po"]
+		},
+		{
+			"id": "fullwidth_letters",
+			"kind": "search",
+			"query": "ＳＳＣ ＣＧＬ",
+			"expect_ids": ["ssc_cgl"]
+		},
+		{
+			"id": "short_prefix",
+			"kind": "search",
+			"query": "ss",
+			"expect_ids": [
+				"ssc_cgl",
+				"ssc_chsl",
+				"ssc_gd",
+				"ssc_mts",
+				"ssc_cpo",
+				"ssc_je",
+				"ssc_selection_post",
+				"ssc_steno"
+			]
+		},
+		{
+			"id": "within_category",
+			"kind": "search",
+			"query": "po",
+			"category": "banking",
+			"expect_ids": ["ibps_po", "sbi_po", "ibps_rrb_po"]
+		},
+		{
+			"id": "no_match",
+			"kind": "search",
+			"query": "zzzz",
+			"expect_ids": []
+		},
+		{
+			"id": "blank_query_gives_nothing",
+			"kind": "search",
+			"query": "   ",
+			"expect_ids": []
+		},
+		{
+			"id": "browse_banking",
+			"kind": "browse",
+			"category": "banking",
+			"expect_ids": [
+				"ibps_po",
+				"sbi_po",
+				"ibps_clerk",
+				"sbi_clerk",
+				"ibps_rrb_po",
+				"ibps_rrb_clerk",
+				"rbi_grade_b",
+				"ibps_so",
+				"rbi_assistant"
+			]
+		},
+		{
+			"id": "browse_railway_with_unverified",
+			"kind": "browse",
+			"category": "railway",
+			"show_unverified": true,
+			"expect_ids": [
+				"rrb_ntpc_grad",
+				"rpf_constable",
+				"rrb_alp",
+				"rrb_group_d",
+				"rrb_je",
+				"rrb_ntpc_ug"
+			]
+		},
+		{
+			"id": "popular_top_3",
+			"kind": "popular",
+			"n": 3,
+			"expect_ids": ["ibps_po", "sbi_po", "ssc_cgl"]
+		},
+		{
+			"id": "popular_all",
+			"kind": "popular",
+			"n": 50,
+			"expect_ids": [
+				"ibps_po",
+				"sbi_po",
+				"ssc_cgl",
+				"neet_ug",
+				"jee_main",
+				"cuet_ug",
+				"ibps_clerk",
+				"ssc_chsl",
+				"ssc_gd",
+				"rrb_ntpc_grad",
+				"upsc_cse",
+				"sbi_clerk",
+				"ctet",
+				"ugc_net",
+				"ibps_rrb_po",
+				"ibps_rrb_clerk",
+				"rbi_grade_b",
+				"lic_aao",
+				"ssc_mts",
+				"gate",
+				"cat",
+				"clat"
+			]
+		}
+	],
+	"search_level_cases": [
+		{ "id": "level_01", "q": "ibps", "t": "ibps", "level": 3 },
+		{ "id": "level_02", "q": "ib", "t": "ibps", "level": 2 },
+		{ "id": "level_03", "q": "ibsp", "t": "ibps", "level": 1 },
+		{ "id": "level_04", "q": "ibp", "t": "ibsp", "level": 0 },
+		{ "id": "level_05", "q": "jeee", "t": "jee", "level": 1 },
+		{ "id": "level_06", "q": "abcd", "t": "wxyz", "level": 0 },
+		{ "id": "level_07", "q": "neet", "t": "neetpg", "level": 2 },
+		{ "id": "level_08", "q": "nept", "t": "neetpg", "level": 1 },
+		{ "id": "level_09", "q": "बैंक", "t": "बैंकिंग", "level": 2 },
+		{ "id": "level_10", "q": "cgl", "t": "sscgl", "level": 0 },
+		{ "id": "level_11", "q": "ssc", "t": "s", "level": 0 },
+		{ "id": "level_12", "q": "insp", "t": "inspector", "level": 2 },
+		{ "id": "level_13", "q": "ibsp", "t": "inspector", "level": 1 }
+	],
+	"search_norm_cases": [
+		{
+			"id": "norm_01",
+			"text": "IBPS PO / MT",
+			"tokens": ["ibps", "po", "mt"]
+		},
+		{ "id": "norm_02", "text": "State_PSC", "tokens": ["state", "psc"] },
+		{ "id": "norm_03", "text": "ज़ीरो", "tokens": ["जीरो"] },
+		{ "id": "norm_04", "text": "ＳＳＣ", "tokens": ["ssc"] },
+		{ "id": "norm_05", "text": "क्‍ष", "tokens": ["क्ष"] },
+		{
+			"id": "norm_06",
+			"text": "  Hello,World!! ",
+			"tokens": ["hello", "world"]
+		},
+		{
+			"id": "norm_07",
+			"text": "RRB Group D (Level 1)",
+			"tokens": ["rrb", "group", "d", "level", "1"]
+		},
+		{
+			"id": "norm_08",
+			"text": "NEET-UG 2026",
+			"tokens": ["neet", "ug", "2026"]
+		}
+	]
 }

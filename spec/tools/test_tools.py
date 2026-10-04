@@ -13,6 +13,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import gen_analytics  # noqa: E402
 import gen_strings  # noqa: E402
 import gen_tokens  # noqa: E402
+import photo_crop  # noqa: E402
 import release_preflight  # noqa: E402
 from _common import SPEC, require  # noqa: E402
 
@@ -92,6 +93,14 @@ class Strings(unittest.TestCase):
     def test_android_escaping(self):
         self.assertEqual(gen_strings.android_escape("Don't <b> & \"q\""), "Don\\'t &lt;b&gt; &amp; \\\"q\\\"")
         self.assertEqual(gen_strings.android_escape("@home"), "\\@home")
+
+    def test_info_plist_fallbacks_match_the_english_strings(self):
+        """ios/project.yml repeats each infoplist.* value as the Info.plist fallback: it must not drift from en.json."""
+        en = load("strings", "en.json")
+        with open(os.path.join(SPEC, "..", "ios", "project.yml"), encoding="utf-8") as f:
+            project = f.read()
+        for key, plist_key in gen_strings.INFOPLIST_KEYS.items():
+            self.assertIn(f"{plist_key}: {en[key]}\n", project, key)
 
     def test_todo_prefix_is_stripped_for_output(self):
         self.assertEqual(gen_strings.strip_todo("TODO_HI: नमस्ते"), "नमस्ते")
@@ -241,6 +250,13 @@ class CasesFile(unittest.TestCase):
                 self.assertEqual(crop(src["w"], src["h"], a), c["expect"]["crop"], c["id"])
             if "pad" in c["expect"]:
                 self.assertEqual(pad(src["w"], src["h"], dims["width"] / dims["height"]), c["expect"]["pad"], c["id"])
+
+
+    def test_crop_expectations_match_the_reference(self):
+        """crop_cases are computed by photo_crop.py: a hand edit that drifts from ALGORITHMS 9.6 fails here."""
+        self.assertGreaterEqual(len(self.cases["crop_cases"]), 10)
+        for c in self.cases["crop_cases"]:
+            self.assertEqual(photo_crop.expected(c), c["expect"], c["id"])
 
 
 class PresetsDist(unittest.TestCase):

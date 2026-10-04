@@ -1,9 +1,11 @@
 plugins {
     id("scanfit.android.library")
-    // Pure interfaces and value types for the ML wrappers; the ML Kit implementations land in Phase 2 (with fakes in :core:testing).
 }
 
 dependencies {
     api(project(":core:imaging"))
     implementation(libs.kotlinx.coroutines.android)
+    // Bundled models: on-device, no Play services download, nothing leaves the phone (CLAUDE.md rule 2).
+    implementation(libs.mlkit.face.detection)
+    implementation(libs.mlkit.segmentation.selfie)
 }

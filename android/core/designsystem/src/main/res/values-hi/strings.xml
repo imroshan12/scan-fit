@@ -69,6 +69,10 @@
     <string name="exam_status_saved">सेव हो गया</string>
     <string name="exam_unpin">मेरी परीक्षाओं से हटाएँ</string>
     <string name="exam_verified_on">स्पेक्स %1$s को सत्यापित</string>
+    <string name="export_save_failed">फ़ाइल सेव नहीं हो सकी। कृपया फिर कोशिश करें।</string>
+    <string name="export_saved">सेव हो गया</string>
+    <string name="export_saving">सेव हो रहा है…</string>
+    <string name="export_verify_failed">सेव की गई फ़ाइल जाँच में पास नहीं हुई। कृपया फिर कोशिश करें।</string>
     <string name="fix_compress_to_target">साइज़ घटाकर फ़िट करें</string>
     <string name="fix_convert_to_jpeg">JPG में बदलें</string>
     <string name="fix_enlarge_to_target">साइज़ बढ़ाकर फ़िट करें</string>
@@ -140,6 +144,32 @@
         <item quantity="one">%1$d त्वरित सुधार</item>
         <item quantity="other">%1$d त्वरित सुधार</item>
     </plurals>
+    <string name="photo_choose">गैलरी से चुनें</string>
+    <string name="photo_choose_another">दूसरी फ़ोटो चुनें</string>
+    <string name="photo_choose_file">फ़ाइल्स से चुनें</string>
+    <string name="photo_crop_heading">क्रॉप ठीक करें</string>
+    <string name="photo_crop_hint">हिलाने के लिए खींचें · ज़ूम के लिए पिंच करें</string>
+    <string name="photo_crop_tight">फ़ोटो में चेहरा बहुत बड़ा है, इसलिए क्रॉप सामान्य से छोटा है। थोड़ी दूर से ली गई फ़ोटो बेहतर रहेगी।</string>
+    <string name="photo_date_label">तारीख़ (DD/MM/YYYY)</string>
+    <string name="photo_finding_face">आपका चेहरा ढूँढ रहे हैं…</string>
+    <string name="photo_meets_rules">%1$s के नियमों के अनुसार है</string>
+    <string name="photo_misses_rules">अभी %1$s के नियमों के अनुसार नहीं है</string>
+    <string name="photo_name_label">फ़ोटो पर नाम</string>
+    <string name="photo_open_failed">यह इमेज नहीं खुल पाई। कोई दूसरी फ़ोटो आज़माएँ।</string>
+    <string name="photo_reset">रीसेट करें</string>
+    <string name="photo_result">%1$d KB · %2$d×%3$d · JPG</string>
+    <plurals name="photo_result_a11y">
+        <item quantity="one">%1$d किलोबाइट, %2$s गुणा %3$s पिक्सल, JPG</item>
+        <item quantity="other">%1$d किलोबाइट, %2$s गुणा %3$s पिक्सल, JPG</item>
+    </plurals>
+    <string name="photo_rotate">घुमाएँ</string>
+    <string name="photo_source_heading">अपनी फ़ोटो जोड़ें</string>
+    <string name="photo_strip_hint">इस परीक्षा में फ़ोटो पर आपका नाम और तारीख़ ज़रूरी हो सकती है। नोटिस देखें।</string>
+    <string name="photo_take">फ़ोटो लें</string>
+    <string name="photo_tips">सादा हल्का बैकग्राउंड · सीधे कैमरे की ओर देखें · टोपी या काला चश्मा नहीं</string>
+    <string name="photo_white_bg_unavailable">इस डिवाइस पर सफ़ेद बैकग्राउंड उपलब्ध नहीं है।</string>
+    <string name="photo_zoom_in">ज़ूम इन करें</string>
+    <string name="photo_zoom_out">ज़ूम आउट करें</string>
     <string name="settings_about">ऐप के बारे में</string>
     <string name="settings_check_updates">अपडेट जाँचें</string>
     <string name="settings_help">मदद</string>

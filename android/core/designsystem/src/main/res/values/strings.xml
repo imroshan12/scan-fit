@@ -69,6 +69,10 @@
     <string name="exam_status_saved">Saved</string>
     <string name="exam_unpin">Remove from My exams</string>
     <string name="exam_verified_on">Specs verified %1$s</string>
+    <string name="export_save_failed">Could not save the file. Please try again.</string>
+    <string name="export_saved">Saved</string>
+    <string name="export_saving">Saving…</string>
+    <string name="export_verify_failed">The saved file did not pass verification. Please try again.</string>
     <string name="fix_compress_to_target">Compress to fit</string>
     <string name="fix_convert_to_jpeg">Convert to JPG</string>
     <string name="fix_enlarge_to_target">Enlarge to fit</string>
@@ -140,6 +144,32 @@
         <item quantity="one">%1$d quick fix</item>
         <item quantity="other">%1$d quick fixes</item>
     </plurals>
+    <string name="photo_choose">Choose from gallery</string>
+    <string name="photo_choose_another">Choose another photo</string>
+    <string name="photo_choose_file">Choose from Files</string>
+    <string name="photo_crop_heading">Adjust the crop</string>
+    <string name="photo_crop_hint">Drag to move · pinch to zoom</string>
+    <string name="photo_crop_tight">Your face fills most of the photo, so the crop is tighter than usual. A photo from further away works better.</string>
+    <string name="photo_date_label">Date (DD/MM/YYYY)</string>
+    <string name="photo_finding_face">Finding your face…</string>
+    <string name="photo_meets_rules">Meets the %1$s rules</string>
+    <string name="photo_misses_rules">Doesn\'t meet the %1$s rules yet</string>
+    <string name="photo_name_label">Name on the photo</string>
+    <string name="photo_open_failed">Couldn\'t open this image. Try another photo.</string>
+    <string name="photo_reset">Reset</string>
+    <string name="photo_result">%1$d KB · %2$d×%3$d · JPG</string>
+    <plurals name="photo_result_a11y">
+        <item quantity="one">%1$d kilobyte, %2$s by %3$s pixels, JPG</item>
+        <item quantity="other">%1$d kilobytes, %2$s by %3$s pixels, JPG</item>
+    </plurals>
+    <string name="photo_rotate">Rotate</string>
+    <string name="photo_source_heading">Add a photo of yourself</string>
+    <string name="photo_strip_hint">This exam may need your name and date on the photo. Check the notice.</string>
+    <string name="photo_take">Take a photo</string>
+    <string name="photo_tips">Plain light background · look straight at the camera · no cap or dark glasses</string>
+    <string name="photo_white_bg_unavailable">White background isn\'t available on this device.</string>
+    <string name="photo_zoom_in">Zoom in</string>
+    <string name="photo_zoom_out">Zoom out</string>
     <string name="settings_about">About</string>
     <string name="settings_check_updates">Check for updates</string>
     <string name="settings_help">Help</string>

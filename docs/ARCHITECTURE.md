@@ -23,17 +23,19 @@ No shared runtime code. Parity comes from generated resources and a conformance 
 ```
 
 ## 1. Platform baselines
-| | Android | iOS |
-|---|---|---|
-| Language | Kotlin 2.x (K2), coroutines/Flow | Swift 6, strict concurrency |
-| UI | Jetpack Compose + Material 3 (custom theme from tokens) | SwiftUI (Observation, NavigationStack) |
-| Min / target | minSdk **26**, targetSdk **36** (Play requires Android 16 targets for new apps and updates from 31 Aug 2026) | iOS **17.0** min; build with the Xcode/SDK that App Store Connect currently requires |
-| Architecture | Single activity, UDF/MVVM, Hilt DI, multi-module Gradle with convention plugins in `build-logic/` and a version catalog | Feature-sliced local Swift packages, lightweight DI via an `AppContainer` passed in `Environment` |
-| Persistence | Room (metadata) + app-specific files dir (images) + DataStore (prefs) | SwiftData (metadata, files referenced by name only) + app container files + `UserDefaults` for prefs |
-| Background | WorkManager (preset sync, cleanup) | `BGAppRefreshTask` + fetch on foreground |
-| Must-dos | Edge-to-edge, predictive back, **16 KB page-size compatible native libs**, per-app language (`LocaleManager`) | Privacy manifest (`PrivacyInfo.xcprivacy`), Dynamic Type, current system design language (Liquid Glass comes automatically with the current SDK; don't fight it) |
+
+|              | Android                                                                                                                 | iOS                                                                                                                                                              |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Language     | Kotlin 2.x (K2), coroutines/Flow                                                                                        | Swift 6, strict concurrency                                                                                                                                      |
+| UI           | Jetpack Compose + Material 3 (custom theme from tokens)                                                                 | SwiftUI (Observation, NavigationStack)                                                                                                                           |
+| Min / target | minSdk **26**, targetSdk **36** (Play requires Android 16 targets for new apps and updates from 31 Aug 2026)            | iOS **17.0** min; build with the Xcode/SDK that App Store Connect currently requires                                                                             |
+| Architecture | Single activity, UDF/MVVM, Hilt DI, multi-module Gradle with convention plugins in `build-logic/` and a version catalog | Feature-sliced local Swift packages, lightweight DI via an `AppContainer` passed in `Environment`                                                                |
+| Persistence  | Room (metadata) + app-specific files dir (images) + DataStore (prefs)                                                   | SwiftData (metadata, files referenced by name only) + app container files + `UserDefaults` for prefs                                                             |
+| Background   | WorkManager (preset sync, cleanup)                                                                                      | `BGAppRefreshTask` + fetch on foreground                                                                                                                         |
+| Must-dos     | Edge-to-edge, predictive back, **16 KB page-size compatible native libs**, per-app language (`LocaleManager`)           | Privacy manifest (`PrivacyInfo.xcprivacy`), Dynamic Type, current system design language (Liquid Glass comes automatically with the current SDK; don't fight it) |
 
 ## 2. Android module graph
+
 ```
 :app                         (nav graph, DI root, Application, deep links)
 :feature:home  :feature:exams  :feature:flow-photo  :feature:flow-ink  (signature/thumb/declaration)
@@ -49,6 +51,7 @@ No shared runtime code. Parity comes from generated resources and a conformance 
 :core:data          (Room DB, KitRepository, ExportRepository/MediaStore)
 :core:billing  :core:ads  :core:analytics  :core:config (Remote Config)  :core:testing
 ```
+
 Toolchain (Oct 2026): AGP 9.4.1 (needs Gradle ≥ 9.6), Gradle 9.6.1, Kotlin 2.4, `compileSdk` 37 / `targetSdk` 36 / `minSdk` 26.
 Because minSdk 26 predates the platform Ed25519 provider (API 33), `:core:presets` verifies with Tink and caches the digest of a
 verified snapshot (`docs/spikes/ed25519-verify-cost.md`).
@@ -56,12 +59,14 @@ Rules: `feature:*` depends on `core:*` only; features never depend on each other
 routes in `:app`). `core:model`, `core:match`, `core:inspect` are **pure Kotlin/JVM**, with no Android imports.
 
 ## 3. iOS package graph (`ios/Packages/`)
+
 ```
 App target (ScanFitApp, RootView, AppContainer, deep links)
 Features/  Home, Exams, PhotoFlow, InkFlow, Coach, Checker, Custom, PDFTools, Kit, Paywall, Settings
 Core/      DesignSystem (generated), Model, Presets (CryptoKit Ed25519), Imaging (ImageIO/CoreImage/vImage),
            Match, Inspect, PDF (PDFKit), Vision, Data (SwiftData), Billing, Ads, Analytics, Config
 ```
+
 Layout: two local packages, `ios/Packages/Core` (all `Core/*` targets) and `ios/Packages/Features`; the app target is generated by
 XcodeGen from `ios/project.yml`. Three Core targets are prefixed to avoid clashes with Apple modules: `Model` → `ScanModel`,
 `Data` → `ScanData`, `Vision` → `ScanVision`.
@@ -69,7 +74,9 @@ Engines are `actor`s or `Sendable` structs. View models are `@MainActor @Observa
 runs in `Task` with cancellation checked between steps (the user can back out mid-fit).
 
 ## 4. Layering (same on both)
+
 `View → ViewModel(UiState, intents) → UseCase → Repository/Engine → Platform API`
+
 - **UiState** is an immutable value (sealed/enums) and the single source of truth for the screen.
 - **Engines are deterministic and side-effect free**: input bytes/bitmap + spec → output + report.
   This is what the conformance suite tests.
@@ -77,6 +84,7 @@ runs in `Task` with cancellation checked between steps (the user can back out mi
   `PresetError.BadSignature`) is mapped to a user message in the ViewModel. No raw exception text in the UI.
 
 ## 5. Data model (both platforms mirror these)
+
 ```
 Exam (from presets bundle, read-only, in memory + cached file)
 KitItem      id, docKind, originalFile, cleanedFile, createdAt, source(camera|gallery|scan), meta(json)
@@ -84,11 +92,13 @@ Export       id, kitItemId?, examId?, docType, file(uri/bookmark), bytes, w, h, 
 MyExam       examId, pinnedAt, lastOpenedAt, checklistState(json)
 PresetState  version, etag, fetchedAt, signatureOk
 ```
+
 Files: `files/kit/<uuid>.jpg` (cleaned original, max 2400px, q=92), `files/exports/<uuid>.jpg`
 (copy retained 30 days for re-share, then pruned). Exported user-visible copies live in
 MediaStore/Files. The DB stores relative names only (SwiftData principle: filename in the DB, bytes on disk).
 
 ## 6. Presets delivery
+
 1. Every build embeds `presets.json` + `.sig` from `spec/dist` (Gradle task / Xcode build phase copies it).
 2. On launch (at most once per 24h) and daily in the background: `GET https://<cdn>/presets/v2/presets.json`
    with `If-None-Match`. On 200: fetch the `.sig`, verify **Ed25519** against the embedded public
@@ -99,17 +109,26 @@ MediaStore/Files. The DB stores relative names only (SwiftData principle: filena
    `exams/<id>.json`, fetched lazily. The schema already supports it (`schema_version` gate).
 
 ## 7. Export and file access
-| | Android | iOS |
-|---|---|---|
-| Pick input | Photo Picker (`PickVisualMedia`, no storage permission), SAF `OpenDocument` for PDFs | `PhotosPicker`, `fileImporter` |
-| Camera | CameraX (capture + `ImageAnalysis` for the coach) | AVFoundation (`AVCaptureSession`, video data output for the coach) |
-| Doc scan | ML Kit Document Scanner (Play services UI, no camera permission) | `VNDocumentCameraViewController` |
-| Save | API 29+: `MediaStore.Downloads` → `Download/ScanFit/<Exam>/`. API 26–28: SAF `CreateDocument` | `fileExporter` / `UIDocumentPickerViewController(forExporting:)` to Files (default); "Save to Photos" as a secondary option with a warning |
-| Share | `ACTION_SEND` via `FileProvider` | `ShareLink` |
+
+|            | Android                                                                                                        | iOS                                                                                                                                        |
+| ---------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Pick input | Photo Picker (`PickVisualMedia`, no storage permission); SAF `OpenDocument` for images from Files and for PDFs | `PhotosPicker`; `fileImporter` (Files: images, PDFs)                                                                                       |
+| Camera     | CameraX (capture + `ImageAnalysis` for the coach)                                                              | AVFoundation (`AVCaptureSession`, video data output for the coach)                                                                         |
+| Doc scan   | ML Kit Document Scanner (Play services UI, no camera permission)                                               | `VNDocumentCameraViewController`                                                                                                           |
+| Save       | API 29+: `MediaStore.Downloads` → `Download/ScanFit/<Exam>/`. API 26–28: SAF `CreateDocument`                  | `fileExporter` / `UIDocumentPickerViewController(forExporting:)` to Files (default); "Save to Photos" as a secondary option with a warning |
+| Share      | `ACTION_SEND` via `FileProvider`                                                                               | `ShareLink`                                                                                                                                |
 
 No broad storage permission is ever requested (Play's photo/video permission policy).
 
+Phase 2 single-photo exports use a separate save state and re-open the destination off the UI thread. Android leaves the
+MediaStore entry pending until verification, then publishes it; older APIs use CreateDocument. iOS currently bridges
+UIDocumentPickerViewController (copy export), re-reading its returned URL with security scope and NSFileCoordinator.
+Verification and cleanup follow ALGORITHMS §1.6. The picker controls the iOS folder; the app cannot force `ScanFit/<Exam>/`.
+Verified checklist status is stored in the existing DataStore/UserDefaults preferences, keyed by exam/document type. This is
+a historical Saved marker, not a file-existence check. The full Export entity, retained copies and history remain follow-ups.
+
 ## 8. Monetisation plumbing
+
 - **Billing**: RevenueCat native SDKs (`purchases-android`, `purchases-ios`) on top of Play Billing
   and StoreKit 2. Entitlement `pro`. Products: `pro_yearly` (subscription), `pro_lifetime`
   (non-consumable/one-time). Why RevenueCat: receipt validation and cross-store analytics without
@@ -122,6 +141,7 @@ No broad storage permission is ever requested (Play's photo/video permission pol
 - **Paywall**: native screen (not a web paywall) with variants driven by Remote Config.
 
 ## 9. Analytics, crashes, config
+
 Firebase Analytics + Crashlytics + Remote Config (Firebase links AdMob revenue to analytics for
 LTV). Events are a closed enum set, defined once in `spec/analytics/events.json` (Phase 0) and
 generated for both apps:
@@ -139,6 +159,7 @@ Remote Config keys (defaults ship in the app): `min_presets_version`, `min_fill_
 bundle (`spec/presets/popular.json`), so it updates with presets; Remote Config only overrides it.
 
 ## 10. Security and privacy
+
 - All processing is on-device. The only network calls are presets, Remote Config, analytics,
   ads and billing.
 - Presets are signed (Ed25519): a compromised CDN can't push wrong specs.
@@ -147,28 +168,30 @@ bundle (`spec/presets/popular.json`), so it updates with presets; Remote Config 
   iOS: set `isExcludedFromBackup` on those folders.
 - v1.1 app lock: BiometricPrompt / LocalAuthentication, gating Kit and Scan library.
 - Play Data safety: "no data collected" isn't accurate because analytics, ads and crash reports
-  exist. Declare exactly those, as not linked to identity, and document-content *not* collected.
+  exist. Declare exactly those, as not linked to identity, and document-content _not_ collected.
   iOS: the privacy manifest lists the required-reason APIs (UserDefaults, file timestamp, disk
   space) and the SDKs' manifests.
 - India DPDP Act: no personal data is processed off-device by us. The privacy policy states this
   plainly (a short page on the web site).
 
 ## 11. Performance budgets (release gates, measured on reference devices, TESTING §4)
-| Metric | Low-end Android (2–3 GB) | Mid Android | iPhone SE 3 |
-|---|---|---|---|
-| Cold start to interactive home | ≤ 2.0 s | ≤ 1.2 s | ≤ 1.0 s |
-| Photo fit (from 12 MP source) | ≤ 1.5 s | ≤ 0.8 s | ≤ 0.6 s |
-| Signature cleanup + fit | ≤ 1.2 s | ≤ 0.6 s | ≤ 0.5 s |
-| Match note recompute | ≤ 30 ms | ≤ 10 ms | ≤ 10 ms |
-| Peak memory in flows | ≤ 180 MB | ≤ 250 MB | ≤ 200 MB |
-| APK download size (arm64) | ≤ 15 MB | | IPA ≤ 25 MB |
-| Frame time in scroll/transitions | no jank > 2% frames | | |
+
+| Metric                           | Low-end Android (4 GB) | Mid Android | iPhone 11 Pro Max (iOS 17) |
+| -------------------------------- | ---------------------- | ----------- | -------------------------- |
+| Cold start to interactive home   | ≤ 2.0 s                | ≤ 1.2 s     | ≤ 1.0 s                    |
+| Photo fit (from 12 MP source)    | ≤ 1.5 s                | ≤ 0.8 s     | ≤ 0.6 s                    |
+| Signature cleanup + fit          | ≤ 1.2 s                | ≤ 0.6 s     | ≤ 0.5 s                    |
+| Match note recompute             | ≤ 30 ms                | ≤ 10 ms     | ≤ 10 ms                    |
+| Peak memory in flows             | ≤ 180 MB               | ≤ 250 MB    | ≤ 200 MB                   |
+| APK download size (arm64)        | ≤ 15 MB                |             | IPA ≤ 25 MB                |
+| Frame time in scroll/transitions | no jank > 2% frames    |             |                            |
 
 Android: Baseline Profiles + startup profile (Macrobenchmark), R8 full mode, bundled ML Kit
 models only where needed (face detection bundled for the offline coach; the doc scanner comes
 from Play services).
 
 ## 12. CI/CD
+
 - `.github/workflows/spec.yml` (paths `spec/**`): validate presets, run the fixture generator
   diff, build + sign + publish presets to `web/` (on main).
 - `android.yml` (paths `android/**`, `spec/**`): spotless, detekt, unit + conformance,
@@ -180,12 +203,13 @@ from Play services).
   API key (cloud-managed signing, no certificates in secrets) and upload to TestFlight with `xcodebuild -exportArchive`.
 - Versioning: marketing version is shared semver per release (`1.0.0`), taken from the tag (`android-v1.0.0`, `ios-v1.0.0`);
   a suffix (`-rc1`, `-beta1`) marks a pre-release, which may still carry machine-drafted Hindi (`build_all.sh --release
-  --allow-todo-hi`). iOS takes digits only, so the suffix stays in the tag. Build numbers are per platform, from CI run
+--allow-todo-hi`). iOS takes digits only, so the suffix stays in the tag. Build numbers are per platform, from CI run
   numbers (`-Pscanfit.versionCode`, `--build`). Defaults live in `android/gradle.properties` and `ios/project.yml`.
 - Secrets: signing keys in GitHub Actions secrets behind protected environments; the full list is in
   `docs/RELEASE_CHECKLIST.md`. Android upload key via Play App Signing. `release_preflight.py` reports what is missing.
 
 ## 13. Scalability checklist
+
 Presets can grow 10× without code changes (§6). New languages: add `spec/strings/<lang>.json`.
 New doc types: schema enum + ALGORITHMS entry + one flow mapping. New exam families with unusual
 rules: extend the schema, never special-case in code. Feature flags gate every new flow.

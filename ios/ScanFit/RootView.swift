@@ -2,17 +2,20 @@ import DesignSystem
 import Exams
 import Home
 import Kit
+import PhotoFlow
 import Presets
 import ScanModel
 import Settings
 import SwiftUI
 
-/// Tab shell: Home · My Kit · Tools · Settings (UI_UX §2). The Home stack maps `ExamRoute` to the exam screen, so the
-/// two features never import each other.
+/// Tab shell: Home · My Kit · Tools · Settings (UI_UX §2). The Home stack maps `ExamRoute` to the exam screen and
+/// `PhotoRoute` to the photo flow, so the features never import each other.
 struct RootView: View {
     private let container: AppContainer
     @State private var homeModel: HomeViewModel
     @State private var presets: PresetsSummary?
+    /// The Home stack's path, so a flow can leave itself explicitly (see `PhotoFlowView.onExit`).
+    @State private var homePath = NavigationPath()
 
     init(container: AppContainer) {
         self.container = container
@@ -22,18 +25,34 @@ struct RootView: View {
         })
     }
 
+    /// Document types the photo flow handles (ALGORITHMS 1.2: the kinds that are cropped, not padded).
+    private static let photoFlowTypes: Set<DocType> = [.photo, .postcardPhoto]
+
     var body: some View {
         let strings = container.strings
         TabView {
-            NavigationStack {
+            NavigationStack(path: $homePath) {
                 HomeView(model: homeModel, strings: strings)
                     .navigationDestination(for: ExamRoute.self) { route in
                         ExamView(
                             model: ExamViewModel(examId: route.examId, preferences: container.preferences) {
                                 await container.trustedBundle()
                             },
-                            strings: strings
+                            strings: strings,
+                            openable: Self.photoFlowTypes
                         )
+                    }
+                    .navigationDestination(for: PhotoRoute.self) { route in
+                        PhotoFlowView(
+                            model: PhotoFlowViewModel(
+                                examId: route.examId, docType: route.docType, preferences: container.preferences
+                            ) {
+                                await container.trustedBundle()
+                            },
+                            strings: strings
+                        ) {
+                            if !homePath.isEmpty { homePath.removeLast() }
+                        }
                     }
             }
             .tabItem { Label(strings.tabHome, systemImage: "house") }

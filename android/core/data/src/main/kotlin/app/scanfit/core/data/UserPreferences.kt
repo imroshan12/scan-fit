@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -20,6 +21,10 @@ interface UserPreferences {
     /** Low-confidence presets are hidden until the user opts in (PRD F1, CLAUDE.md rule 6). */
     val showUnverified: Flow<Boolean>
 
+    val savedDocuments: Flow<Set<SavedDocument>>
+
+    suspend fun recordSaved(examId: String, docType: String)
+
     suspend fun setPinned(
         examId: String,
         pinned: Boolean,
@@ -27,6 +32,8 @@ interface UserPreferences {
 
     suspend fun setShowUnverified(show: Boolean)
 }
+
+data class SavedDocument(val examId: String, val docType: String)
 
 /** [UserPreferences] in a Preferences DataStore. A corrupt or unreadable file reads as defaults instead of crashing. */
 class DataStoreUserPreferences(
@@ -37,7 +44,22 @@ class DataStoreUserPreferences(
 
     override val pinnedExamIds: Flow<List<String>> = data.map { decode(it[PINNED]) }.distinctUntilChanged()
 
-    override val showUnverified: Flow<Boolean> = data.map { it[SHOW_UNVERIFIED] ?: false }.distinctUntilChanged()
+    override val showUnverified: Flow<Boolean> =
+        data.map { it[SHOW_UNVERIFIED] ?: SHOW_UNVERIFIED_DEFAULT }.distinctUntilChanged()
+
+    override val savedDocuments: Flow<Set<SavedDocument>> = data.map { prefs ->
+        prefs[SAVED_DOCUMENTS].orEmpty().mapNotNull { raw ->
+            val parts = raw.split(":")
+            if (parts.size == 2) SavedDocument(parts[0], parts[1]) else null
+        }.toSet()
+    }.distinctUntilChanged()
+
+    override suspend fun recordSaved(examId: String, docType: String) {
+        require(examId.matches(Regex("[a-z0-9_]+")) && docType.matches(Regex("[A-Z_0-9]+")))
+        store.edit { prefs ->
+            prefs[SAVED_DOCUMENTS] = prefs[SAVED_DOCUMENTS].orEmpty() + "$examId:$docType"
+        }
+    }
 
     override suspend fun setPinned(
         examId: String,
@@ -58,6 +80,10 @@ class DataStoreUserPreferences(
         const val SEPARATOR = ","
         val PINNED = stringPreferencesKey("pinned_exam_ids")
         val SHOW_UNVERIFIED = booleanPreferencesKey("show_unverified_exams")
+        val SAVED_DOCUMENTS = stringSetPreferencesKey("saved_documents")
+
+        /** On by default (ALGORITHMS §10): an unverified exam is listed with its badge rather than missing. */
+        const val SHOW_UNVERIFIED_DEFAULT = true
 
         fun decode(raw: String?): List<String> = raw.orEmpty().split(SEPARATOR).filter { it.isNotEmpty() }
     }

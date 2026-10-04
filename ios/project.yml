@@ -63,6 +63,8 @@ targets:
                     - UIInterfaceOrientationLandscapeLeft
                     - UIInterfaceOrientationLandscapeRight
                 ITSAppUsesNonExemptEncryption: false # only Ed25519 signature verification + HTTPS
+                # English fallback; the shown text is localised from ScanFit/InfoPlist.xcstrings (spec infoplist.*).
+                NSCameraUsageDescription: ScanFit uses the camera to take your photo for exam forms. The photo stays on your phone.
         dependencies:
             - package: Core
               product: DesignSystem
@@ -74,6 +76,8 @@ targets:
               product: Home
             - package: Features
               product: Exams
+            - package: Features
+              product: PhotoFlow
             - package: Core
               product: ScanData
             - package: Features

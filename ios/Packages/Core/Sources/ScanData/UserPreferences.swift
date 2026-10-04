@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import ScanModel
 
 /// Small user choices that outlive the app process (UI_UX §2: "My exams", Settings "Show unverified exams"),
 /// kept in `UserDefaults`. Same rules as Android's `DataStoreUserPreferences`: newest pin first, no duplicates,
@@ -11,15 +12,19 @@ public final class UserPreferences {
     public private(set) var pinnedExamIds: [String]
     /// Low-confidence presets are hidden until the user opts in (PRD F1, CLAUDE.md rule 6).
     public private(set) var showUnverified: Bool
+    public private(set) var savedDocuments: [String: [String]]
 
     @ObservationIgnored private let defaults: UserDefaults
     private static let pinnedKey = "pinned_exam_ids"
     private static let unverifiedKey = "show_unverified_exams"
+    private static let savedKey = "saved_documents"
 
     public init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         pinnedExamIds = defaults.stringArray(forKey: Self.pinnedKey) ?? []
-        showUnverified = defaults.bool(forKey: Self.unverifiedKey)
+        // On by default (ALGORITHMS §10): an unverified exam is listed with its badge rather than missing.
+        showUnverified = defaults.object(forKey: Self.unverifiedKey) as? Bool ?? true
+        savedDocuments = defaults.dictionary(forKey: Self.savedKey) as? [String: [String]] ?? [:]
     }
 
     public func isPinned(_ examId: String) -> Bool { pinnedExamIds.contains(examId) }
@@ -33,5 +38,15 @@ public final class UserPreferences {
     public func setShowUnverified(_ show: Bool) {
         showUnverified = show
         defaults.set(show, forKey: Self.unverifiedKey)
+    }
+
+    public func isSaved(_ examId: String, _ docType: DocType) -> Bool {
+        savedDocuments[examId]?.contains(docType.rawValue) == true
+    }
+
+    public func recordSaved(_ examId: String, _ docType: DocType) {
+        guard !isSaved(examId, docType) else { return }
+        savedDocuments[examId, default: []].append(docType.rawValue)
+        defaults.set(savedDocuments, forKey: Self.savedKey)
     }
 }

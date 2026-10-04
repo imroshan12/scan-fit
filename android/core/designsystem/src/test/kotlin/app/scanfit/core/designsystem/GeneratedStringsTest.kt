@@ -22,6 +22,8 @@ class GeneratedStringsTest {
         val obj: JsonObject = Json.parseToJsonElement(File(spec, "strings/$lang.json").readText()).jsonObject
         return obj.keys
             .filterNot { it.startsWith("_") }
+            // iOS Info.plist values (permission prompts) go only to the iOS app target (gen_strings.py INFOPLIST_KEYS)
+            .filterNot { it.startsWith("infoplist.") }
             .map { it.replace('.', '_') }
             .toSet()
     }

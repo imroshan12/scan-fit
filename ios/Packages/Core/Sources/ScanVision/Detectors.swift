@@ -1,13 +1,13 @@
 import Foundation
 import Imaging
 
-/// Face detection behind a protocol so the pipeline is testable with fakes (Vision wrapper lands in Phase 2).
+/// Face detection behind a protocol so the pipeline is testable with fakes (`VisionFaceDetector` is the real one).
 public protocol FaceDetector: Sendable {
     func detect(in raster: Raster) async throws -> [Face]
 }
 
 /// Person segmentation: one alpha value per pixel (0 background, 255 person), row-major,
-/// `raster.width * raster.height` long, or nil when the model is unavailable (Vision wrapper lands in Phase 2).
+/// `raster.width * raster.height` long, or nil when the model is unavailable (`VisionPersonSegmenter`).
 public protocol PersonSegmenter: Sendable {
     func mask(for raster: Raster) async throws -> [UInt8]?
 }

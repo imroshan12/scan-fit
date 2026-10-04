@@ -16,7 +16,7 @@ import javax.inject.Inject
 /** Settings state. Pro, privacy and help arrive with their phases. */
 data class SettingsUiState(
     val presetsVersion: Int?,
-    val showUnverified: Boolean = false,
+    val showUnverified: Boolean = true,
 )
 
 @HiltViewModel

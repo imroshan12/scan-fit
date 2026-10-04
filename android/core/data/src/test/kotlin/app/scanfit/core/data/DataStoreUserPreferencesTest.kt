@@ -2,6 +2,9 @@ package app.scanfit.core.data
 
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import app.cash.turbine.test
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
@@ -21,10 +24,10 @@ class DataStoreUserPreferencesTest {
     )
 
     @Test
-    fun defaultsAreEmptyAndHidden() = runTest {
+    fun defaultsAreEmptyAndUnverifiedExamsShown() = runTest {
         val prefs = prefs()
         assertEquals(emptyList<String>(), prefs.pinnedExamIds.first())
-        assertFalse(prefs.showUnverified.first())
+        assertTrue(prefs.showUnverified.first())
     }
 
     @Test
@@ -42,9 +45,31 @@ class DataStoreUserPreferencesTest {
     fun showUnverifiedIsRemembered() = runTest {
         val prefs = prefs()
         prefs.showUnverified.test {
-            assertFalse(awaitItem())
-            prefs.setShowUnverified(true)
-            assertTrue(awaitItem())
+            assertTrue("on by default", awaitItem())
+            prefs.setShowUnverified(false)
+            assertFalse("turning it off is stored, not overridden by the default", awaitItem())
         }
+    }
+
+    @Test
+    fun savedDocumentsSurviveStoreRestartAndDoNotDuplicate() = runTest {
+        val owner = Job()
+        val store = PreferenceDataStoreFactory.create(
+            scope = CoroutineScope(backgroundScope.coroutineContext + owner),
+        ) { folder.root.resolve("saved.preferences_pb") }
+        val first = DataStoreUserPreferences(store)
+        assertTrue(first.savedDocuments.first().isEmpty())
+        first.recordSaved("ibps_po", "PHOTO")
+        first.recordSaved("ibps_po", "PHOTO")
+        first.recordSaved("ibps_po", "SIGNATURE")
+        first.recordSaved("jee_main", "PHOTO")
+        val expected = setOf(
+            SavedDocument("ibps_po", "PHOTO"),
+            SavedDocument("ibps_po", "SIGNATURE"),
+            SavedDocument("jee_main", "PHOTO"),
+        )
+        assertEquals(expected, first.savedDocuments.first())
+        owner.cancelAndJoin()
+        assertEquals(expected, prefs("saved").savedDocuments.first())
     }
 }

@@ -46,10 +46,10 @@ class SettingsViewModelTest {
         val prefs = FakeUserPreferences()
         val model = SettingsViewModel(FakePresetsRepository(null), prefs)
         model.uiState.test {
+            assertEquals("on by default", true, awaitItem().showUnverified)
+            model.onShowUnverifiedChange(false)
             assertEquals(false, awaitItem().showUnverified)
-            model.onShowUnverifiedChange(true)
-            assertEquals(true, awaitItem().showUnverified)
-            assertEquals(true, prefs.showUnverified.value)
+            assertEquals(false, prefs.showUnverified.value)
         }
     }
 }

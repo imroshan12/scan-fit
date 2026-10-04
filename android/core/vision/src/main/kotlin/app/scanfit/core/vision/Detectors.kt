@@ -5,14 +5,14 @@ import app.scanfit.core.imaging.Raster
 /** A detected face box in raster pixels (the same type the pure framing math uses). */
 typealias FaceBox = app.scanfit.core.imaging.Face
 
-/** Face detection behind an interface so the pipeline is testable with fakes (ML Kit wrapper lands in Phase 2). */
+/** Face detection behind an interface so the pipeline is testable with fakes ([MlKitFaceDetector] is the real one). */
 fun interface FaceDetector {
     suspend fun detect(raster: Raster): List<FaceBox>
 }
 
 /**
  * Person segmentation: one alpha value per pixel (0 = background, 255 = person), row-major and
- * `raster.width * raster.height` long, or null when the model is unavailable (ML Kit wrapper lands in Phase 2).
+ * `raster.width * raster.height` long, or null when the model is unavailable ([MlKitPersonSegmenter]).
  */
 fun interface PersonSegmenter {
     suspend fun mask(raster: Raster): ByteArray?

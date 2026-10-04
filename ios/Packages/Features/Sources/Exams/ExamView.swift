@@ -4,15 +4,18 @@ import ScanModel
 import SwiftUI
 
 /// Exam checklist screen: header with the confidence badge and source, one row per document with its requirement
-/// summary, and the "Before you upload" card. Flows attach to the document rows later in Phase 2.
+/// summary, and the "Before you upload" card. A row links to its flow (`PhotoRoute`) when the app says the flow exists.
 public struct ExamView: View {
     @State private var model: ExamViewModel
     @Environment(\.locale) private var locale
     private let strings: Strings
+    private let openable: Set<DocType>
 
-    public init(model: ExamViewModel, strings: Strings = Strings()) {
+    /// - Parameter openable: document types whose flow exists (the app decides: features never import each other).
+    public init(model: ExamViewModel, strings: Strings = Strings(), openable: Set<DocType> = []) {
         _model = State(initialValue: model)
         self.strings = strings
+        self.openable = openable
     }
 
     public var body: some View {
@@ -52,7 +55,13 @@ public struct ExamView: View {
                     }
                 }
                 Section(strings.examDocuments) {
-                    ForEach(exam.documents) { doc in docRow(doc) }
+                    ForEach(exam.documents) { doc in
+                        if openable.contains(doc.type) {
+                            NavigationLink(value: PhotoRoute(examId: exam.id, docType: doc.type)) { docRow(doc) }
+                        } else {
+                            docRow(doc)
+                        }
+                    }
                 }
                 if !exam.specialRules.isEmpty {
                     Section(strings.examBeforeUpload) {
@@ -86,7 +95,7 @@ public struct ExamView: View {
         .padding(.vertical, ScanFitSpacing.xs)
     }
 
-    /// UI_UX §4 `DocRow`. The status stays "Not started" until the flows land later in Phase 2.
+    /// UI_UX §4 `DocRow`. The status stays "Not started" until export lands.
     private func docRow(_ doc: DocSpec) -> some View {
         VStack(alignment: .leading, spacing: ScanFitSpacing.xs) {
             HStack(spacing: ScanFitSpacing.sm) {
@@ -96,7 +105,12 @@ public struct ExamView: View {
                 }
             }
             Text(strings.specSummary(doc)).scanFitText(.figure)
-            Text(strings.examStatusNotStarted).scanFitText(.caption).foregroundStyle(ScanFitColor.onSurfaceVariant)
+            if model.preferences.isSaved(model.examId, doc.type) {
+                Label(strings.examStatusSaved, systemImage: "checkmark.circle.fill")
+                    .scanFitText(.caption).foregroundStyle(ScanFitColor.success)
+            } else {
+                Text(strings.examStatusNotStarted).scanFitText(.caption).foregroundStyle(ScanFitColor.onSurfaceVariant)
+            }
         }
         .frame(minHeight: ScanFitSpacing.minTouchTarget, alignment: .leading)
         .accessibilityElement(children: .combine)

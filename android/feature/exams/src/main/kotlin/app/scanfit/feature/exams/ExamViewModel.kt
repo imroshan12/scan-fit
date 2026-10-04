@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.scanfit.core.data.UserPreferences
+import app.scanfit.core.model.DocType
 import app.scanfit.core.model.Exam
 import app.scanfit.core.presets.PresetsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,6 +25,7 @@ sealed interface ExamUiState {
     data class Ready(
         val exam: Exam,
         val pinned: Boolean,
+        val savedDocuments: Set<DocType> = emptySet(),
     ) : ExamUiState
 }
 
@@ -38,13 +40,28 @@ constructor(
     private val examId: String = savedState.get<String>(EXAM_ID).orEmpty()
 
     val uiState: StateFlow<ExamUiState> =
-        combine(presets.outcome, presets.bundle, preferences.pinnedExamIds) { outcome, bundle, pinned ->
+        combine(
+            presets.outcome,
+            presets.bundle,
+            preferences.pinnedExamIds,
+            preferences.savedDocuments,
+        ) { outcome, bundle, pinned, saved ->
             when {
                 bundle == null -> if (outcome == null) ExamUiState.Loading else ExamUiState.NotFound
 
                 else -> {
                     val exam = bundle.exams.firstOrNull { it.id == examId }
-                    if (exam == null) ExamUiState.NotFound else ExamUiState.Ready(exam, exam.id in pinned)
+                    if (exam == null) {
+                        ExamUiState.NotFound
+                    } else {
+                        ExamUiState.Ready(
+                            exam,
+                            exam.id in pinned,
+                            exam.documents.map { it.type }.filter { type ->
+                                saved.any { it.examId == exam.id && it.docType == type.name }
+                            }.toSet(),
+                        )
+                    }
                 }
             }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), ExamUiState.Loading)

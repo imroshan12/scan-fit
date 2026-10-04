@@ -24,6 +24,12 @@ public struct PipelineResult: Sendable {
     public let prepared: Raster
     /// Present for the ink pipelines: the coverage gate result for the "too faint / too dark" warning.
     public let ink: InkResult?
+
+    public init(fit: FitResult, prepared: Raster, ink: InkResult?) {
+        self.fit = fit
+        self.prepared = prepared
+        self.ink = ink
+    }
 }
 
 /// crop/clean -> pad to aspect -> fit (ALGORITHMS sections 1.2, 3, 9.4-9.6). Pure given an injected encoder.

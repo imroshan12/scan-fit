@@ -44,6 +44,15 @@ public struct FitResult: Sendable, Equatable {
     public let strategy: FitStrategy
     public let encodes: Int
 
+    public init(bytes: [UInt8], width: Int, height: Int, quality: Int, strategy: FitStrategy, encodes: Int) {
+        self.bytes = bytes
+        self.width = width
+        self.height = height
+        self.quality = quality
+        self.strategy = strategy
+        self.encodes = encodes
+    }
+
     public var kb: Double { Double(bytes.count) / 1024.0 }
 }
 

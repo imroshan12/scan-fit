@@ -57,11 +57,12 @@ jobs:
         run: python3 ../../Scripts/check_coverage.py
       - name: Feature tests
         run: swift test --package-path Packages/Features
-      - name: App + string-catalog tests on an iPhone SE (3rd gen) simulator, the low-end profile
+      - name: App + string-catalog tests on an iPhone 11 Pro Max simulator, the low-end profile (iOS 17 if installed)
         run: |
           xcodegen generate
-          RUNTIME=$(xcrun simctl list runtimes -j | python3 -c "import json,sys; r=[x for x in json.load(sys.stdin)['runtimes'] if x['platform']=='iOS' and x['isAvailable']]; print(sorted(r,key=lambda x:x['version'])[-1]['identifier'])")
-          UDID=$(xcrun simctl create "ScanFit SE3" com.apple.CoreSimulator.SimDeviceType.iPhone-SE-3rd-generation "$RUNTIME")
+          RUNTIME=$(xcrun simctl list runtimes -j | python3 -c "import json,sys; r=sorted((x for x in json.load(sys.stdin)['runtimes'] if x['platform']=='iOS' and x['isAvailable']),key=lambda x:[int(n) for n in x['version'].split('.')]); m=[x for x in r if x['version'].startswith('17.')]; print((m or r)[-1]['identifier'])")
+          echo "::notice title=Simulator::iPhone 11 Pro Max on $RUNTIME"
+          UDID=$(xcrun simctl create "ScanFit 11 Pro Max" com.apple.CoreSimulator.SimDeviceType.iPhone-11-Pro-Max "$RUNTIME")
           xcodebuild -scheme ScanFit -destination "id=$UDID" CODE_SIGNING_ALLOWED=NO test
           # The String Catalog is compiled only by the Xcode build system, so its tests run here, on the real platform.
           (cd Packages/Core && xcodebuild test -scheme Core-Package -destination "id=$UDID" -only-testing:DesignSystemTests CODE_SIGNING_ALLOWED=NO)

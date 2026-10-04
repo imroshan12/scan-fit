@@ -49,7 +49,11 @@ Firebase (Analytics, Crashlytics, RemoteConfig). **Test:** Swift Testing, XCTest
 (navigation-compose), compose material-icons-core (not `-extended`: size), `javax.inject` via Hilt, Tink `tink-android`
 (Ed25519 on minSdk 26). **Tooling:** XcodeGen (generates the Xcode project; not shipped in the app), detekt **2.0.0-alpha** (`dev.detekt`;
 the stable 1.23 line targets an older Kotlin: revisit when 2.0 is stable).
-**Added in Phase 2:** `androidx.datastore:datastore-preferences` 1.2.1 (pinned exams, "Show unverified"; 1.3 is still alpha).
+**Added in Phase 2:** `androidx.datastore:datastore-preferences` 1.2.1 (pinned exams, "Show unverified"; 1.3 is still alpha);
+`com.google.mlkit:face-detection` 16.1.7 and `segmentation-selfie` 16.0.0-beta6 (bundled, on-device; native libs 16 KB aligned).
+Size: about +8.6 MB to an arm64 download (3.2 MB faces, 5.4 MB segmentation, compressed), so roughly 10–11 MB in all against the
+15 MB budget (ARCHITECTURE §11). If the budget tightens, Play-services Subject Segmentation adds 0 MB but downloads its model on
+first use. iOS: Vision only (no dependency).
 **Removed in Phase 2:** Roborazzi and swift-snapshot-testing (screenshot tests dropped, docs/TESTING.md §1).
 **Tooling:** ktlint via Spotless, detekt, SwiftLint, SwiftFormat, fastlane, Gradle Play Publisher.
 Licence check in CI (no GPL/AGPL in the app binary).
@@ -64,7 +68,7 @@ Licence check in CI (no GPL/AGPL in the app binary).
    without submitting (many do client-side checks on file select): upscaled vs padded files.
 3. **Segmentation quality** on 20 consented real photos (hair, dupatta, glasses) → decide default,
    feather radius, and "don't use if" guidance.
-4. **Low-RAM path**: Android Go / 2 GB device. Document scanner availability, decode peak memory
+4. **Low-RAM path**: 4 GB device (the low-end profile). Document scanner availability, decode peak memory
    with 48 MP input, CameraX analysis fps.
 5. **Conformance in CI**: confirm Robolectric (native graphics mode) produces real JPEG sizes
    comparable to a device (±10%). If not, run `:core:imaging` conformance as an instrumented test

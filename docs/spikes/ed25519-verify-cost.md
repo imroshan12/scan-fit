@@ -21,7 +21,7 @@ remembered in no-backup storage; a launch with the identical triple skips the Ed
 and is fully verified (tests: `VerifiedDigestStoreTest`). The first launch after install or update still pays ~1-2 s.
 
 **Open.**
-- Re-measure on a real 2 GB / API 29-30 phone (spike 4).
+- Re-measure on a real 4 GB / API 29-30 phone (spike 4).
 - Phase 5: Baseline Profile covering the verify path; consider the platform provider on API 33+.
 - The per-process cost remains for the first launch of every app version and for every OTA bundle (Phase 4); OTA verification
   runs in the background worker, so it does not block the UI.

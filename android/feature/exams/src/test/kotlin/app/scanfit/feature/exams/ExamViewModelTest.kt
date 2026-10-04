@@ -1,6 +1,7 @@
 package app.scanfit.feature.exams
 
 import androidx.lifecycle.SavedStateHandle
+import app.scanfit.core.model.DocType
 import app.scanfit.core.presets.PresetsLoadOutcome
 import app.scanfit.core.presets.PresetsSummary
 import app.scanfit.core.testing.FakePresetsRepository
@@ -67,5 +68,18 @@ class ExamViewModelTest {
         assertTrue((model.uiState.first { (it as? ExamUiState.Ready)?.pinned == true } as ExamUiState.Ready).pinned)
         model.onTogglePin()
         assertTrue(prefs.pinnedExamIds.value.isEmpty())
+    }
+
+    @Test
+    fun verifiedSavedDocumentsAreObservedAndShownOnReopeningOnlyForTheirExam() = runTest {
+        val prefs = FakeUserPreferences()
+        val model = model("ibps_po", prefs)
+        model.uiState.first { it is ExamUiState.Ready }
+        prefs.recordSaved("ibps_po", "PHOTO")
+        prefs.recordSaved("jee_main", "SIGNATURE")
+        val observed = model.uiState.first { (it as? ExamUiState.Ready)?.savedDocuments?.isNotEmpty() == true }
+        assertEquals(setOf(DocType.PHOTO), (observed as ExamUiState.Ready).savedDocuments)
+        val reopened = model("ibps_po", prefs).uiState.first { it is ExamUiState.Ready } as ExamUiState.Ready
+        assertEquals(setOf(DocType.PHOTO), reopened.savedDocuments)
     }
 }

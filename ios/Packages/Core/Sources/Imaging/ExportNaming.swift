@@ -26,8 +26,12 @@ public enum ExportNaming {
     }
 
     public static func fileName(exam: Exam, slot: DocSpec, width: Int, height: Int, bytes: Int) -> String {
+        fileName(examName: exam.name, slot: slot, width: width, height: height, bytes: bytes)
+    }
+
+    public static func fileName(examName: String, slot: DocSpec, width: Int, height: Int, bytes: Int) -> String {
         if let filename = slot.filename { return "\(filename).jpg" }
         let kb = roundHalfUp(Double(bytes) / 1024.0)
-        return "\(slot.type.rawValue)_\(examShort(exam.name))_\(width)x\(height)_\(kb)kb.jpg"
+        return "\(slot.type.rawValue)_\(examShort(examName))_\(width)x\(height)_\(kb)kb.jpg"
     }
 }

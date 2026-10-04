@@ -15,14 +15,7 @@ object AndroidJpegEncoder : JpegEncoder {
         raster: Raster,
         quality: Int,
     ): ByteArray {
-        val pixels = IntArray(raster.width * raster.height)
-        for (y in 0 until raster.height) {
-            for (x in 0 until raster.width) {
-                pixels[y * raster.width + x] =
-                    Color.rgb(raster.r(x, y), raster.g(x, y), raster.b(x, y))
-            }
-        }
-        val bitmap = Bitmap.createBitmap(pixels, raster.width, raster.height, Bitmap.Config.ARGB_8888)
+        val bitmap = raster.toBitmap()
         return try {
             ByteArrayOutputStream()
                 .also {
@@ -32,6 +25,17 @@ object AndroidJpegEncoder : JpegEncoder {
             bitmap.recycle()
         }
     }
+}
+
+/** An opaque ARGB_8888 bitmap with the raster's pixels (for encoders, ML models and on-screen previews). */
+fun Raster.toBitmap(): Bitmap {
+    val pixels = IntArray(width * height)
+    for (y in 0 until height) {
+        for (x in 0 until width) {
+            pixels[y * width + x] = Color.rgb(r(x, y), g(x, y), b(x, y))
+        }
+    }
+    return Bitmap.createBitmap(pixels, width, height, Bitmap.Config.ARGB_8888)
 }
 
 /**

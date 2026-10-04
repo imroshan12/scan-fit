@@ -25,8 +25,12 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import app.scanfit.core.designsystem.R
 import app.scanfit.core.designsystem.theme.ScanFitTheme
+import app.scanfit.core.model.DocType
+import app.scanfit.feature.exams.DocActions
 import app.scanfit.feature.exams.ExamRoute
 import app.scanfit.feature.exams.ExamViewModel
+import app.scanfit.feature.flowphoto.PhotoFlowRoute
+import app.scanfit.feature.flowphoto.PhotoFlowViewModel
 import app.scanfit.feature.home.HomeRoute
 import app.scanfit.feature.kit.KitScreen
 import app.scanfit.feature.settings.SettingsRoute
@@ -80,7 +84,28 @@ fun ScanFitApp() {
                     HomeRoute(onOpenExam = { id -> navController.navigate("$EXAM_ROUTE/$id") })
                 }
                 composable("$EXAM_ROUTE/{${ExamViewModel.EXAM_ID}}") {
-                    ExamRoute(onBack = { navController.popBackStack() })
+                    ExamRoute(
+                        onBack = { navController.popBackStack() },
+                        docActions =
+                        DocActions(
+                            canOpen = { it in PHOTO_FLOW_TYPES },
+                            onOpen = { examId, type ->
+                                // Single top: a double tap must not stack two flows (Done would land on the second).
+                                val route = "$EXAM_ROUTE/$examId/$PHOTO_ROUTE/${type.name.lowercase()}"
+                                navController.navigate(route) {
+                                    launchSingleTop = true
+                                }
+                            },
+                        ),
+                    )
+                }
+                composable(
+                    "$EXAM_ROUTE/{${PhotoFlowViewModel.EXAM_ID}}/$PHOTO_ROUTE/{${PhotoFlowViewModel.DOC_TYPE}}",
+                ) {
+                    PhotoFlowRoute(
+                        onBack = { navController.popBackStack() },
+                        onDone = { navController.popBackStack() },
+                    )
                 }
                 composable(Tab.KIT.route) { KitScreen() }
                 composable(Tab.TOOLS.route) { ToolsScreen() }
@@ -92,3 +117,9 @@ fun ScanFitApp() {
 
 /** `exam/<id>`: the exam checklist, opened from Home. */
 private const val EXAM_ROUTE = "exam"
+
+/** `exam/<id>/photo/<docType>`: the photo flow for one of the exam's photo slots. */
+private const val PHOTO_ROUTE = "photo"
+
+/** Document types the photo flow handles (ALGORITHMS 1.2: the kinds that are cropped, not padded). */
+private val PHOTO_FLOW_TYPES = setOf(DocType.PHOTO, DocType.POSTCARD_PHOTO)

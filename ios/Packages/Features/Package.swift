@@ -8,6 +8,10 @@ let presets: Target.Dependency = .product(name: "Presets", package: "Core")
 let model: Target.Dependency = .product(name: "ScanModel", package: "Core")
 let data: Target.Dependency = .product(name: "ScanData", package: "Core")
 let testSupport: Target.Dependency = .product(name: "TestSupport", package: "Core")
+let imaging: Target.Dependency = .product(name: "Imaging", package: "Core")
+let vision: Target.Dependency = .product(name: "ScanVision", package: "Core")
+let match: Target.Dependency = .product(name: "Match", package: "Core")
+let inspect: Target.Dependency = .product(name: "Inspect", package: "Core")
 
 let package = Package(
     name: "Features",
@@ -33,8 +37,8 @@ let package = Package(
         .target(name: "Kit", dependencies: [core]),
         .target(name: "Settings", dependencies: [core, presets, data]),
         .target(name: "Exams", dependencies: [core, model, data]),
+        .target(name: "PhotoFlow", dependencies: [core, model, imaging, vision, match, inspect, data]),
         // Empty until their phase (ROADMAP Phase 2-4)
-        .target(name: "PhotoFlow", dependencies: [core, model]),
         .target(name: "InkFlow", dependencies: [core, model]),
         .target(name: "Coach", dependencies: [core, model]),
         .target(name: "Checker", dependencies: [core, model]),
@@ -43,6 +47,9 @@ let package = Package(
         .target(name: "Paywall", dependencies: [core]),
         .testTarget(name: "HomeTests", dependencies: ["Home", presets, model, data, testSupport]),
         .testTarget(name: "ExamsTests", dependencies: ["Exams", model, data, testSupport]),
+        .testTarget(
+            name: "PhotoFlowTests", dependencies: ["PhotoFlow", model, imaging, vision, inspect, data, testSupport]
+        ),
     ],
     swiftLanguageModes: [.v6]
 )

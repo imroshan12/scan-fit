@@ -2,6 +2,7 @@ package app.scanfit.feature.exams
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,6 +17,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
@@ -51,6 +53,7 @@ import app.scanfit.core.designsystem.theme.ScanFitSpacing
 import app.scanfit.core.designsystem.theme.ScanFitTheme
 import app.scanfit.core.designsystem.theme.ScanFitType
 import app.scanfit.core.model.DocSpec
+import app.scanfit.core.model.DocType
 import app.scanfit.core.model.Exam
 import app.scanfit.core.model.PresetBundle
 import app.scanfit.core.model.SourceKind
@@ -65,11 +68,21 @@ import java.util.Locale
 fun ExamRoute(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    docActions: DocActions = DocActions(),
     viewModel: ExamViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    ExamScreen(state, onBack, viewModel::onTogglePin, modifier)
+    ExamScreen(state, onBack, viewModel::onTogglePin, modifier, docActions)
 }
+
+/**
+ * Which document rows open a flow, and what opening one does. The app decides, because features never depend on each
+ * other: a row is tappable only once its flow exists.
+ */
+class DocActions(
+    val canOpen: (DocType) -> Boolean = { false },
+    val onOpen: (examId: String, type: DocType) -> Unit = { _, _ -> },
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -78,6 +91,7 @@ internal fun ExamScreen(
     onBack: () -> Unit,
     onTogglePin: () -> Unit,
     modifier: Modifier = Modifier,
+    docActions: DocActions = DocActions(),
 ) {
     Scaffold(
         modifier = modifier,
@@ -124,14 +138,18 @@ internal fun ExamScreen(
                     )
                 }
 
-                is ExamUiState.Ready -> ExamContent(state.exam)
+                is ExamUiState.Ready -> ExamContent(state.exam, docActions, state.savedDocuments)
             }
         }
     }
 }
 
 @Composable
-private fun ExamContent(exam: Exam) {
+private fun ExamContent(
+    exam: Exam,
+    docActions: DocActions,
+    savedDocuments: Set<DocType>,
+) {
     LazyColumn(
         contentPadding = PaddingValues(ScanFitSpacing.screenMargin),
         verticalArrangement = Arrangement.spacedBy(ScanFitSpacing.md),
@@ -139,7 +157,10 @@ private fun ExamContent(exam: Exam) {
         item { Header(exam) }
         if (exam.livePhotoCapture == true) item { LivePhotoRow() }
         item { SectionTitle(R.string.exam_documents) }
-        items(exam.documents, key = { it.type.name }) { DocRow(it) }
+        items(exam.documents, key = { it.type.name }) { doc ->
+            val open = if (docActions.canOpen(doc.type)) ({ docActions.onOpen(exam.id, doc.type) }) else null
+            DocRow(doc, onClick = open, saved = doc.type in savedDocuments)
+        }
         if (exam.specialRules.isNotEmpty()) item { RulesCard(exam.specialRules) }
     }
 }
@@ -200,37 +221,60 @@ private fun SectionTitle(text: Int) {
     )
 }
 
-/** UI_UX §4 `DocRow`. The status stays "Not started" until the flows land later in Phase 2. */
+/** UI_UX §4 `DocRow`. Saved records a verified export, not whether the user has kept the file. */
 @Composable
-private fun DocRow(doc: DocSpec) {
-    Column(
-        modifier = Modifier.fillMaxWidth().heightIn(min = ScanFitSpacing.minTouchTarget),
-        verticalArrangement = Arrangement.spacedBy(ScanFitSpacing.xs),
+private fun DocRow(
+    doc: DocSpec,
+    onClick: (() -> Unit)?,
+    saved: Boolean,
+) {
+    Row(
+        modifier =
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = ScanFitSpacing.minTouchTarget)
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(ScanFitSpacing.sm),
-            verticalAlignment = Alignment.CenterVertically,
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(ScanFitSpacing.xs),
         ) {
-            Text(
-                stringResource(doc.type.labelRes()),
-                style = ScanFitType.headline,
-                modifier = Modifier.weight(1f, fill = false),
-            )
-            if (!doc.required) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(ScanFitSpacing.sm),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Text(
-                    stringResource(R.string.exam_optional),
-                    style = ScanFitType.caption,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    stringResource(doc.type.labelRes()),
+                    style = ScanFitType.headline,
+                    modifier = Modifier.weight(1f, fill = false),
                 )
+                if (!doc.required) {
+                    Text(
+                        stringResource(R.string.exam_optional),
+                        style = ScanFitType.caption,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
+            Text(specSummary(doc), style = ScanFitType.figure, color = MaterialTheme.colorScheme.onSurface)
+            Text(
+                stringResource(if (saved) R.string.exam_status_saved else R.string.exam_status_not_started),
+                style = ScanFitType.caption,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            HorizontalDivider(
+                Modifier.padding(top = ScanFitSpacing.sm),
+                color = MaterialTheme.colorScheme.outlineVariant,
+            )
         }
-        Text(specSummary(doc), style = ScanFitType.figure, color = MaterialTheme.colorScheme.onSurface)
-        Text(
-            stringResource(R.string.exam_status_not_started),
-            style = ScanFitType.caption,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        HorizontalDivider(Modifier.padding(top = ScanFitSpacing.sm), color = MaterialTheme.colorScheme.outlineVariant)
+        if (onClick != null) {
+            Icon(
+                Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
     }
 }
 
@@ -291,7 +335,10 @@ private val previewExam: Exam by lazy {
 @Preview(name = "Ready Hindi", showBackground = true, locale = "hi")
 @Composable
 private fun ExamReadyPreview() {
-    ScanFitTheme { ExamScreen(ExamUiState.Ready(previewExam, pinned = true), {}, {}) }
+    ScanFitTheme {
+        val actions = DocActions(canOpen = { it == DocType.PHOTO })
+        ExamScreen(ExamUiState.Ready(previewExam, pinned = true), {}, {}, docActions = actions)
+    }
 }
 
 @Preview(name = "Not found", showBackground = true)

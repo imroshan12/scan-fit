@@ -1,15 +1,21 @@
 package app.scanfit.core.testing
 
+import app.scanfit.core.data.SavedDocument
 import app.scanfit.core.data.UserPreferences
 import kotlinx.coroutines.flow.MutableStateFlow
 
 /** In-memory [UserPreferences] for view-model tests. */
 class FakeUserPreferences(
     pinned: List<String> = emptyList(),
-    showUnverified: Boolean = false,
+    showUnverified: Boolean = true, // the production default (ALGORITHMS §10)
 ) : UserPreferences {
     override val pinnedExamIds = MutableStateFlow(pinned)
     override val showUnverified = MutableStateFlow(showUnverified)
+    override val savedDocuments = MutableStateFlow(emptySet<SavedDocument>())
+
+    override suspend fun recordSaved(examId: String, docType: String) {
+        savedDocuments.value += SavedDocument(examId, docType)
+    }
 
     override suspend fun setPinned(
         examId: String,

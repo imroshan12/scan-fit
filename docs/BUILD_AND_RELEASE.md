@@ -310,8 +310,8 @@ conformance tests, lint; the 90 % coverage gate for the engine modules; assemble
 
 **iOS `build`** (macOS): create the dev-signed bundle; print the Swift/Xcode versions; test the signature verifier against the shared
 signing vector; SwiftLint (strict); Core tests with coverage (the string-catalog tests are skipped here, see section 9); an annotation
-listing any failing tests; the coverage gate; Features tests; app tests plus the string-catalog tests on an **iPhone SE (3rd gen)**
-simulator (the low-end profile); then the **release rehearsal**.
+listing any failing tests; the coverage gate; Features tests; app tests plus the string-catalog tests on an **iPhone 11 Pro Max**
+simulator (the low-end profile; iOS 17 when the runner has it, else the newest runtime); then the **release rehearsal**.
 
 **The release rehearsal** is the key safety net. Release-only problems (R8 breaking the app, release lint, the Release archive, the
 embed checks) would otherwise appear only on release day. So every push builds the release configuration, *unsigned*, using a throwaway

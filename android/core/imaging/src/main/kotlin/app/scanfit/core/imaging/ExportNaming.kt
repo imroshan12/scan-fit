@@ -39,9 +39,17 @@ object ExportNaming {
         width: Int,
         height: Int,
         bytes: Int,
+    ): String = fileName(exam.name, slot, width, height, bytes)
+
+    fun fileName(
+        examName: String,
+        slot: DocSpec,
+        width: Int,
+        height: Int,
+        bytes: Int,
     ): String {
         slot.filename?.let { return "$it.jpg" }
         val kb = roundHalfUp(bytes / BYTES_PER_KB)
-        return "${idOf(slot.type)}_${examShort(exam.name)}_${width}x${height}_${kb}kb.jpg"
+        return "${idOf(slot.type)}_${examShort(examName)}_${width}x${height}_${kb}kb.jpg"
     }
 }

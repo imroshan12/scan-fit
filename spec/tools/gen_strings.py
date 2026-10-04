@@ -10,6 +10,7 @@ Outputs
   android/app/src/main/res/xml/locales_config.xml           (per-app language list)
   ios/Packages/Core/Sources/DesignSystem/Resources/Localizable.xcstrings
   ios/Packages/Core/Sources/DesignSystem/Generated/Strings.swift   (typed accessors)
+  ios/ScanFit/InfoPlist.xcstrings                           (`infoplist.*` keys only: permission prompts)
 
 Source format (see en.json): flat dotted keys; {name:int} / {name:str} placeholders; a plural is
 {"one": ..., "other": ...} and its first placeholder must be {count:int}. en is the source language;
@@ -33,6 +34,10 @@ KEY_RE = re.compile(r"^[a-z0-9_]+(\.[a-z0-9_]+)+$")
 PH_RE = re.compile(r"\{([a-z][a-z0-9_]*):(int|str)\}")
 PLURAL_FORMS = ("one", "other")
 TODO_PREFIX = "TODO_HI:"
+# `infoplist.<name>` keys are Info.plist values (iOS permission prompts), not app strings: they go only to the app target's
+# InfoPlist.xcstrings, under the Info.plist key named here.
+INFOPLIST_PREFIX = "infoplist."
+INFOPLIST_KEYS = {"infoplist.camera_usage": "NSCameraUsageDescription"}
 
 
 def load(lang):
@@ -186,6 +191,14 @@ def xcstrings(langs, data):
     return json.dumps(doc, ensure_ascii=False, indent=2, sort_keys=True)
 
 
+def infoplist_xcstrings(langs, data):
+    """The app target's InfoPlist.xcstrings: one entry per `infoplist.*` key, under its Info.plist key name."""
+    plist = {}
+    for lang in data:
+        plist[lang] = {INFOPLIST_KEYS[k]: v for k, v in data[lang].items() if k.startswith(INFOPLIST_PREFIX)}
+    return xcstrings(langs, plist)
+
+
 def swift_accessors(src):
     lines = [banner("gen_strings.py"), "import Foundation", "",
              "/// Typed accessors for every string in `spec/strings`. Create `Strings()` for the system language,",
@@ -250,6 +263,8 @@ def main():
             die([f"language '{lang}': only 2-letter codes supported (Android folder naming)"], "gen_strings")
     data = {l: load(l) for l in [SOURCE_LANG] + langs}
     errors = validate(langs, data)
+    errors += [f"{k}: unknown Info.plist key (add it to INFOPLIST_KEYS)" for k in data[SOURCE_LANG]
+               if k.startswith(INFOPLIST_PREFIX) and k not in INFOPLIST_KEYS]
     if errors:
         die(errors, "gen_strings")
 
@@ -263,6 +278,8 @@ def main():
         die([f"{l}: {n} TODO_HI string(s)" for l, n in todo.items() if n], "gen_strings --strict")
 
     out = Output(args.check)
+    plist_data = data
+    data = {l: {k: v for k, v in d.items() if not k.startswith(INFOPLIST_PREFIX)} for l, d in data.items()}
     src = data[SOURCE_LANG]
     res = os.path.join(ANDROID_DESIGNSYSTEM, "src", "main", "res")
     out.write(os.path.join(res, "values", "strings.xml"), android_xml(SOURCE_LANG, src, src))
@@ -273,6 +290,7 @@ def main():
     ds = os.path.join(IOS_CORE, "DesignSystem")
     out.write(os.path.join(ds, "Resources", "Localizable.xcstrings"), xcstrings(langs, data))
     out.write(os.path.join(ds, "Generated", "Strings.swift"), swift_accessors(src))
+    out.write(os.path.join(REPO, "ios", "ScanFit", "InfoPlist.xcstrings"), infoplist_xcstrings(langs, plist_data))
     out.finish("gen_strings.py")
 
 

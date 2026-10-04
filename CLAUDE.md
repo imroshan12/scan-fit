@@ -8,7 +8,7 @@ Read these before changing anything:
 
 | When you are… | Read |
 |---|---|
-| Starting any task | `docs/ROADMAP.md` (find the current phase and its tasks), this file |
+| Starting any task | `docs/HANDOFF.md` (where the last session stopped, open issues, decisions), `docs/ROADMAP.md` (current phase and its tasks), this file |
 | Touching image, PDF, match or face logic | `spec/ALGORITHMS.md` — the single source of truth for behaviour on both platforms |
 | Adding or changing a screen | `docs/UI_UX.md` |
 | Structuring code, adding a module or dependency | `docs/ARCHITECTURE.md`, `docs/TECH_FEASIBILITY.md` |
@@ -81,7 +81,7 @@ swiftlint --strict
 - Builds and all tests pass locally for the platform(s) touched. CI stays green.
 - New UI has previews in light and dark mode, at the largest font scale and in Hindi, and a view-model test for each state.
   No screenshot tests (dropped for speed, docs/TESTING.md §1); don't add them back.
-- Checked on a low-end profile: Android emulator with 2 GB RAM and API 29, iPhone SE (3rd gen) simulator.
+- Checked on a low-end profile: Android emulator with 4 GB RAM and API 29, iPhone 11 Pro Max simulator on iOS 17 (the minimum).
 - No new warnings. No new dependency without an entry in `docs/TECH_FEASIBILITY.md` §Dependencies.
 - The ROADMAP task is ticked, with a one-line note if anything deviated.
 

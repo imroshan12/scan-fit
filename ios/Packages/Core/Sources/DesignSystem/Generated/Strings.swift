@@ -160,6 +160,14 @@ public struct Strings: Sendable {
     public var examUnpin: String { tr("exam.unpin") }
     /// "Specs verified {date:str}"
     public func examVerifiedOn(date: String) -> String { fmt("exam.verified_on", [date]) }
+    /// "Could not save the file. Please try again."
+    public var exportSaveFailed: String { tr("export.save_failed") }
+    /// "Saved"
+    public var exportSaved: String { tr("export.saved") }
+    /// "Saving…"
+    public var exportSaving: String { tr("export.saving") }
+    /// "The saved file did not pass verification. Please try again."
+    public var exportVerifyFailed: String { tr("export.verify_failed") }
     /// "Compress to fit"
     public var fixCompressToTarget: String { tr("fix.compress_to_target") }
     /// "Convert to JPG"
@@ -278,6 +286,52 @@ public struct Strings: Sendable {
     public var matchNone: String { tr("match.none") }
     /// "{count:int} quick fixes"
     public func matchQuickFix(count: Int) -> String { fmt("match.quick_fix", [count]) }
+    /// "Choose from gallery"
+    public var photoChoose: String { tr("photo.choose") }
+    /// "Choose another photo"
+    public var photoChooseAnother: String { tr("photo.choose_another") }
+    /// "Choose from Files"
+    public var photoChooseFile: String { tr("photo.choose_file") }
+    /// "Adjust the crop"
+    public var photoCropHeading: String { tr("photo.crop_heading") }
+    /// "Drag to move · pinch to zoom"
+    public var photoCropHint: String { tr("photo.crop_hint") }
+    /// "Your face fills most of the photo, so the crop is tighter than usual. A photo from further away works better."
+    public var photoCropTight: String { tr("photo.crop_tight") }
+    /// "Date (DD/MM/YYYY)"
+    public var photoDateLabel: String { tr("photo.date_label") }
+    /// "Finding your face…"
+    public var photoFindingFace: String { tr("photo.finding_face") }
+    /// "Meets the {exam:str} rules"
+    public func photoMeetsRules(exam: String) -> String { fmt("photo.meets_rules", [exam]) }
+    /// "Doesn't meet the {exam:str} rules yet"
+    public func photoMissesRules(exam: String) -> String { fmt("photo.misses_rules", [exam]) }
+    /// "Name on the photo"
+    public var photoNameLabel: String { tr("photo.name_label") }
+    /// "Couldn't open this image. Try another photo."
+    public var photoOpenFailed: String { tr("photo.open_failed") }
+    /// "Reset"
+    public var photoReset: String { tr("photo.reset") }
+    /// "{kb:int} KB · {width:int}×{height:int} · JPG"
+    public func photoResult(kb: Int, width: Int, height: Int) -> String { fmt("photo.result", [kb, width, height]) }
+    /// "{count:int} kilobytes, {width:str} by {height:str} pixels, JPG"
+    public func photoResultA11y(count: Int, width: String, height: String) -> String { fmt("photo.result_a11y", [count, width, height]) }
+    /// "Rotate"
+    public var photoRotate: String { tr("photo.rotate") }
+    /// "Add a photo of yourself"
+    public var photoSourceHeading: String { tr("photo.source_heading") }
+    /// "This exam may need your name and date on the photo. Check the notice."
+    public var photoStripHint: String { tr("photo.strip_hint") }
+    /// "Take a photo"
+    public var photoTake: String { tr("photo.take") }
+    /// "Plain light background · look straight at the camera · no cap or dark glasses"
+    public var photoTips: String { tr("photo.tips") }
+    /// "White background isn't available on this device."
+    public var photoWhiteBgUnavailable: String { tr("photo.white_bg_unavailable") }
+    /// "Zoom in"
+    public var photoZoomIn: String { tr("photo.zoom_in") }
+    /// "Zoom out"
+    public var photoZoomOut: String { tr("photo.zoom_out") }
     /// "About"
     public var settingsAbout: String { tr("settings.about") }
     /// "Check for updates"

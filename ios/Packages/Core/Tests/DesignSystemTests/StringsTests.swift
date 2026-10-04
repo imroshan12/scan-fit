@@ -60,7 +60,7 @@ struct StringsTests {
     func noRawKeysLeak() throws {
         let data = try SpecFiles.data("strings/en.json")
         let keys = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
-            .keys.filter { !$0.hasPrefix("_") }
+            .keys.filter { !$0.hasPrefix("_") && !$0.hasPrefix("infoplist.") } // Info.plist values: app target only
         #expect(keys.count > 100)
         for lang in ["en", "hi"] {
             let bundle = try #require(Self.languageBundle(lang), "no \(lang).lproj in the DesignSystem bundle")

@@ -100,7 +100,7 @@ class HomeViewModelTest {
 
     @Test
     fun unverifiedExamsAppearOnlyWhenTheSettingIsOn() = runTest {
-        val prefs = FakeUserPreferences()
+        val prefs = FakeUserPreferences(showUnverified = false)
         val model = model(prefs)
         model.onQueryChange("rrb alp")
         assertTrue(model.settled { it.query == "rrb alp" }.results.none { it.id == "rrb_alp" })
@@ -110,7 +110,8 @@ class HomeViewModelTest {
 
     @Test
     fun aPinnedUnverifiedExamStaysInMyExamsEvenWithTheSettingOff() = runTest {
-        val state = model(FakeUserPreferences(pinned = listOf("rrb_alp"))).settled { it.pinned.isNotEmpty() }
+        val prefs = FakeUserPreferences(pinned = listOf("rrb_alp"), showUnverified = false)
+        val state = model(prefs).settled { it.pinned.isNotEmpty() }
         assertEquals(listOf("rrb_alp"), state.pinned.map { it.id })
     }
 }

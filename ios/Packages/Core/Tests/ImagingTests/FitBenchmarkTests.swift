@@ -10,7 +10,7 @@ import Testing
 /// Debug builds are an order of magnitude slower than release, so the budget is **asserted only in optimised builds**
 /// (`swift test -c release -Xswiftc -enable-testing`); in debug it just records the time. Either way this is a build-machine
 /// number, much faster than a mid-range phone: it is a regression guard, and the device figure comes from XCTest `measure` on
-/// an iPhone SE in Phase 5.
+/// an iPhone 11 Pro Max (the low-end profile) in Phase 5.
 @Suite("Fit benchmark")
 struct FitBenchmarkTests {
     @Test("the IBPS photo fixture fits within the mid-device budget on the build machine")

@@ -53,4 +53,16 @@ struct ExamViewModelTests {
         let hindi = ExamView.formatted("2026-09-30", locale: Locale(identifier: "hi"))
         #expect(!hindi.contains("Sep"), "Hindi must not show an English month: \(hindi)")
     }
+
+    @Test("a successful export is reflected in the existing exam model, scoped to its document")
+    func savedStatus() async throws {
+        let prefs = preferences()
+        let bundle = try SpecPresets.bundle()
+        let model = ExamViewModel(examId: "ibps_po", preferences: prefs) { bundle }
+        await model.onAppear()
+        #expect(!model.preferences.isSaved(model.examId, .photo))
+        prefs.recordSaved("ibps_po", .photo)
+        #expect(model.preferences.isSaved(model.examId, .photo))
+        #expect(!model.preferences.isSaved(model.examId, .signature))
+    }
 }
