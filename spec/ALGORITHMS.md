@@ -157,6 +157,13 @@ Android `Downloads/ScanFit/<Exam>/`, iOS `Files › ScanFit › <Exam>/`.
 Do **not** try to detect CAPITAL-letter signatures. It isn't reliable from images. Show a
 one-time checkbox instead: "I signed in running handwriting, not CAPITAL letters".
 
+**Flow (both apps).** Pick (camera, gallery or Files) → free rectangular crop (starts as the whole image; the user drags
+corners to leave out other marks) → cleanup (steps 2–6) → pad to aspect + fit (step 7) → review → save (§1.6, with the
+slot's match kind). Rectification (step 1) comes with the document scanner; until then the crop is an axis-aligned
+rectangle. Review offers "Crisp black" (signature/document) and "Darker ink" (when crisp black is off); a thumb has
+neither. The quality gate warns but does not block saving. A declaration shows the preset's `declaration_text` to copy
+by hand before capture, or "Copy the text from the official notice" when it is null. Exact numbers: §9.5.
+
 ## 4. Match engine — "which exams accept this file?" (feature: exam note on every edit)
 
 Input: an `InspectedFile` (format, bytes, width, height, colour, progressive, dpi) plus `docKind`
@@ -367,6 +374,18 @@ Input raster: long side already ≤ 1600 (§1.1). Variants: `signature`, `docume
 - Aspect (§1.2): pad with white, centred, to the slot aspect (`width/height` for exact/preferred, midpoint for range, unchanged for none).
 - Quality gate on the trimmed image: coverage `< 0.5 %` → `TOO_FAINT`, `> 35 %` → `TOO_DARK`, else `OK`.
 - The three conformance pipelines: `signature_cleanup` (signature), `thumb_cleanup` (thumb), `document_cleanup` (document), always followed by the aspect pad and `fit`.
+- **Doc type → cleanup variant / match kind** (§4): `signature`, `triple_signature` → signature / SIGNATURE; `left_thumb`,
+  `thumb_impression` → thumb / THUMB; `left_hand_fingers_thumb`, `right_hand_fingers_thumb` → thumb / FINGERS;
+  `handwritten_declaration` → document / DECLARATION. The export check (§1.6) evaluates the slot with this kind.
+- **Review options:** `crispBlack` defaults per variant (signature on, document off); "Darker ink" sets `inkFactor` in
+  `[0.3, 0.9]` in steps of 0.1 (default 0.6, lower = darker), only while crisp black is off. Thumb: no options.
+- **Free crop (ink)** on a `W×H` image: starts as `(0, 0, W, H)`. `move` as §9.6. `resize(corner, dx, dy)` moves the dragged
+  corner (`tl`, `tr`, `bl`, `br`) by `round(dx)`, `round(dy)` and keeps the opposite corner fixed; each side stays
+  `≥ min(32, W)` / `≥ min(32, H)` and inside the image: e.g. `br`: `right = clamp(round(x + w + dx), x + minW, W)`,
+  `bottom = clamp(round(y + h + dy), y + minH, H)`; `tl`: `x' = clamp(round(x + dx), 0, x + w − minW)`, `y'` likewise, the
+  right and bottom edges unchanged. Conformance: `crop_cases` op `resize`.
+- **Signature confirmation:** before the first save of a signature or triple signature, the user ticks "I signed in running
+  handwriting, not CAPITAL letters"; the tick is remembered on the device and never asked again.
 
 ### 9.6 Photo pipeline numbers
 

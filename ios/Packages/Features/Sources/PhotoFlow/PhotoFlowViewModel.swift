@@ -15,9 +15,9 @@ public final class PhotoFlowViewModel {
     public private(set) var state: PhotoState = .loading
     public let examId: String
     public let docType: DocType
-    public private(set) var exportState: PhotoExportState = .idle
+    public private(set) var exportState: ExportState = .idle
     public private(set) var renderPending = false
-    public let exporter: any PhotoExporting
+    public let exporter: any DocumentExporting
     @ObservationIgnored private let preferences: UserPreferences?
 
     @ObservationIgnored private let tools: any PhotoTools
@@ -42,7 +42,7 @@ public final class PhotoFlowViewModel {
         faces: any FaceDetector = VisionFaceDetector(),
         segmenter: any PersonSegmenter = VisionPersonSegmenter(),
         preferences: UserPreferences? = nil,
-        exporter: any PhotoExporting = FilesPhotoExporter(),
+        exporter: any DocumentExporting = FilesExporter(),
         load: @escaping @Sendable () async -> PresetBundle?
     ) {
         self.examId = examId
@@ -278,8 +278,8 @@ public final class PhotoFlowViewModel {
             examName: review.slot.examName, slot: review.slot.spec,
             width: ready.width, height: ready.height, bytes: ready.bytes.count
         )
-        exportState = await exporter.save(PhotoExportRequest(
-            bytes: ready.bytes, filename: filename, spec: review.slot.spec
+        exportState = await exporter.save(ExportRequest(
+            bytes: ready.bytes, filename: filename, spec: review.slot.spec, kind: .photo
         ))
         if exportState == .saved { preferences?.recordSaved(examId, docType) }
     }

@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 class FakeUserPreferences(
     pinned: List<String> = emptyList(),
     showUnverified: Boolean = true, // the production default (ALGORITHMS §10)
+    handwritingConfirmed: Boolean = false,
 ) : UserPreferences {
     override val pinnedExamIds = MutableStateFlow(pinned)
     override val showUnverified = MutableStateFlow(showUnverified)
@@ -27,5 +28,11 @@ class FakeUserPreferences(
 
     override suspend fun setShowUnverified(show: Boolean) {
         showUnverified.value = show
+    }
+
+    override val handwritingConfirmed = MutableStateFlow(handwritingConfirmed)
+
+    override suspend fun confirmHandwriting() {
+        handwritingConfirmed.value = true
     }
 }

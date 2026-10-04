@@ -234,6 +234,16 @@ public struct Strings: Sendable {
     public var homeSectionPopular: String { tr("home.section_popular") }
     /// "What are you applying for?"
     public var homeTitle: String { tr("home.title") }
+    /// "Drag the corners to leave out everything else"
+    public var inkCropHint: String { tr("ink.crop_hint") }
+    /// "Write this by hand, sign it, then photograph it"
+    public var inkDeclarationHeading: String { tr("ink.declaration_heading") }
+    /// "Photograph it on plain white paper"
+    public var inkSourceHeading: String { tr("ink.source_heading") }
+    /// "Too much of the image is dark. Use plain white paper and crop closer."
+    public var inkTooDark: String { tr("ink.too_dark") }
+    /// "The ink looks too faint. Use a darker pen, or retake it in better light."
+    public var inkTooFaint: String { tr("ink.too_faint") }
     /// "This JPEG uses CMYK colours. Many portals reject it."
     public var issueCmykColor: String { tr("issue.cmyk_color") }
     /// "The file name and the real file type don't match. Some portals reject this."

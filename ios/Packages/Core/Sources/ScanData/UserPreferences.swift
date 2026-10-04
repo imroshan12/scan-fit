@@ -13,11 +13,14 @@ public final class UserPreferences {
     /// Low-confidence presets are hidden until the user opts in (PRD F1, CLAUDE.md rule 6).
     public private(set) var showUnverified: Bool
     public private(set) var savedDocuments: [String: [String]]
+    /// The one-time "I signed in running handwriting, not CAPITAL letters" tick (ALGORITHMS 9.5).
+    public private(set) var handwritingConfirmed: Bool
 
     @ObservationIgnored private let defaults: UserDefaults
     private static let pinnedKey = "pinned_exam_ids"
     private static let unverifiedKey = "show_unverified_exams"
     private static let savedKey = "saved_documents"
+    private static let handwritingKey = "handwriting_confirmed"
 
     public init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -25,6 +28,7 @@ public final class UserPreferences {
         // On by default (ALGORITHMS §10): an unverified exam is listed with its badge rather than missing.
         showUnverified = defaults.object(forKey: Self.unverifiedKey) as? Bool ?? true
         savedDocuments = defaults.dictionary(forKey: Self.savedKey) as? [String: [String]] ?? [:]
+        handwritingConfirmed = defaults.bool(forKey: Self.handwritingKey)
     }
 
     public func isPinned(_ examId: String) -> Bool { pinnedExamIds.contains(examId) }
@@ -42,6 +46,12 @@ public final class UserPreferences {
 
     public func isSaved(_ examId: String, _ docType: DocType) -> Bool {
         savedDocuments[examId]?.contains(docType.rawValue) == true
+    }
+
+    /// Remembered on the device; the confirmation is never asked again (ALGORITHMS 9.5).
+    public func confirmHandwriting() {
+        handwritingConfirmed = true
+        defaults.set(true, forKey: Self.handwritingKey)
     }
 
     public func recordSaved(_ examId: String, _ docType: DocType) {

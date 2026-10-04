@@ -29,6 +29,8 @@ import app.scanfit.core.model.DocType
 import app.scanfit.feature.exams.DocActions
 import app.scanfit.feature.exams.ExamRoute
 import app.scanfit.feature.exams.ExamViewModel
+import app.scanfit.feature.flowink.InkFlowRoute
+import app.scanfit.feature.flowink.InkFlowViewModel
 import app.scanfit.feature.flowphoto.PhotoFlowRoute
 import app.scanfit.feature.flowphoto.PhotoFlowViewModel
 import app.scanfit.feature.home.HomeRoute
@@ -88,10 +90,11 @@ fun ScanFitApp() {
                         onBack = { navController.popBackStack() },
                         docActions =
                         DocActions(
-                            canOpen = { it in PHOTO_FLOW_TYPES },
+                            canOpen = { it in PHOTO_FLOW_TYPES || it in INK_FLOW_TYPES },
                             onOpen = { examId, type ->
                                 // Single top: a double tap must not stack two flows (Done would land on the second).
-                                val route = "$EXAM_ROUTE/$examId/$PHOTO_ROUTE/${type.name.lowercase()}"
+                                val flow = if (type in PHOTO_FLOW_TYPES) PHOTO_ROUTE else INK_ROUTE
+                                val route = "$EXAM_ROUTE/$examId/$flow/${type.name.lowercase()}"
                                 navController.navigate(route) {
                                     launchSingleTop = true
                                 }
@@ -103,6 +106,14 @@ fun ScanFitApp() {
                     "$EXAM_ROUTE/{${PhotoFlowViewModel.EXAM_ID}}/$PHOTO_ROUTE/{${PhotoFlowViewModel.DOC_TYPE}}",
                 ) {
                     PhotoFlowRoute(
+                        onBack = { navController.popBackStack() },
+                        onDone = { navController.popBackStack() },
+                    )
+                }
+                composable(
+                    "$EXAM_ROUTE/{${InkFlowViewModel.EXAM_ID}}/$INK_ROUTE/{${InkFlowViewModel.DOC_TYPE}}",
+                ) {
+                    InkFlowRoute(
                         onBack = { navController.popBackStack() },
                         onDone = { navController.popBackStack() },
                     )
@@ -123,3 +134,18 @@ private const val PHOTO_ROUTE = "photo"
 
 /** Document types the photo flow handles (ALGORITHMS 1.2: the kinds that are cropped, not padded). */
 private val PHOTO_FLOW_TYPES = setOf(DocType.PHOTO, DocType.POSTCARD_PHOTO)
+
+/** `exam/<id>/ink/<docType>`: the ink flow for a signature, thumb, fingers or declaration slot. */
+private const val INK_ROUTE = "ink"
+
+/** Document types the ink flow handles (ALGORITHMS 3 / 9.5: cleaned up, padded to aspect). */
+private val INK_FLOW_TYPES =
+    setOf(
+        DocType.SIGNATURE,
+        DocType.TRIPLE_SIGNATURE,
+        DocType.LEFT_THUMB,
+        DocType.THUMB_IMPRESSION,
+        DocType.LEFT_HAND_FINGERS_THUMB,
+        DocType.RIGHT_HAND_FINGERS_THUMB,
+        DocType.HANDWRITTEN_DECLARATION,
+    )

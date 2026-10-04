@@ -7,20 +7,20 @@ import Testing
 import TestSupport
 
 @MainActor
-final class ExporterSpy: PhotoExporting {
+final class ExporterSpy: DocumentExporting {
     var operation = "success"
     var held = false
-    private(set) var requests: [PhotoExportRequest] = []
-    private var continuation: CheckedContinuation<PhotoExportState, Never>?
+    private(set) var requests: [ExportRequest] = []
+    private var continuation: CheckedContinuation<ExportState, Never>?
     private var started: CheckedContinuation<Void, Never>?
 
-    func save(_ request: PhotoExportRequest) async -> PhotoExportState {
+    func save(_ request: ExportRequest) async -> ExportState {
         requests.append(request)
         started?.resume()
         started = nil
         if held { return await withCheckedContinuation { continuation = $0 } }
-        return await PhotoExportOperation.run(
-            request, transport: operation == "cancel" ? nil : ExportTransport(operation)
+        return await ExportOperation.run(
+            request, transport: operation == "cancel" ? nil : ScriptedExportTransport(operation)
         ).state
     }
 
@@ -29,7 +29,7 @@ final class ExporterSpy: PhotoExporting {
         await withCheckedContinuation { started = $0 }
     }
 
-    func finish(_ state: PhotoExportState) {
+    func finish(_ state: ExportState) {
         continuation?.resume(returning: state)
         continuation = nil
     }

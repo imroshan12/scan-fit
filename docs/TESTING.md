@@ -25,6 +25,10 @@ busy edit/back guards, stale debounced renders, failure retry, best-effort clean
 use actual temporary files with coordinated reading/removal; Android provider/device integration still needs the matrix below.
 Run SwiftLint from `ios/`, and rebuild/sign the local dev preset bundle together before full preset suites.
 
+iOS Files lifecycle regressions explicitly deliver sheet dismissal before the save/cancel delegate result. Dismissal alone
+must not resolve the export or delete its staged source. A real-exporter integration test verifies the destination then checks
+Review's Saved state, the existing exam's preferences and status loaded after relaunch.
+
 ## 2. Key journeys (UI tests, both platforms)
 
 1. First launch → search "ibps po" → checklist → photo from gallery (fixture injected via a fake

@@ -7,6 +7,11 @@ import ScanModel
 public enum DocKind: String, Sendable, Equatable, CaseIterable {
     case photo, signature, thumb, declaration, fingers
     case pdfDocument = "pdf_document"
+
+    /// The kind a slot of `type` is matched and checked as (ALGORITHMS 4 / 9.5); PDF-only slots are documents.
+    public static func of(_ type: DocType) -> DocKind {
+        allCases.first { MatchEngine.slotTypes(for: $0).contains(type) } ?? .pdfDocument
+    }
 }
 
 public enum Verdict: Int, Sendable, Equatable, Comparable {

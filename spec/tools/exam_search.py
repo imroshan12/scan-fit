@@ -15,7 +15,7 @@ import sys
 import unicodedata
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from _common import SPEC  # noqa: E402
+from _common import SPEC, replace_json_array  # noqa: E402
 
 DELETED = {"़", "‌", "‍"}  # Devanagari nukta, zero-width non-joiner, zero-width joiner
 
@@ -143,11 +143,6 @@ def expected(bundle, case):
 SEARCH_SECTIONS = ("search_cases", "search_level_cases", "search_norm_cases")
 
 
-def case_line(case):
-    """One case per line, in the file's existing `{ "id": ... }` style."""
-    return "    { " + json.dumps(case, ensure_ascii=False)[1:-1] + " }"
-
-
 def write_cases(bundle):
     """Recompute the expectations of the search sections in place, keeping every other byte of cases.json as it is."""
     path = os.path.join(SPEC, "fixtures", "cases.json")
@@ -159,11 +154,10 @@ def write_cases(bundle):
         case["level"] = level(case["q"], case["t"])
     for case in cases["search_norm_cases"]:
         case["tokens"] = norm(case["text"])
-    head = text[:text.index(',\n  "search_cases"')]
-    sections = ",\n".join(
-        f'  "{name}": [\n' + ",\n".join(case_line(c) for c in cases[name]) + "\n  ]" for name in SEARCH_SECTIONS)
+    for name in SEARCH_SECTIONS:
+        text = replace_json_array(text, name, cases[name])
     with open(path, "w", encoding="utf-8") as f:
-        f.write(head + ",\n" + sections + "\n}\n")
+        f.write(text)
     print(f"wrote expectations for {len(cases['search_cases'])} search cases")
 
 

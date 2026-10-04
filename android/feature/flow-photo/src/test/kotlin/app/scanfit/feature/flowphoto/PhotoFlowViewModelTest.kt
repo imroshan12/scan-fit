@@ -1,12 +1,14 @@
 package app.scanfit.feature.flowphoto
 
 import androidx.lifecycle.SavedStateHandle
+import app.scanfit.core.data.export.DocumentExporter
 import app.scanfit.core.imaging.AutoFraming
 import app.scanfit.core.imaging.CropRect
 import app.scanfit.core.imaging.FitError
 import app.scanfit.core.imaging.Raster
 import app.scanfit.core.presets.PresetsLoadOutcome
 import app.scanfit.core.presets.PresetsSummary
+import app.scanfit.core.testing.FakeExportDestinations
 import app.scanfit.core.testing.FakeFaceDetector
 import app.scanfit.core.testing.FakePersonSegmenter
 import app.scanfit.core.testing.FakePresetsRepository
@@ -55,7 +57,7 @@ class PhotoFlowViewModelTest {
         detector,
         segmenter,
         dispatcher,
-        PhotoExporter(FakeExportDestinations(), FakeUserPreferences()),
+        DocumentExporter(FakeExportDestinations(), FakeUserPreferences()),
     )
 
     private val PhotoFlowViewModel.state get() = uiState.value

@@ -502,128 +502,24 @@
 		}
 	],
 	"crop_cases": [
-		{
-			"_doc": "Photo crop math (ALGORITHMS 9.6). image = decoded raster WxH; aspect = [w, h] of the slot. op frame: auto-framing from a face box (coverage optional, default 0.675) -> rect + coverage_adjusted. op move: dx/dy in raster px. op zoom: factor > 1 zooms in. Expectations are computed by spec/tools/photo_crop.py --write-cases.",
-			"id": "frame_centred_face",
-			"op": "frame",
-			"image": { "w": 1000, "h": 1400 },
-			"aspect": [200, 230],
-			"face": { "x": 400, "y": 500, "w": 200, "h": 240 },
-			"expect": {
-				"rect": { "x": 307, "y": 426, "w": 386, "h": 444 },
-				"coverage_adjusted": false
-			}
-		},
-		{
-			"id": "frame_shifted_back_inside",
-			"op": "frame",
-			"image": { "w": 1000, "h": 1400 },
-			"aspect": [4, 5],
-			"face": { "x": 10, "y": 20, "w": 200, "h": 240 },
-			"expect": {
-				"rect": { "x": 0, "y": 0, "w": 355, "h": 444 },
-				"coverage_adjusted": false
-			}
-		},
-		{
-			"id": "frame_face_too_big_shrinks_and_flags",
-			"op": "frame",
-			"image": { "w": 1000, "h": 1200 },
-			"aspect": [4, 5],
-			"face": { "x": 50, "y": 100, "w": 900, "h": 1000 },
-			"expect": {
-				"rect": { "x": 20, "y": 0, "w": 960, "h": 1200 },
-				"coverage_adjusted": true
-			}
-		},
-		{
-			"id": "frame_wide_slot_limited_by_width",
-			"op": "frame",
-			"image": { "w": 300, "h": 1000 },
-			"aspect": [2, 1],
-			"face": { "x": 0, "y": 0, "w": 400, "h": 100 },
-			"expect": {
-				"rect": { "x": 0, "y": 0, "w": 300, "h": 150 },
-				"coverage_adjusted": true
-			}
-		},
-		{
-			"id": "frame_preset_coverage",
-			"op": "frame",
-			"image": { "w": 2000, "h": 2000 },
-			"aspect": [4, 5],
-			"face": { "x": 400, "y": 500, "w": 200, "h": 240 },
-			"coverage": 0.75,
-			"expect": {
-				"rect": { "x": 340, "y": 430, "w": 320, "h": 400 },
-				"coverage_adjusted": false
-			}
-		},
-		{
-			"id": "move_inside_rounds_half_up",
-			"op": "move",
-			"image": { "w": 1000, "h": 1400 },
-			"aspect": [200, 230],
-			"rect": { "x": 100, "y": 100, "w": 200, "h": 230 },
-			"dx": 50.5,
-			"dy": -20.6,
-			"expect": { "rect": { "x": 151, "y": 79, "w": 200, "h": 230 } }
-		},
-		{
-			"id": "move_clamps_to_the_image",
-			"op": "move",
-			"image": { "w": 1000, "h": 1400 },
-			"aspect": [200, 230],
-			"rect": { "x": 100, "y": 100, "w": 200, "h": 230 },
-			"dx": 2000,
-			"dy": -500,
-			"expect": { "rect": { "x": 800, "y": 0, "w": 200, "h": 230 } }
-		},
-		{
-			"id": "zoom_in_keeps_the_centre",
-			"op": "zoom",
-			"image": { "w": 1000, "h": 1400 },
-			"aspect": [200, 230],
-			"rect": { "x": 300, "y": 400, "w": 400, "h": 460 },
-			"factor": 2,
-			"expect": { "rect": { "x": 400, "y": 515, "w": 200, "h": 230 } }
-		},
-		{
-			"id": "zoom_out_stops_at_the_largest_crop",
-			"op": "zoom",
-			"image": { "w": 1000, "h": 1400 },
-			"aspect": [200, 230],
-			"rect": { "x": 300, "y": 400, "w": 400, "h": 460 },
-			"factor": 0.1,
-			"expect": { "rect": { "x": 0, "y": 55, "w": 1000, "h": 1150 } }
-		},
-		{
-			"id": "zoom_in_stops_at_64px_short_side_tall",
-			"op": "zoom",
-			"image": { "w": 1000, "h": 1400 },
-			"aspect": [200, 230],
-			"rect": { "x": 300, "y": 400, "w": 400, "h": 460 },
-			"factor": 100,
-			"expect": { "rect": { "x": 468, "y": 593, "w": 64, "h": 74 } }
-		},
-		{
-			"id": "zoom_in_stops_at_64px_short_side_wide",
-			"op": "zoom",
-			"image": { "w": 1600, "h": 1200 },
-			"aspect": [3, 2],
-			"rect": { "x": 0, "y": 0, "w": 600, "h": 400 },
-			"factor": 100,
-			"expect": { "rect": { "x": 252, "y": 168, "w": 96, "h": 64 } }
-		},
-		{
-			"id": "zoom_out_near_the_edge_shifts_inside",
-			"op": "zoom",
-			"image": { "w": 1000, "h": 1400 },
-			"aspect": [200, 230],
-			"rect": { "x": 780, "y": 1150, "w": 200, "h": 230 },
-			"factor": 0.5,
-			"expect": { "rect": { "x": 600, "y": 940, "w": 400, "h": 460 } }
-		}
+		{"_doc": "Photo crop math (ALGORITHMS 9.6). image = decoded raster WxH; aspect = [w, h] of the slot. op frame: auto-framing from a face box (coverage optional, default 0.675) -> rect + coverage_adjusted. op move: dx/dy in raster px. op zoom: factor > 1 zooms in. Expectations are computed by spec/tools/photo_crop.py --write-cases.", "id": "frame_centred_face", "op": "frame", "image": {"w": 1000, "h": 1400}, "aspect": [200, 230], "face": {"x": 400, "y": 500, "w": 200, "h": 240}, "expect": {"rect": {"x": 307, "y": 426, "w": 386, "h": 444}, "coverage_adjusted": false}},
+		{"id": "frame_shifted_back_inside", "op": "frame", "image": {"w": 1000, "h": 1400}, "aspect": [4, 5], "face": {"x": 10, "y": 20, "w": 200, "h": 240}, "expect": {"rect": {"x": 0, "y": 0, "w": 355, "h": 444}, "coverage_adjusted": false}},
+		{"id": "frame_face_too_big_shrinks_and_flags", "op": "frame", "image": {"w": 1000, "h": 1200}, "aspect": [4, 5], "face": {"x": 50, "y": 100, "w": 900, "h": 1000}, "expect": {"rect": {"x": 20, "y": 0, "w": 960, "h": 1200}, "coverage_adjusted": true}},
+		{"id": "frame_wide_slot_limited_by_width", "op": "frame", "image": {"w": 300, "h": 1000}, "aspect": [2, 1], "face": {"x": 0, "y": 0, "w": 400, "h": 100}, "expect": {"rect": {"x": 0, "y": 0, "w": 300, "h": 150}, "coverage_adjusted": true}},
+		{"id": "frame_preset_coverage", "op": "frame", "image": {"w": 2000, "h": 2000}, "aspect": [4, 5], "face": {"x": 400, "y": 500, "w": 200, "h": 240}, "coverage": 0.75, "expect": {"rect": {"x": 340, "y": 430, "w": 320, "h": 400}, "coverage_adjusted": false}},
+		{"id": "move_inside_rounds_half_up", "op": "move", "image": {"w": 1000, "h": 1400}, "aspect": [200, 230], "rect": {"x": 100, "y": 100, "w": 200, "h": 230}, "dx": 50.5, "dy": -20.6, "expect": {"rect": {"x": 151, "y": 79, "w": 200, "h": 230}}},
+		{"id": "move_clamps_to_the_image", "op": "move", "image": {"w": 1000, "h": 1400}, "aspect": [200, 230], "rect": {"x": 100, "y": 100, "w": 200, "h": 230}, "dx": 2000, "dy": -500, "expect": {"rect": {"x": 800, "y": 0, "w": 200, "h": 230}}},
+		{"id": "zoom_in_keeps_the_centre", "op": "zoom", "image": {"w": 1000, "h": 1400}, "aspect": [200, 230], "rect": {"x": 300, "y": 400, "w": 400, "h": 460}, "factor": 2, "expect": {"rect": {"x": 400, "y": 515, "w": 200, "h": 230}}},
+		{"id": "zoom_out_stops_at_the_largest_crop", "op": "zoom", "image": {"w": 1000, "h": 1400}, "aspect": [200, 230], "rect": {"x": 300, "y": 400, "w": 400, "h": 460}, "factor": 0.1, "expect": {"rect": {"x": 0, "y": 55, "w": 1000, "h": 1150}}},
+		{"id": "zoom_in_stops_at_64px_short_side_tall", "op": "zoom", "image": {"w": 1000, "h": 1400}, "aspect": [200, 230], "rect": {"x": 300, "y": 400, "w": 400, "h": 460}, "factor": 100, "expect": {"rect": {"x": 468, "y": 593, "w": 64, "h": 74}}},
+		{"id": "zoom_in_stops_at_64px_short_side_wide", "op": "zoom", "image": {"w": 1600, "h": 1200}, "aspect": [3, 2], "rect": {"x": 0, "y": 0, "w": 600, "h": 400}, "factor": 100, "expect": {"rect": {"x": 252, "y": 168, "w": 96, "h": 64}}},
+		{"id": "zoom_out_near_the_edge_shifts_inside", "op": "zoom", "image": {"w": 1000, "h": 1400}, "aspect": [200, 230], "rect": {"x": 780, "y": 1150, "w": 200, "h": 230}, "factor": 0.5, "expect": {"rect": {"x": 600, "y": 940, "w": 400, "h": 460}}},
+		{"id": "resize_br_grows_inside_the_image", "op": "resize", "image": {"w": 1200, "h": 800}, "aspect": [1, 1], "rect": {"x": 100, "y": 100, "w": 400, "h": 300}, "corner": "br", "dx": 150.5, "dy": 80.4, "expect": {"rect": {"x": 100, "y": 100, "w": 551, "h": 380}}},
+		{"id": "resize_br_clamps_to_the_image", "op": "resize", "image": {"w": 1200, "h": 800}, "aspect": [1, 1], "rect": {"x": 100, "y": 100, "w": 400, "h": 300}, "corner": "br", "dx": 5000, "dy": 5000, "expect": {"rect": {"x": 100, "y": 100, "w": 1100, "h": 700}}},
+		{"id": "resize_tl_shrinks_and_keeps_bottom_right", "op": "resize", "image": {"w": 1200, "h": 800}, "aspect": [1, 1], "rect": {"x": 0, "y": 0, "w": 1200, "h": 800}, "corner": "tl", "dx": 300, "dy": 200, "expect": {"rect": {"x": 300, "y": 200, "w": 900, "h": 600}}},
+		{"id": "resize_tl_stops_at_the_minimum_side", "op": "resize", "image": {"w": 1200, "h": 800}, "aspect": [1, 1], "rect": {"x": 100, "y": 100, "w": 400, "h": 300}, "corner": "tl", "dx": 900, "dy": 900, "expect": {"rect": {"x": 468, "y": 368, "w": 32, "h": 32}}},
+		{"id": "resize_tr_moves_top_and_right", "op": "resize", "image": {"w": 1200, "h": 800}, "aspect": [1, 1], "rect": {"x": 100, "y": 100, "w": 400, "h": 300}, "corner": "tr", "dx": -100, "dy": -150, "expect": {"rect": {"x": 100, "y": 0, "w": 300, "h": 400}}},
+		{"id": "resize_bl_on_a_tiny_image_keeps_the_whole_image", "op": "resize", "image": {"w": 20, "h": 30}, "aspect": [1, 1], "rect": {"x": 0, "y": 0, "w": 20, "h": 30}, "corner": "bl", "dx": 10, "dy": -10, "expect": {"rect": {"x": 0, "y": 0, "w": 20, "h": 30}}}
 	],
 	"inspect_cases": [
 		{
@@ -1001,273 +897,53 @@
 		}
 	],
 	"search_cases": [
-		{
-			"id": "body_query",
-			"kind": "search",
-			"query": "ibps",
-			"expect_ids": [
-				"ibps_po",
-				"ibps_clerk",
-				"ibps_rrb_po",
-				"ibps_rrb_clerk",
-				"ibps_so"
-			]
-		},
-		{
-			"id": "two_tokens",
-			"kind": "search",
-			"query": "ssc cgl",
-			"expect_ids": ["ssc_cgl"]
-		},
-		{
-			"id": "partial_name_token",
-			"kind": "search",
-			"query": "cgl",
-			"expect_ids": ["ssc_cgl"]
-		},
-		{
-			"id": "joined_tokens",
-			"kind": "search",
-			"query": "sscchsl",
-			"expect_ids": ["ssc_chsl"]
-		},
-		{
-			"id": "hindi_category_word",
-			"kind": "search",
-			"query": "बैंक",
-			"expect_ids": [
-				"ibps_po",
-				"sbi_po",
-				"ibps_clerk",
-				"sbi_clerk",
-				"ibps_rrb_po",
-				"ibps_rrb_clerk",
-				"rbi_grade_b",
-				"ibps_so",
-				"rbi_assistant"
-			]
-		},
-		{
-			"id": "hindi_alias_phrase",
-			"kind": "search",
-			"query": "आईबीपीएस पीओ",
-			"expect_ids": ["ibps_po", "ibps_rrb_po"]
-		},
-		{
-			"id": "hindi_alias_word",
-			"kind": "search",
-			"query": "नीट",
-			"expect_ids": ["neet_ug", "neet_pg"]
-		},
-		{
-			"id": "typo_adjacent_swap",
-			"kind": "search",
-			"query": "ibsp",
-			"expect_ids": [
-				"ibps_po",
-				"ibps_clerk",
-				"ibps_rrb_po",
-				"ibps_rrb_clerk",
-				"ibps_so",
-				"ssc_cpo"
-			]
-		},
-		{
-			"id": "typo_extra_letter",
-			"kind": "search",
-			"query": "jeee",
-			"expect_ids": ["jee_main"]
-		},
-		{
-			"id": "hindi_category_insurance",
-			"kind": "search",
-			"query": "बीमा",
-			"expect_ids": ["lic_aao", "lic_ado", "uiic_ao"]
-		},
-		{
-			"id": "latin_alias",
-			"kind": "search",
-			"query": "ias",
-			"expect_ids": ["upsc_cse"]
-		},
-		{
-			"id": "unverified_hidden_by_default",
-			"kind": "search",
-			"query": "rrb",
-			"expect_ids": [
-				"rrb_ntpc_grad",
-				"rrb_ntpc_ug",
-				"ibps_rrb_po",
-				"ibps_rrb_clerk"
-			]
-		},
-		{
-			"id": "unverified_shown_when_enabled",
-			"kind": "search",
-			"query": "rrb",
-			"show_unverified": true,
-			"expect_ids": [
-				"rrb_ntpc_grad",
-				"rrb_alp",
-				"rrb_group_d",
-				"rrb_je",
-				"rrb_ntpc_ug",
-				"ibps_rrb_po",
-				"ibps_rrb_clerk",
-				"rpf_constable"
-			]
-		},
-		{
-			"id": "punctuation_is_a_separator",
-			"kind": "search",
-			"query": "IBPS-PO",
-			"expect_ids": ["ibps_po", "ibps_rrb_po"]
-		},
-		{
-			"id": "fullwidth_letters",
-			"kind": "search",
-			"query": "ＳＳＣ ＣＧＬ",
-			"expect_ids": ["ssc_cgl"]
-		},
-		{
-			"id": "short_prefix",
-			"kind": "search",
-			"query": "ss",
-			"expect_ids": [
-				"ssc_cgl",
-				"ssc_chsl",
-				"ssc_gd",
-				"ssc_mts",
-				"ssc_cpo",
-				"ssc_je",
-				"ssc_selection_post",
-				"ssc_steno"
-			]
-		},
-		{
-			"id": "within_category",
-			"kind": "search",
-			"query": "po",
-			"category": "banking",
-			"expect_ids": ["ibps_po", "sbi_po", "ibps_rrb_po"]
-		},
-		{
-			"id": "no_match",
-			"kind": "search",
-			"query": "zzzz",
-			"expect_ids": []
-		},
-		{
-			"id": "blank_query_gives_nothing",
-			"kind": "search",
-			"query": "   ",
-			"expect_ids": []
-		},
-		{
-			"id": "browse_banking",
-			"kind": "browse",
-			"category": "banking",
-			"expect_ids": [
-				"ibps_po",
-				"sbi_po",
-				"ibps_clerk",
-				"sbi_clerk",
-				"ibps_rrb_po",
-				"ibps_rrb_clerk",
-				"rbi_grade_b",
-				"ibps_so",
-				"rbi_assistant"
-			]
-		},
-		{
-			"id": "browse_railway_with_unverified",
-			"kind": "browse",
-			"category": "railway",
-			"show_unverified": true,
-			"expect_ids": [
-				"rrb_ntpc_grad",
-				"rpf_constable",
-				"rrb_alp",
-				"rrb_group_d",
-				"rrb_je",
-				"rrb_ntpc_ug"
-			]
-		},
-		{
-			"id": "popular_top_3",
-			"kind": "popular",
-			"n": 3,
-			"expect_ids": ["ibps_po", "sbi_po", "ssc_cgl"]
-		},
-		{
-			"id": "popular_all",
-			"kind": "popular",
-			"n": 50,
-			"expect_ids": [
-				"ibps_po",
-				"sbi_po",
-				"ssc_cgl",
-				"neet_ug",
-				"jee_main",
-				"cuet_ug",
-				"ibps_clerk",
-				"ssc_chsl",
-				"ssc_gd",
-				"rrb_ntpc_grad",
-				"upsc_cse",
-				"sbi_clerk",
-				"ctet",
-				"ugc_net",
-				"ibps_rrb_po",
-				"ibps_rrb_clerk",
-				"rbi_grade_b",
-				"lic_aao",
-				"ssc_mts",
-				"gate",
-				"cat",
-				"clat"
-			]
-		}
+		{"id": "body_query", "kind": "search", "query": "ibps", "expect_ids": ["ibps_po", "ibps_clerk", "ibps_rrb_po", "ibps_rrb_clerk", "ibps_so"]},
+		{"id": "two_tokens", "kind": "search", "query": "ssc cgl", "expect_ids": ["ssc_cgl"]},
+		{"id": "partial_name_token", "kind": "search", "query": "cgl", "expect_ids": ["ssc_cgl"]},
+		{"id": "joined_tokens", "kind": "search", "query": "sscchsl", "expect_ids": ["ssc_chsl"]},
+		{"id": "hindi_category_word", "kind": "search", "query": "बैंक", "expect_ids": ["ibps_po", "sbi_po", "ibps_clerk", "sbi_clerk", "ibps_rrb_po", "ibps_rrb_clerk", "rbi_grade_b", "ibps_so", "rbi_assistant"]},
+		{"id": "hindi_alias_phrase", "kind": "search", "query": "आईबीपीएस पीओ", "expect_ids": ["ibps_po", "ibps_rrb_po"]},
+		{"id": "hindi_alias_word", "kind": "search", "query": "नीट", "expect_ids": ["neet_ug", "neet_pg"]},
+		{"id": "typo_adjacent_swap", "kind": "search", "query": "ibsp", "expect_ids": ["ibps_po", "ibps_clerk", "ibps_rrb_po", "ibps_rrb_clerk", "ibps_so", "ssc_cpo"]},
+		{"id": "typo_extra_letter", "kind": "search", "query": "jeee", "expect_ids": ["jee_main"]},
+		{"id": "hindi_category_insurance", "kind": "search", "query": "बीमा", "expect_ids": ["lic_aao", "lic_ado", "uiic_ao"]},
+		{"id": "latin_alias", "kind": "search", "query": "ias", "expect_ids": ["upsc_cse"]},
+		{"id": "unverified_hidden_by_default", "kind": "search", "query": "rrb", "expect_ids": ["rrb_ntpc_grad", "rrb_ntpc_ug", "ibps_rrb_po", "ibps_rrb_clerk"]},
+		{"id": "unverified_shown_when_enabled", "kind": "search", "query": "rrb", "show_unverified": true, "expect_ids": ["rrb_ntpc_grad", "rrb_alp", "rrb_group_d", "rrb_je", "rrb_ntpc_ug", "ibps_rrb_po", "ibps_rrb_clerk", "rpf_constable"]},
+		{"id": "punctuation_is_a_separator", "kind": "search", "query": "IBPS-PO", "expect_ids": ["ibps_po", "ibps_rrb_po"]},
+		{"id": "fullwidth_letters", "kind": "search", "query": "ＳＳＣ ＣＧＬ", "expect_ids": ["ssc_cgl"]},
+		{"id": "short_prefix", "kind": "search", "query": "ss", "expect_ids": ["ssc_cgl", "ssc_chsl", "ssc_gd", "ssc_mts", "ssc_cpo", "ssc_je", "ssc_selection_post", "ssc_steno"]},
+		{"id": "within_category", "kind": "search", "query": "po", "category": "banking", "expect_ids": ["ibps_po", "sbi_po", "ibps_rrb_po"]},
+		{"id": "no_match", "kind": "search", "query": "zzzz", "expect_ids": []},
+		{"id": "blank_query_gives_nothing", "kind": "search", "query": "   ", "expect_ids": []},
+		{"id": "browse_banking", "kind": "browse", "category": "banking", "expect_ids": ["ibps_po", "sbi_po", "ibps_clerk", "sbi_clerk", "ibps_rrb_po", "ibps_rrb_clerk", "rbi_grade_b", "ibps_so", "rbi_assistant"]},
+		{"id": "browse_railway_with_unverified", "kind": "browse", "category": "railway", "show_unverified": true, "expect_ids": ["rrb_ntpc_grad", "rpf_constable", "rrb_alp", "rrb_group_d", "rrb_je", "rrb_ntpc_ug"]},
+		{"id": "popular_top_3", "kind": "popular", "n": 3, "expect_ids": ["ibps_po", "sbi_po", "ssc_cgl"]},
+		{"id": "popular_all", "kind": "popular", "n": 50, "expect_ids": ["ibps_po", "sbi_po", "ssc_cgl", "neet_ug", "jee_main", "cuet_ug", "ibps_clerk", "ssc_chsl", "ssc_gd", "rrb_ntpc_grad", "upsc_cse", "sbi_clerk", "ctet", "ugc_net", "ibps_rrb_po", "ibps_rrb_clerk", "rbi_grade_b", "lic_aao", "ssc_mts", "gate", "cat", "clat"]}
 	],
 	"search_level_cases": [
-		{ "id": "level_01", "q": "ibps", "t": "ibps", "level": 3 },
-		{ "id": "level_02", "q": "ib", "t": "ibps", "level": 2 },
-		{ "id": "level_03", "q": "ibsp", "t": "ibps", "level": 1 },
-		{ "id": "level_04", "q": "ibp", "t": "ibsp", "level": 0 },
-		{ "id": "level_05", "q": "jeee", "t": "jee", "level": 1 },
-		{ "id": "level_06", "q": "abcd", "t": "wxyz", "level": 0 },
-		{ "id": "level_07", "q": "neet", "t": "neetpg", "level": 2 },
-		{ "id": "level_08", "q": "nept", "t": "neetpg", "level": 1 },
-		{ "id": "level_09", "q": "बैंक", "t": "बैंकिंग", "level": 2 },
-		{ "id": "level_10", "q": "cgl", "t": "sscgl", "level": 0 },
-		{ "id": "level_11", "q": "ssc", "t": "s", "level": 0 },
-		{ "id": "level_12", "q": "insp", "t": "inspector", "level": 2 },
-		{ "id": "level_13", "q": "ibsp", "t": "inspector", "level": 1 }
+		{"id": "level_01", "q": "ibps", "t": "ibps", "level": 3},
+		{"id": "level_02", "q": "ib", "t": "ibps", "level": 2},
+		{"id": "level_03", "q": "ibsp", "t": "ibps", "level": 1},
+		{"id": "level_04", "q": "ibp", "t": "ibsp", "level": 0},
+		{"id": "level_05", "q": "jeee", "t": "jee", "level": 1},
+		{"id": "level_06", "q": "abcd", "t": "wxyz", "level": 0},
+		{"id": "level_07", "q": "neet", "t": "neetpg", "level": 2},
+		{"id": "level_08", "q": "nept", "t": "neetpg", "level": 1},
+		{"id": "level_09", "q": "बैंक", "t": "बैंकिंग", "level": 2},
+		{"id": "level_10", "q": "cgl", "t": "sscgl", "level": 0},
+		{"id": "level_11", "q": "ssc", "t": "s", "level": 0},
+		{"id": "level_12", "q": "insp", "t": "inspector", "level": 2},
+		{"id": "level_13", "q": "ibsp", "t": "inspector", "level": 1}
 	],
 	"search_norm_cases": [
-		{
-			"id": "norm_01",
-			"text": "IBPS PO / MT",
-			"tokens": ["ibps", "po", "mt"]
-		},
-		{ "id": "norm_02", "text": "State_PSC", "tokens": ["state", "psc"] },
-		{ "id": "norm_03", "text": "ज़ीरो", "tokens": ["जीरो"] },
-		{ "id": "norm_04", "text": "ＳＳＣ", "tokens": ["ssc"] },
-		{ "id": "norm_05", "text": "क्‍ष", "tokens": ["क्ष"] },
-		{
-			"id": "norm_06",
-			"text": "  Hello,World!! ",
-			"tokens": ["hello", "world"]
-		},
-		{
-			"id": "norm_07",
-			"text": "RRB Group D (Level 1)",
-			"tokens": ["rrb", "group", "d", "level", "1"]
-		},
-		{
-			"id": "norm_08",
-			"text": "NEET-UG 2026",
-			"tokens": ["neet", "ug", "2026"]
-		}
+		{"id": "norm_01", "text": "IBPS PO / MT", "tokens": ["ibps", "po", "mt"]},
+		{"id": "norm_02", "text": "State_PSC", "tokens": ["state", "psc"]},
+		{"id": "norm_03", "text": "ज़ीरो", "tokens": ["जीरो"]},
+		{"id": "norm_04", "text": "ＳＳＣ", "tokens": ["ssc"]},
+		{"id": "norm_05", "text": "क्‍ष", "tokens": ["क्ष"]},
+		{"id": "norm_06", "text": "  Hello,World!! ", "tokens": ["hello", "world"]},
+		{"id": "norm_07", "text": "RRB Group D (Level 1)", "tokens": ["rrb", "group", "d", "level", "1"]},
+		{"id": "norm_08", "text": "NEET-UG 2026", "tokens": ["neet", "ug", "2026"]}
 	]
 }

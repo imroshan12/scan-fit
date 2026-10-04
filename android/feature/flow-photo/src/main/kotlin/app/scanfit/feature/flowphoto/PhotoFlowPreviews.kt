@@ -4,6 +4,8 @@ import android.content.res.Configuration
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
+import app.scanfit.core.data.export.SaveResult
+import app.scanfit.core.data.export.SaveState
 import app.scanfit.core.designsystem.theme.ScanFitTheme
 import app.scanfit.core.imaging.CropRect
 import app.scanfit.core.imaging.FitError
@@ -93,14 +95,14 @@ private fun ReviewFailedPreview() {
 @Preview(name = "Export large font", showBackground = true, fontScale = 2f)
 @Preview(name = "Export Hindi", showBackground = true, locale = "hi")
 @Composable
-private fun PhotoSavePreview(@PreviewParameter(PhotoSavePreviewStates::class) save: PhotoSaveState) {
+private fun PhotoSavePreview(@PreviewParameter(PhotoSavePreviewStates::class) save: SaveState) {
     ScanFitTheme {
         PhotoFlowScreen(
             PhotoUiState.Review(
                 previewSlot,
                 PhotoOptions(nameDate = true, name = "Asha Rao", date = "03/10/2026"),
                 ReviewResult.Ready(ByteArray(0), kb = 34, width = 200, height = 230, meetsRules = true),
-                save = PhotoSaveResult(save),
+                save = SaveResult(save),
             ),
             PhotoActions(),
         )

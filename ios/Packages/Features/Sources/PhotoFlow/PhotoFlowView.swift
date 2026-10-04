@@ -1,5 +1,6 @@
 import DesignSystem
 import PhotosUI
+import ScanData
 import ScanModel
 import SwiftUI
 import UniformTypeIdentifiers
@@ -58,11 +59,11 @@ public struct PhotoFlowView: View {
             }
         #if os(iOS)
             .sheet(item: Binding(
-                get: { (model.exporter as? FilesPhotoExporter)?.document },
-                set: { if $0 == nil { (model.exporter as? FilesPhotoExporter)?.cancelled() } }
+                get: { (model.exporter as? FilesExporter)?.document },
+                set: { if $0 == nil { (model.exporter as? FilesExporter)?.presentationDismissed() } }
             )) { document in
-                if let exporter = model.exporter as? FilesPhotoExporter {
-                    FilesExportPicker(url: document.url, exporter: exporter)
+                if let exporter = model.exporter as? FilesExporter {
+                    FilesExportPicker(url: document.url, onPicked: exporter.completed, onCancelled: exporter.cancelled)
                         .interactiveDismissDisabled()
                 }
             }
@@ -102,9 +103,9 @@ public struct PhotoFlowView: View {
             VStack(alignment: .leading, spacing: ScanFitSpacing.lg) {
                 Text(strings.photoSourceHeading).scanFitText(.title).accessibilityAddTraits(.isHeader)
                 Text(strings.specSummary(slot.spec)).scanFitText(.figure)
-                PhotoNotice(text: strings.photoTips, kind: .info)
+                NoticeCard(text: strings.photoTips, kind: .info)
                 if let problem {
-                    PhotoNotice(text: message(problem), kind: .error)
+                    NoticeCard(text: message(problem), kind: .error)
                 }
                 if Self.hasCamera {
                     Button { showCamera = true } label: {
@@ -182,27 +183,5 @@ public struct PhotoFlowView: View {
         #else
             false
         #endif
-    }
-}
-
-/// A message card: text on a tinted background (the text carries the meaning, not the colour).
-struct PhotoNotice: View {
-    enum Kind { case info, warning, error }
-
-    let text: String
-    let kind: Kind
-
-    var body: some View {
-        let (background, foreground): (Color, Color) = switch kind {
-        case .info: (ScanFitColor.surfaceVariant, ScanFitColor.onSurfaceVariant)
-        case .warning: (ScanFitColor.warningContainer, ScanFitColor.onWarningContainer)
-        case .error: (ScanFitColor.errorContainer, ScanFitColor.onErrorContainer)
-        }
-        Text(text)
-            .scanFitText(.body)
-            .foregroundStyle(foreground)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(ScanFitSpacing.lg)
-            .background(background, in: RoundedRectangle(cornerRadius: ScanFitRadius.card))
     }
 }

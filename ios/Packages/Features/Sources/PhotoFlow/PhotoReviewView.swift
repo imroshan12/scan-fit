@@ -17,7 +17,7 @@ struct PhotoReviewView: View {
             VStack(alignment: .leading, spacing: ScanFitSpacing.lg) {
                 preview
                 result
-                PhotoExportStatusView(state: model.exportState, strings: strings)
+                ExportStatusView(state: model.exportState, strings: strings)
                 options
                     .disabled(model.exportState == .saving)
             }
@@ -62,7 +62,7 @@ struct PhotoReviewView: View {
                 ))
             verdict(ready)
         case let .failed(error):
-            PhotoNotice(text: message(error), kind: .error)
+            NoticeCard(text: message(error), kind: .error)
         }
     }
 

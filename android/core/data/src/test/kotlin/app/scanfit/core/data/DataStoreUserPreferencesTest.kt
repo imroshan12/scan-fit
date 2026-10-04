@@ -52,6 +52,16 @@ class DataStoreUserPreferencesTest {
     }
 
     @Test
+    fun theHandwritingConfirmationIsAskedOnceAndRemembered() = runTest {
+        val prefs = prefs()
+        prefs.handwritingConfirmed.test {
+            assertFalse("not confirmed until the user ticks it", awaitItem())
+            prefs.confirmHandwriting()
+            assertTrue(awaitItem())
+        }
+    }
+
+    @Test
     fun savedDocumentsSurviveStoreRestartAndDoNotDuplicate() = runTest {
         val owner = Job()
         val store = PreferenceDataStoreFactory.create(

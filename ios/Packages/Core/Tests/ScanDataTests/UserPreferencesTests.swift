@@ -49,4 +49,14 @@ struct UserPreferencesTests {
         #expect(!reopened.isSaved("ibps_po", .leftThumb))
         #expect(reopened.savedDocuments["ibps_po"] == ["photo", "signature"])
     }
+
+    @Test("the handwriting confirmation is asked once and remembered across a restart")
+    func handwriting() {
+        let defaults = fresh()
+        let prefs = UserPreferences(defaults: defaults)
+        #expect(!prefs.handwritingConfirmed)
+        prefs.confirmHandwriting()
+        #expect(prefs.handwritingConfirmed)
+        #expect(UserPreferences(defaults: defaults).handwritingConfirmed)
+    }
 }

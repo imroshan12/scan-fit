@@ -1,8 +1,6 @@
 package app.scanfit.feature.flowphoto
 
-import android.content.Context
-import androidx.core.content.FileProvider
-import androidx.core.net.toUri
+import app.scanfit.core.data.ImageSource
 import app.scanfit.core.imaging.AndroidImageDecoder
 import app.scanfit.core.imaging.AndroidJpegEncoder
 import app.scanfit.core.imaging.AndroidStripRenderer
@@ -19,16 +17,10 @@ import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
-import java.io.ByteArrayOutputStream
-import java.io.File
-import java.io.IOException
-import java.io.InputStream
 import java.time.LocalDate
-import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Qualifier
 import javax.inject.Singleton
@@ -69,28 +61,15 @@ interface PhotoTools {
 class AndroidPhotoTools
 @Inject
 constructor(
-    @ApplicationContext private val context: Context,
+    private val source: ImageSource,
 ) : PhotoTools {
-    private val captureDir get() = File(context.cacheDir, CAPTURE_DIR)
     private val pipeline = FitPipeline(AndroidJpegEncoder)
 
-    override suspend fun read(uri: String): ByteArray? = try {
-        context.contentResolver.openInputStream(uri.toUri())?.use { it.readAtMost(MAX_INPUT_BYTES) }
-    } catch (_: IOException) {
-        null
-    } catch (_: SecurityException) {
-        null
-    }
+    override suspend fun read(uri: String): ByteArray? = source.read(uri)
 
-    override fun newCaptureUri(): String {
-        captureDir.mkdirs()
-        val file = File(captureDir, "${UUID.randomUUID()}.jpg")
-        return FileProvider.getUriForFile(context, "${context.packageName}.photoflow.files", file).toString()
-    }
+    override fun newCaptureUri(): String = source.newCaptureUri()
 
-    override fun discardCaptures() {
-        captureDir.listFiles()?.forEach { it.delete() }
-    }
+    override fun discardCaptures() = source.discardCaptures()
 
     override fun decode(
         bytes: ByteArray,
@@ -109,28 +88,7 @@ constructor(
     ): PipelineOutcome = pipeline.run(prepared, spec, crop = CropRect(0, 0, prepared.width, prepared.height))
 
     override fun today(): LocalDate = LocalDate.now()
-
-    private companion object {
-        const val CAPTURE_DIR = "capture"
-
-        /** A 50 MP HEIC or JPEG is well under this; anything bigger is not a photo we should hold in memory. */
-        const val MAX_INPUT_BYTES = 64 * 1024 * 1024
-    }
 }
-
-/** The whole stream, or `null` when it is longer than [limit] bytes (`readNBytes` needs API 33). */
-private fun InputStream.readAtMost(limit: Int): ByteArray? {
-    val out = ByteArrayOutputStream()
-    val buffer = ByteArray(BUFFER_BYTES)
-    while (true) {
-        val n = read(buffer)
-        if (n < 0) return out.toByteArray()
-        if (out.size() + n > limit) return null
-        out.write(buffer, 0, n)
-    }
-}
-
-private const val BUFFER_BYTES = 64 * 1024
 
 /** Image work runs here, never on the main thread (CLAUDE.md rule 4). */
 @Qualifier
@@ -140,9 +98,6 @@ annotation class PhotoWork
 @Module
 @InstallIn(SingletonComponent::class)
 internal abstract class PhotoFlowModule {
-    @Binds
-    abstract fun exportDestinations(destinations: AndroidExportDestinations): ExportDestinations
-
     @Binds
     abstract fun photoTools(tools: AndroidPhotoTools): PhotoTools
 

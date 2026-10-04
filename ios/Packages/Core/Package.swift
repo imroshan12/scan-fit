@@ -30,14 +30,14 @@ let package = Package(
         .target(name: "DesignSystem", dependencies: ["ScanModel"], resources: [.process("Resources")]),
         .target(name: "Presets", dependencies: ["ScanModel"]),
         .target(name: "Analytics"),
-        .target(name: "TestSupport", dependencies: ["Imaging", "ScanVision", "ScanModel"]),
+        .target(name: "TestSupport", dependencies: ["Imaging", "ScanVision", "ScanModel", "ScanData"]),
         // Empty until their phase (ROADMAP): engines in Phase 1, services in Phase 3-4.
         .target(name: "Imaging", dependencies: ["ScanModel", "Inspect"]),
         .target(name: "Match", dependencies: ["ScanModel", "Inspect"]),
         .target(name: "Inspect", dependencies: ["ScanModel"]),
         .target(name: "PDF", dependencies: ["ScanModel"]),
         .target(name: "ScanVision", dependencies: ["ScanModel", "Imaging"]),
-        .target(name: "ScanData", dependencies: ["ScanModel"]),
+        .target(name: "ScanData", dependencies: ["ScanModel", "Inspect", "Match"]),
         .target(name: "Billing"),
         .target(name: "Ads"),
         .target(name: "Config"),
@@ -45,7 +45,9 @@ let package = Package(
         .testTarget(name: "ScanModelTests", dependencies: ["ScanModel", "TestSupport"]),
         .testTarget(name: "PresetsTests", dependencies: ["Presets", "ScanModel", "TestSupport"]),
         .testTarget(name: "DesignSystemTests", dependencies: ["DesignSystem", "TestSupport"]),
-        .testTarget(name: "ScanDataTests", dependencies: ["ScanData"]),
+        .testTarget(
+            name: "ScanDataTests", dependencies: ["ScanData", "ScanModel", "Inspect", "Imaging", "TestSupport"]
+        ),
         .testTarget(name: "AnalyticsTests", dependencies: ["Analytics"]),
         .testTarget(name: "InspectTests", dependencies: ["Inspect", "TestSupport"]),
         .testTarget(name: "ScanVisionTests", dependencies: ["ScanVision", "Imaging", "TestSupport"]),

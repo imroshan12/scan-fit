@@ -39,6 +39,7 @@ dependencies {
     implementation(project(":feature:home"))
     implementation(project(":feature:exams"))
     implementation(project(":feature:flow-photo"))
+    implementation(project(":feature:flow-ink"))
     implementation(project(":feature:kit"))
     implementation(project(":feature:settings"))
 

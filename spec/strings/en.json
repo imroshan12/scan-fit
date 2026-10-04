@@ -206,5 +206,11 @@
 	"photo.meets_rules": "Meets the {exam:str} rules",
 	"photo.misses_rules": "Doesn't meet the {exam:str} rules yet",
 
+	"ink.source_heading": "Photograph it on plain white paper",
+	"ink.crop_hint": "Drag the corners to leave out everything else",
+	"ink.too_faint": "The ink looks too faint. Use a darker pen, or retake it in better light.",
+	"ink.too_dark": "Too much of the image is dark. Use plain white paper and crop closer.",
+	"ink.declaration_heading": "Write this by hand, sign it, then photograph it",
+
 	"infoplist.camera_usage": "ScanFit uses the camera to take your photo for exam forms. The photo stays on your phone."
 }

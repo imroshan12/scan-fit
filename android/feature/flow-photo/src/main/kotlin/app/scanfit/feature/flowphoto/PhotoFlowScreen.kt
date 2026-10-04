@@ -49,7 +49,10 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.scanfit.core.data.export.SaveState
 import app.scanfit.core.designsystem.R
+import app.scanfit.core.designsystem.components.NoticeCard
+import app.scanfit.core.designsystem.components.NoticeKind
 import app.scanfit.core.designsystem.components.labelRes
 import app.scanfit.core.designsystem.components.specSummary
 import app.scanfit.core.designsystem.theme.ScanFitRadius
@@ -187,7 +190,7 @@ internal fun PhotoFlowScreen(
                 navigationIcon = {
                     IconButton(
                         onClick = actions.onBack,
-                        enabled = (state as? PhotoUiState.Review)?.save?.state != PhotoSaveState.SAVING,
+                        enabled = (state as? PhotoUiState.Review)?.save?.state != SaveState.SAVING,
                     ) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
@@ -236,9 +239,9 @@ private fun BottomAction(
             is PhotoUiState.Review -> {
                 val ready = state.result as? ReviewResult.Ready
                 val label = when (state.save.state) {
-                    PhotoSaveState.SAVING -> R.string.export_saving
+                    SaveState.SAVING -> R.string.export_saving
 
-                    PhotoSaveState.SAVED -> R.string.common_done
+                    SaveState.SAVED -> R.string.common_done
 
                     else -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                         R.string.flow_save_downloads
@@ -246,12 +249,12 @@ private fun BottomAction(
                         R.string.flow_save_files
                     }
                 }
-                val click = if (state.save.state == PhotoSaveState.SAVED) actions.onDone else actions.onSave
+                val click = if (state.save.state == SaveState.SAVED) actions.onDone else actions.onSave
                 Triple(
                     label,
                     click,
                     !state.rendering && ready?.meetsRules == true &&
-                        state.save.state != PhotoSaveState.SAVING,
+                        state.save.state != SaveState.SAVING,
                 )
             }
 
@@ -288,7 +291,7 @@ private fun PickSourceContent(
             modifier = Modifier.semantics { heading() },
         )
         Text(specSummary(state.slot.spec), style = ScanFitType.figure)
-        Notice(stringResource(R.string.photo_tips), NoticeKind.INFO)
+        NoticeCard(stringResource(R.string.photo_tips), NoticeKind.INFO)
         state.problem?.let {
             val text =
                 when (it) {
@@ -296,7 +299,7 @@ private fun PickSourceContent(
                     SourceProblem.NO_FACE -> R.string.error_face_none
                     SourceProblem.FAILED -> R.string.error_generic
                 }
-            Notice(stringResource(text), NoticeKind.ERROR)
+            NoticeCard(stringResource(text), NoticeKind.ERROR)
         }
         val buttonModifier = Modifier.fillMaxWidth().heightIn(min = ScanFitSpacing.minTouchTarget)
         actions.onTakePhoto?.let { take ->
@@ -337,32 +340,5 @@ internal fun ScrollColumn(content: @Composable ColumnScope.() -> Unit) {
             .padding(ScanFitSpacing.screenMargin),
         verticalArrangement = Arrangement.spacedBy(ScanFitSpacing.lg),
         content = content,
-    )
-}
-
-internal enum class NoticeKind { INFO, WARNING, ERROR }
-
-/** A message card: text on a tinted background (the text carries the meaning, not the colour). */
-@Composable
-internal fun Notice(
-    text: String,
-    kind: NoticeKind,
-) {
-    val colors = ScanFitTheme.colors
-    val (background, foreground) =
-        when (kind) {
-            NoticeKind.INFO -> MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
-            NoticeKind.WARNING -> colors.warningContainer to colors.onWarningContainer
-            NoticeKind.ERROR -> colors.errorContainer to colors.onErrorContainer
-        }
-    Text(
-        text,
-        style = ScanFitType.body,
-        color = foreground,
-        modifier =
-        Modifier
-            .fillMaxWidth()
-            .background(background, RoundedCornerShape(ScanFitRadius.card))
-            .padding(ScanFitSpacing.lg),
     )
 }

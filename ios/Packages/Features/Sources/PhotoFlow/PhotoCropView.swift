@@ -27,9 +27,9 @@ struct PhotoCropView: View {
                 VStack(alignment: .leading, spacing: ScanFitSpacing.xs) { tools }
             }
             if let problem = crop.problem {
-                PhotoNotice(text: message(problem), kind: .error)
+                NoticeCard(text: message(problem), kind: .error)
             } else if crop.tight {
-                PhotoNotice(text: strings.photoCropTight, kind: .warning)
+                NoticeCard(text: strings.photoCropTight, kind: .warning)
             }
         }
         .padding(ScanFitSpacing.screenMargin)
@@ -70,7 +70,9 @@ struct PhotoCropView: View {
                     var outside = Path(CGRect(origin: origin, size: size))
                     outside.addRect(frame)
                     context.fill(outside, with: .color(.black.opacity(0.55)), style: FillStyle(eoFill: true))
-                    context.stroke(Path(frame), with: .color(.white), lineWidth: 2)
+                    // Brand colour on a white outline: visible on a plain light wall and on dark backgrounds alike.
+                    context.stroke(Path(frame), with: .color(.white), lineWidth: 4)
+                    context.stroke(Path(frame), with: .color(ScanFitColor.primary), lineWidth: 2)
                 }
                 .allowsHitTesting(false)
             }

@@ -22,6 +22,12 @@ public struct InkResult: Sendable {
     public let raster: Raster
     public let quality: InkQuality
     public let coverage: Double
+
+    public init(raster: Raster, quality: InkQuality, coverage: Double) {
+        self.raster = raster
+        self.quality = quality
+        self.coverage = coverage
+    }
 }
 
 /// Turns a phone photo of ink on paper into black-on-white (ALGORITHMS section 3 / 9.5). The input should

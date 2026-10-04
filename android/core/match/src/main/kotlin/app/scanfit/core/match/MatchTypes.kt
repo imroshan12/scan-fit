@@ -4,9 +4,23 @@ import app.scanfit.core.inspect.ColorKind
 import app.scanfit.core.inspect.DetectedFormat
 import app.scanfit.core.inspect.InspectedFile
 import app.scanfit.core.inspect.Issue
+import app.scanfit.core.model.DocType
 
 /** What the file is for: from the flow that produced it, or the user's pick in the Checker (ALGORITHMS 4). */
-enum class DocKind { PHOTO, SIGNATURE, THUMB, DECLARATION, FINGERS, PDF_DOCUMENT }
+enum class DocKind {
+    PHOTO,
+    SIGNATURE,
+    THUMB,
+    DECLARATION,
+    FINGERS,
+    PDF_DOCUMENT,
+    ;
+
+    companion object {
+        /** The kind a slot of [type] is matched and checked as (ALGORITHMS 4 / 9.5); PDF-only slots are documents. */
+        fun of(type: DocType): DocKind = entries.firstOrNull { type in MatchEngine.slotTypes(it) } ?: PDF_DOCUMENT
+    }
+}
 
 enum class Verdict { EXACT, ACCEPTED, NEAR_MISS, NO, UNKNOWN }
 

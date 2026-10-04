@@ -4,7 +4,7 @@ import ScanModel
 import SwiftUI
 
 /// Exam checklist screen: header with the confidence badge and source, one row per document with its requirement
-/// summary, and the "Before you upload" card. A row links to its flow (`PhotoRoute`) when the app says the flow exists.
+/// summary, and the "Before you upload" card. A row links to its flow (`FlowRoute`) when the app says the flow exists.
 public struct ExamView: View {
     @State private var model: ExamViewModel
     @Environment(\.locale) private var locale
@@ -57,7 +57,7 @@ public struct ExamView: View {
                 Section(strings.examDocuments) {
                     ForEach(exam.documents) { doc in
                         if openable.contains(doc.type) {
-                            NavigationLink(value: PhotoRoute(examId: exam.id, docType: doc.type)) { docRow(doc) }
+                            NavigationLink(value: FlowRoute(examId: exam.id, docType: doc.type)) { docRow(doc) }
                         } else {
                             docRow(doc)
                         }

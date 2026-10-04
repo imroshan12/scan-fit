@@ -3,6 +3,9 @@ package app.scanfit.feature.flowphoto
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.scanfit.core.data.export.DocumentExporter
+import app.scanfit.core.data.export.SaveResult
+import app.scanfit.core.data.export.SaveState
 import app.scanfit.core.imaging.AndroidImageDecoder
 import app.scanfit.core.imaging.AutoFraming
 import app.scanfit.core.imaging.BackgroundWhitening
@@ -125,7 +128,7 @@ sealed interface PhotoUiState {
         val slot: PhotoSlot,
         val options: PhotoOptions,
         val result: ReviewResult,
-        val save: PhotoSaveResult = PhotoSaveResult(),
+        val save: SaveResult = SaveResult(),
         val rendering: Boolean = false,
     ) : PhotoUiState
 }
@@ -140,7 +143,7 @@ constructor(
     private val faces: FaceDetector,
     private val segmenter: PersonSegmenter,
     @PhotoWork private val work: CoroutineDispatcher,
-    exporter: PhotoExporter,
+    exporter: DocumentExporter,
 ) : ViewModel() {
     private val examId: String = savedState.get<String>(EXAM_ID).orEmpty()
     private val docType: String = savedState.get<String>(DOC_TYPE).orEmpty()
@@ -188,7 +191,7 @@ constructor(
     fun newCaptureUri(): String = tools.newCaptureUri()
 
     fun onImageSelected(uri: String) {
-        if ((_uiState.value as? PhotoUiState.Review)?.save?.state == PhotoSaveState.SAVING) return
+        if ((_uiState.value as? PhotoUiState.Review)?.save?.state == SaveState.SAVING) return
         val slot = slot ?: return
         job?.cancel()
         _uiState.value = PhotoUiState.FindingFace(slot)
@@ -291,7 +294,7 @@ constructor(
 
     /** System back inside the flow: Review -> Crop -> PickSource. `false` = leave the flow. */
     fun onBack(): Boolean {
-        if ((_uiState.value as? PhotoUiState.Review)?.save?.state == PhotoSaveState.SAVING) return true
+        if ((_uiState.value as? PhotoUiState.Review)?.save?.state == SaveState.SAVING) return true
         val slot = slot ?: return false
         return when (_uiState.value) {
             is PhotoUiState.Review -> {
@@ -322,7 +325,7 @@ constructor(
         change: (PhotoOptions) -> PhotoOptions,
     ) {
         val review = _uiState.value as? PhotoUiState.Review ?: return
-        if (review.save.state == PhotoSaveState.SAVING) return
+        if (review.save.state == SaveState.SAVING) return
         render(review.slot, change(review.options), debounce)
     }
 

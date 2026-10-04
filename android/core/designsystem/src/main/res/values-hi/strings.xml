@@ -112,6 +112,11 @@
     <string name="home_section_pinned">मेरी परीक्षाएँ</string>
     <string name="home_section_popular">अभी लोकप्रिय</string>
     <string name="home_title">आप किसके लिए आवेदन कर रहे हैं?</string>
+    <string name="ink_crop_hint">बाकी सब हटाने के लिए कोनों को खींचें</string>
+    <string name="ink_declaration_heading">इसे अपने हाथ से लिखें, हस्ताक्षर करें, फिर फ़ोटो लें</string>
+    <string name="ink_source_heading">इसे सादे सफ़ेद काग़ज़ पर रखकर फ़ोटो लें</string>
+    <string name="ink_too_dark">इमेज का बहुत ज़्यादा हिस्सा गहरा है। सादा सफ़ेद काग़ज़ लें और पास से क्रॉप करें।</string>
+    <string name="ink_too_faint">स्याही बहुत हल्की दिख रही है। गहरे पेन का इस्तेमाल करें या अच्छी रोशनी में दोबारा लें।</string>
     <string name="issue_cmyk_color">यह JPEG CMYK रंगों में है। कई पोर्टल इसे रिजेक्ट कर देते हैं।</string>
     <string name="issue_extension_mismatch">फ़ाइल का नाम और असली फ़ाइल प्रकार मेल नहीं खाते। कुछ पोर्टल इसे रिजेक्ट कर देते हैं।</string>
     <string name="issue_grayscale_not_allowed">यहाँ ब्लैक-एंड-व्हाइट (ग्रेस्केल) फ़ाइलें मान्य नहीं हैं।</string>

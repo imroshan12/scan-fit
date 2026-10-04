@@ -1783,6 +1783,91 @@
         }
       }
     },
+    "ink.crop_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drag the corners to leave out everything else"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "बाकी सब हटाने के लिए कोनों को खींचें"
+          }
+        }
+      }
+    },
+    "ink.declaration_heading": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write this by hand, sign it, then photograph it"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "इसे अपने हाथ से लिखें, हस्ताक्षर करें, फिर फ़ोटो लें"
+          }
+        }
+      }
+    },
+    "ink.source_heading": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photograph it on plain white paper"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "इसे सादे सफ़ेद काग़ज़ पर रखकर फ़ोटो लें"
+          }
+        }
+      }
+    },
+    "ink.too_dark": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Too much of the image is dark. Use plain white paper and crop closer."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "इमेज का बहुत ज़्यादा हिस्सा गहरा है। सादा सफ़ेद काग़ज़ लें और पास से क्रॉप करें।"
+          }
+        }
+      }
+    },
+    "ink.too_faint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The ink looks too faint. Use a darker pen, or retake it in better light."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "स्याही बहुत हल्की दिख रही है। गहरे पेन का इस्तेमाल करें या अच्छी रोशनी में दोबारा लें।"
+          }
+        }
+      }
+    },
     "issue.cmyk_color": {
       "extractionState": "manual",
       "localizations": {

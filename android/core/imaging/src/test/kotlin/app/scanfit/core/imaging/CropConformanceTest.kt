@@ -23,7 +23,8 @@ class CropConformanceTest {
     @Test
     fun everySharedCropCaseHolds() {
         val cases = Cases.section("crop_cases")
-        assertTrue(cases.size >= 10)
+        assertTrue(cases.size >= 18)
+        assertTrue("resize is covered", cases.count { it["op"]?.jsonPrimitive?.content == "resize" } >= 6)
         for (c in cases) {
             val id = c.getValue("id").jsonPrimitive.content
             val img = c.obj("image")
@@ -44,6 +45,11 @@ class CropConformanceTest {
                     "move" -> CropAdjust.move(c.obj("rect").rect(), c.d("dx"), c.d("dy"), img.n("w"), img.n("h"))
 
                     "zoom" -> CropAdjust.zoom(c.obj("rect").rect(), c.d("factor"), aspect, img.n("w"), img.n("h"))
+
+                    "resize" -> {
+                        val corner = CropCorner.of(c.getValue("corner").jsonPrimitive.content)
+                        CropAdjust.resize(c.obj("rect").rect(), corner, c.d("dx"), c.d("dy"), img.n("w"), img.n("h"))
+                    }
 
                     else -> error("$id: unknown op $op")
                 }

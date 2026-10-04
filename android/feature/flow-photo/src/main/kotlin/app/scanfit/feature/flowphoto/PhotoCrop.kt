@@ -36,6 +36,8 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import app.scanfit.core.designsystem.R
+import app.scanfit.core.designsystem.components.NoticeCard
+import app.scanfit.core.designsystem.components.NoticeKind
 import app.scanfit.core.designsystem.theme.ScanFitSpacing
 import app.scanfit.core.designsystem.theme.ScanFitType
 import app.scanfit.core.imaging.CropRect
@@ -89,10 +91,10 @@ internal fun CropContent(
                     CropProblem.SEVERAL_FACES -> R.string.error_face_multiple
                     CropProblem.FAILED -> R.string.error_generic
                 }
-            Notice(stringResource(text), NoticeKind.ERROR)
+            NoticeCard(stringResource(text), NoticeKind.ERROR)
         }
         if (state.tight && state.problem == null) {
-            Notice(stringResource(R.string.photo_crop_tight), NoticeKind.WARNING)
+            NoticeCard(stringResource(R.string.photo_crop_tight), NoticeKind.WARNING)
         }
     }
 }
@@ -116,6 +118,7 @@ private fun CropEditor(
     val move by rememberUpdatedState(onMove)
     val zoom by rememberUpdatedState(onZoom)
     val scrim = Color.Black.copy(alpha = SCRIM_ALPHA)
+    val frameColor = MaterialTheme.colorScheme.primary
     Canvas(
         modifier =
         modifier
@@ -155,7 +158,9 @@ private fun CropEditor(
         drawRect(scrim, Offset(ox, b), Size(w, oy + h - b))
         drawRect(scrim, Offset(ox, t), Size(l - ox, b - t))
         drawRect(scrim, Offset(r, t), Size(ox + w - r, b - t))
-        drawRect(Color.White, Offset(l, t), Size(r - l, b - t), style = Stroke(2.dp.toPx()))
+        // Brand colour on a white outline: visible on a plain light wall and on dark backgrounds alike.
+        drawRect(Color.White, Offset(l, t), Size(r - l, b - t), style = Stroke(4.dp.toPx()))
+        drawRect(frameColor, Offset(l, t), Size(r - l, b - t), style = Stroke(2.dp.toPx()))
     }
 }
 

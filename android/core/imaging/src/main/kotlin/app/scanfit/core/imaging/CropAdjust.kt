@@ -43,8 +43,57 @@ object CropAdjust {
         )
     }
 
+    /**
+     * The ink flow's free crop (ALGORITHMS 9.5): the dragged [corner] moves by ([dx], [dy]), the opposite corner stays,
+     * and each side stays at least 32 px (or the whole image when it is smaller) and inside the image.
+     */
+    fun resize(
+        rect: CropRect,
+        corner: CropCorner,
+        dx: Double,
+        dy: Double,
+        imgW: Int,
+        imgH: Int,
+    ): CropRect {
+        val minW = minOf(MIN_FREE_SIDE, imgW)
+        val minH = minOf(MIN_FREE_SIDE, imgH)
+        var left = rect.x
+        var top = rect.y
+        var right = rect.x + rect.w
+        var bottom = rect.y + rect.h
+        if (corner.left) {
+            left = roundHalfUp(rect.x + dx).coerceIn(0, maxOf(0, right - minW))
+        } else {
+            right = roundHalfUp(rect.x + rect.w + dx).coerceIn(minOf(left + minW, imgW), imgW)
+        }
+        if (corner.top) {
+            top = roundHalfUp(rect.y + dy).coerceIn(0, maxOf(0, bottom - minH))
+        } else {
+            bottom = roundHalfUp(rect.y + rect.h + dy).coerceIn(minOf(top + minH, imgH), imgH)
+        }
+        return CropRect(left, top, right - left, bottom - top)
+    }
+
     /** The raster turned 90° clockwise (EXIF transform 6), for the crop screen's Rotate button. */
     fun rotateClockwise(raster: Raster): Raster = Orientation.apply(raster, ROTATE_CW)
 
     private const val ROTATE_CW = 6
+    private const val MIN_FREE_SIDE = 32
+}
+
+/** A corner of the free crop. `wire` is the name used in `crop_cases`. */
+enum class CropCorner(
+    val wire: String,
+    val left: Boolean,
+    val top: Boolean,
+) {
+    TOP_LEFT("tl", left = true, top = true),
+    TOP_RIGHT("tr", left = false, top = true),
+    BOTTOM_LEFT("bl", left = true, top = false),
+    BOTTOM_RIGHT("br", left = false, top = false),
+    ;
+
+    companion object {
+        fun of(wire: String): CropCorner = entries.first { it.wire == wire }
+    }
 }

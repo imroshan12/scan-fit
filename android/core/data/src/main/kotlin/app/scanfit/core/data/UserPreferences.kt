@@ -31,6 +31,11 @@ interface UserPreferences {
     )
 
     suspend fun setShowUnverified(show: Boolean)
+
+    /** The one-time "I signed in running handwriting, not CAPITAL letters" tick (ALGORITHMS 9.5). */
+    val handwritingConfirmed: Flow<Boolean>
+
+    suspend fun confirmHandwriting()
 }
 
 data class SavedDocument(val examId: String, val docType: String)
@@ -75,12 +80,20 @@ class DataStoreUserPreferences(
         store.edit { it[SHOW_UNVERIFIED] = show }
     }
 
+    override val handwritingConfirmed: Flow<Boolean> =
+        data.map { it[HANDWRITING_CONFIRMED] ?: false }.distinctUntilChanged()
+
+    override suspend fun confirmHandwriting() {
+        store.edit { it[HANDWRITING_CONFIRMED] = true }
+    }
+
     private companion object {
         // Exam ids match ^[a-z0-9_]+$ (spec/schema), so a comma can never be part of one.
         const val SEPARATOR = ","
         val PINNED = stringPreferencesKey("pinned_exam_ids")
         val SHOW_UNVERIFIED = booleanPreferencesKey("show_unverified_exams")
         val SAVED_DOCUMENTS = stringSetPreferencesKey("saved_documents")
+        val HANDWRITING_CONFIRMED = booleanPreferencesKey("handwriting_confirmed")
 
         /** On by default (ALGORITHMS §10): an unverified exam is listed with its badge rather than missing. */
         const val SHOW_UNVERIFIED_DEFAULT = true

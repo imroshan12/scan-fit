@@ -24,6 +24,40 @@ KOTLIN_PKG_ANALYTICS = "app.scanfit.core.analytics"
 PIP_NAMES = {"PIL": "pillow"}
 
 
+def replace_json_array(text: str, key: str, items: list) -> str:
+    """Replaces the array of top-level `key` in a JSON document's text, leaving every other byte as it is.
+
+    Works whatever the file's formatting (one case per line, Prettier, tabs or spaces): the array is found by bracket
+    matching (strings skipped) and rewritten one item per line in the file's own indentation.
+    """
+    import json
+    start = text.index(f'"{key}"')
+    open_at = text.index("[", start)
+    depth, i, in_string = 0, open_at, False
+    while True:
+        ch = text[i]
+        if in_string:
+            if ch == "\\":
+                i += 1
+            elif ch == '"':
+                in_string = False
+        elif ch == '"':
+            in_string = True
+        elif ch in "[{":
+            depth += 1
+        elif ch in "]}":
+            depth -= 1
+            if depth == 0:
+                break
+        i += 1
+    line_start = text.rindex("\n", 0, start) + 1
+    outer = text[line_start:start]  # the key's own indentation
+    unit = "\t" if outer.startswith("\t") else "  "
+    inner = outer + unit
+    body = ",\n".join(inner + json.dumps(item, ensure_ascii=False, separators=(", ", ": ")) for item in items)
+    return text[:open_at] + "[\n" + body + "\n" + outer + "]" + text[i + 1:]
+
+
 def require(*modules: str):
     """Exit with the setup steps (not a traceback) when a third-party package the tool needs is missing."""
     missing = [m for m in modules if importlib.util.find_spec(m) is None]

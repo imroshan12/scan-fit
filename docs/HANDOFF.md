@@ -1,6 +1,6 @@
 # HANDOFF.md — where work stopped (read this first when picking the project up)
 
-Last updated: **2026-10-04**. Current phase: **Phase 2 — Core flows** (docs/ROADMAP.md). Everything below is in the working tree
+Last updated: **2026-10-05**. Current phase: **Phase 2 — Core flows** (docs/ROADMAP.md). Everything below is in the working tree
 but **not committed** (the last commit is `90fd134 Phase 2 start`). The user commits; a session never runs `git add/commit/push`.
 
 ## 1. State in one screen
@@ -10,15 +10,16 @@ but **not committed** (the last commit is `90fd134 Phase 2 start`). The user com
 | Home (search, categories, My exams, Popular) | Done on both apps (ROADMAP Phase 2, ticked).                                                                                                                                                    |
 | Exam checklist                               | Verified photo exports persist the row status "Saved" on both apps. Photo rows are tappable (chevron). Intermediate "Ready" rows remain a follow-up.                                            |
 | Photo flow                                   | Built on both apps, including save, retry, cancellation and Done after success. Physical-device camera/navigation confirmation remains open (§3).                                               |
-| Export / save                                | Single-photo save + verify-after-write done on both apps. Android Downloads (SAF below API 29), iOS Files picker. Save all, share, Open folder, retained copies and export history remain open. |
-| Ink flows, My Kit, Custom, Checker           | Not started.                                                                                                                                                                                    |
+| Export / save                                | Single-file save + verify-after-write, shared by every flow (Android `:core:data` `export`, iOS `ScanData`), checked as the slot's `DocKind`. Save all, share, Open folder, retained copies and export history remain open. |
+| Ink flows                                    | Built on both apps (2026-10-05): signature, triple signature, thumbs, NEET fingers, declaration. Free crop, cleanup variant by type, crisp black / darker ink, one-time handwriting tick, save + verify. Verified end to end on the iPhone 11 Pro Max simulator; Android hand check open (§5). |
+| My Kit, Custom, Checker                      | Not started.                                                                                                                                                                                    |
 | Screenshot tests                             | Removed for good (user decision 2026-10-03). Don't add them back (CLAUDE.md Definition of done).                                                                                                |
 
-Gates last run (2026-10-04): Android `./gradlew spotlessCheck detekt testDebugUnitTest lint :app:assembleDebug` green;
-iOS `swiftlint --strict` **from ios/**, `swift test` Core (`--skip DesignSystemTests`) and Features (45 tests, including 33
-photo/export tests), app tests on the iPhone 17 simulator; spec 56 tool tests, all 55 presets valid, dev signature verified,
-`gen_strings.py --check`. Both platforms consume all eight shared `export_cases`. Device/provider QA and new coverage measurements
-remain open. Hindi export messages are drafted with `TODO_HI:` for native review.
+Gates last run (2026-10-05): Android `./gradlew spotlessCheck detekt testDebugUnitTest lint :app:assembleDebug` green
+(245 unit tests); iOS `swiftlint --strict` **from ios/**, `swift test` Core and Features (incl. 14 InkFlow tests),
+DesignSystemTests, app tests on the iPhone 17 simulator; spec tool tests, `gen_strings.py --check`. Both platforms consume all
+eight `export_cases` and all 18 `crop_cases` (frame, move, zoom, resize). Device/provider QA and new coverage measurements remain
+open. Hindi export and `ink.*` messages are drafted with `TODO_HI:` for native review.
 
 ## 2. Decisions made with the user (not obvious from the code)
 
@@ -45,7 +46,48 @@ remain open. Hindi export messages are drafted with `TODO_HI:` for native review
 - Review now saves and verifies before offering Done; Saved persists on the exam checklist. This removes the former no-save
   behavior, but does not substitute for confirming the camera/navigation fix on the user's physical device.
 
-## 4. What changed this session (by area, for review)
+### Files save missing Saved status (2026-10-04)
+
+- User reported a photo existed in Files but neither Review nor the exam checklist showed Saved.
+- Found an iOS callback-order bug: the export sheet's binding treated becoming nil as picker cancellation, which could resolve
+  the save as idle before UIKit delivered the destination URL. A dismissed sheet is not evidence of cancellation.
+- Fixed: presentation dismissal only clears the sheet. Only the document picker's completion/cancellation delegates resolve
+  the export; staging survives dismissal until that result. Completion still re-opens and verifies the destination before
+  persisting Saved. Regression tests cover dismissal before success and cancellation, plus real Files exporter → photo model
+  → existing exam preferences → relaunch persistence.
+- Full Features tests, focused regressions, strict SwiftLint and iPhone 17 simulator build passed. Confirmation on the user's
+  device is still needed with the updated build. Files saved before the fix are not retroactively marked; save again to verify.
+
+## 4. What changed (by area, for review)
+
+### Ink flows session (2026-10-05)
+
+- **Spec:** ALGORITHMS §3 "Flow (both apps)"; §9.5 doc type → cleanup variant / match kind (signature + triple → SIGNATURE_CLEANUP,
+  thumbs + fingers → THUMB_CLEANUP, declaration → DOCUMENT_CLEANUP), review options (crisp black: signature on, document off;
+  "Darker ink" factor 0.3–0.9 in steps of 0.1, debounced 300 ms; none for thumbs), free crop `resize` (min side 32 px), the one-time
+  handwriting confirmation for signatures. The coverage quality gate only warns. `crop_cases` +6 resize cases (18 total) from
+  `spec/tools/photo_crop.py --write-cases`. New `_common.replace_json_array` rewrites one array in `cases.json` whatever its
+  formatting (the user reformatted it with tabs; `photo_crop.py` and `exam_search.py` use it). New `ink.*` strings (EN + `TODO_HI:`).
+- **Shared export layer (moved out of the photo flow):** Android `:core:data` package `app.scanfit.core.data.export`
+  (`DocumentExporter`, `ExportVerifier(kind)`, `ExportRequest(examId, examName, spec, kind, bytes)`, `SaveState`/`SaveResult`,
+  `ExportDestinations`/`AndroidExportDestinations`), plus `ImageSource` (bounded read, camera capture URI under
+  `${applicationId}.capture`, discard). iOS `ScanData` `ExportRequest(bytes, filename, spec, kind)`, `ExportOperation`,
+  `DocumentExporting`, `FilesExporter`/`FilesExportTransport`; `ScanModel.ExportState`. Photo flow now uses these
+  (`PhotoSaveState` → `SaveState`, `FilesPhotoExporter` → `FilesExporter`, etc.).
+- **`DocKind.of(DocType)`** on both platforms (inverse of `slotTypes`; PDF-only slots → PDF_DOCUMENT), with tests.
+- **Handwriting preference:** `UserPreferences.handwritingConfirmed` / `confirmHandwriting()` (key `handwriting_confirmed`), both apps.
+- **Shared UI:** Android designsystem `NoticeCard` / `NoticeKind`. iOS DesignSystem `NoticeCard`, `ExportStatusView`,
+  `FilesExportPicker`, `CameraPicker` (moved from PhotoFlow). Crop frames (photo + ink, both apps) are drawn in the primary colour
+  over a white outline with handles — white-on-white was invisible on paper. The iOS ink editor insets the image so handles aren't clipped.
+- **Android:** new `:feature:flow-ink` (`InkTools`/`AndroidInkTools`, `InkFlowViewModel` + `InkUiState`, `InkFlowScreen`,
+  `InkCrop` free-crop editor, `InkReview`, previews, 16 VM tests). Route `exam/{examId}/ink/{docType}` (`launchSingleTop`),
+  `INK_FLOW_TYPES` in `ScanFitApp`. Test support: `TestJpeg`, `FakeExportDestinations` in `:core:testing`.
+- **iOS:** Features `InkFlow` target (`LiveInkTools`, `InkFlowState`, `InkFlowViewModel`, `InkFlowView`, `InkCropView`,
+  `InkReviewView`) + `InkFlowTests` (14). `PhotoRoute` → `FlowRoute`; `RootView.flow()` picks Photo or Ink by doc type. Imaging
+  `CropAdjust.resize` / `CropCorner`, public `InkResult` init. TestSupport `TestJpeg`, `ExportFixtures`. `project.yml` + xcodegen.
+- **Docs:** ROADMAP (ink item ticked with notes), ARCHITECTURE (core:data export, iOS shared components, FlowRoute), this file.
+
+### Photo flow session (2026-10-04)
 
 - **Export follow-up:** ALGORITHMS §1.6 defines lifecycle, verification, cleanup and persistent checklist status; eight shared
   `export_cases`. Android adds `PhotoExporter`, `PhotoExportVerifier`, `PhotoSaveController`, `AndroidExportDestinations`;
@@ -77,16 +119,23 @@ remain open. Hindi export messages are drafted with `TODO_HI:` for native review
 2. **Device export smoke:** save a real photo on Android API 29+ and API 26–28, and iOS Files/iCloud; cancel and retry; Done
    returns to the exam with Saved, including after app relaunch. Upload the output via `web/upload-test/` to verify byte fidelity.
    iOS lets the user choose the destination folder; `ScanFit/<Exam>/` cannot be forced by the system Files picker.
-3. **Ink flows** (signature, thumb, declaration): reuse the verified export contract; keep doc-kind matching and grayscale rules
-   correct rather than calling the current photo-only verifier unchanged.
+3. **Ink flow checks:** hand-check the Android ink flow on an emulator (signature, thumb, declaration; free-crop drag, darker
+   ink slider, handwriting tick, save). Time cleanup on a real low-end device (≈20 s in a simulator **debug** build — measure
+   release before optimising). Ask a native speaker to review the `TODO_HI:` strings.
 4. Finish the wider export/review items: Ready checklist rows, Save all, sharing, Open folder, My Kit/export history, match note
-   and before/after. Verify UPSC ESE / CMS presets only with official sources and user direction.
+   and before/after, then Custom and Checker. Verify UPSC ESE / CMS presets only with official sources and user direction.
 
 ## 6. Testing tips that cost time to learn
 
 - No fixture or built-in macOS image contains a face. To reach crop/review on the simulator, build a **throwaway** copy with a stub
   `FaceDetector` (a box in the middle of any photo) injected in `RootView`, test, then restore the file and reinstall the real build.
   Never leave the stub in the source.
+- Ink flows need no face: add a fixture to the simulator's Photos with
+  `xcrun simctl addmedia <udid> spec/fixtures/images/signature_paper_shadow.jpg`, then pick it from the gallery.
+- SwiftUI toggles/checkboxes on the simulator often ignore quick synthetic taps; tap with `duration: 0.15–0.2`. Not an app bug.
+- The Files save picker on the simulator writes to "On My iPhone" inside the simulator's data container; inspect the file there.
+- `cases.json` may be reformatted (Prettier, tabs) at any time; the writers use `replace_json_array`, so rerunning them is safe.
+- After moving a Kotlin type between modules, "Incremental compilation failed" can appear; rerun once with `--rerun-tasks`.
 - Vision fails on the simulator ("Could not create inference context") unless requests run on the CPU — already handled.
 - The Android emulator (`Medium_Phone_API_35`, single core) froze with `-memory 4096` ("System UI isn't responding", adb hung).
 - Don't run Gradle and `xcodebuild` at the same time; VS Code's Java extension runs its own Gradle on `android/` (stop with

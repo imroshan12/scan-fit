@@ -2,9 +2,12 @@ package app.scanfit.feature.flowphoto
 
 import androidx.lifecycle.SavedStateHandle
 import app.scanfit.core.data.SavedDocument
+import app.scanfit.core.data.export.DocumentExporter
+import app.scanfit.core.data.export.SaveState
 import app.scanfit.core.imaging.FitError
 import app.scanfit.core.presets.PresetsLoadOutcome
 import app.scanfit.core.presets.PresetsSummary
+import app.scanfit.core.testing.FakeExportDestinations
 import app.scanfit.core.testing.FakeFaceDetector
 import app.scanfit.core.testing.FakePersonSegmenter
 import app.scanfit.core.testing.FakePresetsRepository
@@ -56,7 +59,7 @@ class PhotoSaveViewModelTest {
             FakeFaceDetector(listOf(FaceBox(400.0, 500.0, 200.0, 240.0))),
             segmenter,
             dispatcher,
-            PhotoExporter(destination, preferences),
+            DocumentExporter(destination, preferences),
         )
         model.onImageSelected("photo")
         model.onCropDone()
@@ -72,7 +75,7 @@ class PhotoSaveViewModelTest {
         val model = model()
         val before = model.review
         model.onSave()
-        assertEquals(PhotoSaveState.SAVING, model.review.save.state)
+        assertEquals(SaveState.SAVING, model.review.save.state)
         model.onSave()
         model.onWhiteBackground(true)
         model.onNameDate(true)
@@ -84,7 +87,7 @@ class PhotoSaveViewModelTest {
         assertEquals(1, destinations.events.count { it == "create" })
         destinations.gate?.complete(Unit)
         advanceUntilIdle()
-        assertEquals(PhotoSaveState.SAVED, model.review.save.state)
+        assertEquals(SaveState.SAVED, model.review.save.state)
         assertArrayEquals((before.result as ReviewResult.Ready).bytes, destinations.lastRequest?.bytes)
         assertEquals(setOf(SavedDocument("ibps_po", "PHOTO")), preferences.savedDocuments.value)
     }
@@ -94,14 +97,14 @@ class PhotoSaveViewModelTest {
         destinations.operation = "write_failed"
         val model = model()
         model.onSave()
-        assertEquals(PhotoSaveState.SAVE_FAILED, model.review.save.state)
+        assertEquals(SaveState.SAVE_FAILED, model.review.save.state)
         assertTrue(preferences.savedDocuments.value.isEmpty())
         destinations.operation = "success"
         model.onSave()
-        assertEquals(PhotoSaveState.SAVED, model.review.save.state)
+        assertEquals(SaveState.SAVED, model.review.save.state)
         destinations.operation = "read_failed"
         model.onSave()
-        assertEquals(PhotoSaveState.SAVE_FAILED, model.review.save.state)
+        assertEquals(SaveState.SAVE_FAILED, model.review.save.state)
         assertEquals(setOf(SavedDocument("ibps_po", "PHOTO")), preferences.savedDocuments.value)
     }
 
@@ -111,12 +114,12 @@ class PhotoSaveViewModelTest {
         destinations.deleteSucceeds = false
         val model = model()
         model.onSave()
-        assertEquals(PhotoSaveState.VERIFY_FAILED, model.review.save.state)
+        assertEquals(SaveState.VERIFY_FAILED, model.review.save.state)
         assertEquals(false, model.review.save.cleanupSucceeded)
         assertFalse("publish" in destinations.events)
         destinations.operation = "success"
         model.onSave()
-        assertEquals(PhotoSaveState.SAVED, model.review.save.state)
+        assertEquals(SaveState.SAVED, model.review.save.state)
     }
 
     @Test
@@ -126,17 +129,17 @@ class PhotoSaveViewModelTest {
         assertEquals("photo_IBPS-PO_200x230_34kb.jpg", model.onSave())
         assertNull(model.onSave())
         model.onSaveDestination(null)
-        assertEquals(PhotoSaveState.IDLE, model.review.save.state)
+        assertEquals(SaveState.IDLE, model.review.save.state)
         assertTrue(destination.events.isEmpty())
         assertTrue(preferences.savedDocuments.value.isEmpty())
         model.onSave()
         model.onSaveDestination(null, launchFailed = true)
-        assertEquals(PhotoSaveState.SAVE_FAILED, model.review.save.state)
+        assertEquals(SaveState.SAVE_FAILED, model.review.save.state)
         model.onSave()
         model.onSaveDestination("content://document/new")
-        assertEquals(PhotoSaveState.SAVED, model.review.save.state)
+        assertEquals(SaveState.SAVED, model.review.save.state)
         model.onSaveDestination(null)
-        assertEquals(PhotoSaveState.SAVED, model.review.save.state)
+        assertEquals(SaveState.SAVED, model.review.save.state)
     }
 
     @Test
@@ -171,7 +174,7 @@ class PhotoSaveViewModelTest {
         gate.complete(Unit)
         advanceUntilIdle()
         assertFalse(model.review.options.whiteBackground)
-        assertEquals(PhotoSaveState.SAVED, model.review.save.state)
+        assertEquals(SaveState.SAVED, model.review.save.state)
     }
 
     @Test

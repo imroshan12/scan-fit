@@ -38,7 +38,10 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import app.scanfit.core.data.export.SaveState
 import app.scanfit.core.designsystem.R
+import app.scanfit.core.designsystem.components.NoticeCard
+import app.scanfit.core.designsystem.components.NoticeKind
 import app.scanfit.core.designsystem.theme.ScanFitRadius
 import app.scanfit.core.designsystem.theme.ScanFitSpacing
 import app.scanfit.core.designsystem.theme.ScanFitTheme
@@ -81,20 +84,20 @@ internal fun ReviewContent(
                         FitError.UNKNOWN_LIMIT -> stringResource(R.string.exam_spec_unknown)
                         else -> stringResource(R.string.error_generic)
                     }
-                Notice(text, NoticeKind.ERROR)
+                NoticeCard(text, NoticeKind.ERROR)
             }
         }
         when (state.save.state) {
-            PhotoSaveState.SAVED -> Notice(stringResource(R.string.export_saved), NoticeKind.INFO)
-            PhotoSaveState.SAVE_FAILED -> Notice(stringResource(R.string.export_save_failed), NoticeKind.ERROR)
-            PhotoSaveState.VERIFY_FAILED -> Notice(stringResource(R.string.export_verify_failed), NoticeKind.ERROR)
+            SaveState.SAVED -> NoticeCard(stringResource(R.string.export_saved), NoticeKind.INFO)
+            SaveState.SAVE_FAILED -> NoticeCard(stringResource(R.string.export_save_failed), NoticeKind.ERROR)
+            SaveState.VERIFY_FAILED -> NoticeCard(stringResource(R.string.export_verify_failed), NoticeKind.ERROR)
             else -> Unit
         }
         Options(
             state.options,
             stripHint = state.slot.spec.nameDateStrip?.required == true,
             actions = actions,
-            enabled = state.save.state != PhotoSaveState.SAVING,
+            enabled = state.save.state != SaveState.SAVING,
         )
     }
 }

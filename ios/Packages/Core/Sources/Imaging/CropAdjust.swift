@@ -28,6 +28,34 @@ public enum CropAdjust {
         return CropRect(x: min(max(x, 0), imgW - w), y: min(max(y, 0), imgH - h), w: w, h: h)
     }
 
+    /// The ink flow's free crop (ALGORITHMS 9.5): the dragged `corner` moves by (`dx`, `dy`), the opposite corner
+    /// stays, and each side stays at least 32 px (or the whole image when it is smaller) and inside the image.
+    public static func resize(
+        _ rect: CropRect, corner: CropCorner, dx: Double, dy: Double, imgW: Int, imgH: Int
+    ) -> CropRect {
+        let minW = min(32, imgW), minH = min(32, imgH)
+        var left = rect.x, top = rect.y, right = rect.x + rect.w, bottom = rect.y + rect.h
+        if corner.isLeft {
+            left = min(max(roundHalfUp(Double(rect.x) + dx), 0), max(0, right - minW))
+        } else {
+            right = min(max(roundHalfUp(Double(rect.x + rect.w) + dx), min(left + minW, imgW)), imgW)
+        }
+        if corner.isTop {
+            top = min(max(roundHalfUp(Double(rect.y) + dy), 0), max(0, bottom - minH))
+        } else {
+            bottom = min(max(roundHalfUp(Double(rect.y + rect.h) + dy), min(top + minH, imgH)), imgH)
+        }
+        return CropRect(x: left, y: top, w: right - left, h: bottom - top)
+    }
+
     /// The raster turned 90° clockwise (EXIF transform 6), for the crop screen's Rotate button.
     public static func rotateClockwise(_ raster: Raster) -> Raster { Orientation.apply(raster, 6) }
+}
+
+/// A corner of the free crop. The raw value is the name used in `crop_cases`.
+public enum CropCorner: String, Sendable, CaseIterable {
+    case topLeft = "tl", topRight = "tr", bottomLeft = "bl", bottomRight = "br"
+
+    public var isLeft: Bool { self == .topLeft || self == .bottomLeft }
+    public var isTop: Bool { self == .topLeft || self == .topRight }
 }

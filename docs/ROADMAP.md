@@ -84,8 +84,8 @@ of the photo fixture ≤ 800 ms on a mid device (benchmark test).
 
 ## Phase 2 — Core flows (A: W3–W5, I: W4–W6)
 
-> **Status (2026-10-04):** Home and photo flow built on both apps; single-photo export verifies the destination and persists Saved
-> checklist rows. Device/provider QA remains open; ink flows are next. Details and decisions: docs/HANDOFF.md.
+> **Status (2026-10-05):** Home, photo flow and ink flows built on both apps; export (verify-after-write, Saved checklist rows) is
+> shared by both flows from the core layer. Device/provider QA remains open. Details and decisions: docs/HANDOFF.md.
 
 - [x] Home: search (EN + Hindi aliases, fuzzy), categories, pinned exams, popular list
     - _Done (both apps):_ ALGORITHMS §10 search with `aliases` (all 55 presets), `categories.json` and `popular.json` in the signed bundle
@@ -114,7 +114,17 @@ of the photo fixture ≤ 800 ms on a mid device (benchmark test).
       Popular and from search; the Files picker opens. _Open:_ "Done does nothing" reported on the user's physical device (fix applied,
       unconfirmed — HANDOFF §3); crop/review with a real face on both apps; the Android emulator froze before the flow could be
       walked; no iOS 17 simulator runtime or API 29 image is installed.
-- [ ] Ink flows: signature (incl. triple), thumb, NEET fingers (both hands), declaration (text shown from preset; disabled with "copy from notice" when `declaration_text` is null)
+- [x] Ink flows: signature (incl. triple), thumb, NEET fingers (both hands), declaration (text shown from preset; disabled with "copy from notice" when `declaration_text` is null)
+  - *Done (both apps, 2026-10-05):* ALGORITHMS §3 "Flow" and §9.5 (doc type → cleanup variant / match kind, review options, free
+    crop `resize`, one-time handwriting confirmation); 6 new `crop_cases` (`resize`) from `photo_crop.py`. Flow: exam row → pick
+    (camera / gallery / Files) → free crop with corner handles → cleanup → pad + fit → review (Crisp black, Darker ink, too faint /
+    too dark warning) → save as the slot's kind → Saved. Export moved to the core layer (`:core:data` `DocumentExporter`,
+    `ScanData` `ExportOperation` / `FilesExporter`) and is shared with the photo flow. View-model tests: 16 Android, 14 iOS, both
+    mutation-checked. Checked by hand on the iPhone 11 Pro Max simulator: IBPS signature saved to Files, the written file
+    re-inspected (12 KB, 273×117, SOF0, 3 components, JFIF 200 dpi, no EXIF), row shows Saved.
+  - *Deviations:* rectification (4-corner warp) comes with the document scanner; the crop is an axis-aligned rectangle. A
+    declaration with no `declaration_text` still opens (it shows "Copy the text from the official notice") rather than being
+    disabled. *Open:* Android hand check; cleanup speed on a real low-end device (≈20 s in a simulator debug build).
 - [ ] [S] Transcribe `declaration_text` verbatim for IBPS PO/Clerk/RRB, SBI PO/Clerk, RBI, LIC, SEBI from the official notices; promote those presets where verified
 - [ ] Review screen with `MatchNote`, near-miss Fix, before/after, verdict chips
 - [ ] Export + verify-after-write (§1.6), naming (§1.7), Save all, share, "Open folder"
@@ -124,6 +134,8 @@ of the photo fixture ≤ 800 ms on a mid device (benchmark test).
           failures retry, cleanup is best effort, duplicate taps and stale renders are guarded. Eight shared export cases on both apps.
           _Deviation:_ checklist status uses existing preferences, not an export-history DB; iOS folder is user-selected.
           _Open:_ device/provider/echo-page QA, Save all, sharing, Open folder, retained copies and export history.
+    - [x] [I] Fix missing Saved after Files export (2026-10-04): sheet dismissal no longer cancels the export before its
+          delegate result. Callback-order and Files-to-checklist persistence regressions pass; device confirmation remains open.
 - [ ] My Kit (store cleaned originals, "Use for exam…", export history)
 - [ ] Custom resize with the live match note
 - [ ] Checker with issue fixes and per-exam verdicts

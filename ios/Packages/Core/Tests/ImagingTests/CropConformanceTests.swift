@@ -13,7 +13,8 @@ struct CropConformanceTests {
     @Test("every shared crop case holds")
     func sharedCases() throws {
         let cases = try CasesFile.section("crop_cases")
-        #expect(cases.count >= 10)
+        #expect(cases.count >= 18)
+        #expect(cases.filter { $0.string("op") == "resize" }.count >= 6)
         for c in cases {
             let id = try #require(c.string("id"))
             let img = try #require(c.dict("image"))
@@ -36,6 +37,10 @@ struct CropConformanceTests {
             case "zoom":
                 actual = CropAdjust.zoom(rect(try #require(c.dict("rect"))), factor: c.double("factor") ?? 1,
                                          aspect: aspect, imgW: imgW, imgH: imgH)
+            case "resize":
+                let corner = try #require(CropCorner(rawValue: c.string("corner") ?? ""))
+                actual = CropAdjust.resize(rect(try #require(c.dict("rect"))), corner: corner, dx: c.double("dx") ?? 0,
+                                           dy: c.double("dy") ?? 0, imgW: imgW, imgH: imgH)
             default:
                 Issue.record("\(id): unknown op")
                 continue

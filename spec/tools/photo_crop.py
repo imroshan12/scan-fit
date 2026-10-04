@@ -12,13 +12,14 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from _common import SPEC  # noqa: E402
+from _common import SPEC, replace_json_array  # noqa: E402
 
 DEFAULT_COVERAGE = 0.675
 CHIN_TO_HAIRLINE = 1.25
 CROWN_ABOVE_FACE = 0.125
 CROWN_FROM_TOP = 0.10
 MIN_SHORT_SIDE = 64
+MIN_FREE_SIDE = 32
 
 
 def round_half_up(x):
@@ -65,6 +66,22 @@ def zoom(rect, factor, aspect, img_w, img_h):
     return nx, ny, nw, nh
 
 
+def resize(rect, corner, dx, dy, img_w, img_h):
+    """§9.5 free crop (ink): the dragged corner moves, the opposite corner stays."""
+    x, y, w, h = rect
+    min_w, min_h = min(MIN_FREE_SIDE, img_w), min(MIN_FREE_SIDE, img_h)
+    left, top, right, bottom = x, y, x + w, y + h
+    if corner in ("tl", "bl"):
+        left = clamp(round_half_up(x + dx), 0, right - min_w)
+    else:
+        right = clamp(round_half_up(x + w + dx), left + min_w, img_w)
+    if corner in ("tl", "tr"):
+        top = clamp(round_half_up(y + dy), 0, bottom - min_h)
+    else:
+        bottom = clamp(round_half_up(y + h + dy), top + min_h, img_h)
+    return left, top, right - left, bottom - top
+
+
 def expected(case):
     img_w, img_h = case["image"]["w"], case["image"]["h"]
     aspect = case["aspect"][0] / case["aspect"][1]
@@ -79,22 +96,11 @@ def expected(case):
         x, y, w, h = move(rect, case["dx"], case["dy"], img_w, img_h)
     elif case["op"] == "zoom":
         x, y, w, h = zoom(rect, case["factor"], aspect, img_w, img_h)
+    elif case["op"] == "resize":
+        x, y, w, h = resize(rect, case["corner"], case["dx"], case["dy"], img_w, img_h)
     else:
         raise SystemExit(f"{case['id']}: unknown op {case['op']}")
     return {"rect": {"x": x, "y": y, "w": w, "h": h}}
-
-
-def compact(value):
-    """One-line JSON in the file's style: `{ "k": v, ... }`."""
-    if isinstance(value, dict):
-        return "{ " + ", ".join(f"{json.dumps(k)}: {compact(v)}" for k, v in value.items()) + " }"
-    if isinstance(value, list):
-        return "[" + ", ".join(compact(v) for v in value) + "]"
-    return json.dumps(value, ensure_ascii=False)
-
-
-def case_line(case):
-    return "    " + compact(case)
 
 
 def write_cases():
@@ -105,11 +111,8 @@ def write_cases():
     for case in cases:
         if "op" in case:
             case["expect"] = expected(case)
-    start = text.index('  "crop_cases": [\n')
-    end = text.index("\n  ]", start) + len("\n  ]")
-    section = '  "crop_cases": [\n' + ",\n".join(case_line(c) for c in cases) + "\n  ]"
     with open(path, "w", encoding="utf-8") as f:
-        f.write(text[:start] + section + text[end:])
+        f.write(replace_json_array(text, "crop_cases", cases))
     print(f"wrote expectations for {sum('op' in c for c in cases)} crop cases")
 
 

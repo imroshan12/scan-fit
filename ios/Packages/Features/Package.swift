@@ -38,8 +38,8 @@ let package = Package(
         .target(name: "Settings", dependencies: [core, presets, data]),
         .target(name: "Exams", dependencies: [core, model, data]),
         .target(name: "PhotoFlow", dependencies: [core, model, imaging, vision, match, inspect, data]),
+        .target(name: "InkFlow", dependencies: [core, model, imaging, match, inspect, data]),
         // Empty until their phase (ROADMAP Phase 2-4)
-        .target(name: "InkFlow", dependencies: [core, model]),
         .target(name: "Coach", dependencies: [core, model]),
         .target(name: "Checker", dependencies: [core, model]),
         .target(name: "Custom", dependencies: [core, model]),
@@ -47,8 +47,10 @@ let package = Package(
         .target(name: "Paywall", dependencies: [core]),
         .testTarget(name: "HomeTests", dependencies: ["Home", presets, model, data, testSupport]),
         .testTarget(name: "ExamsTests", dependencies: ["Exams", model, data, testSupport]),
+        .testTarget(name: "InkFlowTests", dependencies: ["InkFlow", model, imaging, inspect, data, testSupport]),
         .testTarget(
-            name: "PhotoFlowTests", dependencies: ["PhotoFlow", model, imaging, vision, inspect, data, testSupport]
+            name: "PhotoFlowTests",
+            dependencies: ["PhotoFlow", "Exams", model, imaging, vision, inspect, data, testSupport]
         ),
     ],
     swiftLanguageModes: [.v6]

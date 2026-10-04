@@ -112,6 +112,11 @@
     <string name="home_section_pinned">My exams</string>
     <string name="home_section_popular">Popular now</string>
     <string name="home_title">What are you applying for?</string>
+    <string name="ink_crop_hint">Drag the corners to leave out everything else</string>
+    <string name="ink_declaration_heading">Write this by hand, sign it, then photograph it</string>
+    <string name="ink_source_heading">Photograph it on plain white paper</string>
+    <string name="ink_too_dark">Too much of the image is dark. Use plain white paper and crop closer.</string>
+    <string name="ink_too_faint">The ink looks too faint. Use a darker pen, or retake it in better light.</string>
     <string name="issue_cmyk_color">This JPEG uses CMYK colours. Many portals reject it.</string>
     <string name="issue_extension_mismatch">The file name and the real file type don\'t match. Some portals reject this.</string>
     <string name="issue_grayscale_not_allowed">Black-and-white (grayscale) files are not accepted here.</string>

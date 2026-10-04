@@ -78,6 +78,8 @@ targets:
               product: Exams
             - package: Features
               product: PhotoFlow
+            - package: Features
+              product: InkFlow
             - package: Core
               product: ScanData
             - package: Features
