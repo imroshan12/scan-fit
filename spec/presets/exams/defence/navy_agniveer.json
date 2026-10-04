@@ -1,6 +1,12 @@
 {
   "id": "navy_agniveer",
   "name": "Indian Navy Agniveer (SSR/MR)",
+  "aliases": [
+    "अग्निवीर नौसेना",
+    "नौसेना",
+    "नेवी",
+    "agnipath"
+  ],
   "body": "Indian Navy",
   "category": "defence",
   "portal": null,

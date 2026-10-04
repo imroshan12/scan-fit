@@ -1,6 +1,10 @@
 {
   "id": "upsc_nda",
   "name": "UPSC NDA & NA",
+  "aliases": [
+    "यूपीएससी एनडीए",
+    "एनडीए"
+  ],
   "body": "UPSC",
   "category": "upsc",
   "portal": "upsconline.nic.in",

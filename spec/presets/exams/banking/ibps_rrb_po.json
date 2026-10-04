@@ -1,6 +1,12 @@
 {
   "id": "ibps_rrb_po",
   "name": "IBPS RRB Officer Scale I",
+  "aliases": [
+    "आईबीपीएस आरआरबी पीओ",
+    "rrb po",
+    "gramin bank",
+    "ग्रामीण बैंक"
+  ],
   "body": "IBPS",
   "category": "banking",
   "portal": null,

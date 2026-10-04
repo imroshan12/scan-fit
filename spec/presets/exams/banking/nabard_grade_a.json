@@ -1,6 +1,9 @@
 {
   "id": "nabard_grade_a",
   "name": "NABARD Grade A",
+  "aliases": [
+    "नाबार्ड"
+  ],
   "body": "NABARD",
   "category": "banking",
   "portal": null,

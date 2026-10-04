@@ -2,6 +2,10 @@ package app.scanfit
 
 import android.content.Context
 import android.os.Process
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import androidx.datastore.preferences.preferencesDataStoreFile
+import app.scanfit.core.data.DataStoreUserPreferences
+import app.scanfit.core.data.UserPreferences
 import app.scanfit.core.presets.AssetEmbeddedPresetSource
 import app.scanfit.core.presets.DefaultPresetsRepository
 import app.scanfit.core.presets.FileVerifiedDigestStore
@@ -36,6 +40,17 @@ object AppModule {
         source = AssetEmbeddedPresetSource(context),
         verifiedDigests = FileVerifiedDigestStore(File(context.noBackupFilesDir, "presets_verified.sha256")),
         dispatcher = backgroundDispatcher(),
+    )
+
+    /** One DataStore per file for the whole process (DataStore requirement), on an IO-backed app scope. */
+    @Provides
+    @Singleton
+    fun userPreferences(
+        @ApplicationContext context: Context,
+    ): UserPreferences = DataStoreUserPreferences(
+        PreferenceDataStoreFactory.create(scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)) {
+            context.preferencesDataStoreFile("user_preferences")
+        },
     )
 
     @Provides

@@ -42,14 +42,15 @@ serialization + coroutines, Coil 3 (thumbnails only), ML Kit (face-detection bun
 segmentation-selfie, play-services-mlkit-document-scanner, text-recognition + devanagari in
 v1.1), Tink, RevenueCat purchases, play-services-ads + UMP, Firebase BoM (analytics,
 crashlytics, config). **Test:** JUnit5 or JUnit4, Turbine, MockK (sparingly; prefer fakes),
-Robolectric, Roborazzi, Compose UI test, Macrobenchmark + Baseline Profile.
+Robolectric, Compose UI test, Macrobenchmark + Baseline Profile.
 **iOS:** Swift packages from Apple frameworks only, plus RevenueCat, Google Mobile Ads + UMP,
-Firebase (Analytics, Crashlytics, RemoteConfig). **Test:** Swift Testing, XCTest/XCUITest,
-pointfreeco `swift-snapshot-testing`.
+Firebase (Analytics, Crashlytics, RemoteConfig). **Test:** Swift Testing, XCTest/XCUITest.
 **Added in Phase 0:** androidx.navigation-compose and androidx.appcompat (per-app language below API 33), androidx.hilt
 (navigation-compose), compose material-icons-core (not `-extended`: size), `javax.inject` via Hilt, Tink `tink-android`
 (Ed25519 on minSdk 26). **Tooling:** XcodeGen (generates the Xcode project; not shipped in the app), detekt **2.0.0-alpha** (`dev.detekt`;
 the stable 1.23 line targets an older Kotlin: revisit when 2.0 is stable).
+**Added in Phase 2:** `androidx.datastore:datastore-preferences` 1.2.1 (pinned exams, "Show unverified"; 1.3 is still alpha).
+**Removed in Phase 2:** Roborazzi and swift-snapshot-testing (screenshot tests dropped, docs/TESTING.md §1).
 **Tooling:** ktlint via Spotless, detekt, SwiftLint, SwiftFormat, fastlane, Gradle Play Publisher.
 Licence check in CI (no GPL/AGPL in the app binary).
 

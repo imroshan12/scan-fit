@@ -1,6 +1,11 @@
 {
   "id": "cat",
   "name": "CAT 2026",
+  "aliases": [
+    "कैट",
+    "mba",
+    "iim"
+  ],
   "body": "IIM",
   "category": "entrance",
   "portal": null,

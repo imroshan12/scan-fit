@@ -1,6 +1,12 @@
 {
   "id": "jee_main",
   "name": "JEE Main",
+  "aliases": [
+    "जेईई मेन",
+    "जेईई",
+    "iit jee",
+    "engineering"
+  ],
   "body": "NTA",
   "category": "entrance",
   "portal": null,

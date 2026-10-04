@@ -1,6 +1,11 @@
 {
   "id": "uppsc",
   "name": "UPPSC (OTR - PCS, RO/ARO etc.)",
+  "aliases": [
+    "यूपीपीएससी",
+    "uttar pradesh",
+    "pcs"
+  ],
   "body": "UPPSC",
   "category": "state_psc",
   "portal": null,

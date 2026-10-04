@@ -11,11 +11,13 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -58,7 +60,7 @@ fun SettingsRoute(
         AppCompatDelegate.getApplicationLocales().toLanguageTags()
     }, onLanguageChosen = {
         AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(it))
-    }, modifier = modifier)
+    }, onShowUnverifiedChange = viewModel::onShowUnverifiedChange, modifier = modifier)
 }
 
 @Composable
@@ -66,6 +68,7 @@ internal fun SettingsScreen(
     state: SettingsUiState,
     currentLanguageTag: () -> String,
     onLanguageChosen: (String) -> Unit,
+    onShowUnverifiedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var showLanguages by rememberSaveable { mutableStateOf(false) }
@@ -92,6 +95,8 @@ internal fun SettingsScreen(
                 )
             }
         }
+        HorizontalDivider()
+        ShowUnverifiedRow(state.showUnverified, onShowUnverifiedChange)
         state.presetsVersion?.let { version ->
             HorizontalDivider()
             Text(
@@ -149,9 +154,37 @@ internal fun SettingsScreen(
     }
 }
 
+/** Low-confidence presets stay hidden until the user opts in (PRD F1). The whole row toggles, not just the switch. */
+@Composable
+private fun ShowUnverifiedRow(
+    checked: Boolean,
+    onChange: (Boolean) -> Unit,
+) {
+    Row(
+        modifier =
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = ScanFitSpacing.minTouchTarget)
+            .toggleable(value = checked, role = Role.Switch, onValueChange = onChange)
+            .padding(horizontal = ScanFitSpacing.screenMargin, vertical = ScanFitSpacing.md),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(ScanFitSpacing.md),
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(stringResource(R.string.settings_show_unverified), style = ScanFitType.body)
+            Text(
+                stringResource(R.string.settings_show_unverified_hint),
+                style = ScanFitType.caption,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Switch(checked = checked, onCheckedChange = null)
+    }
+}
+
 @Preview(showBackground = true)
 @Preview(showBackground = true, fontScale = 2f, locale = "hi")
 @Composable
 private fun SettingsScreenPreview() {
-    ScanFitTheme { SettingsScreen(SettingsUiState(presetsVersion = 1), { "" }, {}) }
+    ScanFitTheme { SettingsScreen(SettingsUiState(presetsVersion = 1, showUnverified = true), { "" }, {}, {}) }
 }

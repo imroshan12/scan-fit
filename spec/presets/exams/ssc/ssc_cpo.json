@@ -1,6 +1,11 @@
 {
   "id": "ssc_cpo",
   "name": "SSC CPO (SI Delhi Police & CAPF)",
+  "aliases": [
+    "एसएससी सीपीओ",
+    "delhi police",
+    "sub inspector"
+  ],
   "body": "SSC",
   "category": "ssc",
   "portal": "ssc.gov.in",

@@ -1,6 +1,10 @@
 {
   "id": "upsc_ese",
   "name": "UPSC Engineering Services (ESE)",
+  "aliases": [
+    "यूपीएससी ईएसई",
+    "ies"
+  ],
   "body": "UPSC",
   "category": "upsc",
   "portal": "upsconline.nic.in",

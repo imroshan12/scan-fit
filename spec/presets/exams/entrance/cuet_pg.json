@@ -1,6 +1,9 @@
 {
   "id": "cuet_pg",
   "name": "CUET PG",
+  "aliases": [
+    "सीयूईटी पीजी"
+  ],
   "body": "NTA",
   "category": "entrance",
   "portal": null,

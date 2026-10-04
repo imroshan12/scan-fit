@@ -1,6 +1,10 @@
 {
   "id": "cuet_ug",
   "name": "CUET UG",
+  "aliases": [
+    "सीयूईटी यूजी",
+    "cuet"
+  ],
   "body": "NTA",
   "category": "entrance",
   "portal": null,

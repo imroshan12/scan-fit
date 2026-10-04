@@ -1,6 +1,10 @@
 {
   "id": "rrb_ntpc_ug",
   "name": "RRB NTPC (Undergraduate)",
+  "aliases": [
+    "आरआरबी एनटीपीसी",
+    "ntpc"
+  ],
   "body": "RRB",
   "category": "railway",
   "portal": "rrbapply.gov.in",

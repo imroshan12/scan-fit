@@ -1,6 +1,10 @@
 {
   "id": "ugc_net",
   "name": "UGC NET",
+  "aliases": [
+    "यूजीसी नेट",
+    "net"
+  ],
   "body": "NTA",
   "category": "teaching",
   "portal": null,

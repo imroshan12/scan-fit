@@ -6,6 +6,8 @@ import PackageDescription
 let core: Target.Dependency = .product(name: "DesignSystem", package: "Core")
 let presets: Target.Dependency = .product(name: "Presets", package: "Core")
 let model: Target.Dependency = .product(name: "ScanModel", package: "Core")
+let data: Target.Dependency = .product(name: "ScanData", package: "Core")
+let testSupport: Target.Dependency = .product(name: "TestSupport", package: "Core")
 
 let package = Package(
     name: "Features",
@@ -27,11 +29,11 @@ let package = Package(
     dependencies: [.package(path: "../Core")],
     targets: [
         // Phase 0 content
-        .target(name: "Home", dependencies: [core, presets]),
+        .target(name: "Home", dependencies: [core, presets, model, data]),
         .target(name: "Kit", dependencies: [core]),
-        .target(name: "Settings", dependencies: [core, presets]),
+        .target(name: "Settings", dependencies: [core, presets, data]),
+        .target(name: "Exams", dependencies: [core, model, data]),
         // Empty until their phase (ROADMAP Phase 2-4)
-        .target(name: "Exams", dependencies: [core, model]),
         .target(name: "PhotoFlow", dependencies: [core, model]),
         .target(name: "InkFlow", dependencies: [core, model]),
         .target(name: "Coach", dependencies: [core, model]),
@@ -39,7 +41,8 @@ let package = Package(
         .target(name: "Custom", dependencies: [core, model]),
         .target(name: "PDFTools", dependencies: [core, model]),
         .target(name: "Paywall", dependencies: [core]),
-        .testTarget(name: "HomeTests", dependencies: ["Home", presets]),
+        .testTarget(name: "HomeTests", dependencies: ["Home", presets, model, data, testSupport]),
+        .testTarget(name: "ExamsTests", dependencies: ["Exams", model, data, testSupport]),
     ],
     swiftLanguageModes: [.v6]
 )

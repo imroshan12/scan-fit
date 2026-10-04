@@ -1,6 +1,11 @@
 {
   "id": "ssc_mts",
   "name": "SSC MTS & Havaldar",
+  "aliases": [
+    "एसएससी एमटीएस",
+    "एमटीएस",
+    "havaldar"
+  ],
   "body": "SSC",
   "category": "ssc",
   "portal": "ssc.gov.in",

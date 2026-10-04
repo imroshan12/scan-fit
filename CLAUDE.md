@@ -13,6 +13,7 @@ Read these before changing anything:
 | Adding or changing a screen | `docs/UI_UX.md` |
 | Structuring code, adding a module or dependency | `docs/ARCHITECTURE.md`, `docs/TECH_FEASIBILITY.md` |
 | Editing exam presets | `spec/README.md` |
+| Building, signing, CI or releasing | `docs/BUILD_AND_RELEASE.md` (concepts + how-to), `docs/RELEASE_CHECKLIST.md` (to-do list) |
 | Writing tests | `docs/TESTING.md` |
 
 ## Repo layout
@@ -41,7 +42,7 @@ python3 spec/tools/gen_strings.py && python3 spec/tools/gen_tokens.py
 python3 spec/tools/release_preflight.py        # what still blocks a release build (docs/RELEASE_CHECKLIST.md)
 
 # android (from android/)
-./gradlew spotlessCheck detekt testDebugUnitTest verifyRoborazziDebug
+./gradlew spotlessCheck detekt testDebugUnitTest
 ./gradlew :app:assembleDebug
 ./gradlew :core:imaging:testDebugUnitTest --tests "*Conformance*"
 
@@ -78,7 +79,8 @@ swiftlint --strict
 ## Definition of done (every task)
 
 - Builds and all tests pass locally for the platform(s) touched. CI stays green.
-- New UI has a screenshot test in light and dark mode, and at the largest font scale.
+- New UI has previews in light and dark mode, at the largest font scale and in Hindi, and a view-model test for each state.
+  No screenshot tests (dropped for speed, docs/TESTING.md §1); don't add them back.
 - Checked on a low-end profile: Android emulator with 2 GB RAM and API 29, iPhone SE (3rd gen) simulator.
 - No new warnings. No new dependency without an entry in `docs/TECH_FEASIBILITY.md` §Dependencies.
 - The ROADMAP task is ticked, with a one-line note if anything deviated.

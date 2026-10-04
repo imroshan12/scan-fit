@@ -1,6 +1,10 @@
 {
   "id": "nchm_jee",
   "name": "NCHM JEE",
+  "aliases": [
+    "एनसीएचएम जेईई",
+    "hotel management"
+  ],
   "body": "NTA",
   "category": "entrance",
   "portal": null,

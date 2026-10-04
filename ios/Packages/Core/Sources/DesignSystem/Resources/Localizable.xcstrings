@@ -800,6 +800,23 @@
         }
       }
     },
+    "exam.documents": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Documents to upload"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "अपलोड करने वाले दस्तावेज़"
+          }
+        }
+      }
+    },
     "exam.live_photo_row": {
       "extractionState": "manual",
       "localizations": {
@@ -834,6 +851,57 @@
         }
       }
     },
+    "exam.not_found": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This exam is no longer in the list."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "यह परीक्षा अब सूची में नहीं है।"
+          }
+        }
+      }
+    },
+    "exam.optional": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "वैकल्पिक"
+          }
+        }
+      }
+    },
+    "exam.pin": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pin to My exams"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "मेरी परीक्षाओं में जोड़ें"
+          }
+        }
+      }
+    },
     "exam.practise": {
       "extractionState": "manual",
       "localizations": {
@@ -864,6 +932,57 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "सभी सेव करें (%1$lld)"
+          }
+        }
+      }
+    },
+    "exam.size_max": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Up to %1$@ KB"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "अधिकतम %1$@ KB"
+          }
+        }
+      }
+    },
+    "exam.size_min": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At least %1$@ KB"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "कम से कम %1$@ KB"
+          }
+        }
+      }
+    },
+    "exam.size_range": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@–%2$@ KB"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@–%2$@ KB"
           }
         }
       }
@@ -949,6 +1068,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "सेव हो गया"
+          }
+        }
+      }
+    },
+    "exam.unpin": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove from My exams"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "मेरी परीक्षाओं से हटाएँ"
           }
         }
       }
@@ -1317,6 +1453,23 @@
         }
       }
     },
+    "home.category_all": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "सभी"
+          }
+        }
+      }
+    },
     "home.empty_hint": {
       "extractionState": "manual",
       "localizations": {
@@ -1364,6 +1517,23 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "फ़ाइल ठीक करें"
+          }
+        }
+      }
+    },
+    "home.no_results": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No exam matches “%1$@”"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "“%1$@” से कोई परीक्षा नहीं मिली"
           }
         }
       }
@@ -1456,6 +1626,23 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "परीक्षा स्पेक्स सत्यापित हो रहे हैं…"
+          }
+        }
+      }
+    },
+    "home.search_clear": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear search"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "खोज साफ़ करें"
           }
         }
       }
@@ -2167,6 +2354,23 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "असत्यापित परीक्षाएँ दिखाएँ"
+          }
+        }
+      }
+    },
+    "settings.show_unverified_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Also list exams whose upload rules are not confirmed yet"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "वे परीक्षाएँ भी दिखाएँ जिनके अपलोड नियमों की अभी पुष्टि नहीं हुई है"
           }
         }
       }

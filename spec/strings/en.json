@@ -30,6 +30,9 @@
   "home.fix_file_title": "Fix a file",
   "home.fix_file_body": "Check a photo, signature or PDF before you upload it.",
   "home.empty_hint": "Not listed? Use Custom size.",
+  "home.category_all": "All",
+  "home.search_clear": "Clear search",
+  "home.no_results": "No exam matches “{query:str}”",
   "home.presets_status": {
     "one": "{count:int} exam · specs v{version:str}",
     "other": "{count:int} exams · specs v{version:str}"
@@ -63,6 +66,14 @@
   "exam.make_all": "Make all files",
   "exam.save_all": "Save all ({count:int})",
   "exam.spec_unknown": "Spec not verified yet",
+  "exam.pin": "Pin to My exams",
+  "exam.unpin": "Remove from My exams",
+  "exam.documents": "Documents to upload",
+  "exam.optional": "Optional",
+  "exam.size_range": "{min:str}–{max:str} KB",
+  "exam.size_max": "Up to {max:str} KB",
+  "exam.size_min": "At least {min:str} KB",
+  "exam.not_found": "This exam is no longer in the list.",
 
   "doc.photo": "Photograph",
   "doc.postcard_photo": "Postcard photo",
@@ -143,6 +154,7 @@
   "settings.presets_version": "Exam specs version {version:int}",
   "settings.check_updates": "Check for updates",
   "settings.show_unverified": "Show unverified exams",
+  "settings.show_unverified_hint": "Also list exams whose upload rules are not confirmed yet",
   "settings.privacy": "Privacy",
   "settings.help": "Help",
   "settings.report_problem": "Report a problem",

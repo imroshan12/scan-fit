@@ -31,6 +31,15 @@ before enabling the declaration helper for that exam (ROADMAP Phase 2).
 A low preset stays hidden behind "Show unverified exams" until someone verifies it against the
 live notice. Don't guess numbers.
 
+### Search data (ALGORITHMS §10)
+- `aliases` on an exam: other spellings and Hindi forms (`आईबीपीएस पीओ`, `bank po`, `ias`). Search only, never shown.
+- `presets/categories.json`: search words per category (`बैंक` → banking). Keys must be exactly the schema's categories.
+- `presets/popular.json`: exam ids, most applied-for first. Drives Home "Popular now", search ties and match-note order.
+  Remote Config `popular_exam_order` may override it from Phase 4.
+All three ship in the signed bundle, so a better alias reaches users with a presets update. The Hindi aliases were drafted, not
+reviewed: include them in the Phase 3 native-speaker review. After changing any of them, refresh the conformance expectations:
+`python3 spec/tools/exam_search.py --write-cases` (CI fails until you do; `python3 spec/tools/exam_search.py "query"` to try one).
+
 ## Building everything generated from spec/
 ```bash
 # Python is only needed to PRODUCE spec/dist and the generated files; Gradle and Xcode builds run no Python.

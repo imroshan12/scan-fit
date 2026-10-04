@@ -32,12 +32,16 @@ struct EmbeddedPresetsTests {
         #expect(outcome == .failed(.badSignature))
     }
 
-    @Test("the container verifies once and shares the outcome")
+    @Test("the container verifies once and shares the outcome, and exposes the trusted bundle")
+    @MainActor
     func containerSharesOutcome() async {
         let container = AppContainer.live()
         let first = await container.presetsOutcome.value
         let second = await container.presetsOutcome.value
         #expect(first == second)
         if case .ready = first {} else { Issue.record("expected .ready, got \(first)") }
+        let bundle = await container.trustedBundle()
+        #expect(bundle?.exams.count == 55)
+        #expect(bundle?.popular?.isEmpty == false, "the signed bundle carries the popular list")
     }
 }

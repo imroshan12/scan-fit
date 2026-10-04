@@ -1,6 +1,9 @@
 {
   "id": "sebi_grade_a",
   "name": "SEBI Grade A (Assistant Manager)",
+  "aliases": [
+    "सेबी"
+  ],
   "body": "SEBI",
   "category": "regulator",
   "portal": null,

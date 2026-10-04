@@ -135,7 +135,8 @@ beyond buckets, text, or images. Crashlytics: no custom keys holding paths.
 Remote Config keys (defaults ship in the app): `min_presets_version`, `min_fill_strategy`,
 `allow_grayscale_docs`, `coach_thresholds`, `free_exports_per_day`, `rewarded_bonus`,
 `interstitial_every_n_sessions`, `paywall_variant`, `ads_enabled`, `popular_exam_order`,
-`kill_switch_<feature>`.
+`kill_switch_<feature>`. The `popular_exam_order` default is not an in-app constant: it is `popular` in the signed presets
+bundle (`spec/presets/popular.json`), so it updates with presets; Remote Config only overrides it.
 
 ## 10. Security and privacy
 - All processing is on-device. The only network calls are presets, Remote Config, analytics,
@@ -170,12 +171,12 @@ from Play services).
 ## 12. CI/CD
 - `.github/workflows/spec.yml` (paths `spec/**`): validate presets, run the fixture generator
   diff, build + sign + publish presets to `web/` (on main).
-- `android.yml` (paths `android/**`, `spec/**`): spotless, detekt, unit + conformance, Roborazzi
-  screenshots, lint, a **release-configuration rehearsal** on every PR (R8 + lint vital, throwaway key), and on tag
+- `android.yml` (paths `android/**`, `spec/**`): spotless, detekt, unit + conformance,
+  lint, a **release-configuration rehearsal** on every PR (R8 + lint vital, throwaway key), and on tag
   `android-v*` a signed AAB + APK + `mapping.txt` as artifacts. The first Play upload is manual (Google opens the
   publishing API only after it); automating later means a Play service-account secret and one upload step.
-- `ios.yml` (paths `ios/**`, `spec/**`, macOS runner): swiftlint, unit + conformance, snapshot
-  tests, an unsigned **Release archive rehearsal** on every PR, and on tag `ios-v*` archive, sign through an App Store Connect
+- `ios.yml` (paths `ios/**`, `spec/**`, macOS runner): swiftlint, unit + conformance,
+  an unsigned **Release archive rehearsal** on every PR, and on tag `ios-v*` archive, sign through an App Store Connect
   API key (cloud-managed signing, no certificates in secrets) and upload to TestFlight with `xcodebuild -exportArchive`.
 - Versioning: marketing version is shared semver per release (`1.0.0`), taken from the tag (`android-v1.0.0`, `ios-v1.0.0`);
   a suffix (`-rc1`, `-beta1`) marks a pre-release, which may still carry machine-drafted Hindi (`build_all.sh --release

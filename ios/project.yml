@@ -73,6 +73,10 @@ targets:
             - package: Features
               product: Home
             - package: Features
+              product: Exams
+            - package: Core
+              product: ScanData
+            - package: Features
               product: Kit
             - package: Features
               product: Settings

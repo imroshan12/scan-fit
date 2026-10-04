@@ -1,6 +1,11 @@
 {
   "id": "ssc_gd",
   "name": "SSC GD Constable",
+  "aliases": [
+    "एसएससी जीडी",
+    "जीडी",
+    "constable"
+  ],
   "body": "SSC",
   "category": "ssc",
   "portal": "ssc.gov.in",

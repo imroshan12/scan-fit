@@ -74,8 +74,8 @@ rewarded-ad option side by side), on Pro features, or from Settings.
 - **Shape:** cards 16, buttons 12 (Android) / platform default (iOS), chips full.
 - **Components** (both platforms, same names): `VerdictChip`, `MatchNote`, `DocRow`,
   `SpecSummary`, `ConfidenceBadge`, `PrimaryBottomBar`, `BeforeAfterImage`, `KbSlider`,
-  `IssueRow`, `EmptyState`, `ProgressRing`. Each gets previews in light/dark/large-font/Hindi and
-  a screenshot test.
+  `IssueRow`, `EmptyState`, `ProgressRing`. Each gets previews in light/dark/large-font/Hindi (no
+  screenshot tests: docs/TESTING.md §1).
 
 ## 5. Motion and feedback
 - Durations: 150 ms micro (chips, toggles), 250 ms standard (sheets, cards), 350 ms emphasised
@@ -100,7 +100,7 @@ Hindi copy is written, not machine-translated, for all primary flows. Machine-dr
 marked `TODO_HI` until reviewed by a native speaker.
 
 ## 8. Quality bar before launch
-- Every screen passes the state matrix (loading/empty/content/error/offline) in screenshots.
+- Every screen passes the state matrix (loading/empty/content/error/offline), checked in previews and by hand.
 - 60 fps on a mid device and no dropped frames >2% on low-end during list scroll and transitions
   (Android Macrobenchmark `FrameTimingMetric`; iOS Instruments hitches).
 - Five-person hallway test with real aspirants: each completes an IBPS kit unaided in < 5 min.

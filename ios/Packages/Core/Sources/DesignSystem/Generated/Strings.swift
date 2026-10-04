@@ -124,14 +124,28 @@ public struct Strings: Sendable {
     public var examConfidenceLow: String { tr("exam.confidence_low") }
     /// "Likely accurate"
     public var examConfidenceMedium: String { tr("exam.confidence_medium") }
+    /// "Documents to upload"
+    public var examDocuments: String { tr("exam.documents") }
     /// "Photo is captured live on the portal"
     public var examLivePhotoRow: String { tr("exam.live_photo_row") }
     /// "Make all files"
     public var examMakeAll: String { tr("exam.make_all") }
+    /// "This exam is no longer in the list."
+    public var examNotFound: String { tr("exam.not_found") }
+    /// "Optional"
+    public var examOptional: String { tr("exam.optional") }
+    /// "Pin to My exams"
+    public var examPin: String { tr("exam.pin") }
     /// "Practise"
     public var examPractise: String { tr("exam.practise") }
     /// "Save all ({count:int})"
     public func examSaveAll(count: Int) -> String { fmt("exam.save_all", [count]) }
+    /// "Up to {max:str} KB"
+    public func examSizeMax(max: String) -> String { fmt("exam.size_max", [max]) }
+    /// "At least {min:str} KB"
+    public func examSizeMin(min: String) -> String { fmt("exam.size_min", [min]) }
+    /// "{min:str}–{max:str} KB"
+    public func examSizeRange(min: String, max: String) -> String { fmt("exam.size_range", [min, max]) }
     /// "Source"
     public var examSource: String { tr("exam.source") }
     /// "Spec not verified yet"
@@ -142,6 +156,8 @@ public struct Strings: Sendable {
     public var examStatusReady: String { tr("exam.status_ready") }
     /// "Saved"
     public var examStatusSaved: String { tr("exam.status_saved") }
+    /// "Remove from My exams"
+    public var examUnpin: String { tr("exam.unpin") }
     /// "Specs verified {date:str}"
     public func examVerifiedOn(date: String) -> String { fmt("exam.verified_on", [date]) }
     /// "Compress to fit"
@@ -182,12 +198,16 @@ public struct Strings: Sendable {
     public var flowToggleNameDate: String { tr("flow.toggle_name_date") }
     /// "White background"
     public var flowToggleWhiteBg: String { tr("flow.toggle_white_bg") }
+    /// "All"
+    public var homeCategoryAll: String { tr("home.category_all") }
     /// "Not listed? Use Custom size."
     public var homeEmptyHint: String { tr("home.empty_hint") }
     /// "Check a photo, signature or PDF before you upload it."
     public var homeFixFileBody: String { tr("home.fix_file_body") }
     /// "Fix a file"
     public var homeFixFileTitle: String { tr("home.fix_file_title") }
+    /// "No exam matches “{query:str}”"
+    public func homeNoResults(query: String) -> String { fmt("home.no_results", [query]) }
     /// "{count:int} exams · specs v{version:str}"
     public func homePresetsStatus(count: Int, version: String) -> String { fmt("home.presets_status", [count, version]) }
     /// "Spec data could not be verified"
@@ -196,6 +216,8 @@ public struct Strings: Sendable {
     public var homePresetsVerified: String { tr("home.presets_verified") }
     /// "Verifying exam specs…"
     public var homePresetsVerifying: String { tr("home.presets_verifying") }
+    /// "Clear search"
+    public var homeSearchClear: String { tr("home.search_clear") }
     /// "Search {count:int}+ exams — IBPS, SSC, NEET…"
     public func homeSearchHint(count: Int) -> String { fmt("home.search_hint", [count]) }
     /// "My exams"
@@ -274,6 +296,8 @@ public struct Strings: Sendable {
     public var settingsReportProblem: String { tr("settings.report_problem") }
     /// "Show unverified exams"
     public var settingsShowUnverified: String { tr("settings.show_unverified") }
+    /// "Also list exams whose upload rules are not confirmed yet"
+    public var settingsShowUnverifiedHint: String { tr("settings.show_unverified_hint") }
     /// "Home"
     public var tabHome: String { tr("tab.home") }
     /// "My Kit"

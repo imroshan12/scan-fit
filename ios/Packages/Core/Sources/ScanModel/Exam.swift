@@ -114,6 +114,8 @@ public struct Source: Codable, Sendable, Equatable {
 public struct Exam: Codable, Sendable, Equatable, Identifiable {
     public let id: String
     public let name: String
+    /// Other spellings and Hindi forms, used only by search (ALGORITHMS §10).
+    public let aliases: [String]?
     public let body: String
     public let category: ExamCategory
     public let portal: String?

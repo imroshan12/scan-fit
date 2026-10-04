@@ -1,6 +1,10 @@
 {
   "id": "niacl_ao",
   "name": "NIACL AO",
+  "aliases": [
+    "एनआईएसीएल एओ",
+    "new india assurance"
+  ],
   "body": "NIACL",
   "category": "insurance",
   "portal": null,

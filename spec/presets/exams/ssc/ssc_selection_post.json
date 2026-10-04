@@ -1,6 +1,9 @@
 {
   "id": "ssc_selection_post",
   "name": "SSC Selection Post",
+  "aliases": [
+    "एसएससी सेलेक्शन पोस्ट"
+  ],
   "body": "SSC",
   "category": "ssc",
   "portal": "ssc.gov.in",

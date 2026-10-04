@@ -1,6 +1,11 @@
 {
   "id": "clat",
   "name": "CLAT 2027",
+  "aliases": [
+    "क्लैट",
+    "law",
+    "lawyer"
+  ],
   "body": "Consortium of NLUs",
   "category": "entrance",
   "portal": null,

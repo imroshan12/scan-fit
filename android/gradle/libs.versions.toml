@@ -11,6 +11,7 @@ androidx-core = "1.19.1"
 appcompat = "1.8.0"
 hilt-navigation-compose = "1.4.0"
 navigation = "2.10.2"
+datastore = "1.2.1"
 coroutines = "1.11.0"
 serialization = "1.11.0"
 tink = "1.23.0"
@@ -32,6 +33,7 @@ androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-ru
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
 androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hilt-navigation-compose" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigation" }
+androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
 # Compose (versions come from the BOM)
 androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "compose-bom" }
 androidx-compose-ui = { module = "androidx.compose.ui:ui" }

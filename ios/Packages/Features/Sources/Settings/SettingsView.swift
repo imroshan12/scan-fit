@@ -1,15 +1,18 @@
 import DesignSystem
 import Presets
+import ScanData
 import SwiftUI
 
-/// Settings tab. Phase 0: language (system per-app language), presets version and the non-affiliation
-/// disclaimer. Pro, privacy, help and "Show unverified" arrive with their phases.
+/// Settings tab: language (system per-app language), "Show unverified exams", presets version and the
+/// non-affiliation disclaimer. Pro, privacy and help arrive with their phases.
 public struct SettingsView: View {
     private let strings: Strings
     private let presets: PresetsSummary?
+    private let preferences: UserPreferences
 
-    public init(presets: PresetsSummary?, strings: Strings = Strings()) {
+    public init(presets: PresetsSummary?, preferences: UserPreferences, strings: Strings = Strings()) {
         self.presets = presets
+        self.preferences = preferences
         self.strings = strings
     }
 
@@ -18,6 +21,17 @@ public struct SettingsView: View {
             List {
                 Section {
                     languageRow
+                    // Low-confidence presets stay hidden until the user opts in (PRD F1).
+                    Toggle(isOn: Binding(
+                        get: { preferences.showUnverified },
+                        set: { preferences.setShowUnverified($0) }
+                    )) {
+                        VStack(alignment: .leading, spacing: ScanFitSpacing.xs) {
+                            Text(strings.settingsShowUnverified).scanFitText(.body)
+                            Text(strings.settingsShowUnverifiedHint).scanFitText(.caption)
+                                .foregroundStyle(ScanFitColor.onSurfaceVariant)
+                        }
+                    }
                     if let presets {
                         LabeledContent {
                             Text(presets.examCount, format: .number).scanFitText(.figure)

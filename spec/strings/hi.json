@@ -30,6 +30,9 @@
   "home.fix_file_title": "TODO_HI: फ़ाइल ठीक करें",
   "home.fix_file_body": "TODO_HI: अपलोड करने से पहले फ़ोटो, हस्ताक्षर या PDF जाँच लें।",
   "home.empty_hint": "TODO_HI: सूची में नहीं है? कस्टम साइज़ इस्तेमाल करें।",
+  "home.category_all": "TODO_HI: सभी",
+  "home.search_clear": "TODO_HI: खोज साफ़ करें",
+  "home.no_results": "TODO_HI: “{query:str}” से कोई परीक्षा नहीं मिली",
   "home.presets_status": {
     "one": "TODO_HI: {count:int} परीक्षा · स्पेक्स v{version:str}",
     "other": "TODO_HI: {count:int} परीक्षाएँ · स्पेक्स v{version:str}"
@@ -63,6 +66,14 @@
   "exam.make_all": "TODO_HI: सभी फ़ाइलें बनाएँ",
   "exam.save_all": "TODO_HI: सभी सेव करें ({count:int})",
   "exam.spec_unknown": "TODO_HI: स्पेक अभी सत्यापित नहीं है",
+  "exam.pin": "TODO_HI: मेरी परीक्षाओं में जोड़ें",
+  "exam.unpin": "TODO_HI: मेरी परीक्षाओं से हटाएँ",
+  "exam.documents": "TODO_HI: अपलोड करने वाले दस्तावेज़",
+  "exam.optional": "TODO_HI: वैकल्पिक",
+  "exam.size_range": "TODO_HI: {min:str}–{max:str} KB",
+  "exam.size_max": "TODO_HI: अधिकतम {max:str} KB",
+  "exam.size_min": "TODO_HI: कम से कम {min:str} KB",
+  "exam.not_found": "TODO_HI: यह परीक्षा अब सूची में नहीं है।",
 
   "doc.photo": "फ़ोटो",
   "doc.postcard_photo": "TODO_HI: पोस्टकार्ड फ़ोटो",
@@ -143,6 +154,7 @@
   "settings.presets_version": "TODO_HI: परीक्षा स्पेक्स संस्करण {version:int}",
   "settings.check_updates": "TODO_HI: अपडेट जाँचें",
   "settings.show_unverified": "TODO_HI: असत्यापित परीक्षाएँ दिखाएँ",
+  "settings.show_unverified_hint": "TODO_HI: वे परीक्षाएँ भी दिखाएँ जिनके अपलोड नियमों की अभी पुष्टि नहीं हुई है",
   "settings.privacy": "TODO_HI: गोपनीयता",
   "settings.help": "TODO_HI: मदद",
   "settings.report_problem": "TODO_HI: समस्या बताएँ",

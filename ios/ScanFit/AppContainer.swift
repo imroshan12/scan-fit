@@ -1,34 +1,45 @@
 import DesignSystem
 import Foundation
 import Presets
+import ScanData
+import ScanModel
 import SwiftUI
 
-/// Lightweight DI root (ARCHITECTURE §3). Built once at launch and passed through the SwiftUI
-/// Environment; tests and previews build their own with fakes.
+/// Lightweight DI root (ARCHITECTURE §3). Built once at launch on the main actor and handed to `RootView`; tests and
+/// previews build their own with fakes.
 struct AppContainer: Sendable {
     let strings: Strings
     let presets: PresetsRepository
+    let preferences: UserPreferences
     /// The embedded presets are verified once, at launch, off the main actor. Every reader awaits the
-    /// same task, so Home and Settings agree and nothing verifies twice.
+    /// same task, so Home, Settings and the exam screen agree and nothing verifies twice.
     let presetsOutcome: Task<PresetsLoadOutcome, Never>
 
+    @MainActor
     static func live(bundle: Bundle = .main) -> AppContainer {
         let repository = PresetsRepository()
         let files = PresetFiles.embedded(in: bundle)
         return AppContainer(
             strings: Strings(),
             presets: repository,
+            preferences: UserPreferences(),
             presetsOutcome: Task { await repository.loadEmbedded(files) }
         )
+    }
+
+    /// The trusted bundle once verification finished (`nil` if it failed).
+    func trustedBundle() async -> PresetBundle? {
+        _ = await presetsOutcome.value
+        return await presets.bundle
     }
 }
 
 private struct AppContainerKey: EnvironmentKey {
-    static var defaultValue: AppContainer { AppContainer.live() }
+    static let defaultValue: AppContainer? = nil
 }
 
 extension EnvironmentValues {
-    var appContainer: AppContainer {
+    var appContainer: AppContainer? {
         get { self[AppContainerKey.self] }
         set { self[AppContainerKey.self] = newValue }
     }

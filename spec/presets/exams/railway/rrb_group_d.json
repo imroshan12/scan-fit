@@ -1,6 +1,11 @@
 {
   "id": "rrb_group_d",
   "name": "RRB Group D (Level 1)",
+  "aliases": [
+    "आरआरबी ग्रुप डी",
+    "group d",
+    "ग्रुप डी"
+  ],
   "body": "RRB",
   "category": "railway",
   "portal": "rrbapply.gov.in",

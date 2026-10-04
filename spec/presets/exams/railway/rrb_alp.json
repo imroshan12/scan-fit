@@ -1,6 +1,10 @@
 {
   "id": "rrb_alp",
   "name": "RRB ALP",
+  "aliases": [
+    "आरआरबी एएलपी",
+    "loco pilot"
+  ],
   "body": "RRB",
   "category": "railway",
   "portal": "rrbapply.gov.in",

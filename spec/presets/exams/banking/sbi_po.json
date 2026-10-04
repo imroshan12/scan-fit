@@ -1,6 +1,12 @@
 {
   "id": "sbi_po",
   "name": "SBI PO",
+  "aliases": [
+    "एसबीआई पीओ",
+    "bank po",
+    "बैंक पीओ",
+    "state bank"
+  ],
   "body": "SBI",
   "category": "banking",
   "portal": null,

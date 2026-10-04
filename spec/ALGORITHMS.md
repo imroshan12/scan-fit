@@ -171,8 +171,8 @@ throttled to 150 ms — and in the Checker):
 ✓ Accepted by 14 exams     IBPS PO · SBI PO · RBI Grade B  +11  ›
 ⚠ 1 quick fix              SSC CGL signature needs ≤ 20 KB   [Fix]
 ```
-Group by body in the detail sheet. Sort: EXACT before ACCEPTED, then by exam popularity (remote
-config list), then name. Tapping Fix runs §1 against that slot and re-runs the match.
+Group by body in the detail sheet. Sort: EXACT before ACCEPTED, then by exam popularity (the bundle's
+`popular` list, §10; Remote Config `popular_exam_order` may override it from Phase 4), then name. Tapping Fix runs §1 against that slot and re-runs the match.
 
 ## 5. Inspector (`inspect(uri) → InspectedFile + issues[]`)
 Detect the format from **magic bytes**, not the extension: JPEG `FFD8FF`, PNG `89504E47`, PDF `%PDF-`,
@@ -371,5 +371,37 @@ A fit case names either `preset` + `doc`, or an inline `spec` (a full document o
 (inclusive), `aspect` ± `aspect_tol`, `background_mean_min` (median luma of the whole image ≥ value), `ink_pixels_min_pct` (% of pixels with luma < 128 ≥ value),
 `exif: "none"` (no APP1), `dpi` (JFIF units 1 and both densities equal), `export_filename` (§9.8), `decodes` (re-decodes without error),
 `max_ms_midrange` (measured by the benchmark, not asserted in unit tests). Other sections: `inspect_cases`, `decode_cases`, `patch_cases`,
-`geometry_cases`, `match_cases` (their keys are documented inline in the file).
+`geometry_cases`, `match_cases`, `search_cases` (their keys are documented inline in the file).
+
+## 10. Exam search and browse (Home, PRD F1)
+A pure function on both platforms (`ExamSearch`) over the presets bundle. Conformance: `search_cases`, whose expected results are
+computed by the reference implementation `spec/tools/exam_search.py` (a third, independent implementation).
+
+**Data** (all in the signed bundle, so search improves with a presets update, never with an app release):
+`exam.aliases` (optional: other spellings and Hindi forms, e.g. `आईबीपीएस पीओ`, `bank po`), `bundle.categories[<category>].aliases`
+(e.g. banking: `bank`, `बैंक`) and `bundle.popular` (exam ids, most popular first; Remote Config `popular_exam_order` may override it
+from Phase 4). Older bundles without these fields behave as if they were empty.
+
+**Visible exams.** `status = active`, and `confidence = low` only when the "Show unverified exams" setting is on.
+
+**Normalisation `norm(s)` → tokens.** (1) Unicode NFKC. (2) Lower-case every scalar with the Unicode default mapping (no locale rules).
+(3) Delete U+093C (Devanagari nukta), U+200C and U+200D. (4) Every scalar that is not a letter (`L*`), mark (`M*`) or decimal digit (`Nd`)
+becomes a space; Devanagari vowel signs and virama are marks, so Hindi words stay whole. (5) Split on spaces, dropping empty tokens.
+Lengths and comparisons below are in Unicode scalars; `_` in ids is punctuation, so `state_psc` → `state psc`.
+
+**Index of an exam:** the tokens of `name`, `body`, `id`, `category`, each category alias and each exam alias, plus one *joined*
+token per phrase of `name` and of each alias (its tokens concatenated: `IBPS PO / MT` → `ibpspomt`), so `ibpspo` and `sscchsl` match.
+
+**Token level `level(q, t)`:** 3 if `q = t`; 2 if `t` starts with `q`; 1 if `|q| ≥ 4` and `osa(q, t[0..k]) ≤ 1` for some
+`k ∈ {|q| − 1, |q|, |q| + 1}` with `k ≤ |t|` (one typo: insertion, deletion, substitution or adjacent swap, against a prefix of
+`t`); else 0. `osa` is the optimal string alignment distance (Levenshtein plus adjacent transposition, each cost 1).
+
+**Search(query, category?).** `Q = norm(query)`. Empty `Q` → no results (the screen shows its browse sections instead). Candidates are the
+visible exams, restricted to `category` when a chip is selected. An exam matches when every `q ∈ Q` has `max_t level(q, t) ≥ 1`;
+its score is `Σ_q max_t level(q, t)`. Order: score descending; then exams whose normalised name (tokens joined by one space) starts
+with the normalised query (tokens joined by one space) first; then popularity rank (position in `popular`, unlisted after all listed);
+then normalised name by scalar order; then id.
+
+**Browse(category).** The visible exams of the category, ordered by popularity rank, then normalised name, then id.
+**Popular(n).** The first `n` visible exams in `popular` order; unknown or invisible ids are skipped.
 

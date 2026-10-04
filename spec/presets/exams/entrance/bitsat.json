@@ -1,6 +1,10 @@
 {
   "id": "bitsat",
   "name": "BITSAT",
+  "aliases": [
+    "बिटसैट",
+    "bits"
+  ],
   "body": "BITS Pilani",
   "category": "entrance",
   "portal": null,

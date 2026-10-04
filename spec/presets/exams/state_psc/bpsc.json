@@ -1,6 +1,10 @@
 {
   "id": "bpsc",
   "name": "BPSC",
+  "aliases": [
+    "बीपीएससी",
+    "bihar"
+  ],
   "body": "BPSC",
   "category": "state_psc",
   "portal": null,

@@ -9,6 +9,7 @@ sharing a spec rather than code.
 |---|---|
 | [CLAUDE.md](CLAUDE.md) | Rules and commands for Claude Code: read first |
 | [docs/PRD.md](docs/PRD.md) | Product, users, features by release, monetisation |
+| [docs/BUILD_AND_RELEASE.md](docs/BUILD_AND_RELEASE.md) | **Start here for builds:** what presets are, how a build works, the CI/CD pipeline, local setup, reusing it in another project |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Both apps' architecture, modules, data, presets delivery, security, budgets, CI/CD |
 | [spec/ALGORITHMS.md](spec/ALGORITHMS.md) | Behaviour contract: fit engine, cleanup, match engine, inspector, PDF, live coach |
 | [docs/TECH_FEASIBILITY.md](docs/TECH_FEASIBILITY.md) | Every tool/API per feature, what's possible, spikes, dependency allow-list |

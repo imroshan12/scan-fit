@@ -1,0 +1,118 @@
+import DesignSystem
+import Foundation
+import ScanModel
+import SwiftUI
+
+/// Exam checklist screen: header with the confidence badge and source, one row per document with its requirement
+/// summary, and the "Before you upload" card. Flows attach to the document rows later in Phase 2.
+public struct ExamView: View {
+    @State private var model: ExamViewModel
+    @Environment(\.locale) private var locale
+    private let strings: Strings
+
+    public init(model: ExamViewModel, strings: Strings = Strings()) {
+        _model = State(initialValue: model)
+        self.strings = strings
+    }
+
+    public var body: some View {
+        content
+            .navigationTitle(title)
+        #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+        #endif
+            .toolbar {
+                if case .ready = model.state {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button { model.togglePin() } label: {
+                            Image(systemName: model.isPinned ? "heart.fill" : "heart")
+                        }
+                        .accessibilityLabel(model.isPinned ? strings.examUnpin : strings.examPin)
+                    }
+                }
+            }
+            .task { await model.onAppear() }
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        switch model.state {
+        case .loading:
+            ProgressView()
+        case .notFound:
+            Text(strings.examNotFound).scanFitText(.body).padding(ScanFitSpacing.screenMargin)
+        case let .ready(exam):
+            List {
+                Section { header(exam) }
+                if exam.livePhotoCapture == true {
+                    Section {
+                        Label(strings.examLivePhotoRow, systemImage: "person.crop.square")
+                            .scanFitText(.body)
+                            .foregroundStyle(ScanFitColor.onSurfaceVariant)
+                    }
+                }
+                Section(strings.examDocuments) {
+                    ForEach(exam.documents) { doc in docRow(doc) }
+                }
+                if !exam.specialRules.isEmpty {
+                    Section(strings.examBeforeUpload) {
+                        // Rules are preset data, shown exactly as written (presets are data, CLAUDE.md rule 5).
+                        ForEach(exam.specialRules, id: \.self) { rule in
+                            Text("• \(rule)").scanFitText(.body).foregroundStyle(ScanFitColor.onWarningContainer)
+                        }
+                    }
+                    .listRowBackground(ScanFitColor.warningContainer)
+                }
+            }
+        }
+    }
+
+    private func header(_ exam: Exam) -> some View {
+        VStack(alignment: .leading, spacing: ScanFitSpacing.sm) {
+            Text(exam.name).scanFitText(.title).accessibilityAddTraits(.isHeader)
+            Text(strings.subtitle(body: exam.body, category: exam.category))
+                .scanFitText(.caption)
+                .foregroundStyle(ScanFitColor.onSurfaceVariant)
+            ConfidenceBadge(exam.confidence, strings: strings)
+            HStack(spacing: ScanFitSpacing.sm) {
+                Text(strings.examVerifiedOn(date: Self.formatted(exam.lastVerified, locale: locale)))
+                    .scanFitText(.caption)
+                    .foregroundStyle(ScanFitColor.onSurfaceVariant)
+                if let url = (exam.sources.first { $0.kind == .official } ?? exam.sources.first)?.url {
+                    Link(strings.examSource, destination: url).scanFitText(.label)
+                }
+            }
+        }
+        .padding(.vertical, ScanFitSpacing.xs)
+    }
+
+    /// UI_UX §4 `DocRow`. The status stays "Not started" until the flows land later in Phase 2.
+    private func docRow(_ doc: DocSpec) -> some View {
+        VStack(alignment: .leading, spacing: ScanFitSpacing.xs) {
+            HStack(spacing: ScanFitSpacing.sm) {
+                Text(strings.label(doc.type)).scanFitText(.headline)
+                if !doc.required {
+                    Text(strings.examOptional).scanFitText(.caption).foregroundStyle(ScanFitColor.onSurfaceVariant)
+                }
+            }
+            Text(strings.specSummary(doc)).scanFitText(.figure)
+            Text(strings.examStatusNotStarted).scanFitText(.caption).foregroundStyle(ScanFitColor.onSurfaceVariant)
+        }
+        .frame(minHeight: ScanFitSpacing.minTouchTarget, alignment: .leading)
+        .accessibilityElement(children: .combine)
+    }
+
+    private var title: String {
+        if case let .ready(exam) = model.state { exam.name } else { "" }
+    }
+
+    /// `2026-09-30` in the view's locale ("30 Sept 2026", "30 सित॰ 2026"). Built from date components, so no time
+    /// zone can shift the day.
+    static func formatted(_ iso: String, locale: Locale = .current) -> String {
+        let parts = iso.split(separator: "-").compactMap { Int($0) }
+        guard parts.count == 3,
+              let date = Calendar.current.date(from: DateComponents(year: parts[0], month: parts[1], day: parts[2]))
+        else { return iso }
+        return date.formatted(.dateTime.day().month(.abbreviated).year().locale(locale))
+    }
+}

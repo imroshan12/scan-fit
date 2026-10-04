@@ -1,0 +1,13 @@
+{
+  "_doc": "Search words for each exam category (ALGORITHMS §10), shipped in the signed bundle. English and Hindi. Hindi entries are drafted: native review pending (spec/README.md).",
+  "banking": { "aliases": ["bank", "banking", "बैंक", "बैंकिंग"] },
+  "insurance": { "aliases": ["insurance", "बीमा"] },
+  "regulator": { "aliases": ["regulator", "नियामक"] },
+  "ssc": { "aliases": ["staff selection commission", "कर्मचारी चयन आयोग", "एसएससी"] },
+  "upsc": { "aliases": ["union public service commission", "संघ लोक सेवा आयोग", "यूपीएससी"] },
+  "railway": { "aliases": ["railway", "railways", "रेलवे", "रेल"] },
+  "defence": { "aliases": ["defence", "defense", "army", "navy", "air force", "रक्षा", "सेना"] },
+  "teaching": { "aliases": ["teaching", "teacher", "शिक्षक", "अध्यापक"] },
+  "state_psc": { "aliases": ["state psc", "public service commission", "राज्य लोक सेवा आयोग"] },
+  "entrance": { "aliases": ["entrance", "admission", "प्रवेश परीक्षा"] }
+}

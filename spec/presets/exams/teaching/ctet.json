@@ -1,6 +1,10 @@
 {
   "id": "ctet",
   "name": "CTET",
+  "aliases": [
+    "सीटीईटी",
+    "teacher eligibility"
+  ],
   "body": "CBSE",
   "category": "teaching",
   "portal": null,

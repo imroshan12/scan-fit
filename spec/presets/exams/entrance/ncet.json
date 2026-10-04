@@ -1,6 +1,10 @@
 {
   "id": "ncet",
   "name": "NCET (ITEP)",
+  "aliases": [
+    "एनसीईटी",
+    "itep"
+  ],
   "body": "NTA",
   "category": "entrance",
   "portal": null,

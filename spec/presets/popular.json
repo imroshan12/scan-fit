@@ -1,0 +1,6 @@
+{
+  "_doc": "Default popularity order (most applied-for first) for Home's 'Popular now', match-note sorting and search ties (ALGORITHMS §4, §10). Shipped in the signed bundle; Remote Config popular_exam_order may override it from Phase 4.",
+  "popular": ["ibps_po", "sbi_po", "ssc_cgl", "neet_ug", "jee_main", "cuet_ug", "ibps_clerk", "ssc_chsl", "ssc_gd",
+              "rrb_ntpc_grad", "upsc_cse", "sbi_clerk", "ctet", "ugc_net", "ibps_rrb_po", "ibps_rrb_clerk", "rbi_grade_b",
+              "lic_aao", "ssc_mts", "gate", "cat", "clat"]
+}

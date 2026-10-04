@@ -1,6 +1,12 @@
 {
   "id": "sbi_clerk",
   "name": "SBI Clerk (JA)",
+  "aliases": [
+    "एसबीआई क्लर्क",
+    "junior associate",
+    "bank clerk",
+    "बैंक क्लर्क"
+  ],
   "body": "SBI",
   "category": "banking",
   "portal": null,

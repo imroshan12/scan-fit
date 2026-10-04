@@ -1,6 +1,10 @@
 {
   "id": "rbi_grade_b",
   "name": "RBI Grade B (DR)",
+  "aliases": [
+    "आरबीआई ग्रेड बी",
+    "reserve bank"
+  ],
   "body": "RBI",
   "category": "banking",
   "portal": null,

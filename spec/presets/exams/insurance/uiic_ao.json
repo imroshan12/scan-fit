@@ -1,6 +1,10 @@
 {
   "id": "uiic_ao",
   "name": "UIIC AO",
+  "aliases": [
+    "यूआईआईसी एओ",
+    "united india insurance"
+  ],
   "body": "UIIC",
   "category": "insurance",
   "portal": null,

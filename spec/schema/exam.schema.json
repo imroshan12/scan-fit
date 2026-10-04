@@ -9,6 +9,8 @@
   "properties": {
     "id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
     "name": { "type": "string", "minLength": 2 },
+    "aliases": { "type": "array", "maxItems": 12, "uniqueItems": true,
+                 "items": { "type": "string", "minLength": 2, "maxLength": 60 } },
     "body": { "type": "string" },
     "category": { "enum": ["banking", "insurance", "regulator", "ssc", "upsc", "railway", "defence",
                            "teaching", "state_psc", "entrance"] },

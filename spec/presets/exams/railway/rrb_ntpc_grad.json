@@ -1,6 +1,10 @@
 {
   "id": "rrb_ntpc_grad",
   "name": "RRB NTPC (Graduate)",
+  "aliases": [
+    "आरआरबी एनटीपीसी",
+    "ntpc"
+  ],
   "body": "RRB",
   "category": "railway",
   "portal": "rrbapply.gov.in",

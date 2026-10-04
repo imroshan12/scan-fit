@@ -8,9 +8,14 @@
 | Property-based | kotest-property or hand-rolled generators | Swift Testing parameterised + seeded random | fit(any image, any slot) → output always passes that slot or returns a typed error; match(fit output) ⊇ that slot |
 | Integration | Room DAO + migrations (`MigrationTestHelper`), ExportRepository on an emulator (MediaStore) | SwiftData container in-memory, file exporter | Persistence, verify-after-write |
 | UI | Compose UI tests (key journeys) | XCUITest (key journeys) | Journeys below |
-| Screenshot | Roborazzi | swift-snapshot-testing | Every screen × light/dark × font 1.0/2.0 × EN/HI |
 | Performance | Macrobenchmark (startup, frame timing), Microbenchmark (fit) | XCTest `measure` + `XCTOSSignpostMetric`, Instruments | Budgets in ARCHITECTURE §11 |
 | Accessibility | Espresso `AccessibilityChecks` + manual TalkBack | `XCUIApplication.performAccessibilityAudit()` + manual VoiceOver | |
+
+### No screenshot tests
+Removed on 2026-10-03 by product decision: recording and verifying image baselines made every UI change slow.
+Screens are checked instead by Compose `@Preview`s / SwiftUI `#Preview`s in light, dark, the largest font scale and Hindi, by
+hand on the low-end profiles, and by view-model unit tests for every state. Formatting that depends on the locale (dates,
+numbers) gets a unit test in Hindi.
 
 ## 2. Key journeys (UI tests, both platforms)
 1. First launch → search "ibps po" → checklist → photo from gallery (fixture injected via a fake
@@ -21,7 +26,7 @@
 5. Free limit reached → paywall → rewarded path (fake ad) → export allowed.
 6. Offline launch (airplane mode) → embedded presets → full flow works.
 7. Tampered preset bundle from a fake CDN → rejected, old bundle retained, no crash.
-8. Hindi locale → the whole journey 1 with no truncation (screenshot diff).
+8. Hindi locale → the whole journey 1 with no truncation.
 
 ## 3. Test doubles
 Every platform service sits behind an interface with a fake in `core:testing` / `TestSupport`:
@@ -52,7 +57,7 @@ Testers must stay opted in for the full 14 days and open the app on several days
 real engagement, not just opt-ins.
 
 ## 7. Release gates (all must be green)
-- CI: unit, conformance, screenshot, lint, detekt/SwiftLint, licence check.
+- CI: unit, conformance, lint, detekt/SwiftLint, licence check.
 - Performance budgets met on reference low-end + mid devices.
 - Crash-free sessions ≥ 99.5% in beta over ≥ 200 sessions; no ANRs in the beta cohort.
 - Portal-fidelity QA passed.

@@ -13,7 +13,19 @@ data class PresetBundle(
     val generatedOn: String,
     val disclaimer: String,
     val exams: List<Exam>,
+    /**
+     * Search words per category, keyed by the category's JSON name (`banking`, `state_psc`), ALGORITHMS §10.
+     * String keys, so a bundle that names a category this build does not know still decodes.
+     */
+    val categories: Map<String, CategoryInfo> = emptyMap(),
+    /** Exam ids, most popular first (Home "Popular now", match-note and search ordering). */
+    val popular: List<String> = emptyList(),
 ) {
+    @Serializable
+    data class CategoryInfo(
+        val aliases: List<String> = emptyList(),
+    )
+
     /** The two header fields every loader reads first, before decoding exams. */
     @Serializable
     data class Header(

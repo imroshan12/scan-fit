@@ -1,6 +1,12 @@
 {
   "id": "army_agniveer",
   "name": "Indian Army Agniveer (CEE)",
+  "aliases": [
+    "अग्निवीर",
+    "आर्मी",
+    "सेना",
+    "agnipath"
+  ],
   "body": "Indian Army",
   "category": "defence",
   "portal": "joinindianarmy.nic.in",

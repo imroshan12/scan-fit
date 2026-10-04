@@ -25,6 +25,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import app.scanfit.core.designsystem.R
 import app.scanfit.core.designsystem.theme.ScanFitTheme
+import app.scanfit.feature.exams.ExamRoute
+import app.scanfit.feature.exams.ExamViewModel
 import app.scanfit.feature.home.HomeRoute
 import app.scanfit.feature.kit.KitScreen
 import app.scanfit.feature.settings.SettingsRoute
@@ -56,7 +58,9 @@ fun ScanFitApp() {
                 NavigationBar {
                     Tab.entries.forEach { tab ->
                         NavigationBarItem(
-                            selected = destination?.hierarchy?.any { it.route == tab.route } == true,
+                            selected =
+                            destination?.hierarchy?.any { it.route == tab.route } == true ||
+                                (tab == Tab.HOME && destination?.route?.startsWith("$EXAM_ROUTE/") == true),
                             onClick = {
                                 navController.navigate(tab.route) {
                                     popUpTo(navController.graph.findStartDestination().id) { saveState = true }
@@ -72,7 +76,12 @@ fun ScanFitApp() {
             },
         ) { padding ->
             NavHost(navController, startDestination = Tab.HOME.route, modifier = Modifier.padding(padding)) {
-                composable(Tab.HOME.route) { HomeRoute() }
+                composable(Tab.HOME.route) {
+                    HomeRoute(onOpenExam = { id -> navController.navigate("$EXAM_ROUTE/$id") })
+                }
+                composable("$EXAM_ROUTE/{${ExamViewModel.EXAM_ID}}") {
+                    ExamRoute(onBack = { navController.popBackStack() })
+                }
                 composable(Tab.KIT.route) { KitScreen() }
                 composable(Tab.TOOLS.route) { ToolsScreen() }
                 composable(Tab.SETTINGS.route) { SettingsRoute() }
@@ -80,3 +89,6 @@ fun ScanFitApp() {
         }
     }
 }
+
+/** `exam/<id>`: the exam checklist, opened from Home. */
+private const val EXAM_ROUTE = "exam"

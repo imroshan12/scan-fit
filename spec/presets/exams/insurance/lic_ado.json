@@ -1,6 +1,10 @@
 {
   "id": "lic_ado",
   "name": "LIC ADO",
+  "aliases": [
+    "एलआईसी एडीओ",
+    "lic"
+  ],
   "body": "LIC",
   "category": "insurance",
   "portal": null,

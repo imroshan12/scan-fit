@@ -1,6 +1,9 @@
 {
   "id": "gate",
   "name": "GATE 2027",
+  "aliases": [
+    "गेट"
+  ],
   "body": "IIT Madras (GOAPS)",
   "category": "entrance",
   "portal": "goaps",

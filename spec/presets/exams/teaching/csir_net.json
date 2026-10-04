@@ -1,6 +1,10 @@
 {
   "id": "csir_net",
   "name": "CSIR UGC NET",
+  "aliases": [
+    "सीएसआईआर नेट",
+    "csir"
+  ],
   "body": "NTA",
   "category": "teaching",
   "portal": null,

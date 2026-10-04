@@ -1,6 +1,10 @@
 {
   "id": "ibps_so",
   "name": "IBPS Specialist Officer",
+  "aliases": [
+    "आईबीपीएस एसओ",
+    "ibps so"
+  ],
   "body": "IBPS",
   "category": "banking",
   "portal": null,

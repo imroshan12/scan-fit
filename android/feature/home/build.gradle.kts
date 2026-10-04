@@ -4,5 +4,6 @@ plugins {
 
 dependencies {
     implementation(project(":core:presets"))
+    implementation(project(":core:data"))
     testImplementation(project(":core:testing"))
 }

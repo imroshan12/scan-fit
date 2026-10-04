@@ -24,6 +24,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 EXAMS = os.path.join(ROOT, "presets", "exams")
 SCHEMA = os.path.join(ROOT, "schema", "exam.schema.json")
 VERSION_FILE = os.path.join(ROOT, "presets", "VERSION")
+CATEGORIES_FILE = os.path.join(ROOT, "presets", "categories.json")
+POPULAR_FILE = os.path.join(ROOT, "presets", "popular.json")
 DIST = os.path.join(ROOT, "dist")
 
 
@@ -31,6 +33,30 @@ def fail(errors):
     for e in errors:
         print(f"  ✗ {e}", file=sys.stderr)
     sys.exit(1)
+
+
+def search_data(schema, exams):
+    """Category search words and the default popularity order (ALGORITHMS §10). Returns (categories, popular, errors)."""
+    errors = []
+    category_ids = schema["properties"]["category"]["enum"]
+    raw = {k: v for k, v in json.load(open(CATEGORIES_FILE, encoding="utf-8")).items() if not k.startswith("_")}
+    if sorted(raw) != sorted(category_ids):
+        errors.append(f"categories.json: keys must be exactly {sorted(category_ids)}, got {sorted(raw)}")
+    categories = {}
+    for cat, entry in raw.items():
+        aliases = entry.get("aliases") if isinstance(entry, dict) else None
+        if not aliases or not all(isinstance(a, str) and len(a.strip()) >= 2 for a in aliases):
+            errors.append(f"categories.json: {cat}.aliases must be a non-empty list of strings (2+ characters)")
+        elif len(set(aliases)) != len(aliases):
+            errors.append(f"categories.json: {cat}.aliases has duplicates")
+        else:
+            categories[cat] = {"aliases": aliases}
+    popular = json.load(open(POPULAR_FILE, encoding="utf-8")).get("popular", [])
+    active = {e["id"] for e in exams if e["status"] == "active"}
+    if len(set(popular)) != len(popular):
+        errors.append("popular.json: duplicate ids")
+    errors += [f"popular.json: '{i}' is not an active exam id" for i in popular if i not in active]
+    return categories, popular, errors
 
 
 def semantic_checks(exam, path):
@@ -107,6 +133,8 @@ def main():
         seen.add(exam["id"])
         errors += semantic_checks(exam, rel)
         exams.append(exam)
+    categories, popular, search_errors = search_data(schema, exams)
+    errors += search_errors
     if errors:
         print(f"Preset validation failed ({len(errors)} errors):", file=sys.stderr)
         fail(errors)
@@ -119,6 +147,8 @@ def main():
         "disclaimer": "Independent tool data, not affiliated with any exam body. "
                       "Always verify against the current official notification before submitting.",
         "exams": sorted(exams, key=lambda e: (e["category"], e["name"])),
+        "categories": categories,
+        "popular": popular,
     }
     os.makedirs(DIST, exist_ok=True)
     raw = json.dumps(bundle, ensure_ascii=False, separators=(",", ":"), sort_keys=True).encode()

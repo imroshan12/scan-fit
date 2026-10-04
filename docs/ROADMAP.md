@@ -21,7 +21,7 @@ through the year). Check the actual 2027 dates when scheduling the launch.
 - [x] [S] Ed25519 test vector in `spec/fixtures/signing/` (public key, sample bundle, valid + tampered signature)
   - *Done:* `make_signing_vector.py` (deterministic): 8 verify cases + 8 loader-order cases (`bad_signature | parse | bad_schema | stale_version`). Both platforms run it, plus an independent Python cross-check. A mutation check confirmed the Android tests fail on a corrupted fixture. The dev key is derived from a public string: see `spec/signing/README.md` for creating the production key.
 - [x] [A] Project: `build-logic` convention plugins, version catalog, modules per ARCHITECTURE §2 (empty), Hilt, Compose, edge-to-edge, predictive back, per-app language, R8, `dataExtractionRules`
-  - *Done:* AGP 9.4.1 / Gradle 9.6.1 / Kotlin 2.4.20, 25 modules, Hilt, Compose, edge-to-edge, predictive back, per-app language (in-app picker via AppCompat), R8 (release APK 1.5 MB), `dataExtractionRules`, warnings-as-errors, spotless + detekt (2.0 alpha). *Deviations:* `compileSdk` 37 (current AndroidX needs it; `targetSdk` stays 36); placeholder `applicationId` `app.scanfit`; Roborazzi screenshot tests deferred to Phase 2 (the Phase 0 shell is throwaway UI).
+  - *Done:* AGP 9.4.1 / Gradle 9.6.1 / Kotlin 2.4.20, 25 modules, Hilt, Compose, edge-to-edge, predictive back, per-app language (in-app picker via AppCompat), R8 (release APK 1.5 MB), `dataExtractionRules`, warnings-as-errors, spotless + detekt (2.0 alpha). *Deviations:* `compileSdk` 37 (current AndroidX needs it; `targetSdk` stays 36); placeholder `applicationId` `app.scanfit`; Roborazzi screenshot tests deferred to Phase 2 (the Phase 0 shell is throwaway UI), later dropped.
 - [x] [I] Project: app target + local packages per ARCHITECTURE §3, AppContainer, TabView shell, String Catalog, privacy manifest skeleton, SwiftLint/SwiftFormat
   - *Done:* XcodeGen (`ios/project.yml`), two local packages `Core` + `Features` (modules `Model`/`Data`/`Vision` are prefixed `Scan…` to avoid Apple name clashes), `AppContainer`, TabView shell, String Catalog, privacy manifest skeleton, Swift 6 strict concurrency. *Not run:* SwiftLint/SwiftFormat are configured but not installed on the dev machine.
 - [x] [A][I] Embed `presets.json` + `.sig` at build time; verify the signature on load (test vector must pass, tampered must fail)
@@ -81,7 +81,14 @@ of the photo fixture ≤ 800 ms on a mid device (benchmark test).
 
 ## Phase 2 — Core flows (A: W3–W5, I: W4–W6)
 - [ ] Home: search (EN + Hindi aliases, fuzzy), categories, pinned exams, popular list
+  - *Done (both apps):* ALGORITHMS §10 search with `aliases` (all 55 presets), `categories.json` and `popular.json` in the signed bundle
+    (presets_version 2); 25 `search_cases` computed by a Python reference that Kotlin and Swift both pass (mutation-checked). Home: live search,
+    category chips, My exams (pinned, DataStore / UserDefaults) and Popular now; "no matches" is never shown while specs are still verifying.
+    Checked by hand on an API 35 emulator and the iPhone 17 simulator.
 - [ ] Exam checklist screen (all states), special-rules card, source link, confidence badge, "Show unverified" setting
+  - *Done:* header with `ConfidenceBadge` (unverified = "Unverified — check notice"), verified date + source link, document rows with
+    `SpecSummary` (`20–50 KB · 200×230`), "Before you upload" card, pin, not-found state; Settings toggle. *Open:* row status beyond
+    "Not started" (needs the flows).
 - [ ] Photo flow: pick/capture → face-aware crop (locked aspect) → white bg toggle → name/date toggle → review
 - [ ] Ink flows: signature (incl. triple), thumb, NEET fingers (both hands), declaration (text shown from preset; disabled with "copy from notice" when `declaration_text` is null)
 - [ ] [S] Transcribe `declaration_text` verbatim for IBPS PO/Clerk/RRB, SBI PO/Clerk, RBI, LIC, SEBI from the official notices; promote those presets where verified
@@ -90,7 +97,10 @@ of the photo fixture ≤ 800 ms on a mid device (benchmark test).
 - [ ] My Kit (store cleaned originals, "Use for exam…", export history)
 - [ ] Custom resize with the live match note
 - [ ] Checker with issue fixes and per-exam verdicts
-- [ ] Screenshot tests for every screen × light/dark × font 1.0/2.0 × EN/HI
+- [x] ~~Screenshot tests for every screen × light/dark × font 1.0/2.0 × EN/HI~~ — dropped (2026-10-03, product decision)
+  - Built on both apps (Roborazzi, swift-snapshot-testing), then removed: baselines made every UI change slow. Screens are checked
+    with previews (light/dark/largest font/Hindi), by hand on the low-end profiles and by view-model tests (docs/TESTING.md §1).
+    The one bug they found (English month names on the Hindi exam screen) is fixed on both apps and covered by unit tests.
 
 **Exit gate:** a tester completes IBPS PO (4 files), JEE Main (photo, signature, class 10 PDF
 placeholder) and SSC CGL (signature) end to end on a low-end Android and an iPhone SE. Every saved

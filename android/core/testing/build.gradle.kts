@@ -4,6 +4,7 @@ plugins {
 
 dependencies {
     api(project(":core:presets"))
+    api(project(":core:data"))
     api(project(":core:vision"))
     api(libs.kotlinx.coroutines.android)
 }

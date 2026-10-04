@@ -1,6 +1,10 @@
 {
   "id": "ssc_steno",
   "name": "SSC Stenographer C & D",
+  "aliases": [
+    "एसएससी स्टेनो",
+    "stenographer"
+  ],
   "body": "SSC",
   "category": "ssc",
   "portal": "ssc.gov.in",

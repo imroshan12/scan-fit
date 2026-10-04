@@ -1,6 +1,10 @@
 {
   "id": "mht_cet",
   "name": "MHT CET",
+  "aliases": [
+    "एमएचटी सीईटी",
+    "maharashtra cet"
+  ],
   "body": "Maharashtra CET Cell",
   "category": "entrance",
   "portal": null,

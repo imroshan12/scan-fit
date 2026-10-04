@@ -1,6 +1,10 @@
 {
   "id": "rbi_assistant",
   "name": "RBI Assistant",
+  "aliases": [
+    "आरबीआई असिस्टेंट",
+    "reserve bank"
+  ],
   "body": "RBI",
   "category": "banking",
   "portal": null,

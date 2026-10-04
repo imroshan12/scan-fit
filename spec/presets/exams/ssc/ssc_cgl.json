@@ -1,6 +1,10 @@
 {
   "id": "ssc_cgl",
   "name": "SSC CGL",
+  "aliases": [
+    "एसएससी सीजीएल",
+    "सीजीएल"
+  ],
   "body": "SSC",
   "category": "ssc",
   "portal": "ssc.gov.in",

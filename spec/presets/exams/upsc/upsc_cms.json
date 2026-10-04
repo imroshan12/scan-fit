@@ -1,6 +1,9 @@
 {
   "id": "upsc_cms",
   "name": "UPSC Combined Medical Services",
+  "aliases": [
+    "यूपीएससी सीएमएस"
+  ],
   "body": "UPSC",
   "category": "upsc",
   "portal": "upsconline.nic.in",

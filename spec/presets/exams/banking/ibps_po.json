@@ -1,6 +1,12 @@
 {
   "id": "ibps_po",
   "name": "IBPS PO / MT",
+  "aliases": [
+    "आईबीपीएस पीओ",
+    "bank po",
+    "बैंक पीओ",
+    "probationary officer"
+  ],
   "body": "IBPS",
   "category": "banking",
   "portal": null,

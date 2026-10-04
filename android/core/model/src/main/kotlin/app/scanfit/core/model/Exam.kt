@@ -220,6 +220,8 @@ data class Source(
 data class Exam(
     val id: String,
     val name: String,
+    /** Other spellings and Hindi forms, used only by search (ALGORITHMS §10). */
+    val aliases: List<String> = emptyList(),
     val body: String,
     val category: ExamCategory,
     val portal: String? = null,

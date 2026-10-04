@@ -416,3 +416,43 @@ class DependencyGuard(unittest.TestCase):
                 contextlib.redirect_stderr(err), self.assertRaises(SystemExit):
             require("PIL")
         self.assertIn("pillow", err.getvalue())
+
+
+class ExamSearchCases(unittest.TestCase):
+    """search_* sections of cases.json must equal what the §10 reference computes from the current source presets."""
+
+    @classmethod
+    def setUpClass(cls):
+        import exam_search
+        cls.ref = exam_search
+        cls.bundle = exam_search.source_bundle()
+        cls.cases = load("fixtures", "cases.json")
+
+    def test_search_expectations_match_the_reference(self):
+        for case in self.cases["search_cases"]:
+            with self.subTest(case["id"]):
+                self.assertEqual(case["expect_ids"], self.ref.expected(self.bundle, case),
+                                 "stale: run python3 spec/tools/exam_search.py --write-cases")
+
+    def test_level_and_norm_expectations_match_the_reference(self):
+        for case in self.cases["search_level_cases"]:
+            self.assertEqual(case["level"], self.ref.level(case["q"], case["t"]), case)
+        for case in self.cases["search_norm_cases"]:
+            self.assertEqual(case["tokens"], self.ref.norm(case["text"]), case)
+
+    def test_every_case_is_meaningful(self):
+        ids = {e["id"] for e in self.bundle["exams"]}
+        for case in self.cases["search_cases"]:
+            for exam_id in case["expect_ids"]:
+                self.assertIn(exam_id, ids, case["id"])
+        non_empty = [c for c in self.cases["search_cases"] if c["expect_ids"]]
+        self.assertGreaterEqual(len(non_empty), 15, "most cases must find something, or they test nothing")
+
+    def test_osa_counts_an_adjacent_swap_as_one_edit(self):
+        self.assertEqual(1, self.ref.osa("ibsp", "ibps"))
+        self.assertEqual(2, self.ref.osa("ab", "ba") + 1)
+        self.assertEqual(3, self.ref.osa("", "abc"))
+
+    def test_bundle_carries_categories_and_popular(self):
+        self.assertEqual(10, len(self.bundle["categories"]))
+        self.assertTrue(set(self.bundle["popular"]) <= {e["id"] for e in self.bundle["exams"]})

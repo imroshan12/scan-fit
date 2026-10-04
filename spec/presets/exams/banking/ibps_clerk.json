@@ -1,6 +1,11 @@
 {
   "id": "ibps_clerk",
   "name": "IBPS Clerk (CSA)",
+  "aliases": [
+    "आईबीपीएस क्लर्क",
+    "bank clerk",
+    "बैंक क्लर्क"
+  ],
   "body": "IBPS",
   "category": "banking",
   "portal": null,

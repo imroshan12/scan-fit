@@ -1,6 +1,10 @@
 {
   "id": "upsc_cds",
   "name": "UPSC CDS",
+  "aliases": [
+    "यूपीएससी सीडीएस",
+    "सीडीएस"
+  ],
   "body": "UPSC",
   "category": "upsc",
   "portal": "upsconline.nic.in",

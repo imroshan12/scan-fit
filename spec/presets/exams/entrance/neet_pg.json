@@ -1,6 +1,9 @@
 {
   "id": "neet_pg",
   "name": "NEET PG",
+  "aliases": [
+    "नीट पीजी"
+  ],
   "body": "NBEMS",
   "category": "entrance",
   "portal": null,

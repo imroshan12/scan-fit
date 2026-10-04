@@ -1,6 +1,10 @@
 {
   "id": "rpf_constable",
   "name": "RPF Constable",
+  "aliases": [
+    "आरपीएफ कांस्टेबल",
+    "railway police"
+  ],
   "body": "RRB",
   "category": "railway",
   "portal": "rrbapply.gov.in",

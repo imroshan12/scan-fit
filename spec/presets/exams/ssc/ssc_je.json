@@ -1,6 +1,9 @@
 {
   "id": "ssc_je",
   "name": "SSC JE",
+  "aliases": [
+    "एसएससी जेई"
+  ],
   "body": "SSC",
   "category": "ssc",
   "portal": "ssc.gov.in",

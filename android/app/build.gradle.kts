@@ -35,7 +35,9 @@ dependencies {
     implementation(project(":core:designsystem"))
     implementation(project(":core:model"))
     implementation(project(":core:presets"))
+    implementation(project(":core:data"))
     implementation(project(":feature:home"))
+    implementation(project(":feature:exams"))
     implementation(project(":feature:kit"))
     implementation(project(":feature:settings"))
 

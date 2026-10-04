@@ -1,6 +1,13 @@
 {
   "id": "neet_ug",
   "name": "NEET UG",
+  "aliases": [
+    "नीट यूजी",
+    "नीट",
+    "neet",
+    "mbbs",
+    "medical"
+  ],
   "body": "NTA",
   "category": "entrance",
   "portal": null,

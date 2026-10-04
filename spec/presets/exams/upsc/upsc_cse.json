@@ -1,6 +1,12 @@
 {
   "id": "upsc_cse",
   "name": "UPSC Civil Services (CSE)",
+  "aliases": [
+    "यूपीएससी सीएसई",
+    "ias",
+    "आईएएस",
+    "civil services"
+  ],
   "body": "UPSC",
   "category": "upsc",
   "portal": "upsconline.nic.in",

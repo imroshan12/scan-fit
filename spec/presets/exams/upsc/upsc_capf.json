@@ -1,6 +1,9 @@
 {
   "id": "upsc_capf",
   "name": "UPSC CAPF (AC)",
+  "aliases": [
+    "यूपीएससी सीएपीएफ"
+  ],
   "body": "UPSC",
   "category": "upsc",
   "portal": "upsconline.nic.in",

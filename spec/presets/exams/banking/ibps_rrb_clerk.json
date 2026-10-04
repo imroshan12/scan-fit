@@ -1,6 +1,12 @@
 {
   "id": "ibps_rrb_clerk",
   "name": "IBPS RRB Office Assistant",
+  "aliases": [
+    "आईबीपीएस आरआरबी क्लर्क",
+    "rrb clerk",
+    "gramin bank",
+    "ग्रामीण बैंक"
+  ],
   "body": "IBPS",
   "category": "banking",
   "portal": null,

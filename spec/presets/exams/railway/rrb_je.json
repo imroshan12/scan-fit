@@ -1,6 +1,9 @@
 {
   "id": "rrb_je",
   "name": "RRB JE",
+  "aliases": [
+    "आरआरबी जेई"
+  ],
   "body": "RRB",
   "category": "railway",
   "portal": "rrbapply.gov.in",

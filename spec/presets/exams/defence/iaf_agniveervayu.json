@@ -1,6 +1,12 @@
 {
   "id": "iaf_agniveervayu",
   "name": "IAF Agniveervayu",
+  "aliases": [
+    "अग्निवीर वायु",
+    "वायुसेना",
+    "air force",
+    "agnipath"
+  ],
   "body": "Indian Air Force",
   "category": "defence",
   "portal": null,

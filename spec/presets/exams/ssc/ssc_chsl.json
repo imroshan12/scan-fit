@@ -1,6 +1,11 @@
 {
   "id": "ssc_chsl",
   "name": "SSC CHSL",
+  "aliases": [
+    "एसएससी सीएचएसएल",
+    "सीएचएसएल",
+    "ldc"
+  ],
   "body": "SSC",
   "category": "ssc",
   "portal": "ssc.gov.in",
