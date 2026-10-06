@@ -72,8 +72,10 @@ object InkCleanup {
         var window = maxOf(MIN_WINDOW, minOf(w, h) / WINDOW_DIVISOR)
         if (window % 2 == 0) window++
         var mask = ImageOps.sauvola(n, w, h, window, SAUVOLA_K, SAUVOLA_R)
-        mask = ImageOps.open3x3(mask, w, h)
-        mask = ImageOps.removeSpecks(mask, w, h, maxOf(SPECK_MIN, (SPECK_FRACTION * w * h).toInt()))
+        if (variant == InkVariant.DOCUMENT) {
+            mask = ImageOps.open3x3(mask, w, h)
+            mask = ImageOps.removeSpecks(mask, w, h, maxOf(SPECK_MIN, (SPECK_FRACTION * w * h).toInt()))
+        }
 
         val crisp = options.crispBlack ?: (variant == InkVariant.SIGNATURE)
         val out = ByteArray(w * h * Raster.CHANNELS) { -1 } // white

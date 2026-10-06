@@ -133,8 +133,9 @@
     <string name="issue_too_small_kb">Too small: %1$d KB (minimum %2$d).</string>
     <string name="issue_wrong_aspect">The shape doesn\'t match. Crop to the right proportions.</string>
     <string name="issue_wrong_dimensions">Size is %1$d×%2$d; this slot needs %3$d×%4$d.</string>
-    <string name="kit_empty_body">Make a photo, signature or thumb once and reuse it for every exam.</string>
+    <string name="kit_empty_body">No prepared files yet.</string>
     <string name="kit_empty_title">Your kit is empty</string>
+    <string name="kit_load_failed">Could not load your prepared files. Please try again.</string>
     <string name="language_en">English</string>
     <string name="language_hi">हिन्दी</string>
     <string name="language_system">System default</string>

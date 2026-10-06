@@ -211,7 +211,8 @@
 	"tools.coach": "TODO_HI: लाइव फ़ोटो कोच",
 
 	"kit.empty_title": "TODO_HI: आपकी किट ख़ाली है",
-	"kit.empty_body": "TODO_HI: फ़ोटो, हस्ताक्षर या अँगूठे का निशान एक बार बनाएँ और हर परीक्षा के लिए दोबारा इस्तेमाल करें।",
+	"kit.empty_body": "TODO_HI: अभी कोई तैयार फ़ाइल नहीं है।",
+	"kit.load_failed": "TODO_HI: आपकी तैयार फ़ाइलें नहीं खोल पाए। कृपया फिर कोशिश करें।",
 
 	"photo.source_heading": "TODO_HI: अपनी फ़ोटो जोड़ें",
 	"photo.take": "TODO_HI: फ़ोटो लें",

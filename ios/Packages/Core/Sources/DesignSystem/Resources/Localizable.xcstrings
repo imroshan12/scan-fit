@@ -2146,13 +2146,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Make a photo, signature or thumb once and reuse it for every exam."
+            "value": "No prepared files yet."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "फ़ोटो, हस्ताक्षर या अँगूठे का निशान एक बार बनाएँ और हर परीक्षा के लिए दोबारा इस्तेमाल करें।"
+            "value": "अभी कोई तैयार फ़ाइल नहीं है।"
           }
         }
       }
@@ -2170,6 +2170,23 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "आपकी किट ख़ाली है"
+          }
+        }
+      }
+    },
+    "kit.load_failed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not load your prepared files. Please try again."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "आपकी तैयार फ़ाइलें नहीं खोल पाए। कृपया फिर कोशिश करें।"
           }
         }
       }

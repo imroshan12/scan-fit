@@ -145,6 +145,17 @@ back from a newly rendered review still returns to its crop. Picker cancellation
 Shared conformance cases: `draft_cases`; additional native tests cover atomic replacement failure, stale jobs, current
 preset validation, app relaunch, exact retained/exported bytes and checklist updates.
 
+**My Kit prepared files.** My Kit lists available photo/ink drafts from active exams in the current trusted bundle,
+including unverified exams regardless of the Home visibility setting (keep their confidence badge). Group by exam in
+bundle order and list slots in preset document order. Each row carries its document type and rounded KB and opens that
+slot's restored review. The app composes navigation; Kit never imports the flow features. Loading is explicit; failure
+to load trusted presets is a retryable error, not an empty kit. Empty means verification found no available drafts.
+Revalidate on tab entry/foreground/store changes; cancel obsolete loads. Enumerate trusted slots through existing
+draft reads, not untrusted filesystem metadata. Kit does not retain JPEGs in its UI model or decode full inputs.
+These are prepared exam files, not reusable cleaned originals or export history. Existing missing/expired files and
+files produced before draft retention was implemented cannot be recovered from a historical Saved marker. Originals,
+cross-exam reuse and history remain separate My Kit follow-ups. Viewing Kit never records Saved or extends retention.
+
 ### 1.7 Export naming
 
 `<filename or docType>_<examShort>_<WxH>_<KB>kb.jpg`, e.g. `signature_IBPS-PO_140x60_16kb.jpg`.
@@ -181,7 +192,9 @@ Android `Downloads/ScanFit/<Exam>/`, iOS `Files › ScanFit › <Exam>/`.
 3. **Background normalisation**: `bg = gaussianBlur(L, σ = shortSide/30)`; `N = clamp(L / bg × 255)`.
    This removes phone shadows and paper tint.
 4. **Ink mask** (signature, declaration): Sauvola threshold on N, window = odd(shortSide/20),
-   k = 0.34, R = 128. Morphological open (3×3) to drop specks smaller than 0.02% of the area.
+   k = 0.34, R = 128. **Signatures (including triple): preserve the thresholded mask without erosion or component
+   removal**, since fine strokes, dots and disconnected flourishes are meaningful ink. Documents only: morphological
+   open (3×3) and small-component filtering as §9.5. Crop unwanted marks manually rather than deleting signature parts.
    **Thumb**: no binarisation (ridges matter). Apply CLAHE-like contrast stretch (clip at the 2nd/98th
    percentile) on N, then gamma 0.8.
 5. **Render**: background = pure white. Ink colour = the original pixel darkened ×0.6 (keeps blue or
@@ -414,15 +427,18 @@ Formats must include `jpg`/`jpeg`, else `UNSUPPORTED_FORMAT`.
 
 ### 9.5 Ink cleanup (§3) numbers
 
-Input raster: long side already ≤ 1600 (§1.1). Variants: `signature`, `document` (declaration, triple signature), `thumb`.
+Input raster: long side already ≤ 1600 (§1.1). Variants: `signature` (including triple signature), `document` (declaration), `thumb`.
 
 - Blur: σ = shortSide/30 approximated by 3 box-blur passes ("boxes for Gauss": ideal width `wI = √(12σ²/3 + 1)`, `wl` = largest odd integer
   ≤ wI, `wu = wl+2`, `m = round((12σ² − 3wl² − 12wl − 9) / (−4wl − 4))` clamped to 0..3, `m` passes of width `wl` then `3−m` of width `wu`; each pass is a
   horizontal then a vertical box blur of radius `(w−1)/2`, integer-rounded `(sum + w/2) / w`), edge pixels replicated.
 - `N = min(255, (L·255 + bg/2) / max(bg, 1))`.
 - Sauvola (signature, document): window = odd number ≥ `shortSide/20` and ≥ 15, k = 0.34, R = 128, `T = mean·(1 + k·(sd/R − 1))`, ink if `N < T`,
-  window clipped at the borders (count the pixels actually inside). Then 3×3 binary opening (erosion treats outside-the-image as ink and dilation as background, so strokes touching the border do
-  not erode), then drop 8-connected components smaller than `max(4, 0.0002 · area)` pixels.
+  window clipped at the borders (count the pixels actually inside). Signature keeps this mask unchanged: do not erode
+  strokes or delete components by size. Document only: 3×3 binary opening (erosion treats outside-the-image as ink and
+  dilation as background, so strokes touching the border do not erode), then drop 8-connected components smaller than
+  `max(4, 0.0002 · area)` pixels. Conformance: `ink_preservation_cases` retain all threshold-detected signature pixels,
+  including one-pixel strokes and isolated marks on each of three signatures. The trim must include all retained marks.
 - Render: background white; ink is black when `crispBlack`, else the original RGB × 0.6. Default `crispBlack`: signature yes, document no.
 - Thumb: no mask. Stretch `N` between its 2nd and 98th percentile (if they coincide, skip the stretch), then gamma 0.8; output grey as RGB.
   "Ink" (for centring and the gate) = stretched pixels below 128.

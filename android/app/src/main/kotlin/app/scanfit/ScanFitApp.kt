@@ -34,7 +34,7 @@ import app.scanfit.feature.flowink.InkFlowViewModel
 import app.scanfit.feature.flowphoto.PhotoFlowRoute
 import app.scanfit.feature.flowphoto.PhotoFlowViewModel
 import app.scanfit.feature.home.HomeRoute
-import app.scanfit.feature.kit.KitScreen
+import app.scanfit.feature.kit.KitRoute
 import app.scanfit.feature.settings.SettingsRoute
 
 /**
@@ -58,6 +58,8 @@ fun ScanFitApp() {
         val navController = rememberNavController()
         val backStack by navController.currentBackStackEntryAsState()
         val destination = backStack?.destination
+        val flowFromKit = destination?.route?.startsWith("$EXAM_ROUTE/") == true &&
+            navController.previousBackStackEntry?.destination?.route == Tab.KIT.route
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
             bottomBar = {
@@ -66,7 +68,11 @@ fun ScanFitApp() {
                         NavigationBarItem(
                             selected =
                             destination?.hierarchy?.any { it.route == tab.route } == true ||
-                                (tab == Tab.HOME && destination?.route?.startsWith("$EXAM_ROUTE/") == true),
+                                (tab == Tab.KIT && flowFromKit) ||
+                                (
+                                    tab == Tab.HOME && !flowFromKit &&
+                                        destination?.route?.startsWith("$EXAM_ROUTE/") == true
+                                    ),
                             onClick = {
                                 navController.navigate(tab.route) {
                                     popUpTo(navController.graph.findStartDestination().id) { saveState = true }
@@ -118,7 +124,14 @@ fun ScanFitApp() {
                         onDone = { navController.popBackStack() },
                     )
                 }
-                composable(Tab.KIT.route) { KitScreen() }
+                composable(Tab.KIT.route) {
+                    KitRoute(onOpen = { examId, type ->
+                        val flow = if (type in PHOTO_FLOW_TYPES) PHOTO_ROUTE else INK_ROUTE
+                        navController.navigate("$EXAM_ROUTE/$examId/$flow/${type.name.lowercase()}") {
+                            launchSingleTop = true
+                        }
+                    })
+                }
                 composable(Tab.TOOLS.route) { ToolsScreen() }
                 composable(Tab.SETTINGS.route) { SettingsRoute() }
             }

@@ -211,7 +211,8 @@
 	"tools.coach": "Live photo coach",
 
 	"kit.empty_title": "Your kit is empty",
-	"kit.empty_body": "Make a photo, signature or thumb once and reuse it for every exam.",
+	"kit.empty_body": "No prepared files yet.",
+	"kit.load_failed": "Could not load your prepared files. Please try again.",
 
 	"photo.source_heading": "Add a photo of yourself",
 	"photo.take": "Take a photo",

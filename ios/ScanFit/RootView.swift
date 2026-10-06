@@ -14,15 +14,23 @@ import SwiftUI
 struct RootView: View {
     private let container: AppContainer
     @State private var homeModel: HomeViewModel
+    @State private var kitModel: KitViewModel
     @State private var presets: PresetsSummary?
     /// The Home stack's path, so a flow can leave itself explicitly (see `PhotoFlowView.onExit`).
     @State private var homePath = NavigationPath()
+    @State private var kitPath = NavigationPath()
+    @State private var selectedTab = Tab.home
+
+    private enum Tab: Hashable { case home, kit, tools, settings }
 
     init(container: AppContainer) {
         self.container = container
         _homeModel = State(initialValue: HomeViewModel(preferences: container.preferences) {
             let outcome = await container.presetsOutcome.value
             return HomeViewModel.Loaded(outcome: outcome, bundle: await container.trustedBundle())
+        })
+        _kitModel = State(initialValue: KitViewModel(drafts: container.drafts) {
+            await container.trustedBundle()
         })
     }
 
@@ -36,7 +44,7 @@ struct RootView: View {
 
     var body: some View {
         let strings = container.strings
-        TabView {
+        TabView(selection: $selectedTab) {
             NavigationStack(path: $homePath) {
                 HomeView(model: homeModel, strings: strings)
                     .navigationDestination(for: ExamRoute.self) { route in
@@ -51,16 +59,29 @@ struct RootView: View {
                         )
                     }
                     .navigationDestination(for: FlowRoute.self) { route in
-                        flow(route, strings: strings)
+                        flow(route, strings: strings) {
+                            if !homePath.isEmpty { homePath.removeLast() }
+                        }
                     }
             }
             .tabItem { Label(strings.tabHome, systemImage: "house") }
-            KitView(strings: strings)
-                .tabItem { Label(strings.tabKit, systemImage: "tray.full") }
+            .tag(Tab.home)
+            NavigationStack(path: $kitPath) {
+                KitView(model: kitModel, strings: strings, isActive: selectedTab == .kit)
+                    .navigationDestination(for: FlowRoute.self) { route in
+                        flow(route, strings: strings) {
+                            if !kitPath.isEmpty { kitPath.removeLast() }
+                        }
+                    }
+            }
+            .tabItem { Label(strings.tabKit, systemImage: "tray.full") }
+            .tag(Tab.kit)
             ToolsView(strings: strings)
                 .tabItem { Label(strings.tabTools, systemImage: "wrench.and.screwdriver") }
+                .tag(Tab.tools)
             SettingsView(presets: presets, preferences: container.preferences, strings: strings)
                 .tabItem { Label(strings.tabSettings, systemImage: "gearshape") }
+                .tag(Tab.settings)
         }
         .tint(ScanFitColor.primary)
         .task {
@@ -72,8 +93,7 @@ struct RootView: View {
 
     /// The photo flow for photo slots, the ink flow for everything else the exam screen lets the user open.
     @ViewBuilder
-    private func flow(_ route: FlowRoute, strings: Strings) -> some View {
-        let exit = { if !homePath.isEmpty { homePath.removeLast() } }
+    private func flow(_ route: FlowRoute, strings: Strings, onExit: @escaping () -> Void) -> some View {
         if Self.photoFlowTypes.contains(route.docType) {
             PhotoFlowView(
                 model: PhotoFlowViewModel(
@@ -83,7 +103,7 @@ struct RootView: View {
                     await container.trustedBundle()
                 },
                 strings: strings,
-                onExit: exit
+                onExit: onExit
             )
         } else {
             InkFlowView(
@@ -94,7 +114,7 @@ struct RootView: View {
                     await container.trustedBundle()
                 },
                 strings: strings,
-                onExit: exit
+                onExit: onExit
             )
         }
     }

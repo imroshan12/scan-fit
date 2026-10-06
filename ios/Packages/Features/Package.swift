@@ -34,7 +34,7 @@ let package = Package(
     targets: [
         // Phase 0 content
         .target(name: "Home", dependencies: [core, presets, model, data]),
-        .target(name: "Kit", dependencies: [core]),
+        .target(name: "Kit", dependencies: [core, model, data, match]),
         .target(name: "Settings", dependencies: [core, presets, data]),
         .target(name: "Exams", dependencies: [core, model, data, match]),
         .target(name: "PhotoFlow", dependencies: [core, model, imaging, vision, match, inspect, data]),
@@ -47,6 +47,7 @@ let package = Package(
         .target(name: "Paywall", dependencies: [core]),
         .testTarget(name: "HomeTests", dependencies: ["Home", presets, model, data, testSupport]),
         .testTarget(name: "ExamsTests", dependencies: ["Exams", model, data, testSupport]),
+        .testTarget(name: "KitTests", dependencies: ["Kit", model, data, match, imaging, inspect, testSupport]),
         .testTarget(name: "InkFlowTests", dependencies: ["InkFlow", model, imaging, inspect, data, testSupport]),
         .testTarget(
             name: "PhotoFlowTests",

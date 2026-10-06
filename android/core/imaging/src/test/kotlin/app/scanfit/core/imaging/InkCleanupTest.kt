@@ -118,7 +118,7 @@ class InkCleanupTest {
                 val speck = (x == 20 && y == 20) || (x == 380 && y == 30) // single dark pixels far from the stroke
                 if (line || speck) 0x000000 else 0xF0F0F0
             }
-        val out = InkCleanup.clean(speckled, InkVariant.SIGNATURE).raster
+        val out = InkCleanup.clean(speckled, InkVariant.DOCUMENT).raster
         assertEquals("specks do not stretch the trim box", 321 + 2 * 26, out.width)
     }
 

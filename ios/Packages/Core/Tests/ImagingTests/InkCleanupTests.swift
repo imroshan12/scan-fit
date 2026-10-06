@@ -5,6 +5,19 @@ import Testing
 
 @Suite("InkCleanup")
 struct InkCleanupTests {
+    @Test("signature cleanup preserves thin strokes and detached pen marks")
+    func thinSignature() {
+        let source = Raster.make(160, 100) { x, y in
+            let stroke = y == 50 && (20...130).contains(x)
+            let dot = x == 120 && y == 35
+            return stroke || dot ? 0x101010 : 0xF0F0F0
+        }
+        let output = InkCleanup.clean(source, variant: .signature)
+        let ink = output.raster.luma().filter { $0 == 0 }.count
+        #expect(ink == 112)
+        #expect(output.coverage > 0)
+    }
+
     /// Paper with a diagonal shadow gradient and a thick dark pen line across the middle.
     private func shadowedLine(_ w: Int = 400, _ h: Int = 200, ink: Int = 0x1C225A) -> Raster {
         Raster.make(w, h) { x, y in
@@ -60,7 +73,7 @@ struct InkCleanupTests {
             let speck = (x == 20 && y == 20) || (x == 380 && y == 30)
             return line || speck ? 0x000000 : 0xF0F0F0
         }
-        #expect(InkCleanup.clean(speckled, variant: .signature).raster.width == 321 + 2 * 26)
+        #expect(InkCleanup.clean(speckled, variant: .document).raster.width == 321 + 2 * 26)
     }
 
     @Test("thumb cleanup is a grey square centred on the ink and keeps grey levels")

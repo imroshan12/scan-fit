@@ -133,8 +133,9 @@
     <string name="issue_too_small_kb">बहुत छोटी: %1$d KB (कम से कम %2$d)।</string>
     <string name="issue_wrong_aspect">आकार मेल नहीं खाता। सही अनुपात में क्रॉप करें।</string>
     <string name="issue_wrong_dimensions">साइज़ %1$d×%2$d है; इसके लिए %3$d×%4$d चाहिए।</string>
-    <string name="kit_empty_body">फ़ोटो, हस्ताक्षर या अँगूठे का निशान एक बार बनाएँ और हर परीक्षा के लिए दोबारा इस्तेमाल करें।</string>
+    <string name="kit_empty_body">अभी कोई तैयार फ़ाइल नहीं है।</string>
     <string name="kit_empty_title">आपकी किट ख़ाली है</string>
+    <string name="kit_load_failed">आपकी तैयार फ़ाइलें नहीं खोल पाए। कृपया फिर कोशिश करें।</string>
     <string name="language_en">English</string>
     <string name="language_hi">हिन्दी</string>
     <string name="language_system">सिस्टम डिफ़ॉल्ट</string>

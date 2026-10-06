@@ -66,6 +66,44 @@
 			}
 		}
 	],
+	"ink_preservation_cases": [
+		{
+			"id": "thin_stroke_and_dot",
+			"width": 160,
+			"height": 100,
+			"lines": [[20, 130, 50]],
+			"dots": [[120, 35]],
+			"expect_ink": 112
+		},
+		{
+			"id": "three_thin_signatures",
+			"width": 240,
+			"height": 180,
+			"lines": [
+				[20, 200, 40],
+				[30, 190, 90],
+				[25, 210, 140]
+			],
+			"dots": [
+				[205, 25],
+				[195, 75],
+				[215, 125]
+			],
+			"expect_ink": 531
+		},
+		{
+			"id": "disconnected_signature_marks",
+			"width": 160,
+			"height": 100,
+			"lines": [[30, 110, 60]],
+			"dots": [
+				[20, 30],
+				[130, 25],
+				[140, 75]
+			],
+			"expect_ink": 84
+		}
+	],
 	"draft_cases": [
 		{
 			"id": "retained_relaunch",

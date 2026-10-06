@@ -52,8 +52,10 @@ public enum InkCleanup {
         var window = max(15, min(w, h) / 20)
         if window % 2 == 0 { window += 1 }
         var mask = ImageOps.sauvola(n, w, h, window: window, k: sauvolaK, range: sauvolaR)
-        mask = ImageOps.open3x3(mask, w, h)
-        mask = ImageOps.removeSpecks(mask, w, h, minSize: max(4, Int(0.0002 * Double(w * h))))
+        if variant == .document {
+            mask = ImageOps.open3x3(mask, w, h)
+            mask = ImageOps.removeSpecks(mask, w, h, minSize: max(4, Int(0.0002 * Double(w * h))))
+        }
 
         let crisp = options.crispBlack ?? (variant == .signature)
         var out = [UInt8](repeating: 255, count: w * h * 3)

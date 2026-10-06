@@ -276,10 +276,12 @@ public struct Strings: Sendable {
     public var issueWrongAspect: String { tr("issue.wrong_aspect") }
     /// "Size is {w:int}×{h:int}; this slot needs {target_w:int}×{target_h:int}."
     public func issueWrongDimensions(w: Int, h: Int, targetW: Int, targetH: Int) -> String { fmt("issue.wrong_dimensions", [w, h, targetW, targetH]) }
-    /// "Make a photo, signature or thumb once and reuse it for every exam."
+    /// "No prepared files yet."
     public var kitEmptyBody: String { tr("kit.empty_body") }
     /// "Your kit is empty"
     public var kitEmptyTitle: String { tr("kit.empty_title") }
+    /// "Could not load your prepared files. Please try again."
+    public var kitLoadFailed: String { tr("kit.load_failed") }
     /// "English"
     public var languageEn: String { tr("language.en") }
     /// "हिन्दी"
