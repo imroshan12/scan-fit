@@ -11,6 +11,7 @@ struct AppContainer: Sendable {
     let strings: Strings
     let presets: PresetsRepository
     let preferences: UserPreferences
+    let drafts: any DraftStore
     /// The embedded presets are verified once, at launch, off the main actor. Every reader awaits the
     /// same task, so Home, Settings and the exam screen agree and nothing verifies twice.
     let presetsOutcome: Task<PresetsLoadOutcome, Never>
@@ -23,6 +24,9 @@ struct AppContainer: Sendable {
             strings: Strings(),
             presets: repository,
             preferences: UserPreferences(),
+            drafts: FileDraftStore(
+                root: URL.applicationSupportDirectory.resolvingSymlinksInPath().appendingPathComponent("drafts")
+            ),
             presetsOutcome: Task { await repository.loadEmbedded(files) }
         )
     }

@@ -1,25 +1,30 @@
 # HANDOFF.md — where work stopped (read this first when picking the project up)
 
-Last updated: **2026-10-05**. Current phase: **Phase 2 — Core flows** (docs/ROADMAP.md). Everything below is in the working tree
-but **not committed** (the last commit is `90fd134 Phase 2 start`). The user commits; a session never runs `git add/commit/push`.
+Last updated: **2026-10-06**. Current phase: **Phase 2 — Core flows** (docs/ROADMAP.md). Latest commit: `cabb530 Phase 2: Signature flow`.
+Match note, review comparison/chips and retained drafts/Ready rows remain **uncommitted** in the working tree.
+The user commits; a session never runs `git add/commit/push`.
 
 ## 1. State in one screen
 
-| Area                                         | State                                                                                                                                                                                           |
-| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Home (search, categories, My exams, Popular) | Done on both apps (ROADMAP Phase 2, ticked).                                                                                                                                                    |
-| Exam checklist                               | Verified photo exports persist the row status "Saved" on both apps. Photo rows are tappable (chevron). Intermediate "Ready" rows remain a follow-up.                                            |
-| Photo flow                                   | Built on both apps, including save, retry, cancellation and Done after success. Physical-device camera/navigation confirmation remains open (§3).                                               |
-| Export / save                                | Single-file save + verify-after-write, shared by every flow (Android `:core:data` `export`, iOS `ScanData`), checked as the slot's `DocKind`. Save all, share, Open folder, retained copies and export history remain open. |
+| Area                                         | State                                                                                                                                                                                                                                                                                          |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Home (search, categories, My exams, Popular) | Done on both apps (ROADMAP Phase 2, ticked).                                                                                                                                                                                                                                                   |
+| Exam checklist                               | Photo/ink rows reopen retained files. Verified private drafts show "Ready · KB" after relaunch; historical Saved takes precedence. Missing/invalid/expired drafts never show Ready. Broader PDF/live-photo flows remain open.                                                                  |
+| Photo flow                                   | Built on both apps, including save, retry, cancellation and Done after success. Physical-device camera/navigation confirmation remains open (§3).                                                                                                                                              |
+| Export / save                                | Single-file save + verify-after-write plus private 30-day retained final drafts (2026-10-06), shared by photo/ink. Restored reviews re-save identical bytes. Save all, share, Open folder, cleaned originals and export history remain open.                                                   |
 | Ink flows                                    | Built on both apps (2026-10-05): signature, triple signature, thumbs, NEET fingers, declaration. Free crop, cleanup variant by type, crisp black / darker ink, one-time handwriting tick, save + verify. Verified end to end on the iPhone 11 Pro Max simulator; Android hand check open (§5). |
-| My Kit, Custom, Checker                      | Not started.                                                                                                                                                                                    |
-| Screenshot tests                             | Removed for good (user decision 2026-10-03). Don't add them back (CLAUDE.md Definition of done).                                                                                                |
+| Review                                       | Built on both apps: match note (2026-10-05), Before/After + hold-to-compare and output-derived KB/dimensions/JPG chips (2026-10-06). No Fix button in exam flows (decision, §2). Gesture/accessibility device QA remains open.                                                                 |
+| My Kit, Custom, Checker                      | Not started.                                                                                                                                                                                                                                                                                   |
+| Screenshot tests                             | Removed for good (user decision 2026-10-03). Don't add them back (CLAUDE.md Definition of done).                                                                                                                                                                                               |
 
-Gates last run (2026-10-05): Android `./gradlew spotlessCheck detekt testDebugUnitTest lint :app:assembleDebug` green
-(245 unit tests); iOS `swiftlint --strict` **from ios/**, `swift test` Core and Features (incl. 14 InkFlow tests),
-DesignSystemTests, app tests on the iPhone 17 simulator; spec tool tests, `gen_strings.py --check`. Both platforms consume all
-eight `export_cases` and all 18 `crop_cases` (frame, move, zoom, resize). Device/provider QA and new coverage measurements remain
-open. Hindi export and `ink.*` messages are drafted with `TODO_HI:` for native review.
+Gates last run (2026-10-06): Android `./gradlew spotlessCheck detekt testDebugUnitTest :core:match:test lint :app:assembleDebug`
+green (303 unit tests). iOS: strict SwiftLint **from ios/**, full Core and Features SwiftPM regressions, DesignSystemTests
+(11 including 4 decode-lifecycle checks), and iPhone 17 simulator app build. Spec: 57 tool tests, `gen_strings.py --check`,
+debug preset build/sign/verify. Both platforms consume all eight `export_cases`, 18 `crop_cases`, 6 `match_note_cases` and
+8 `review_check_cases` and all 11 `draft_cases`. Draft tests also cover actual file relaunch, atomic replacement failures,
+symlinks/size limits, cancellation, current/retired presets, Ready/Saved precedence and restored Files save callback ordering.
+Device/provider QA and new coverage measurements remain open. New `review.*` and `draft.*` Hindi messages are
+drafted with `TODO_HI:`. The spec suite still emits pre-existing unclosed-file `ResourceWarning`s in `exam_search.py`.
 
 ## 2. Decisions made with the user (not obvious from the code)
 
@@ -32,6 +37,10 @@ open. Hindi export and `ink.*` messages are drafted with `TODO_HI:` for native r
   Phase 3), gallery (Photo Picker / PhotosPicker) and **Files** (`OpenDocument` / `fileImporter`), all without storage permission.
 - **ML Kit** (bundled face detection 16.1.7 + selfie segmentation 16.0.0-beta6) adds ~8.6 MB to an arm64 download (~10–11 MB total
   vs the 15 MB budget). Fallback if needed: Play-services Subject Segmentation (0 MB, model downloaded on first use). TECH_FEASIBILITY.
+- **Match note in exam flows has no Fix button** (my call, 2026-10-05, ALGORITHMS §4): the file is made for that exam's slot, so a
+  near miss only says what the other exam needs ("Needs ≥ 20 KB"). Fix belongs to the Checker / Custom resize. Revisit if the user
+  wants "make a copy for SSC CGL" from a review. The preview names follow §9.7 order (EXACT first), so an IBPS signature lists
+  NEET UG / JEE Main first (range-mode slots are EXACT; IBPS's own slot is ACCEPTED because the file is upscaled to reach 10 KB).
 - UPSC ESE / CMS are low-confidence presets ("assumed common UPSC rules"). Offered to the user, not started: verify them against the
   official notices, and/or a search hint when a query only matches hidden exams.
 
@@ -59,6 +68,56 @@ open. Hindi export and `ink.*` messages are drafted with `TODO_HI:` for native r
   device is still needed with the updated build. Files saved before the fix are not retroactively marked; save again to verify.
 
 ## 4. What changed (by area, for review)
+
+### Retained drafts and Ready rows (2026-10-06)
+
+- **Contract:** ALGORITHMS §1.6.1 and 11 `draft_cases`. One final JPEG per exam/document slot, automatically retained after
+  full verification. Availability is revalidated against current trusted rules, with a strict 30-day age limit. Drafts
+  are not cleaned originals, history or user-visible exports, and never record Saved.
+- **Storage:** Android `:core:data` `draft.DraftStore` / `FileDraftStore`, singleton via Hilt in `noBackupFilesDir/drafts`;
+  iOS `ScanData.DraftStore` / actor `FileDraftStore`, shared via AppContainer in backup-excluded Application Support.
+  Versioned JSON records hold bytes/time under opaque SHA-256 names. Temp write, re-read verification and atomic replace
+  preserve the previous good draft on failure. Both reject symlinks, unsupported records, oversized data and invalid age.
+  No external dependency or history DB added. Invalid drafts are removed best effort when read.
+- **Flows:** photo/ink persist current successful render bytes before publishing review; cancelled/superseded renders
+  cannot commit obsolete output. Retention failure warns but leaves the in-memory file exportable. Valid retained files
+  open directly in read-only review without face detection/cleanup/fitting; final-preview decode still runs off-main.
+  Only the final JPEG is stored, so restored reviews have no Before image or processing controls. Replace file / Back go
+  to source selection and preserve the old draft until a verified replacement succeeds. Signature confirmation still gates Save.
+- **Checklist:** Saved → Ready · rounded KB → Not started. Ready refreshes on entry, foreground and store changes using
+  current presets; removed/nonconforming/expired files and retired exams cannot leave stale Ready claims. Saved remains
+  historical. Previews cover Ready/read-only review, Hindi, largest text, light and dark; no screenshot tests added.
+- **Validation:** Android full formatting/detekt/tests/lint/debug-build gates, iOS full Core/Features suites, strict lint,
+  simulator build and spec tools pass. Real-device relaunch/disk-full/provider/accessibility checks remain open.
+
+### Review comparison and verdict chips (2026-10-06)
+
+- **Spec:** ALGORITHMS §4 defines Before as the oriented selected crop before effects, After as the final JPEG, a stable
+  letterboxed frame, hold/release comparison and display-only selection. Eight `review_check_cases` pin technical status
+  mapping from `SlotEvaluation` (`UNKNOWN` never green). New shared `review.*` labels and accessibility messages (EN/HI).
+- **Both apps:** `Match.ReviewChecks` carries size/dimensions/JPG status from the same re-inspected bytes used for the slot
+  verdict. Every photo/ink render retains its bounded pre-effect crop in Review. Shared `BeforeAfterImage`, `VerdictChip`
+  and `ReviewChecksRow` replace duplicated previews/summary lines. Before/After uses a native segmented selector, After
+  initially; press-and-hold temporarily shows Before. Conversion/decoding is off the UI thread. No new external dependency.
+- **Safety:** comparison never renders or changes Saved/export bytes. Pending debounce, fitting and failures hide stale
+  output/chips. Low-confidence presets keep their separate "Likely OK · Unverified" verdict; green technical chips do not
+  promise portal acceptance. DPI/privacy remain part of export verification, not the JPG chip.
+- **Tests/previews:** shared conformance, output-vs-fit-report checks, progressive rejection, unknown slots, crop retention,
+  save-after-debounce and unchanged export bytes. iOS decode tests cover stale results and cancellation. Light/dark/Hindi/
+  largest-font previews compile. No screenshot tests added. Manual gesture, accessibility and minimum-device QA remain open.
+
+### Match note session (2026-10-05, after the ink flows)
+
+- **Spec:** ALGORITHMS §4 "Match note on review", §9.7 "Match note" (+ each entry carries its slot's `size_kb`); 6
+  `match_note_cases` computed by the new `spec/tools/match_note.py --write-cases`; `test_tools.py` checks them.
+  New strings `match.likely_ok_count`, `match.preview_more`, `match.need_*`, `match.sheet_*`, `match.verdict_*` (Hindi `TODO_HI:`).
+- **Android:** `:core:match` `MatchNote` (+ `ExamRef`, `Need`, `QuickFix`, `MatchGroup`, `MatchNote.of(facts, exams, popularity)`),
+  `MatchEntry.sizeKb`; `MatchNoteConformanceTest`. `:core:designsystem` now depends on `:core:match`: `MatchNoteCard` (card +
+  `ModalBottomSheet`), `MatchNoteSamples` (preview data + card previews). Photo and ink `Ready` results carry `note`; the VMs
+  keep the bundle's exams + popular list. VM tests for both.
+- **iOS:** Match `MatchNote` (same API), public inits for `MatchEntry`, `MatchResult`, `SizeKB`; `MatchNoteConformanceTests`.
+  DesignSystem depends on Match: `MatchNoteCard`, `MatchNoteSheet`, `MatchNoteSamples`, previews. `ReviewReady` / `InkReady`
+  carry `note`; `PhotoFlowViewModel.ready` moved to a private extension (SwiftLint type-body length). VM tests for both.
 
 ### Ink flows session (2026-10-05)
 
@@ -119,11 +178,17 @@ open. Hindi export and `ink.*` messages are drafted with `TODO_HI:` for native r
 2. **Device export smoke:** save a real photo on Android API 29+ and API 26–28, and iOS Files/iCloud; cancel and retry; Done
    returns to the exam with Saved, including after app relaunch. Upload the output via `web/upload-test/` to verify byte fidelity.
    iOS lets the user choose the destination folder; `ScanFit/<Exam>/` cannot be forced by the system Files picker.
-3. **Ink flow checks:** hand-check the Android ink flow on an emulator (signature, thumb, declaration; free-crop drag, darker
-   ink slider, handwriting tick, save). Time cleanup on a real low-end device (≈20 s in a simulator **debug** build — measure
+3. **Ink flow checks:** hand-check the Android ink flow (signature, thumb, declaration; free-crop drag, darker ink slider,
+   handwriting tick, save, match note sheet). The emulator froze again on 2026-10-05 (§6): needs the user's device or a better AVD. Time cleanup on a real low-end device (≈20 s in a simulator **debug** build — measure
    release before optimising). Ask a native speaker to review the `TODO_HI:` strings.
-4. Finish the wider export/review items: Ready checklist rows, Save all, sharing, Open folder, My Kit/export history, match note
-   and before/after, then Custom and Checker. Verify UPSC ESE / CMS presets only with official sources and user direction.
+4. **Review device QA:** check Before/After, hold/release/cancellation, Hindi at 200% text and TalkBack/VoiceOver on both
+   flows. Comparison must preserve Saved and exported bytes. iOS 17 / Android API 29 profiles remain unavailable locally.
+5. **Draft device QA:** make a photo/signature without exporting, return to the exam (Ready), relaunch, reopen the retained
+   review, save, and confirm identical bytes + Saved. Check Replace/cancel and storage failure; a failed replacement must
+   keep the previous good draft. Restored signatures must still require the one-time handwriting confirmation.
+6. Finish wider export actions: sharing retained bytes, Save all with partial-failure handling, Open folder, then My Kit
+   cleaned originals/export history, Custom and Checker (reuse `MatchNote`; add Fix there). Verify UPSC ESE / CMS presets
+   only with official sources and user direction.
 
 ## 6. Testing tips that cost time to learn
 
@@ -137,7 +202,10 @@ open. Hindi export and `ink.*` messages are drafted with `TODO_HI:` for native r
 - `cases.json` may be reformatted (Prettier, tabs) at any time; the writers use `replace_json_array`, so rerunning them is safe.
 - After moving a Kotlin type between modules, "Incremental compilation failed" can appear; rerun once with `--rerun-tasks`.
 - Vision fails on the simulator ("Could not create inference context") unless requests run on the CPU — already handled.
-- The Android emulator (`Medium_Phone_API_35`, single core) froze with `-memory 4096` ("System UI isn't responding", adb hung).
+- The Android emulator (`Medium_Phone_API_35`, single core) froze with `-memory 4096` ("System UI isn't responding", adb hung),
+  and again on 2026-10-05 with its default memory right after installing the app. Don't sink time into it; ask the user.
+- iOS simulator taps sometimes register late (a screenshot shows the old screen, the next one the new). Take two screenshots
+  before deciding a tap failed, or a delayed tap lands on the next screen (it opened Photograph instead of Signature once).
 - Don't run Gradle and `xcodebuild` at the same time; VS Code's Java extension runs its own Gradle on `android/` (stop with
   `./gradlew --stop` if builds hang).
 - detekt allows 11 functions per file and 120-char lines; ktlint wants `_uiState`/`uiState` backing-property names; Android lint wants

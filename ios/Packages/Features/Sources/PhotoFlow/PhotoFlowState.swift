@@ -1,5 +1,6 @@
 import Foundation
 import Imaging
+import Match
 import ScanModel
 
 /// The exam slot the photo is for. `unverified` = low-confidence preset: never "meets the rules" (CLAUDE.md rule 6).
@@ -52,6 +53,9 @@ public struct ReviewReady: Sendable, Equatable {
     public let height: Int
     /// EXACT or ACCEPTED for this slot (ALGORITHMS 9.7), checked on the re-inspected bytes.
     public let meetsRules: Bool
+    /// Which other exams accept these bytes (ALGORITHMS 4 "Match note on review").
+    public let note: MatchNote
+    public var checks: ReviewChecks = .unchecked
 }
 
 public enum ReviewResult: Sendable, Equatable {
@@ -64,6 +68,9 @@ public struct ReviewState: Sendable, Equatable {
     public let slot: PhotoSlot
     public var options: PhotoOptions
     public var result: ReviewResult
+    public var before: Raster?
+    public var restored = false
+    public var retainFailed = false
 }
 
 /// The photo flow's steps (UI_UX §3 Capture/crop, Review). Same states as Android's `PhotoUiState`.

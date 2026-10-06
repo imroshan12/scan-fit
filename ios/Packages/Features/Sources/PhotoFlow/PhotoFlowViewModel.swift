@@ -17,13 +17,18 @@ public final class PhotoFlowViewModel {
     public let docType: DocType
     public private(set) var exportState: ExportState = .idle
     public private(set) var renderPending = false
+    public private(set) var draftValidationPending = false
     public let exporter: any DocumentExporting
     @ObservationIgnored private let preferences: UserPreferences?
+    @ObservationIgnored private let drafts: any DraftStore
 
     @ObservationIgnored private let tools: any PhotoTools
     @ObservationIgnored private let faces: any FaceDetector
     @ObservationIgnored private let segmenter: any PersonSegmenter
     @ObservationIgnored private let load: @Sendable () async -> PresetBundle?
+    /// Every exam and the popularity order, for the review's match note.
+    @ObservationIgnored private var exams: [Exam] = []
+    @ObservationIgnored private var popular: [String] = []
     @ObservationIgnored private var generation = 0
     @ObservationIgnored private var lastCrop: CropState?
     @ObservationIgnored private var cropped: Raster?
@@ -43,6 +48,7 @@ public final class PhotoFlowViewModel {
         segmenter: any PersonSegmenter = VisionPersonSegmenter(),
         preferences: UserPreferences? = nil,
         exporter: any DocumentExporting = FilesExporter(),
+        drafts: any DraftStore = NoDraftStore(),
         load: @escaping @Sendable () async -> PresetBundle?
     ) {
         self.examId = examId
@@ -52,26 +58,23 @@ public final class PhotoFlowViewModel {
         self.segmenter = segmenter
         self.preferences = preferences
         self.exporter = exporter
+        self.drafts = drafts
         self.load = load
     }
 
-    /// Loads once; later calls (re-appearing views) do nothing.
+    /// Resolves the trusted slot and revalidates restored reviews on entry.
     public func onAppear() async {
+        guard exportState != .saving else { return }
+        if case let .review(review) = state, review.restored { await restoreDraft(); return }
         guard state == .loading else { return }
-        let id = examId, type = docType
-        guard let exam = await load()?.exams.first(where: { $0.id == id }),
-              let spec = exam.documents.first(where: { $0.type == type })
-        else {
-            state = .notFound
-            return
-        }
-        let slot = PhotoSlot(examId: exam.id, examName: exam.name, unverified: exam.isUnverified, spec: spec)
-        state = .pickSource(slot, nil)
+        await restoreDraft()
     }
 
     /// The picked or captured file's bytes; nil when it could not be read.
     public func imageSelected(_ bytes: [UInt8]?) async {
         guard exportState != .saving, let slot = state.slot else { return }
+        draftValidationPending = false
+        renderTask?.cancel()
         generation += 1
         let gen = generation
         state = .findingFace(slot)
@@ -174,13 +177,14 @@ public final class PhotoFlowViewModel {
     public func back() -> Bool {
         guard exportState != .saving else { return true }
         guard let slot = state.slot else { return false }
+        draftValidationPending = false
         switch state {
-        case .review:
+        case let .review(review):
             renderTask?.cancel()
             generation += 1
             renderPending = false
             exportState = .idle
-            state = lastCrop.map { .crop($0) } ?? .pickSource(slot, nil)
+            state = review.restored ? .pickSource(slot, nil) : lastCrop.map { .crop($0) } ?? .pickSource(slot, nil)
             return true
         case .crop, .findingFace:
             generation += 1
@@ -201,35 +205,32 @@ public final class PhotoFlowViewModel {
     }
 
     private func updateOptions(debounce: Bool, _ change: (inout PhotoOptions) -> Void) {
-        guard exportState != .saving, case let .review(review) = state else { return }
+        guard exportState != .saving, case let .review(review) = state, !review.restored else { return }
         var options = review.options
         change(&options)
         startRender(review.slot, options, debounce: debounce)
     }
 
-    /// Whitening -> strip -> fit -> re-inspect (ALGORITHMS 9.6 order). A newer change cancels the running one. While
-    /// typing, the last result stays on screen until the debounce has passed.
+    /// Whitening -> strip -> fit -> re-inspect (ALGORITHMS 9.6 order). A newer change cancels the running one.
     private func startRender(_ slot: PhotoSlot, _ options: PhotoOptions, debounce: Bool) {
         renderTask?.cancel()
+        generation += 1
+        let gen = generation
         renderPending = true
         if exportState != .saving { exportState = .idle }
         let working = ReviewResult.working(targetKb: slot.targetKb)
-        if case let .review(current) = state, debounce {
-            state = .review(ReviewState(slot: slot, options: options, result: current.result))
-        } else {
-            state = .review(ReviewState(slot: slot, options: options, result: working))
-        }
+        state = .review(ReviewState(slot: slot, options: options, result: working, before: cropped))
         renderTask = Task { [weak self] in
             if debounce {
                 try? await Task.sleep(for: Self.typingDebounce)
                 guard !Task.isCancelled else { return }
-                self?.state = .review(ReviewState(slot: slot, options: options, result: working))
+                self?.state = .review(ReviewState(slot: slot, options: options, result: working, before: self?.cropped))
             }
-            await self?.render(slot, options)
+            await self?.render(slot, options, generation: gen)
         }
     }
 
-    private func render(_ slot: PhotoSlot, _ options: PhotoOptions) async {
+    private func render(_ slot: PhotoSlot, _ options: PhotoOptions, generation gen: Int) async {
         guard let source = cropped else { return }
         var applied = options
         var image = source
@@ -242,6 +243,7 @@ public final class PhotoFlowViewModel {
             }
         }
         let tools = self.tools, spec = slot.spec, strip = applied.nameDate
+        let exams = self.exams, popular = self.popular
         let name = applied.name.trimmingCharacters(in: .whitespaces)
         let date = applied.date.trimmingCharacters(in: .whitespaces).isEmpty
             ? Self.ddmmyyyy(tools.today())
@@ -250,17 +252,28 @@ public final class PhotoFlowViewModel {
         let result: ReviewResult = await Self.background {
             let input = strip ? tools.drawStrip(prepared, name: name, date: date) : prepared
             switch tools.fit(input, spec: spec) {
-            case let .success(r): return .ready(Self.ready(r.fit.bytes, spec))
+            case let .success(r): return .ready(Self.ready(r.fit.bytes, spec, exams, popular))
             case let .failure(error): return .failed(error)
             }
         } ?? .failed(.encodingFailed)
-        guard !Task.isCancelled else { return }
+        guard !Task.isCancelled, gen == generation else { return }
+        var retainFailed = false
+        if case let .ready(ready) = result {
+            do {
+                try await drafts.retain(ready.bytes, examID: examId, spec: spec, kind: .photo)
+            } catch {
+                retainFailed = true
+            }
+        }
+        guard !Task.isCancelled, gen == generation else { return }
         renderPending = false
-        state = .review(ReviewState(slot: slot, options: applied, result: result))
+        state = .review(ReviewState(
+            slot: slot, options: applied, result: result, before: source, retainFailed: retainFailed
+        ))
     }
 
     public var canSave: Bool {
-        guard exportState != .saving, case let .review(review) = state else { return false }
+        guard !draftValidationPending, exportState != .saving, case let .review(review) = state else { return false }
         if renderPending { return true }
         guard case let .ready(ready) = review.result else { return false }
         return ready.meetsRules
@@ -299,56 +312,88 @@ public final class PhotoFlowViewModel {
         return await Self.background { try await faces.detect(in: raster) }
     }
 
-    /// Runs image work off the main actor. A thrown error becomes nil.
-    private nonisolated static func background<T: Sendable>(
-        _ work: @escaping @Sendable () async throws -> T
-    ) async -> T? {
-        try? await Task.detached(priority: .userInitiated, operation: work).value
-    }
+}
 
-    /// ALGORITHMS 1.1: decode no larger than 2x the largest target dimension (at least 1600 px).
-    private nonisolated static func decodeCap(_ spec: DocSpec) -> Int {
-        let d = spec.dimensions
-        let largest = [d.width, d.height, d.maxW, d.maxH].compactMap { $0 }.max() ?? 0
-        return ImageIODecoder.longSideCap(largestTargetDimension: largest)
-    }
-
-    /// Auto-framing for one face (ALGORITHMS 9.6); else the default crop, and a re-crop ask for several faces.
-    private nonisolated static func framed(_ slot: PhotoSlot, _ image: Raster, _ found: [Face]) -> CropState {
-        let aspect = slot.aspect ?? Double(image.width) / Double(image.height)
-        switch FaceCheck.of(found) {
-        case let .single(face):
-            let framing = AutoFraming.frame(face, imgW: image.width, imgH: image.height, aspect: aspect)
-            return CropState(slot: slot, image: image, rect: framing.crop, tight: framing.coverageAdjusted)
-        case .noFace, .several:
-            let rect = Geometry.defaultCrop(srcW: image.width, srcH: image.height, aspect: aspect)
-            let problem: CropProblem? = found.count > 1 ? .severalFaces : nil
-            return CropState(slot: slot, image: image, rect: rect, tight: false, problem: problem)
+private extension PhotoFlowViewModel {
+    func restoreDraft() async {
+        generation += 1
+        let gen = generation
+        draftValidationPending = true
+        defer { if gen == generation { draftValidationPending = false } }
+        let bundle = await load()
+        guard !Task.isCancelled, gen == generation else { return }
+        exams = bundle?.exams ?? []
+        popular = bundle?.popular ?? []
+        guard let exam = exams.first(where: { $0.id == examId && $0.status == .active }),
+              let spec = exam.documents.first(where: { $0.type == docType }), DocKind.of(spec.type) == .photo else {
+            state = .notFound
+            return
+        }
+        let slot = PhotoSlot(examId: exam.id, examName: exam.name, unverified: exam.isUnverified, spec: spec)
+        let draft = await drafts.load(examID: examId, spec: spec, kind: .photo)
+        guard !Task.isCancelled, gen == generation else { return }
+        let exams = exams, popular = popular
+        if let draft, let ready = await Self.background({ Self.ready(draft.bytes, spec, exams, popular) }) {
+            guard !Task.isCancelled, gen == generation else { return }
+            lastCrop = nil
+            cropped = nil
+            renderTask = nil
+            renderPending = false
+            exportState = .idle
+            state = .review(ReviewState(slot: slot, options: PhotoOptions(), result: .ready(ready), restored: true))
+        } else {
+            state = .pickSource(slot, nil)
         }
     }
 
     /// Re-inspects the fitted bytes and evaluates them against the slot, as the export will be (rule 3).
-    private nonisolated static func ready(_ bytes: [UInt8], _ spec: DocSpec) -> ReviewReady {
+    nonisolated static func ready(
+        _ bytes: [UInt8], _ spec: DocSpec, _ exams: [Exam], _ popular: [String]
+    ) -> ReviewReady {
         let inspected = Inspector.inspect(bytes)
-        let verdict = MatchEngine.evaluate(spec, FileFacts(inspected, docKind: .photo)).verdict
+        let facts = FileFacts(inspected, docKind: .photo)
+        let evaluation = MatchEngine.evaluate(spec, facts)
         return ReviewReady(
             bytes: bytes,
             kb: (bytes.count + 512) / 1024,
             width: inspected.width ?? 0,
             height: inspected.height ?? 0,
-            meetsRules: verdict == .exact || verdict == .accepted
+            meetsRules: evaluation.verdict == .exact || evaluation.verdict == .accepted,
+            note: MatchNote.of(facts, exams: exams, popularity: popular),
+            checks: .of(evaluation)
         )
     }
+}
 
-    /// DD/MM/YYYY in the Gregorian calendar with ASCII digits, whatever the app language (ALGORITHMS 2.4).
-    nonisolated static func ddmmyyyy(_ date: Date) -> String {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = .current
-        let c = calendar.dateComponents([.day, .month, .year], from: date)
-        func pad(_ n: Int, _ width: Int) -> String {
-            let digits = String(n)
-            return String(repeating: "0", count: max(0, width - digits.count)) + digits
+public extension PhotoFlowViewModel {
+    #if DEBUG
+    static func preview(_ review: ReviewState) -> PhotoFlowViewModel {
+        let model = PhotoFlowViewModel(examId: review.slot.examId, docType: review.slot.spec.type) { nil }
+        model.state = .review(review)
+        return model
+    }
+    #endif
+    func replaceDraft() {
+        guard exportState != .saving, case let .review(review) = state, review.restored else { return }
+        renderTask?.cancel()
+        generation += 1
+        renderPending = false
+        draftValidationPending = false
+        exportState = .idle
+        lastCrop = nil
+        cropped = nil
+        state = .pickSource(review.slot, nil)
+    }
+
+    func onForeground() async {
+        guard exportState != .saving, case let .review(review) = state, review.restored else { return }
+        await restoreDraft()
+    }
+    func observeDrafts() async {
+        let stream = await drafts.revisions()
+        for await _ in stream {
+            guard !Task.isCancelled else { return }
+            await onForeground()
         }
-        return "\(pad(c.day ?? 1, 2))/\(pad(c.month ?? 1, 2))/\(pad(c.year ?? 2000, 4))"
     }
 }

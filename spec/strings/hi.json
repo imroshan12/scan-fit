@@ -3,6 +3,24 @@
 
 	"app.name": "ScanFit",
 
+	"draft.replace": "TODO_HI: फ़ाइल बदलें",
+	"draft.retain_failed": "TODO_HI: यह फ़ाइल बाद के लिए नहीं रख पाए। आप इसे अभी सेव कर सकते हैं।",
+	"draft.ready_size": "TODO_HI: तैयार · {kb:int} KB",
+
+	"review.before": "TODO_HI: पहले",
+	"review.after": "TODO_HI: बाद में",
+	"review.size": "TODO_HI: {kb:int} KB",
+	"review.dimensions": "TODO_HI: {width:int}×{height:int}",
+	"review.jpeg": "JPG",
+	"review.check_pass": "TODO_HI: {value:str}, इस दस्तावेज़ की जाँच सफल",
+	"review.check_fail": "TODO_HI: {value:str}, इस दस्तावेज़ की जाँच सफल नहीं",
+	"review.size_a11y": {
+		"one": "TODO_HI: {count:int} किलोबाइट",
+		"other": "TODO_HI: {count:int} किलोबाइट"
+	},
+	"review.dimensions_a11y": "TODO_HI: {width:str} गुणा {height:str} पिक्सेल",
+	"review.jpeg_a11y": "TODO_HI: बेसलाइन RGB JPEG",
+
 	"language.system": "TODO_HI: सिस्टम डिफ़ॉल्ट",
 	"language.en": "English",
 	"language.hi": "हिन्दी",
@@ -121,6 +139,22 @@
 	"match.fix_needs_size": "TODO_HI: {exam:str} {doc:str} के लिए ≤ {max_kb:int} KB चाहिए",
 	"match.likely_ok": "TODO_HI: शायद ठीक · असत्यापित",
 	"match.none": "TODO_HI: ScanFit की किसी परीक्षा से मेल नहीं खाता — दूसरे फ़ॉर्म के लिए यह ठीक है",
+	"match.likely_ok_count": {
+		"one": "TODO_HI: {count:int} परीक्षा के लिए शायद ठीक · असत्यापित",
+		"other": "TODO_HI: {count:int} परीक्षाओं के लिए शायद ठीक · असत्यापित"
+	},
+	"match.preview_more": {
+		"one": "TODO_HI: +{count:int} और",
+		"other": "TODO_HI: +{count:int} और"
+	},
+	"match.need_at_most": "TODO_HI: ≤ {max_kb:int} KB चाहिए",
+	"match.need_at_least": "TODO_HI: ≥ {min_kb:int} KB चाहिए",
+	"match.need_jpeg": "TODO_HI: JPG फ़ाइल चाहिए",
+	"match.need_baseline": "TODO_HI: सामान्य (baseline) JPG चाहिए",
+	"match.sheet_title": "TODO_HI: इस फ़ाइल को स्वीकार करने वाली परीक्षाएँ",
+	"match.verdict_exact": "TODO_HI: बिल्कुल सही साइज़",
+	"match.verdict_accepted": "TODO_HI: मान्य",
+	"match.sheet_other_exam": "TODO_HI: किसी दूसरी परीक्षा के लिए फ़ाइल बनाने हेतु होम से वह परीक्षा खोलें।",
 
 	"fix.compress_to_target": "TODO_HI: साइज़ घटाकर फ़िट करें",
 	"fix.enlarge_to_target": "TODO_HI: साइज़ बढ़ाकर फ़िट करें",

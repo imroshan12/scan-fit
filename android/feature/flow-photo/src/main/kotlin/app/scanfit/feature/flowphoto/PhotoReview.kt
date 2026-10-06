@@ -1,20 +1,14 @@
 package app.scanfit.feature.flowphoto
 
-import android.graphics.BitmapFactory
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -22,31 +16,32 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import app.scanfit.core.data.export.SaveState
 import app.scanfit.core.designsystem.R
+import app.scanfit.core.designsystem.components.BeforeAfterImage
+import app.scanfit.core.designsystem.components.MatchNoteCard
 import app.scanfit.core.designsystem.components.NoticeCard
 import app.scanfit.core.designsystem.components.NoticeKind
-import app.scanfit.core.designsystem.theme.ScanFitRadius
+import app.scanfit.core.designsystem.components.ReviewChecksRow
 import app.scanfit.core.designsystem.theme.ScanFitSpacing
 import app.scanfit.core.designsystem.theme.ScanFitTheme
 import app.scanfit.core.designsystem.theme.ScanFitType
 import app.scanfit.core.imaging.FitError
+import app.scanfit.core.imaging.toBitmap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
@@ -57,10 +52,18 @@ internal fun ReviewContent(
     state: PhotoUiState.Review,
     actions: PhotoActions,
 ) {
+    val before by key(state.before) {
+        produceState<ImageBitmap?>(null, state.before) {
+            value = state.before?.let { raster ->
+                withContext(Dispatchers.Default) { raster.toBitmap().asImageBitmap() }
+            }
+        }
+    }
+    val shown = if (state.rendering) ReviewResult.Working(state.slot.targetKb) else state.result
     ScrollColumn {
-        when (val result = state.result) {
+        BeforeAfterImage(before, (shown as? ReviewResult.Ready)?.bytes)
+        when (val result = shown) {
             is ReviewResult.Working -> {
-                ResultImage(null)
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(ScanFitSpacing.sm),
                     verticalAlignment = Alignment.CenterVertically,
@@ -71,12 +74,12 @@ internal fun ReviewContent(
             }
 
             is ReviewResult.Ready -> {
-                ResultImage(result.bytes)
+                ReviewChecksRow(result.kb, result.width, result.height, result.checks)
                 ResultSummary(result, state.slot)
+                MatchNoteCard(result.note)
             }
 
             is ReviewResult.Failed -> {
-                ResultImage(null)
                 val max = state.slot.spec.sizeKb.max?.roundToInt() ?: 0
                 val text =
                     when (result.error) {
@@ -93,36 +96,19 @@ internal fun ReviewContent(
             SaveState.VERIFY_FAILED -> NoticeCard(stringResource(R.string.export_verify_failed), NoticeKind.ERROR)
             else -> Unit
         }
-        Options(
-            state.options,
-            stripHint = state.slot.spec.nameDateStrip?.required == true,
-            actions = actions,
-            enabled = state.save.state != SaveState.SAVING,
-        )
-    }
-}
-
-/** The fitted photo as it will be written, at most 280 dp tall; a placeholder while it is being made. */
-@Composable
-private fun ResultImage(bytes: ByteArray?) {
-    val bitmap by produceState<ImageBitmap?>(null, bytes) {
-        value =
-            bytes?.let {
-                withContext(Dispatchers.Default) { BitmapFactory.decodeByteArray(it, 0, it.size)?.asImageBitmap() }
+        if (state.retainFailed) NoticeCard(stringResource(R.string.draft_retain_failed), NoticeKind.WARNING)
+        if (state.restored) {
+            TextButton(onClick = actions.onReplace, enabled = state.save.state != SaveState.SAVING) {
+                Icon(Icons.Filled.Refresh, contentDescription = null)
+                Text(stringResource(R.string.draft_replace))
             }
-    }
-    val aspect = bitmap?.let { it.width.toFloat() / it.height } ?: PLACEHOLDER_ASPECT
-    Box(
-        modifier =
-        Modifier
-            .fillMaxWidth()
-            .heightIn(max = PREVIEW_MAX_HEIGHT)
-            .aspectRatio(aspect, matchHeightConstraintsFirst = true)
-            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(ScanFitRadius.card)),
-        contentAlignment = Alignment.Center,
-    ) {
-        bitmap?.let {
-            Image(it, contentDescription = null, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
+        } else {
+            Options(
+                state.options,
+                stripHint = state.slot.spec.nameDateStrip?.required == true,
+                actions = actions,
+                enabled = state.save.state != SaveState.SAVING,
+            )
         }
     }
 }
@@ -134,19 +120,6 @@ private fun ResultSummary(
     slot: PhotoSlot,
 ) {
     val colors = ScanFitTheme.colors
-    val a11y =
-        pluralStringResource(
-            R.plurals.photo_result_a11y,
-            result.kb,
-            result.kb,
-            result.width.toString(),
-            result.height.toString(),
-        )
-    Text(
-        stringResource(R.string.photo_result, result.kb, result.width, result.height),
-        style = ScanFitType.figure,
-        modifier = Modifier.semantics { contentDescription = a11y },
-    )
     val missed = stringResource(R.string.photo_misses_rules, slot.examName)
     val met = stringResource(R.string.photo_meets_rules, slot.examName)
     val (icon, tint, text) =
@@ -243,6 +216,3 @@ private fun ToggleRow(
         Switch(checked = checked, onCheckedChange = onChange, enabled = enabled)
     }
 }
-
-private const val PLACEHOLDER_ASPECT = 200f / 230f
-private val PREVIEW_MAX_HEIGHT = 280.dp

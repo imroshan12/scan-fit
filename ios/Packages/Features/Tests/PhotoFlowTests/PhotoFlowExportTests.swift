@@ -125,12 +125,16 @@ struct PhotoFlowExportTests {
         let model = try await model()
         model.setNameDate(true)
         await model.renderTask?.value
+        guard case let .review(initial) = model.state, case let .ready(old) = initial.result else {
+            Issue.record("no initial ready result"); return
+        }
         tools.setFit { FakePhotoTools.success($0, FakePhotoTools.jpeg(width: 200, height: 230, size: 35 * 1024)) }
         model.setName("Asha Rao")
         model.setDate("04/10/2026")
-        guard case let .review(review) = model.state, case let .ready(old) = review.result else {
-            Issue.record("the old ready result should remain visible"); return
+        guard case let .review(review) = model.state else {
+            Issue.record("no pending review"); return
         }
+        #expect(review.result == .working(targetKb: review.slot.targetKb))
         #expect(old.bytes.count == 34 * 1024 && model.renderPending)
         let saving = Task { await model.save() }
         await exporter.waitForStart()
@@ -165,5 +169,18 @@ struct PhotoFlowExportTests {
         let nta = try await model("jee_main")
         await nta.save()
         #expect(nta.exportState == .saved && exporter.requests.last?.filename == "Photograph.jpg")
+    }
+
+    @Test("retaining Before never changes the ready bytes or Saved review")
+    func comparisonPreservesExport() async throws {
+        let model = try await model()
+        let reviewed = model.state
+        guard case let .review(review) = reviewed, case let .ready(ready) = review.result else {
+            Issue.record("no ready review"); return
+        }
+        #expect(review.before != nil)
+        await model.save()
+        #expect(exporter.requests.last?.bytes == ready.bytes)
+        #expect(model.exportState == .saved && model.state == reviewed)
     }
 }

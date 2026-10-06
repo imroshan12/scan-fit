@@ -27,10 +27,12 @@ let package = Package(
     targets: [
         // Phase 0 content
         .target(name: "ScanModel"),
-        .target(name: "DesignSystem", dependencies: ["ScanModel"], resources: [.process("Resources")]),
+        .target(
+            name: "DesignSystem", dependencies: ["ScanModel", "Match", "Imaging"], resources: [.process("Resources")]
+        ),
         .target(name: "Presets", dependencies: ["ScanModel"]),
         .target(name: "Analytics"),
-        .target(name: "TestSupport", dependencies: ["Imaging", "ScanVision", "ScanModel", "ScanData"]),
+        .target(name: "TestSupport", dependencies: ["Imaging", "ScanVision", "ScanModel", "ScanData", "Match"]),
         // Empty until their phase (ROADMAP): engines in Phase 1, services in Phase 3-4.
         .target(name: "Imaging", dependencies: ["ScanModel", "Inspect"]),
         .target(name: "Match", dependencies: ["ScanModel", "Inspect"]),

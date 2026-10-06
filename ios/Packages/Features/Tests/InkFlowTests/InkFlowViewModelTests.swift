@@ -165,8 +165,20 @@ struct InkFlowViewModelTests {
             Issue.record("not ready"); return
         }
         #expect(tools.fitInput?.width == 1000 && tools.fitInput?.height == 700)
+        let original = try #require(tools.decoded).crop(x: 0, y: 0, width: 1000, height: 700)
+        #expect(review.before == original)
         #expect(ready.kb == 16 && ready.meetsRules)
+        #expect(ready.checks == ReviewChecks(size: true, dimensions: true, jpeg: true))
         #expect(tools.fits.last?.0 == .signatureCleanup && tools.fits.last?.1.crispBlack == true)
+    }
+
+    @Test("the review notes which exams accept the file, as the slot's kind")
+    func matchNote() async throws {
+        guard case let .ready(ready) = try await reviewed(model()).result else { Issue.record("not ready"); return }
+        let rows = ready.note.groups.flatMap(\.entries)
+        #expect(rows.contains { $0.examId == "ibps_po" }, "IBPS PO accepts its own signature")
+        #expect(ready.note.accepted > 1, "other exams are named too")
+        #expect(rows.allSatisfy { $0.docType == .signature || $0.docType == .tripleSignature }, "matched as a signature")
     }
 
     @Test("a file outside the window does not meet the rules; a fit error is shown")
@@ -174,6 +186,7 @@ struct InkFlowViewModelTests {
         tools.produce(TestJpeg.make(width: 140, height: 60, size: 30 * 1024))
         guard case let .ready(ready) = try await reviewed(model()).result else { Issue.record("not ready"); return }
         #expect(!ready.meetsRules)
+        #expect(ready.checks == ReviewChecks(size: false, dimensions: true, jpeg: true))
         tools.fail(.tooDetailed)
         #expect(try await reviewed(model()).result == .failed(.tooDetailed))
     }
@@ -239,6 +252,10 @@ struct InkFlowViewModelTests {
         #expect(m.exportState == .saved)
         #expect(prefs.isSaved("ibps_po", .signature))
         #expect(exporter.requests.last?.kind == .signature)
+        guard case let .review(review) = m.state, case let .ready(ready) = review.result else {
+            Issue.record("no saved review"); return
+        }
+        #expect(exporter.requests.last?.bytes == ready.bytes)
         #expect(exporter.requests.last?.filename == "signature_IBPS-PO_140x60_16kb.jpg")
     }
 

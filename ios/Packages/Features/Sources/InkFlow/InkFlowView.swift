@@ -12,6 +12,7 @@ public struct InkFlowView: View {
     @State private var pickedItem: PhotosPickerItem?
     @State private var showCamera = false
     @State private var showFiles = false
+    @Environment(\.scenePhase) private var scenePhase
     private let strings: Strings
     /// Leaves the flow (Done, or back from the first step); the app pops its navigation path.
     private let onExit: () -> Void
@@ -40,7 +41,13 @@ public struct InkFlowView: View {
                 }
             }
             .safeAreaInset(edge: .bottom) { bottomAction }
-            .task { await model.onAppear() }
+            .task {
+                await model.onAppear()
+                await model.observeDrafts()
+            }
+            .task(id: scenePhase) {
+                if scenePhase == .active { await model.onForeground() }
+            }
             .onChange(of: pickedItem) { _, item in
                 guard let item else { return }
                 pickedItem = nil

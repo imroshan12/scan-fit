@@ -44,6 +44,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.scanfit.core.data.export.SaveState
 import app.scanfit.core.designsystem.R
@@ -65,6 +66,10 @@ fun InkFlowRoute(
     viewModel: InkFlowViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    LifecycleResumeEffect(viewModel) {
+        viewModel.refreshDraft()
+        onPauseOrDispose { }
+    }
     val context = LocalContext.current
     val hasCamera = remember { context.packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY) }
     var pendingCapture by rememberSaveable { mutableStateOf<String?>(null) }
@@ -135,6 +140,7 @@ fun InkFlowRoute(
                 }
             },
             onDone = onDone,
+            onReplace = viewModel::onReplace,
         ),
         modifier = modifier,
     )
@@ -156,6 +162,7 @@ internal class InkActions(
     val onConfirmHandwriting: () -> Unit = {},
     val onSave: () -> Unit = {},
     val onDone: () -> Unit = {},
+    val onReplace: () -> Unit = {},
 )
 
 @OptIn(ExperimentalMaterial3Api::class)

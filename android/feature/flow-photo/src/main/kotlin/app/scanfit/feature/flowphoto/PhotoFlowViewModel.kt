@@ -3,7 +3,9 @@ package app.scanfit.feature.flowphoto
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.scanfit.core.data.draft.DraftStore
 import app.scanfit.core.data.export.DocumentExporter
+import app.scanfit.core.data.export.ExportVerifier
 import app.scanfit.core.data.export.SaveResult
 import app.scanfit.core.data.export.SaveState
 import app.scanfit.core.imaging.AndroidImageDecoder
@@ -19,8 +21,12 @@ import app.scanfit.core.inspect.Inspector
 import app.scanfit.core.match.DocKind
 import app.scanfit.core.match.FileFacts
 import app.scanfit.core.match.MatchEngine
+import app.scanfit.core.match.MatchNote
+import app.scanfit.core.match.ReviewChecks
 import app.scanfit.core.match.Verdict
 import app.scanfit.core.model.DocSpec
+import app.scanfit.core.model.Exam
+import app.scanfit.core.model.ExamStatus
 import app.scanfit.core.presets.PresetsRepository
 import app.scanfit.core.vision.FaceBox
 import app.scanfit.core.vision.FaceCheck
@@ -34,8 +40,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.format.DateTimeFormatter
@@ -90,6 +97,9 @@ sealed interface ReviewResult {
         val height: Int,
         /** EXACT or ACCEPTED for this slot (ALGORITHMS 9.7), checked on the re-inspected bytes. */
         val meetsRules: Boolean,
+        /** Which other exams accept these bytes (ALGORITHMS 4 "Match note on review"). */
+        val note: MatchNote = MatchNote.EMPTY,
+        val checks: ReviewChecks = ReviewChecks(),
     ) : ReviewResult
 
     data class Failed(
@@ -130,20 +140,25 @@ sealed interface PhotoUiState {
         val result: ReviewResult,
         val save: SaveResult = SaveResult(),
         val rendering: Boolean = false,
+        val before: Raster? = null,
+        val restored: Boolean = false,
+        val retainFailed: Boolean = false,
     ) : PhotoUiState
 }
 
 @HiltViewModel
+@Suppress("TooManyFunctions")
 class PhotoFlowViewModel
 @Inject
 constructor(
     savedState: SavedStateHandle,
-    presets: PresetsRepository,
+    private val presets: PresetsRepository,
     private val tools: PhotoTools,
     private val faces: FaceDetector,
     private val segmenter: PersonSegmenter,
     @PhotoWork private val work: CoroutineDispatcher,
     exporter: DocumentExporter,
+    private val drafts: DraftStore,
 ) : ViewModel() {
     private val examId: String = savedState.get<String>(EXAM_ID).orEmpty()
     private val docType: String = savedState.get<String>(DOC_TYPE).orEmpty()
@@ -159,22 +174,71 @@ constructor(
     private var mask: ByteArray? = null
     private var maskTried = false
     private var renderVersion = 0L
+    private var exams: List<Exam> = emptyList()
+    private var popular: List<String> = emptyList()
 
     init {
         viewModelScope.launch {
-            val bundle =
-                combine(presets.outcome, presets.bundle) { outcome, bundle -> outcome to bundle }
-                    .first { (outcome, bundle) -> outcome != null || bundle != null }
-                    .second
-            val exam = bundle?.exams?.firstOrNull { it.id == examId }
-            val spec = exam?.documents?.firstOrNull { it.type.name.lowercase() == docType }
-            _uiState.value =
-                if (exam == null || spec == null) {
-                    PhotoUiState.NotFound
-                } else {
-                    PhotoUiState.PickSource(PhotoSlot(exam.id, exam.name, exam.isUnverified, spec))
+            combine(presets.outcome, presets.bundle) { outcome, bundle -> outcome to bundle }
+                .collectLatest { (outcome, bundle) ->
+                    if (bundle != null) {
+                        refreshDraft()
+                    } else if (outcome != null) {
+                        _uiState.value = PhotoUiState.NotFound
+                    }
                 }
         }
+        viewModelScope.launch {
+            drafts.revisions.drop(1).collectLatest { refreshDraft() }
+        }
+    }
+
+    fun refreshDraft() {
+        val bundle = presets.bundle.value ?: return
+        val exam = bundle.exams.firstOrNull { it.id == examId && it.status == ExamStatus.ACTIVE }
+        val spec = exam?.documents?.firstOrNull { it.type.name.lowercase() == docType }
+        if ((_uiState.value as? PhotoUiState.Review)?.save?.state == SaveState.SAVING) return
+        if (slot?.spec != null && slot?.spec != spec) {
+            job?.cancel()
+            renderJob?.cancel()
+            renderVersion++
+            lastCrop = null
+            _uiState.value = PhotoUiState.Loading
+        }
+        val previous = _uiState.value
+        if (previous != PhotoUiState.Loading && previous != PhotoUiState.NotFound &&
+            previous !is PhotoUiState.PickSource && (previous as? PhotoUiState.Review)?.restored != true
+        ) {
+            return
+        }
+        job?.cancel()
+        job = viewModelScope.launch {
+            if (exam == null || spec == null) {
+                _uiState.value = PhotoUiState.NotFound
+                return@launch
+            }
+            val slot = PhotoSlot(exam.id, exam.name, exam.isUnverified, spec)
+            val draft = drafts.read(exam.id, spec, DocKind.PHOTO)
+            exams = bundle.exams
+            popular = bundle.popular
+            val next = if (draft == null || previous is PhotoUiState.PickSource) {
+                PhotoUiState.PickSource(slot)
+            } else {
+                restored(slot, draft.bytes)
+            }
+            if (_uiState.value === previous && presets.bundle.value == bundle) _uiState.value = next
+        }
+    }
+
+    private suspend fun restored(slot: PhotoSlot, bytes: ByteArray): PhotoUiState.Review = withContext(work) {
+        PhotoUiState.Review(slot, PhotoOptions(), ready(bytes, slot.spec, exams, popular), restored = true)
+    }
+
+    fun onReplace() {
+        val review = _uiState.value as? PhotoUiState.Review ?: return
+        if (!review.restored || review.save.state == SaveState.SAVING) return
+        job?.cancel()
+        _uiState.value = PhotoUiState.PickSource(review.slot)
     }
 
     private val slot: PhotoSlot?
@@ -193,6 +257,8 @@ constructor(
     fun onImageSelected(uri: String) {
         if ((_uiState.value as? PhotoUiState.Review)?.save?.state == SaveState.SAVING) return
         val slot = slot ?: return
+        renderJob?.cancel()
+        renderVersion++
         job?.cancel()
         _uiState.value = PhotoUiState.FindingFace(slot)
         job =
@@ -325,7 +391,7 @@ constructor(
         change: (PhotoOptions) -> PhotoOptions,
     ) {
         val review = _uiState.value as? PhotoUiState.Review ?: return
-        if (review.save.state == SaveState.SAVING) return
+        if (review.save.state == SaveState.SAVING || review.restored) return
         render(review.slot, change(review.options), debounce)
     }
 
@@ -341,13 +407,13 @@ constructor(
         val working = ReviewResult.Working(slot.targetKb)
         // While typing, the last result stays on screen until the debounce has passed (no flashing per key).
         val shown = (_uiState.value as? PhotoUiState.Review)?.result?.takeIf { debounce } ?: working
-        _uiState.value = PhotoUiState.Review(slot, options, shown, rendering = true)
+        _uiState.value = PhotoUiState.Review(slot, options, shown, rendering = true, before = source)
         renderJob =
             viewModelScope.launch {
                 if (debounce) {
                     delay(TYPING_DEBOUNCE_MS)
                     if (version != renderVersion) return@launch
-                    _uiState.value = PhotoUiState.Review(slot, options, working, rendering = true)
+                    _uiState.value = PhotoUiState.Review(slot, options, working, rendering = true, before = source)
                 }
                 var applied = options
                 var image = source
@@ -369,10 +435,22 @@ constructor(
                             }
                         when (val outcome = tools.fit(prepared, slot.spec)) {
                             is PipelineOutcome.Failure -> ReviewResult.Failed(outcome.error)
-                            is PipelineOutcome.Success -> ready(outcome.result.fit.bytes, slot.spec)
+                            is PipelineOutcome.Success -> ready(outcome.result.fit.bytes, slot.spec, exams, popular)
                         }
                     }
-                if (version == renderVersion) _uiState.value = PhotoUiState.Review(slot, applied, result)
+                if (version != renderVersion) return@launch
+                if (presets.bundle.value?.exams?.firstOrNull { it.id == slot.examId }?.documents
+                        ?.firstOrNull { it.type == slot.spec.type } != slot.spec
+                ) {
+                    return@launch
+                }
+                val retained = if (result is ReviewResult.Ready && result.meetsRules) {
+                    attempt { drafts.retain(slot.examId, slot.spec, DocKind.PHOTO, result.bytes) } == true
+                } else {
+                    true
+                }
+                if (version != renderVersion) return@launch
+                _uiState.value = PhotoUiState.Review(slot, applied, result, before = source, retainFailed = !retained)
             }
     }
 
@@ -444,15 +522,22 @@ constructor(
         private fun ready(
             bytes: ByteArray,
             spec: DocSpec,
+            exams: List<Exam>,
+            popular: List<String>,
         ): ReviewResult.Ready {
             val inspected = Inspector.inspect(bytes)
-            val verdict = MatchEngine.evaluate(spec, FileFacts.of(inspected, DocKind.PHOTO)).verdict
+            val facts = FileFacts.of(inspected, DocKind.PHOTO)
+            val evaluation = MatchEngine.evaluate(spec, facts)
+            val verdict = evaluation.verdict
             return ReviewResult.Ready(
                 bytes = bytes,
                 kb = (bytes.size + KB / 2) / KB,
                 width = inspected.width ?: 0,
                 height = inspected.height ?: 0,
-                meetsRules = verdict == Verdict.EXACT || verdict == Verdict.ACCEPTED,
+                meetsRules = (verdict == Verdict.EXACT || verdict == Verdict.ACCEPTED) &&
+                    ExportVerifier.verifies(bytes, bytes, spec, DocKind.PHOTO),
+                note = MatchNote.of(facts, exams, popular),
+                checks = ReviewChecks.of(evaluation),
             )
         }
     }

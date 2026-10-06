@@ -11,6 +11,7 @@ public struct PhotoFlowView: View {
     @State private var pickedItem: PhotosPickerItem?
     @State private var showCamera = false
     @State private var showFiles = false
+    @Environment(\.scenePhase) private var scenePhase
     private let strings: Strings
     /// Leaves the flow (Done, or back from the first step). The app pops its navigation path: `@Environment(\.dismiss)`
     /// is not used because, after the camera's full-screen cover or a picker, it can target that presentation instead.
@@ -40,7 +41,13 @@ public struct PhotoFlowView: View {
                 }
             }
             .safeAreaInset(edge: .bottom) { bottomAction }
-            .task { await model.onAppear() }
+            .task {
+                await model.onAppear()
+                await model.observeDrafts()
+            }
+            .task(id: scenePhase) {
+                if scenePhase == .active { await model.onForeground() }
+            }
             .onChange(of: pickedItem) { _, item in
                 guard let item else { return }
                 pickedItem = nil

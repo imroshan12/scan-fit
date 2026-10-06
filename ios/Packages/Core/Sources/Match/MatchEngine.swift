@@ -37,7 +37,8 @@ public enum MatchEngine {
                 let verdict: Verdict = (unverified && e.verdict == .exact) ? .accepted : e.verdict
                 entries.append(MatchEntry(
                     examId: exam.id, examName: exam.name, body: exam.body, docType: slot.type,
-                    verdict: verdict, unverified: unverified, fix: e.fix, failed: e.failed, issues: e.issues
+                    verdict: verdict, unverified: unverified, fix: e.fix, failed: e.failed, issues: e.issues,
+                    sizeKb: slot.sizeKb
                 ))
             }
         }

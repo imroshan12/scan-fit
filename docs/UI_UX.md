@@ -62,6 +62,19 @@ During saving, edits and back are disabled. Picker cancellation leaves review un
 Only a re-opened, verified destination shows Saved and changes the primary action to Done; editing again returns to Save.
 The exam's Saved row persists across launches. iOS lets the user choose the Files folder.
 
+Photo and ink outputs are also automatically retained privately for 30 days after verification. On return to the
+checklist, an available unsaved file shows Ready · KB; historical Saved takes precedence. Tapping its row after relaunch
+opens a read-only review with normal Save and Replace file actions. No Before image or effect controls appear because
+only final bytes, not the crop/options, were retained. Replace/Back go to source selection without deleting the previous
+good draft. Restored signatures still require the one-time handwriting tick. A retention failure warns that the file
+cannot be kept for later but leaves immediate Save available. Missing/invalid/expired drafts never show Ready.
+
+Photo and ink review now use a native Before/After selector (After initially) and hold-to-show-Before. Before is the
+oriented selected crop, before effects, not the full captured image. Both fit inside the same 280 dp/pt letterboxed frame.
+Comparison never changes options, Saved or export bytes. Three wrapping KB/dimensions/JPG chips use icons and spoken
+pass/fail labels backed by the re-inspected output. Pending edits and failures hide old output/chips. Technical passes
+do not certify an unverified preset; the separate "Likely OK · Unverified" verdict stays. See ALGORITHMS §4.
+
 **Checker.** Drop zone / picker → a result card listing each check with a pass/fail icon, human
 text, and a Fix button. Then the "Which exam is this for?" picker → per-exam verdict.
 

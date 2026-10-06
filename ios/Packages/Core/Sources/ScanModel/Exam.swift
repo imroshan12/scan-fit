@@ -58,6 +58,12 @@ public struct SizeKB: Codable, Sendable, Equatable {
     public let min: Double?
     public let max: Double?
     public let target: Double?
+
+    public init(min: Double? = nil, max: Double? = nil, target: Double? = nil) {
+        self.min = min
+        self.max = max
+        self.target = target
+    }
 }
 
 public struct AspectRange: Codable, Sendable, Equatable {

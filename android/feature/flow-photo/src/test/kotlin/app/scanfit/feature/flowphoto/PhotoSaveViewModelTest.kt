@@ -7,6 +7,7 @@ import app.scanfit.core.data.export.SaveState
 import app.scanfit.core.imaging.FitError
 import app.scanfit.core.presets.PresetsLoadOutcome
 import app.scanfit.core.presets.PresetsSummary
+import app.scanfit.core.testing.FakeDraftStore
 import app.scanfit.core.testing.FakeExportDestinations
 import app.scanfit.core.testing.FakeFaceDetector
 import app.scanfit.core.testing.FakePersonSegmenter
@@ -60,6 +61,7 @@ class PhotoSaveViewModelTest {
             segmenter,
             dispatcher,
             DocumentExporter(destination, preferences),
+            FakeDraftStore(),
         )
         model.onImageSelected("photo")
         model.onCropDone()

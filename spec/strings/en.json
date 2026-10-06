@@ -3,6 +3,24 @@
 
 	"app.name": "ScanFit",
 
+	"draft.replace": "Replace file",
+	"draft.retain_failed": "Could not keep this file for later. You can still save it now.",
+	"draft.ready_size": "Ready · {kb:int} KB",
+
+	"review.before": "Before",
+	"review.after": "After",
+	"review.size": "{kb:int} KB",
+	"review.dimensions": "{width:int}×{height:int}",
+	"review.jpeg": "JPG",
+	"review.check_pass": "{value:str}, passes this slot's check",
+	"review.check_fail": "{value:str}, does not pass this slot's check",
+	"review.size_a11y": {
+		"one": "{count:int} kilobyte",
+		"other": "{count:int} kilobytes"
+	},
+	"review.dimensions_a11y": "{width:str} by {height:str} pixels",
+	"review.jpeg_a11y": "Baseline RGB JPEG",
+
 	"language.system": "System default",
 	"language.en": "English",
 	"language.hi": "हिन्दी",
@@ -121,6 +139,22 @@
 	"match.fix_needs_size": "{exam:str} {doc:str} needs ≤ {max_kb:int} KB",
 	"match.likely_ok": "Likely OK · Unverified",
 	"match.none": "Doesn't match any exam in ScanFit — that's fine for other forms",
+	"match.likely_ok_count": {
+		"one": "Likely OK for {count:int} exam · Unverified",
+		"other": "Likely OK for {count:int} exams · Unverified"
+	},
+	"match.preview_more": {
+		"one": "+{count:int} more",
+		"other": "+{count:int} more"
+	},
+	"match.need_at_most": "Needs ≤ {max_kb:int} KB",
+	"match.need_at_least": "Needs ≥ {min_kb:int} KB",
+	"match.need_jpeg": "Needs a JPG file",
+	"match.need_baseline": "Needs a standard (baseline) JPG",
+	"match.sheet_title": "Exams that accept this file",
+	"match.verdict_exact": "Exact size",
+	"match.verdict_accepted": "Accepted",
+	"match.sheet_other_exam": "To make a file for another exam, open that exam from Home.",
 
 	"fix.compress_to_target": "Compress to fit",
 	"fix.enlarge_to_target": "Enlarge to fit",

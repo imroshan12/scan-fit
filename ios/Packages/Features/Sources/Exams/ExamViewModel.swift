@@ -1,3 +1,4 @@
+import Match
 import Observation
 import ScanData
 import ScanModel
@@ -14,30 +15,66 @@ public final class ExamViewModel {
     }
 
     public private(set) var state: State = .loading
+    public private(set) var readyDocuments: [DocType: Int] = [:]
     public let examId: String
     public let preferences: UserPreferences
     @ObservationIgnored private let load: @Sendable () async -> PresetBundle?
+    @ObservationIgnored private let drafts: any DraftStore
+    @ObservationIgnored private var generation = 0
 
-    public init(examId: String, preferences: UserPreferences, load: @escaping @Sendable () async -> PresetBundle?) {
+    public init(
+        examId: String, preferences: UserPreferences, drafts: any DraftStore = NoDraftStore(),
+        load: @escaping @Sendable () async -> PresetBundle?
+    ) {
         self.examId = examId
         self.preferences = preferences
         self.load = load
+        self.drafts = drafts
     }
 
     public var isPinned: Bool { preferences.isPinned(examId) }
 
-    /// Loads once; later calls (re-appearing views) do nothing.
     public func onAppear() async {
-        guard state == .loading else { return }
+        generation += 1
+        let gen = generation
+        readyDocuments = [:]
         let id = examId
-        if let exam = await load()?.exams.first(where: { $0.id == id }) {
-            state = .ready(exam)
-        } else {
+        let bundle = await load()
+        guard !Task.isCancelled, gen == generation else { return }
+        guard let exam = bundle?.exams.first(where: { $0.id == id && $0.status == .active }) else {
             state = .notFound
+            return
         }
+        var available: [DocType: Int] = [:]
+        for spec in exam.documents {
+            let draft = await drafts.load(examID: id, spec: spec, kind: DocKind.of(spec.type))
+            guard !Task.isCancelled, gen == generation else { return }
+            if let draft { available[spec.type] = (draft.bytes.count + 512) / 1024 }
+        }
+        readyDocuments = available
+        state = .ready(exam)
+    }
+
+    public func observeDrafts() async {
+        let stream = await drafts.revisions()
+        for await _ in stream {
+            guard !Task.isCancelled else { return }
+            await onAppear()
+        }
+    }
+
+    public enum DocumentStatus: Equatable {
+        case saved, ready(Int), notStarted
+    }
+
+    public func status(_ type: DocType) -> DocumentStatus {
+        if preferences.isSaved(examId, type) { return .saved }
+        if let kb = readyDocuments[type] { return .ready(kb) }
+        return .notStarted
     }
 
     public func togglePin() {
         preferences.setPinned(examId, !isPinned)
     }
+
 }

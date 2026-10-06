@@ -84,8 +84,10 @@ of the photo fixture ≤ 800 ms on a mid device (benchmark test).
 
 ## Phase 2 — Core flows (A: W3–W5, I: W4–W6)
 
-> **Status (2026-10-05):** Home, photo flow and ink flows built on both apps; export (verify-after-write, Saved checklist rows) is
-> shared by both flows from the core layer. Device/provider QA remains open. Details and decisions: docs/HANDOFF.md.
+> **Status (2026-10-06):** Home, photo flow and ink flows built on both apps; export (verify-after-write, Saved checklist rows) is
+> shared by both flows from the core layer; reviews show the match note, Before/After comparison and technical verdict chips.
+> Photo/ink now retain verified final drafts for 30 days; Ready rows survive relaunch and reopen read-only reviews.
+> Device/provider QA remains open. Details and decisions: docs/HANDOFF.md.
 
 - [x] Home: search (EN + Hindi aliases, fuzzy), categories, pinned exams, popular list
     - _Done (both apps):_ ALGORITHMS §10 search with `aliases` (all 55 presets), `categories.json` and `popular.json` in the signed bundle
@@ -96,7 +98,12 @@ of the photo fixture ≤ 800 ms on a mid device (benchmark test).
     - _Done:_ header with `ConfidenceBadge` (unverified = "Unverified — check notice"), verified date + source link, document rows with
       `SpecSummary` (`20–50 KB · 200×230`), "Before you upload" card, pin, not-found state; Settings toggle ("Show unverified exams",
       **on by default** since 2026-10-04: unverified exams are listed with their badge). Photo rows open the photo flow (chevron).
-      _Added:_ Saved row status persists after verified photo exports. _Open:_ intermediate Ready rows and broader document flows.
+      _Added:_ Saved row status persists after verified photo/ink exports. Verified private drafts show Ready · KB after
+      relaunch; Saved takes precedence. Entry/foreground/store changes revalidate availability against current presets.
+      _Open:_ broader PDF/live-photo flows and device QA.
+        - [x] [S][A][I] Retained drafts + intermediate Ready rows (2026-10-06): ALGORITHMS §1.6.1, all 11 `draft_cases`, native
+              atomic storage and relaunch/restore/failed-replacement tests. Tapping Ready reopens identical final bytes for Save;
+              Replace file starts a new source without deleting the last good draft. No new DB/dependency or editable originals.
 - [ ] Photo flow: pick/capture → face-aware crop (locked aspect) → white bg toggle → name/date toggle → review
     - _Done (both apps):_ ALGORITHMS §9.6 gained the manual-adjust rules (move/zoom/rotate), the step order and the segmenter's 0.5
       threshold; 12 `crop_cases` from a Python reference (`spec/tools/photo_crop.py`) pass on both. ML wrappers: ML Kit (bundled face
@@ -115,27 +122,44 @@ of the photo fixture ≤ 800 ms on a mid device (benchmark test).
       unconfirmed — HANDOFF §3); crop/review with a real face on both apps; the Android emulator froze before the flow could be
       walked; no iOS 17 simulator runtime or API 29 image is installed.
 - [x] Ink flows: signature (incl. triple), thumb, NEET fingers (both hands), declaration (text shown from preset; disabled with "copy from notice" when `declaration_text` is null)
-  - *Done (both apps, 2026-10-05):* ALGORITHMS §3 "Flow" and §9.5 (doc type → cleanup variant / match kind, review options, free
-    crop `resize`, one-time handwriting confirmation); 6 new `crop_cases` (`resize`) from `photo_crop.py`. Flow: exam row → pick
-    (camera / gallery / Files) → free crop with corner handles → cleanup → pad + fit → review (Crisp black, Darker ink, too faint /
-    too dark warning) → save as the slot's kind → Saved. Export moved to the core layer (`:core:data` `DocumentExporter`,
-    `ScanData` `ExportOperation` / `FilesExporter`) and is shared with the photo flow. View-model tests: 16 Android, 14 iOS, both
-    mutation-checked. Checked by hand on the iPhone 11 Pro Max simulator: IBPS signature saved to Files, the written file
-    re-inspected (12 KB, 273×117, SOF0, 3 components, JFIF 200 dpi, no EXIF), row shows Saved.
-  - *Deviations:* rectification (4-corner warp) comes with the document scanner; the crop is an axis-aligned rectangle. A
-    declaration with no `declaration_text` still opens (it shows "Copy the text from the official notice") rather than being
-    disabled. *Open:* Android hand check; cleanup speed on a real low-end device (≈20 s in a simulator debug build).
+    - _Done (both apps, 2026-10-05):_ ALGORITHMS §3 "Flow" and §9.5 (doc type → cleanup variant / match kind, review options, free
+      crop `resize`, one-time handwriting confirmation); 6 new `crop_cases` (`resize`) from `photo_crop.py`. Flow: exam row → pick
+      (camera / gallery / Files) → free crop with corner handles → cleanup → pad + fit → review (Crisp black, Darker ink, too faint /
+      too dark warning) → save as the slot's kind → Saved. Export moved to the core layer (`:core:data` `DocumentExporter`,
+      `ScanData` `ExportOperation` / `FilesExporter`) and is shared with the photo flow. View-model tests: 16 Android, 14 iOS, both
+      mutation-checked. Checked by hand on the iPhone 11 Pro Max simulator: IBPS signature saved to Files, the written file
+      re-inspected (12 KB, 273×117, SOF0, 3 components, JFIF 200 dpi, no EXIF), row shows Saved.
+    - _Deviations:_ rectification (4-corner warp) comes with the document scanner; the crop is an axis-aligned rectangle. A
+      declaration with no `declaration_text` still opens (it shows "Copy the text from the official notice") rather than being
+      disabled. _Open:_ Android hand check; cleanup speed on a real low-end device (≈20 s in a simulator debug build).
 - [ ] [S] Transcribe `declaration_text` verbatim for IBPS PO/Clerk/RRB, SBI PO/Clerk, RBI, LIC, SEBI from the official notices; promote those presets where verified
-- [ ] Review screen with `MatchNote`, near-miss Fix, before/after, verdict chips
+- [x] Review screen with `MatchNote`, near-miss Fix, before/after, verdict chips
+    - _Done (both apps, 2026-10-05): the match note._ ALGORITHMS §4 "Match note on review" and §9.7 "Match note" (headline,
+      first three names, likely-OK count, quick fixes with their need, sheet grouped by body); 6 `match_note_cases` computed by
+      `spec/tools/match_note.py`, passed by Kotlin and Swift `MatchNote.of` (mutation-checked). `MatchEntry` carries the slot's
+      `size_kb`. `MatchNoteCard` + detail sheet in the design system on both apps; photo and ink reviews show it on every render.
+      Checked by hand on the iPhone 11 Pro Max simulator (IBPS signature: "Accepted by 32 exams", 4 quick fixes, sheet by body).
+    - _Deviation:_ no Fix button in exam flows: the file is made for that exam's slot, so near misses only say what the other exam
+      needs ("Needs ≥ 20 KB"); Fix comes with the Checker and Custom resize.
+        - _Done (both apps, 2026-10-06):_ shared Before/After with hold-to-compare, bounded pre-effect crop, fixed 280 dp/pt
+          letterboxed preview and off-thread conversion/decoding. Three accessible KB/dimensions/JPG chips use the output's
+          `SlotEvaluation`; all 8 `review_check_cases` pass on both apps. Comparison leaves rendering, Saved and export bytes
+          unchanged; pending edits/failures hide stale results. Light/dark/Hindi/largest-font previews and focused flow tests pass.
+          _Open QA:_ real-device gestures, TalkBack/VoiceOver and minimum-runtime checks; no new dependencies or screenshot tests.
 - [ ] Export + verify-after-write (§1.6), naming (§1.7), Save all, share, "Open folder"
     - [x] [S][A][I] Single-photo save + destination verification + persistent Saved rows (2026-10-04).
           _Done:_ pending MediaStore on API 29+, CreateDocument below; iOS Files export picker with coordinated security-scoped re-read.
           Bytes must match Review and pass format, encoding, dimensions, KB, DPI and privacy metadata checks. Cancellation is silent;
           failures retry, cleanup is best effort, duplicate taps and stale renders are guarded. Eight shared export cases on both apps.
           _Deviation:_ checklist status uses existing preferences, not an export-history DB; iOS folder is user-selected.
-          _Open:_ device/provider/echo-page QA, Save all, sharing, Open folder, retained copies and export history.
+          _Open:_ device/provider/echo-page QA, Save all, sharing, Open folder and export history.
     - [x] [I] Fix missing Saved after Files export (2026-10-04): sheet dismissal no longer cancels the export before its
           delegate result. Callback-order and Files-to-checklist persistence regressions pass; device confirmation remains open.
+        - [x] [S][A][I] Private retained final drafts (2026-10-06): one verified JPEG per exam/slot, 30-day validity,
+              backup excluded, bounded structured records with opaque names and atomic replacement. Reads use current slot
+              verification; stale/corrupt/expired/retired files cannot show Ready. Restored reviews are read-only and export the
+              same bytes, retaining handwriting confirmation. Failure warns without disabling immediate export or losing the
+              previous good draft. _Open:_ physical-device QA; cleaned originals and export history come with My Kit.
 - [ ] My Kit (store cleaned originals, "Use for exam…", export history)
 - [ ] Custom resize with the live match note
 - [ ] Checker with issue fixes and per-exam verdicts

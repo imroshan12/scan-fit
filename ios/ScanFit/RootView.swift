@@ -41,7 +41,9 @@ struct RootView: View {
                 HomeView(model: homeModel, strings: strings)
                     .navigationDestination(for: ExamRoute.self) { route in
                         ExamView(
-                            model: ExamViewModel(examId: route.examId, preferences: container.preferences) {
+                            model: ExamViewModel(
+                                examId: route.examId, preferences: container.preferences, drafts: container.drafts
+                            ) {
                                 await container.trustedBundle()
                             },
                             strings: strings,
@@ -75,7 +77,8 @@ struct RootView: View {
         if Self.photoFlowTypes.contains(route.docType) {
             PhotoFlowView(
                 model: PhotoFlowViewModel(
-                    examId: route.examId, docType: route.docType, preferences: container.preferences
+                    examId: route.examId, docType: route.docType, preferences: container.preferences,
+                    drafts: container.drafts
                 ) {
                     await container.trustedBundle()
                 },
@@ -85,7 +88,8 @@ struct RootView: View {
         } else {
             InkFlowView(
                 model: InkFlowViewModel(
-                    examId: route.examId, docType: route.docType, preferences: container.preferences
+                    examId: route.examId, docType: route.docType, preferences: container.preferences,
+                    drafts: container.drafts
                 ) {
                     await container.trustedBundle()
                 },

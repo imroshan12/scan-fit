@@ -613,6 +613,57 @@
         }
       }
     },
+    "draft.ready_size": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ready · %1$lld KB"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "तैयार · %1$lld KB"
+          }
+        }
+      }
+    },
+    "draft.replace": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replace file"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "फ़ाइल बदलें"
+          }
+        }
+      }
+    },
+    "draft.retain_failed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not keep this file for later. You can still save it now."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "यह फ़ाइल बाद के लिए नहीं रख पाए। आप इसे अभी सेव कर सकते हैं।"
+          }
+        }
+      }
+    },
     "error.export_verify_failed": {
       "extractionState": "manual",
       "localizations": {
@@ -2300,6 +2351,115 @@
         }
       }
     },
+    "match.likely_ok_count": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Likely OK for %1$lld exam · Unverified"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Likely OK for %1$lld exams · Unverified"
+                }
+              }
+            }
+          }
+        },
+        "hi": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "needs_review",
+                  "value": "%1$lld परीक्षा के लिए शायद ठीक · असत्यापित"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "needs_review",
+                  "value": "%1$lld परीक्षाओं के लिए शायद ठीक · असत्यापित"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "match.need_at_least": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needs ≥ %1$lld KB"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "≥ %1$lld KB चाहिए"
+          }
+        }
+      }
+    },
+    "match.need_at_most": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needs ≤ %1$lld KB"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "≤ %1$lld KB चाहिए"
+          }
+        }
+      }
+    },
+    "match.need_baseline": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needs a standard (baseline) JPG"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "सामान्य (baseline) JPG चाहिए"
+          }
+        }
+      }
+    },
+    "match.need_jpeg": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needs a JPG file"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "JPG फ़ाइल चाहिए"
+          }
+        }
+      }
+    },
     "match.none": {
       "extractionState": "manual",
       "localizations": {
@@ -2313,6 +2473,47 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "ScanFit की किसी परीक्षा से मेल नहीं खाता — दूसरे फ़ॉर्म के लिए यह ठीक है"
+          }
+        }
+      }
+    },
+    "match.preview_more": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "+%1$lld more"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "+%1$lld more"
+                }
+              }
+            }
+          }
+        },
+        "hi": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "needs_review",
+                  "value": "+%1$lld और"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "needs_review",
+                  "value": "+%1$lld और"
+                }
+              }
+            }
           }
         }
       }
@@ -2354,6 +2555,74 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "match.sheet_other_exam": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To make a file for another exam, open that exam from Home."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "किसी दूसरी परीक्षा के लिए फ़ाइल बनाने हेतु होम से वह परीक्षा खोलें।"
+          }
+        }
+      }
+    },
+    "match.sheet_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exams that accept this file"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "इस फ़ाइल को स्वीकार करने वाली परीक्षाएँ"
+          }
+        }
+      }
+    },
+    "match.verdict_accepted": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accepted"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "मान्य"
+          }
+        }
+      }
+    },
+    "match.verdict_exact": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exact size"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "बिल्कुल सही साइज़"
           }
         }
       }
@@ -2769,6 +3038,200 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "ज़ूम आउट करें"
+          }
+        }
+      }
+    },
+    "review.after": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "After"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "बाद में"
+          }
+        }
+      }
+    },
+    "review.before": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Before"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "पहले"
+          }
+        }
+      }
+    },
+    "review.check_fail": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, does not pass this slot's check"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@, इस दस्तावेज़ की जाँच सफल नहीं"
+          }
+        }
+      }
+    },
+    "review.check_pass": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, passes this slot's check"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@, इस दस्तावेज़ की जाँच सफल"
+          }
+        }
+      }
+    },
+    "review.dimensions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld×%2$lld"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$lld×%2$lld"
+          }
+        }
+      }
+    },
+    "review.dimensions_a11y": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ by %2$@ pixels"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ गुणा %2$@ पिक्सेल"
+          }
+        }
+      }
+    },
+    "review.jpeg": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "JPG"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "JPG"
+          }
+        }
+      }
+    },
+    "review.jpeg_a11y": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Baseline RGB JPEG"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "बेसलाइन RGB JPEG"
+          }
+        }
+      }
+    },
+    "review.size": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld KB"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$lld KB"
+          }
+        }
+      }
+    },
+    "review.size_a11y": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld kilobyte"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld kilobytes"
+                }
+              }
+            }
+          }
+        },
+        "hi": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "needs_review",
+                  "value": "%1$lld किलोबाइट"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "needs_review",
+                  "value": "%1$lld किलोबाइट"
+                }
+              }
+            }
           }
         }
       }

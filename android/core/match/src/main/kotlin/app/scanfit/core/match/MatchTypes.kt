@@ -5,6 +5,7 @@ import app.scanfit.core.inspect.DetectedFormat
 import app.scanfit.core.inspect.InspectedFile
 import app.scanfit.core.inspect.Issue
 import app.scanfit.core.model.DocType
+import app.scanfit.core.model.SizeKb
 
 /** What the file is for: from the flow that produced it, or the user's pick in the Checker (ALGORITHMS 4). */
 enum class DocKind {
@@ -99,6 +100,8 @@ data class MatchEntry(
     val fix: FixAction?,
     val failed: List<Constraint>,
     val issues: List<Issue>,
+    /** The slot's size window, for the match note's "needs ≤ 20 KB" (ALGORITHMS 9.7). */
+    val sizeKb: SizeKb = SizeKb(),
 )
 
 data class MatchResult(

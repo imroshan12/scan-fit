@@ -43,7 +43,10 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.scanfit.core.data.draft.DraftStatus
+import app.scanfit.core.data.draft.draftStatus
 import app.scanfit.core.designsystem.R
 import app.scanfit.core.designsystem.components.ConfidenceBadge
 import app.scanfit.core.designsystem.components.labelRes
@@ -72,6 +75,10 @@ fun ExamRoute(
     viewModel: ExamViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    LifecycleResumeEffect(viewModel) {
+        viewModel.refreshDrafts()
+        onPauseOrDispose { }
+    }
     ExamScreen(state, onBack, viewModel::onTogglePin, modifier, docActions)
 }
 
@@ -138,7 +145,7 @@ internal fun ExamScreen(
                     )
                 }
 
-                is ExamUiState.Ready -> ExamContent(state.exam, docActions, state.savedDocuments)
+                is ExamUiState.Ready -> ExamContent(state.exam, docActions, state.savedDocuments, state.readyDocuments)
             }
         }
     }
@@ -149,6 +156,7 @@ private fun ExamContent(
     exam: Exam,
     docActions: DocActions,
     savedDocuments: Set<DocType>,
+    readyDocuments: Map<DocType, Int>,
 ) {
     LazyColumn(
         contentPadding = PaddingValues(ScanFitSpacing.screenMargin),
@@ -159,7 +167,7 @@ private fun ExamContent(
         item { SectionTitle(R.string.exam_documents) }
         items(exam.documents, key = { it.type.name }) { doc ->
             val open = if (docActions.canOpen(doc.type)) ({ docActions.onOpen(exam.id, doc.type) }) else null
-            DocRow(doc, onClick = open, saved = doc.type in savedDocuments)
+            DocRow(doc, onClick = open, saved = doc.type in savedDocuments, readyKb = readyDocuments[doc.type])
         }
         if (exam.specialRules.isNotEmpty()) item { RulesCard(exam.specialRules) }
     }
@@ -227,6 +235,7 @@ private fun DocRow(
     doc: DocSpec,
     onClick: (() -> Unit)?,
     saved: Boolean,
+    readyKb: Int?,
 ) {
     Row(
         modifier =
@@ -259,7 +268,11 @@ private fun DocRow(
             }
             Text(specSummary(doc), style = ScanFitType.figure, color = MaterialTheme.colorScheme.onSurface)
             Text(
-                stringResource(if (saved) R.string.exam_status_saved else R.string.exam_status_not_started),
+                when (draftStatus(saved, readyKb != null)) {
+                    DraftStatus.SAVED -> stringResource(R.string.exam_status_saved)
+                    DraftStatus.READY -> stringResource(R.string.draft_ready_size, requireNotNull(readyKb))
+                    DraftStatus.NOT_STARTED -> stringResource(R.string.exam_status_not_started)
+                },
                 style = ScanFitType.caption,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -337,7 +350,17 @@ private val previewExam: Exam by lazy {
 private fun ExamReadyPreview() {
     ScanFitTheme {
         val actions = DocActions(canOpen = { it == DocType.PHOTO })
-        ExamScreen(ExamUiState.Ready(previewExam, pinned = true), {}, {}, docActions = actions)
+        ExamScreen(
+            ExamUiState.Ready(
+                previewExam,
+                pinned = true,
+                savedDocuments = setOf(DocType.SIGNATURE),
+                readyDocuments = mapOf(DocType.PHOTO to 34, DocType.SIGNATURE to 16),
+            ),
+            {},
+            {},
+            docActions = actions,
+        )
     }
 }
 

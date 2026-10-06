@@ -1,21 +1,30 @@
 package app.scanfit.feature.flowphoto
 
 import android.content.res.Configuration
+import android.graphics.Bitmap
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import app.scanfit.core.data.export.SaveResult
 import app.scanfit.core.data.export.SaveState
+import app.scanfit.core.designsystem.components.MatchNoteSamples
 import app.scanfit.core.designsystem.theme.ScanFitTheme
 import app.scanfit.core.imaging.CropRect
 import app.scanfit.core.imaging.FitError
 import app.scanfit.core.imaging.Raster
+import app.scanfit.core.imaging.toBitmap
+import app.scanfit.core.match.ReviewChecks
 import app.scanfit.core.model.DimensionMode
 import app.scanfit.core.model.Dimensions
 import app.scanfit.core.model.DocSpec
 import app.scanfit.core.model.DocType
 import app.scanfit.core.model.FileFormat
 import app.scanfit.core.model.SizeKb
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
 
 // Previews of each step in light, dark, the largest font and Hindi (CLAUDE.md Definition of done).
 
@@ -65,14 +74,48 @@ private fun CropPreview() {
 @Preview(name = "Review dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Preview(name = "Review large font", showBackground = true, fontScale = 2f)
 @Preview(name = "Review Hindi", showBackground = true, locale = "hi")
+@Preview(name = "Review Hindi large font", showBackground = true, locale = "hi", fontScale = 2f)
 @Composable
 private fun ReviewPreview() {
+    ReviewPreviewContent(restored = false)
+}
+
+@Preview(name = "Retained review", showBackground = true)
+@Preview(name = "Retained review dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(name = "Retained review large font", showBackground = true, fontScale = 2f)
+@Preview(name = "Retained review Hindi", showBackground = true, locale = "hi")
+@Preview(name = "Retained review Hindi large font", showBackground = true, locale = "hi", fontScale = 2f)
+@Composable
+private fun RestoredReviewPreview() {
+    ReviewPreviewContent(restored = true)
+}
+
+@Composable
+private fun ReviewPreviewContent(restored: Boolean) {
+    val bytes by produceState<ByteArray?>(null) {
+        value = withContext(Dispatchers.Default) {
+            ByteArrayOutputStream().use { output ->
+                previewImage.toBitmap().compress(Bitmap.CompressFormat.JPEG, 90, output)
+                output.toByteArray()
+            }
+        }
+    }
     ScanFitTheme {
         PhotoFlowScreen(
             PhotoUiState.Review(
                 previewSlot,
                 PhotoOptions(nameDate = true, name = "Asha Rao", date = "03/10/2026"),
-                ReviewResult.Ready(ByteArray(0), kb = 34, width = 200, height = 230, meetsRules = true),
+                ReviewResult.Ready(
+                    bytes ?: ByteArray(0),
+                    kb = 34,
+                    width = 200,
+                    height = 230,
+                    meetsRules = true,
+                    note = MatchNoteSamples.accepted,
+                    checks = ReviewChecks(true, true, true),
+                ),
+                before = previewImage.takeUnless { restored },
+                restored = restored,
             ),
             PhotoActions(),
         )
@@ -101,8 +144,16 @@ private fun PhotoSavePreview(@PreviewParameter(PhotoSavePreviewStates::class) sa
             PhotoUiState.Review(
                 previewSlot,
                 PhotoOptions(nameDate = true, name = "Asha Rao", date = "03/10/2026"),
-                ReviewResult.Ready(ByteArray(0), kb = 34, width = 200, height = 230, meetsRules = true),
+                ReviewResult.Ready(
+                    ByteArray(0),
+                    kb = 34,
+                    width = 200,
+                    height = 230,
+                    meetsRules = true,
+                    checks = ReviewChecks(true, true, true),
+                ),
                 save = SaveResult(save),
+                before = previewImage,
             ),
             PhotoActions(),
         )

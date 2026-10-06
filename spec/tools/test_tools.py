@@ -13,6 +13,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import gen_analytics  # noqa: E402
 import gen_strings  # noqa: E402
 import gen_tokens  # noqa: E402
+import match_note  # noqa: E402
 import photo_crop  # noqa: E402
 import release_preflight  # noqa: E402
 from _common import SPEC, require  # noqa: E402
@@ -257,6 +258,12 @@ class CasesFile(unittest.TestCase):
         self.assertGreaterEqual(len(self.cases["crop_cases"]), 10)
         for c in self.cases["crop_cases"]:
             self.assertEqual(photo_crop.expected(c), c["expect"], c["id"])
+
+    def test_match_note_expectations_match_the_reference(self):
+        """match_note_cases are computed by match_note.py: a hand edit that drifts from ALGORITHMS 9.7 fails here."""
+        self.assertGreaterEqual(len(self.cases["match_note_cases"]), 5)
+        for c in self.cases["match_note_cases"]:
+            self.assertEqual(match_note.note(c["entries"]), c["expect"], c["id"])
 
 
 class PresetsDist(unittest.TestCase):

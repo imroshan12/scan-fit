@@ -6,8 +6,10 @@ import app.scanfit.core.imaging.AutoFraming
 import app.scanfit.core.imaging.CropRect
 import app.scanfit.core.imaging.FitError
 import app.scanfit.core.imaging.Raster
+import app.scanfit.core.match.ReviewChecks
 import app.scanfit.core.presets.PresetsLoadOutcome
 import app.scanfit.core.presets.PresetsSummary
+import app.scanfit.core.testing.FakeDraftStore
 import app.scanfit.core.testing.FakeExportDestinations
 import app.scanfit.core.testing.FakeFaceDetector
 import app.scanfit.core.testing.FakePersonSegmenter
@@ -25,9 +27,11 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
+import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -58,6 +62,7 @@ class PhotoFlowViewModelTest {
         segmenter,
         dispatcher,
         DocumentExporter(FakeExportDestinations(), FakeUserPreferences()),
+        FakeDraftStore(),
     )
 
     private val PhotoFlowViewModel.state get() = uiState.value
@@ -173,6 +178,7 @@ class PhotoFlowViewModelTest {
         assertEquals(200, ready.width)
         assertEquals(230, ready.height)
         assertTrue(ready.meetsRules)
+        assertEquals(ReviewChecks(true, true, true), ready.checks)
         val expected = AutoFraming.frame(face, 1000, 1400, 200.0 / 230.0).crop
         assertEquals(expected.w, tools.fitInput?.width)
         assertEquals(expected.h, tools.fitInput?.height)
@@ -180,9 +186,76 @@ class PhotoFlowViewModelTest {
     }
 
     @Test
+    fun theReviewNotesWhichExamsAcceptThePhoto() = runTest(dispatcher) {
+        val note = (reviewed().result as ReviewResult.Ready).note
+        val rows = note.groups.flatMap { it.entries }
+        assertTrue("IBPS PO accepts its own photo", note.preview.any { it.id == "ibps_po" } || rows.any { it.examId == "ibps_po" })
+        assertTrue("the IBPS family shares the photo rules", note.accepted > 1)
+        assertTrue("SSC captures the photo live: never listed", rows.none { it.examId == "ssc_cgl" })
+    }
+
+    @Test
     fun aFileOutsideTheWindowDoesNotMeetTheRules() = runTest(dispatcher) {
         tools.fit = { r -> FakePhotoTools.success(r, FakePhotoTools.jpeg(200, 230, 60 * 1024)) }
-        assertFalse((reviewed().result as ReviewResult.Ready).meetsRules)
+        val ready = reviewed().result as ReviewResult.Ready
+        assertFalse(ready.meetsRules)
+        assertEquals(ReviewChecks(false, true, true), ready.checks)
+    }
+
+    @Test
+    fun reviewChecksUseInspectedDimensionsEncodingAndCorruptBytes() = runTest(dispatcher) {
+        val progressive = FakePhotoTools.jpeg(200, 230, 34 * 1024).apply {
+            this[indexOfFirst { it == 0xC0.toByte() }] = 0xC2.toByte()
+        }
+        val cases = listOf(
+            FakePhotoTools.jpeg(200, 500, 34 * 1024) to ReviewChecks(true, false, true),
+            progressive to ReviewChecks(true, true, false),
+            byteArrayOf(1, 2, 3) to ReviewChecks(false, true, false),
+        )
+        for ((bytes, expected) in cases) {
+            tools.fit = { source -> FakePhotoTools.success(source, bytes) }
+            val ready = reviewed().result as ReviewResult.Ready
+            assertEquals(expected, ready.checks)
+            assertFalse(ready.meetsRules)
+        }
+    }
+
+    @Test
+    fun beforeIsTheCropBeforeWhiteningAndStaysStableThroughRendersAndFailure() = runTest(dispatcher) {
+        val model = model()
+        model.onImageSelected(PHOTO)
+        model.onZoom(2.0)
+        val crop = model.state as PhotoUiState.Crop
+        val rect = crop.rect
+        val expected = crop.image.crop(rect.x, rect.y, rect.w, rect.h)
+        model.onCropDone()
+        advanceUntilIdle()
+        val before = checkNotNull((model.state as PhotoUiState.Review).before)
+        assertEquals(rect.w, before.width)
+        assertEquals(rect.h, before.height)
+        assertArrayEquals(expected.rgb, before.rgb)
+        tools.fit = { source ->
+            val working = model.state as PhotoUiState.Review
+            assertTrue(working.result is ReviewResult.Working)
+            assertSame(before, working.before)
+            FakePhotoTools.success(source, FakePhotoTools.jpeg(200, 230, 34 * 1024))
+        }
+        segmenter.mask = ByteArray(before.width * before.height)
+        model.onWhiteBackground(true)
+        advanceUntilIdle()
+        assertEquals(255, checkNotNull(tools.fitInput).g(0, 0))
+        assertSame(before, (model.state as PhotoUiState.Review).before)
+        assertArrayEquals(expected.rgb, before.rgb)
+        model.onNameDate(true)
+        model.onName("Asha")
+        assertSame(before, (model.state as PhotoUiState.Review).before)
+        advanceUntilIdle()
+        assertSame(before, (model.state as PhotoUiState.Review).before)
+        tools.fit = { FakePhotoTools.failure(FitError.TOO_DETAILED) }
+        model.onWhiteBackground(false)
+        advanceUntilIdle()
+        assertTrue((model.state as PhotoUiState.Review).result is ReviewResult.Failed)
+        assertSame(before, (model.state as PhotoUiState.Review).before)
     }
 
     @Test

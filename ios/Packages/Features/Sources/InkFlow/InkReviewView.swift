@@ -1,7 +1,5 @@
-import CoreGraphics
 import DesignSystem
 import Imaging
-import ImageIO
 import SwiftUI
 
 /// UI_UX §3 Review for ink documents: the fitted file, its numbers and verdict, the ink options and the save status.
@@ -10,45 +8,31 @@ struct InkReviewView: View {
     let model: InkFlowViewModel
     let strings: Strings
 
-    @State private var image: CGImage?
-
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: ScanFitSpacing.lg) {
-                preview
+                BeforeAfterImage(before: review.before, after: readyBytes, strings: strings)
                 result
                 ExportStatusView(state: model.exportState, strings: strings)
+                if review.retainFailed { NoticeCard(text: strings.draftRetainFailed, kind: .warning) }
                 Group {
-                    if review.slot.hasInkOptions { options }
+                    if review.restored {
+                        Button { model.replaceDraft() } label: {
+                            Label(strings.draftReplace, systemImage: "arrow.triangle.2.circlepath")
+                        }
+                    } else if review.slot.hasInkOptions {
+                        options
+                    }
                     if review.slot.needsHandwritingConfirmation { confirmation }
                 }
                 .disabled(model.exportState == .saving)
             }
             .padding(ScanFitSpacing.screenMargin)
         }
-        .task(id: readyBytes) {
-            let bytes = readyBytes
-            image = await Task.detached(priority: .userInitiated) { Self.decode(bytes) }.value
-        }
     }
 
     private var readyBytes: [UInt8] {
         if case let .ready(ready) = review.result { ready.bytes } else { [] }
-    }
-
-    /// The fitted file as it will be written, at most 200 pt tall; a placeholder while it is being made.
-    private var preview: some View {
-        let dims = review.slot.spec.dimensions
-        let fallback = dims.width.flatMap { w in dims.height.map { CGFloat(w) / CGFloat($0) } } ?? 7.0 / 3.0
-        let aspect = image.map { CGFloat($0.width) / CGFloat($0.height) } ?? fallback
-        return ZStack {
-            RoundedRectangle(cornerRadius: ScanFitRadius.card).fill(ScanFitColor.surfaceVariant)
-            if let image, case .ready = review.result {
-                Image(decorative: image, scale: 1).resizable().scaledToFit()
-            }
-        }
-        .aspectRatio(aspect, contentMode: .fit)
-        .frame(maxWidth: .infinity, maxHeight: 200)
     }
 
     @ViewBuilder
@@ -60,12 +44,10 @@ struct InkReviewView: View {
                 Text(strings.flowStepClean).scanFitText(.body)
             }
         case let .ready(ready):
-            Text(strings.photoResult(kb: ready.kb, width: ready.width, height: ready.height))
-                .scanFitText(.figure)
-                .accessibilityLabel(strings.photoResultA11y(
-                    count: ready.kb, width: String(ready.width), height: String(ready.height)
-                ))
+            ReviewChecksRow(kb: ready.kb, width: ready.width, height: ready.height,
+                            checks: ready.checks, strings: strings)
             verdict(ready)
+            MatchNoteCard(note: ready.note, strings: strings)
             switch ready.quality {
             case .tooFaint: NoticeCard(text: strings.inkTooFaint, kind: .warning)
             case .tooDark: NoticeCard(text: strings.inkTooDark, kind: .warning)
@@ -134,8 +116,4 @@ struct InkReviewView: View {
         }
     }
 
-    private nonisolated static func decode(_ bytes: [UInt8]) -> CGImage? {
-        guard !bytes.isEmpty, let source = CGImageSourceCreateWithData(Data(bytes) as CFData, nil) else { return nil }
-        return CGImageSourceCreateImageAtIndex(source, 0, nil)
-    }
 }

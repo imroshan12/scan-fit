@@ -9,9 +9,13 @@ import app.scanfit.core.imaging.CropRect
 import app.scanfit.core.imaging.FitError
 import app.scanfit.core.imaging.InkQuality
 import app.scanfit.core.imaging.Pipeline
+import app.scanfit.core.imaging.Raster
 import app.scanfit.core.match.DocKind
+import app.scanfit.core.match.ReviewChecks
+import app.scanfit.core.model.DocType
 import app.scanfit.core.presets.PresetsLoadOutcome
 import app.scanfit.core.presets.PresetsSummary
+import app.scanfit.core.testing.FakeDraftStore
 import app.scanfit.core.testing.FakeExportDestinations
 import app.scanfit.core.testing.FakePresetsRepository
 import app.scanfit.core.testing.FakeUserPreferences
@@ -27,9 +31,11 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
+import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -58,6 +64,7 @@ class InkFlowViewModelTest {
         prefs,
         DocumentExporter(destination, prefs),
         dispatcher,
+        FakeDraftStore(),
     )
 
     private val InkFlowViewModel.state get() = uiState.value
@@ -144,16 +151,86 @@ class InkFlowViewModelTest {
         assertEquals(700, tools.fitInput?.height)
         assertEquals(16, ready.kb)
         assertTrue("140x60 at 16 KB meets the IBPS signature rules", ready.meetsRules)
+        assertEquals(ReviewChecks(true, true, true), ready.checks)
         assertEquals(Pipeline.SIGNATURE_CLEANUP, tools.fits.last().first)
         assertEquals("a signature is crisp black by default", true, tools.fits.last().second.crispBlack)
     }
 
     @Test
+    fun theReviewNotesWhichExamsAcceptTheFileAsTheSlotsKind() = runTest(dispatcher) {
+        val note = (reviewed().result as InkReviewResult.Ready).note
+        val rows = note.groups.flatMap { it.entries }
+        assertTrue("IBPS PO accepts its own signature", rows.any { it.examId == "ibps_po" })
+        assertTrue("other exams are named too", note.accepted > 1)
+        assertTrue(
+            "matched as a signature: only signature slots are listed",
+            rows.all { it.docType == DocType.SIGNATURE || it.docType == DocType.TRIPLE_SIGNATURE },
+        )
+    }
+
+    @Test
     fun aFileOutsideTheWindowDoesNotMeetTheRulesAndAFitErrorIsShown() = runTest(dispatcher) {
         tools.fit = { r -> tools.success(r, TestJpeg.make(140, 60, 30 * 1024)) }
-        assertFalse((reviewed().result as InkReviewResult.Ready).meetsRules)
+        val ready = reviewed().result as InkReviewResult.Ready
+        assertFalse(ready.meetsRules)
+        assertEquals(ReviewChecks(false, true, true), ready.checks)
         tools.fit = { tools.failure(FitError.TOO_DETAILED) }
         assertEquals(InkReviewResult.Failed(FitError.TOO_DETAILED), reviewed().result)
+    }
+
+    @Test
+    fun reviewChecksUseInspectedDimensionsEncodingAndCorruptBytes() = runTest(dispatcher) {
+        val progressive = TestJpeg.make(140, 60, 16 * 1024).apply {
+            this[indexOfFirst { it == 0xC0.toByte() }] = 0xC2.toByte()
+        }
+        val cases = listOf(
+            TestJpeg.make(140, 100, 16 * 1024) to ReviewChecks(true, false, true),
+            progressive to ReviewChecks(true, true, false),
+            byteArrayOf(1, 2, 3) to ReviewChecks(false, true, false),
+        )
+        for ((bytes, expected) in cases) {
+            tools.fit = { source -> tools.success(source, bytes) }
+            val ready = reviewed().result as InkReviewResult.Ready
+            assertEquals(expected, ready.checks)
+            assertFalse(ready.meetsRules)
+        }
+    }
+
+    @Test
+    fun beforeIsTheCropBeforeCleanupPaddingAndFitAndStaysStableThroughRendersAndFailure() = runTest(dispatcher) {
+        val model = model()
+        model.onImageSelected(PHOTO)
+        model.onRotate()
+        model.onResize(CropCorner.TOP_LEFT, 100.0, 200.0)
+        val crop = model.state as InkUiState.Crop
+        val rect = crop.rect
+        val expected = crop.image.crop(rect.x, rect.y, rect.w, rect.h)
+        tools.fit = { tools.success(Raster.white(140, 60), TestJpeg.make(140, 60, 16 * 1024)) }
+        model.onCropDone()
+        advanceUntilIdle()
+        val before = checkNotNull(model.review.before)
+        assertEquals(rect.w, before.width)
+        assertEquals(rect.h, before.height)
+        assertArrayEquals(expected.rgb, before.rgb)
+        assertSame(tools.fitInput, before)
+        tools.fit = { source ->
+            assertTrue(model.review.result is InkReviewResult.Working)
+            assertSame(before, model.review.before)
+            tools.success(source, TestJpeg.make(140, 60, 16 * 1024))
+        }
+        model.onCrispBlack(false)
+        advanceUntilIdle()
+        assertSame(before, model.review.before)
+        model.onInkFactor(0.3)
+        assertSame(before, model.review.before)
+        advanceUntilIdle()
+        assertSame(before, model.review.before)
+        assertArrayEquals(expected.rgb, before.rgb)
+        tools.fit = { tools.failure(FitError.TOO_DETAILED) }
+        model.onCrispBlack(true)
+        advanceUntilIdle()
+        assertTrue(model.review.result is InkReviewResult.Failed)
+        assertSame(before, model.review.before)
     }
 
     @Test

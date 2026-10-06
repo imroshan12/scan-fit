@@ -105,7 +105,45 @@ never deleted on picker cancellation. Save failures keep the review available fo
 Only after successful verification and publication, persist the exam/document's Saved checklist status
 locally. A later failed or cancelled save does not clear a previously verified Saved status. This status
 records a successful export, not a guarantee that the user has kept the file. Export history, sharing,
-Save all and retained copies are separate Phase 2 follow-ups. Conformance: `export_cases`.
+and Save all remain Phase 2 follow-ups; private retained drafts are defined in §1.6.1. Conformance: `export_cases`.
+
+### 1.6.1 Retained drafts and Ready checklist rows
+
+Photo and ink flows retain one **final fitted JPEG** per `(exam_id, doc_type)` locally, automatically after a successful
+render. This is not a cleaned original, export history or a user-visible export. Persist only output passing the full
+§1.6 verifier as the slot's `DocKind`; re-open the private written file and verify byte equality before publishing Ready.
+Retaining a draft never sets Saved. A storage failure leaves the in-memory review exportable, shows
+`draft.retain_failed`, and never claims that a draft was retained. A previous valid draft survives a failed replacement.
+
+Storage is app-private and excluded from device/cloud backup (Android no-backup storage; iOS Application Support with
+`isExcludedFromBackup`). No images, paths, names or draft metadata are logged or transmitted. One versioned structured
+record contains JPEG bytes and its creation time, committed atomically, so process death cannot publish half a record.
+Use an opaque file name derived from the trusted slot key, never concatenate a caller's exam id into a path. Reject
+symlinks, unsupported versions and oversized records; maximum JPEG payload is 64 MiB (encoded record at most 96 MiB).
+The record may use the platform's structured serializer with base64 binary data; no new DB or external dependency is
+required for this single-record-per-slot store. Metadata derived from JPEG bytes is never trusted instead of inspection.
+
+On every read, verify using the **current trusted slot**, including baseline RGB, stripped privacy metadata, size,
+dimensions and DPI. Only a record aged `0 <= age < 30 days` is available (`30 days = 2,592,000 seconds`); missing, corrupt,
+expired, future-dated or nonconforming records produce no Ready status, with best-effort removal of invalid records.
+Revalidate on checklist/flow entry and app foreground, and after store changes. A preset update must not leave a cached
+Ready claim. Storage and inspection run off the UI thread. Late loads/renders must not overwrite newer user actions or
+retain their obsolete bytes; cancellation/generation checks guard persistence and UI publication.
+
+Checklist precedence preserves existing history: **Saved** if a verified export was previously recorded; otherwise
+**Ready · {rounded KB}** only for an available verified draft; otherwise **Not started**. Saved is historical and does not
+assert that a retained or exported file still exists. Ready technical checks for an unverified preset do not remove its
+badge or imply official acceptance. Signature drafts may be retained before the one-time handwriting confirmation;
+restored review still requires that confirmation before Save.
+
+Entering a photo/ink slot first attempts to load its draft. A valid draft opens a read-only review rebuilt from the
+retained bytes (inspection, slot verdict, match note and check chips), with idle export state and the normal Save action.
+No face detection, cleanup, fitting, whitening or name/date renderer runs. No Before image or editable processing
+controls are invented: the original crop/options are not retained. `draft.replace` returns to source selection and keeps
+the previous draft until a new verified output replaces it. Back from a restored review returns to source selection;
+back from a newly rendered review still returns to its crop. Picker cancellation and failed saves leave the draft intact.
+Shared conformance cases: `draft_cases`; additional native tests cover atomic replacement failure, stale jobs, current
+preset validation, app relaunch, exact retained/exported bytes and checklist updates.
 
 ### 1.7 Export naming
 
@@ -211,6 +249,25 @@ throttled to 150 ms — and in the Checker):
 
 Group by body in the detail sheet. Sort: EXACT before ACCEPTED, then by exam popularity (the bundle's
 `popular` list, §10; Remote Config `popular_exam_order` may override it from Phase 4), then name. Tapping Fix runs §1 against that slot and re-runs the match.
+
+**Match note on review.** Exam flows (photo, ink) show the note under the slot verdict on every render: "Accepted by N exams"
+with the first three names, a "likely OK" count for unverified exams, and a detail sheet grouped by body (§9.7 _Match note_).
+The file in an exam flow is made for that exam's slot, so a near miss there says what the other exam needs ("SSC CGL ·
+Signature — Needs ≤ 20 KB") **without** a Fix button; Fix belongs to the Checker and Custom resize, where a file has no slot yet.
+
+**Review comparison and chips (photo and ink).** Before shows the selected, oriented crop before whitening, strip,
+cleanup, padding or fitting; After shows the decoded final JPEG. Reuse the bounded crop already in memory, with image
+conversion/decoding off the UI thread. After is selected on entry. The native segmented selector and a press-and-hold
+on After temporarily show Before; release/cancellation restores the selected segment. Both images use one stable,
+letterboxed preview frame. Comparison is display-only: it never renders, clears Saved, changes options or changes the
+bytes saved. Hide comparison until a ready result exists; hide stale output and chips while fitting or after failure.
+
+Three wrapping chips show the output's rounded KB, inspected dimensions and JPG encoding, with an icon and a spoken
+pass/fail status. Use the slot's `SlotEvaluation` on those exact output bytes: size fails for `size_kb`, dimensions for
+`dims`, and JPG for either `format` or `encoding`. `UNKNOWN` makes all three unchecked (never green). These are
+technical checks, not a promise of portal acceptance: keep the slot verdict underneath and retain "Likely OK ·
+Unverified" for low-confidence presets. The shared `review_check_cases` pin the mapping; DPI and privacy metadata
+remain mandatory export verification checks (§1.6), not implied by a JPG chip. No new image is decoded at full input size.
 
 ## 5. Inspector (`inspect(uri) → InspectedFile + issues[]`)
 
@@ -437,6 +494,16 @@ Per (exam, slot of a matching type, §4 mapping) evaluate four constraints:
    (`acceptedExamCount` counts exams with ≥ 1 non-unverified EXACT/ACCEPTED entry; `quickFixCount` counts non-unverified NEAR_MISS entries).
    Result entries list only EXACT, ACCEPTED, NEAR_MISS, sorted by verdict (EXACT, ACCEPTED, NEAR_MISS), then position in the popularity list
    (unlisted after listed), then exam name (compared by Unicode code point). An exam with several matching slots appears once per slot.
+   Each entry also carries its slot's `size_kb` window (for the need text below).
+
+**Match note** (`MatchNote.of(result)`; conformance: `match_note_cases`, computed by `spec/tools/match_note.py`). From a sorted result:
+`accepted` = `acceptedExamCount`; `preview` = the first 3 of `acceptedExamIds` (result order); `more` = `accepted − |preview|`;
+`likely_ok` = distinct exams with an unverified EXACT/ACCEPTED entry that are not in `acceptedExamIds`; `quick_fixes` = the
+non-unverified NEAR_MISS entries in result order, each with a `need`: `compress_to_target` → `at_most floor(max)` KB,
+`enlarge_to_target` → `at_least ceil(min)` KB, `convert_to_jpeg` → `jpeg`, `reencode_baseline` → `baseline`; `groups` = every entry,
+grouped by `body`, groups ordered by their first entry, entries in result order. Headline: `accepted > 0` → `match.accepted` plus
+the preview names joined by " · " (and "+`more`" when `more > 0`); else `likely_ok > 0` → `match.likely_ok_count`; else `match.none`.
+A quick-fix line (`match.quick_fix`) shows when `quick_fixes` is not empty. Unverified entries in the sheet use "Likely OK · Unverified".
 
 ### 9.8 Export naming
 
@@ -455,7 +522,7 @@ A fit case names either `preset` + `doc`, or an inline `spec` (a full document o
 (inclusive), `aspect` ± `aspect_tol`, `background_mean_min` (median luma of the whole image ≥ value), `ink_pixels_min_pct` (% of pixels with luma < 128 ≥ value),
 `exif: "none"` (no APP1), `dpi` (JFIF units 1 and both densities equal), `export_filename` (§9.8), `decodes` (re-decodes without error),
 `max_ms_midrange` (measured by the benchmark, not asserted in unit tests). Other sections: `inspect_cases`, `decode_cases`, `patch_cases`,
-`geometry_cases`, `crop_cases`, `match_cases`, `search_cases` (their keys are documented inline in the file).
+`geometry_cases`, `crop_cases`, `match_cases`, `match_note_cases`, `search_cases` (their keys are documented inline in the file).
 
 ## 10. Exam search and browse (Home, PRD F1)
 

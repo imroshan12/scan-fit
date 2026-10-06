@@ -1,5 +1,6 @@
 import Foundation
 import Imaging
+import Match
 @testable import PhotoFlow
 import ScanModel
 import ScanVision
@@ -190,8 +191,21 @@ struct PhotoFlowViewModelTests {
         let review = try await reviewed(model())
         guard case let .ready(ready) = review.result else { Issue.record("not ready"); return }
         #expect(ready.kb == 34 && ready.width == 200 && ready.height == 230 && ready.meetsRules)
+        #expect(ready.checks == ReviewChecks(size: true, dimensions: true, jpeg: true))
         #expect(tools.fitInput?.width == autoCrop.w && tools.fitInput?.height == autoCrop.h)
+        let rect = autoCrop
+        let original = try #require(tools.decoded).crop(x: rect.x, y: rect.y, width: rect.w, height: rect.h)
+        #expect(review.before == original)
         #expect(!review.options.nameDate, "IBPS does not require a strip")
+    }
+
+    @Test("the review notes which exams accept the photo")
+    func matchNote() async throws {
+        guard case let .ready(ready) = try await reviewed(model()).result else { Issue.record("not ready"); return }
+        let rows = ready.note.groups.flatMap(\.entries)
+        #expect(rows.contains { $0.examId == "ibps_po" }, "IBPS PO accepts its own photo")
+        #expect(ready.note.accepted > 1, "the IBPS family shares the photo rules")
+        #expect(!rows.contains { $0.examId == "ssc_cgl" }, "SSC captures the photo live: never listed")
     }
 
     @Test("a file outside the window does not meet the rules; a fit error is shown")
@@ -199,6 +213,7 @@ struct PhotoFlowViewModelTests {
         tools.setFit { FakePhotoTools.success($0, FakePhotoTools.jpeg(width: 200, height: 230, size: 60 * 1024)) }
         guard case let .ready(ready) = try await reviewed(model()).result else { Issue.record("not ready"); return }
         #expect(!ready.meetsRules)
+        #expect(ready.checks == ReviewChecks(size: false, dimensions: true, jpeg: true))
         tools.setFit { _ in .failure(.tooDetailed) }
         #expect(try await reviewed(model()).result == .failed(.tooDetailed))
     }
@@ -216,13 +231,25 @@ struct PhotoFlowViewModelTests {
         // person = left half of the crop
         segmenter.mask = (0..<(crop.w * crop.h)).map { $0 % crop.w < crop.w / 2 ? 255 : 0 }
         let m = try await model(segmenter: segmenter)
-        _ = try await reviewed(m)
+        let initial = try await reviewed(m)
         m.setWhiteBackground(true)
+        guard case let .review(working) = m.state else { Issue.record("no working review"); return }
+        #expect(working.before == initial.before && working.result == .working(targetKb: 38))
         await m.renderTask?.value
         let input = try #require(tools.fitInput)
         #expect(input.g(crop.w - 2, crop.h / 2) == 255, "far background is white")
         guard case let .review(review) = m.state else { return }
         #expect(review.options.whiteBackground)
+        #expect(review.before == initial.before && review.before != tools.fitInput)
+        m.setNameDate(true)
+        await m.renderTask?.value
+        guard case let .review(stripped) = m.state else { Issue.record("no strip review"); return }
+        #expect(stripped.before == initial.before)
+        tools.setFit { _ in .failure(.tooDetailed) }
+        m.setWhiteBackground(false)
+        await m.renderTask?.value
+        guard case let .review(failed) = m.state else { Issue.record("no failed review"); return }
+        #expect(failed.before == initial.before && failed.result == .failed(.tooDetailed))
 
         let off = try await model(segmenter: FakePersonSegmenter(mask: nil))
         _ = try await reviewed(off)

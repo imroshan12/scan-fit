@@ -102,6 +102,12 @@ public struct Strings: Sendable {
     public var docThumbImpression: String { tr("doc.thumb_impression") }
     /// "Signature (3 times)"
     public var docTripleSignature: String { tr("doc.triple_signature") }
+    /// "Ready · {kb:int} KB"
+    public func draftReadySize(kb: Int) -> String { fmt("draft.ready_size", [kb]) }
+    /// "Replace file"
+    public var draftReplace: String { tr("draft.replace") }
+    /// "Could not keep this file for later. You can still save it now."
+    public var draftRetainFailed: String { tr("draft.retain_failed") }
     /// "The saved file didn't pass our check, so we removed it. Please save again."
     public var errorExportVerifyFailed: String { tr("error.export_verify_failed") }
     /// "More than one face found. Crop to one person."
@@ -292,10 +298,30 @@ public struct Strings: Sendable {
     public func matchFixNeedsSize(exam: String, doc: String, maxKb: Int) -> String { fmt("match.fix_needs_size", [exam, doc, maxKb]) }
     /// "Likely OK · Unverified"
     public var matchLikelyOk: String { tr("match.likely_ok") }
+    /// "Likely OK for {count:int} exams · Unverified"
+    public func matchLikelyOkCount(count: Int) -> String { fmt("match.likely_ok_count", [count]) }
+    /// "Needs ≥ {min_kb:int} KB"
+    public func matchNeedAtLeast(minKb: Int) -> String { fmt("match.need_at_least", [minKb]) }
+    /// "Needs ≤ {max_kb:int} KB"
+    public func matchNeedAtMost(maxKb: Int) -> String { fmt("match.need_at_most", [maxKb]) }
+    /// "Needs a standard (baseline) JPG"
+    public var matchNeedBaseline: String { tr("match.need_baseline") }
+    /// "Needs a JPG file"
+    public var matchNeedJpeg: String { tr("match.need_jpeg") }
     /// "Doesn't match any exam in ScanFit — that's fine for other forms"
     public var matchNone: String { tr("match.none") }
+    /// "+{count:int} more"
+    public func matchPreviewMore(count: Int) -> String { fmt("match.preview_more", [count]) }
     /// "{count:int} quick fixes"
     public func matchQuickFix(count: Int) -> String { fmt("match.quick_fix", [count]) }
+    /// "To make a file for another exam, open that exam from Home."
+    public var matchSheetOtherExam: String { tr("match.sheet_other_exam") }
+    /// "Exams that accept this file"
+    public var matchSheetTitle: String { tr("match.sheet_title") }
+    /// "Accepted"
+    public var matchVerdictAccepted: String { tr("match.verdict_accepted") }
+    /// "Exact size"
+    public var matchVerdictExact: String { tr("match.verdict_exact") }
     /// "Choose from gallery"
     public var photoChoose: String { tr("photo.choose") }
     /// "Choose another photo"
@@ -342,6 +368,26 @@ public struct Strings: Sendable {
     public var photoZoomIn: String { tr("photo.zoom_in") }
     /// "Zoom out"
     public var photoZoomOut: String { tr("photo.zoom_out") }
+    /// "After"
+    public var reviewAfter: String { tr("review.after") }
+    /// "Before"
+    public var reviewBefore: String { tr("review.before") }
+    /// "{value:str}, does not pass this slot's check"
+    public func reviewCheckFail(value: String) -> String { fmt("review.check_fail", [value]) }
+    /// "{value:str}, passes this slot's check"
+    public func reviewCheckPass(value: String) -> String { fmt("review.check_pass", [value]) }
+    /// "{width:int}×{height:int}"
+    public func reviewDimensions(width: Int, height: Int) -> String { fmt("review.dimensions", [width, height]) }
+    /// "{width:str} by {height:str} pixels"
+    public func reviewDimensionsA11y(width: String, height: String) -> String { fmt("review.dimensions_a11y", [width, height]) }
+    /// "JPG"
+    public var reviewJpeg: String { tr("review.jpeg") }
+    /// "Baseline RGB JPEG"
+    public var reviewJpegA11y: String { tr("review.jpeg_a11y") }
+    /// "{kb:int} KB"
+    public func reviewSize(kb: Int) -> String { fmt("review.size", [kb]) }
+    /// "{count:int} kilobytes"
+    public func reviewSizeA11y(count: Int) -> String { fmt("review.size_a11y", [count]) }
     /// "About"
     public var settingsAbout: String { tr("settings.about") }
     /// "Check for updates"

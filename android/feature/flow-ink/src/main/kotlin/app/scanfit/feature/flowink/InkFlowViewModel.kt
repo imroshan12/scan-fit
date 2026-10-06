@@ -4,8 +4,10 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.scanfit.core.data.UserPreferences
+import app.scanfit.core.data.draft.DraftStore
 import app.scanfit.core.data.export.DocumentExporter
 import app.scanfit.core.data.export.ExportRequest
+import app.scanfit.core.data.export.ExportVerifier
 import app.scanfit.core.data.export.SaveResult
 import app.scanfit.core.data.export.SaveState
 import app.scanfit.core.imaging.AndroidImageDecoder
@@ -23,17 +25,24 @@ import app.scanfit.core.inspect.Inspector
 import app.scanfit.core.match.DocKind
 import app.scanfit.core.match.FileFacts
 import app.scanfit.core.match.MatchEngine
+import app.scanfit.core.match.MatchNote
+import app.scanfit.core.match.ReviewChecks
 import app.scanfit.core.match.Verdict
 import app.scanfit.core.model.DocSpec
+import app.scanfit.core.model.Exam
+import app.scanfit.core.model.ExamStatus
 import app.scanfit.core.presets.PresetsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -104,6 +113,9 @@ sealed interface InkReviewResult {
         val meetsRules: Boolean,
         /** The coverage gate (§3 step 8): a warning only, saving is still allowed. */
         val quality: InkQuality,
+        /** Which other exams accept these bytes (ALGORITHMS 4 "Match note on review"). */
+        val note: MatchNote = MatchNote.EMPTY,
+        val checks: ReviewChecks = ReviewChecks(),
     ) : InkReviewResult
 
     data class Failed(
@@ -141,6 +153,9 @@ sealed interface InkUiState {
         val handwritingConfirmed: Boolean,
         val save: SaveResult = SaveResult(),
         val rendering: Boolean = false,
+        val before: Raster? = null,
+        val restored: Boolean = false,
+        val retainFailed: Boolean = false,
     ) : InkUiState {
         val canSave: Boolean
             get() =
@@ -152,15 +167,17 @@ sealed interface InkUiState {
 }
 
 @HiltViewModel
+@Suppress("TooManyFunctions")
 class InkFlowViewModel
 @Inject
 constructor(
     savedState: SavedStateHandle,
-    presets: PresetsRepository,
+    private val presets: PresetsRepository,
     private val tools: InkTools,
     private val preferences: UserPreferences,
     private val exporter: DocumentExporter,
     @InkWork private val work: CoroutineDispatcher,
+    private val drafts: DraftStore,
 ) : ViewModel() {
     private val examId: String = savedState.get<String>(EXAM_ID).orEmpty()
     private val docType: String = savedState.get<String>(DOC_TYPE).orEmpty()
@@ -174,23 +191,80 @@ constructor(
     private var lastCrop: InkUiState.Crop? = null
     private var cropped: Raster? = null
     private var pendingSave: ExportRequest? = null
+    private var exams: List<Exam> = emptyList()
+    private var popular: List<String> = emptyList()
 
     init {
         viewModelScope.launch {
-            val bundle =
-                combine(presets.outcome, presets.bundle) { outcome, bundle -> outcome to bundle }
-                    .first { (outcome, bundle) -> outcome != null || bundle != null }
-                    .second
-            val exam = bundle?.exams?.firstOrNull { it.id == examId }
-            val spec = exam?.documents?.firstOrNull { it.type.name.lowercase() == docType }
-            val slot = if (exam != null && spec != null) InkSlot(exam.id, exam.name, exam.isUnverified, spec) else null
-            _uiState.value =
-                if (slot == null || slot.kind == DocKind.PHOTO || slot.kind == DocKind.PDF_DOCUMENT) {
-                    InkUiState.NotFound
-                } else {
-                    InkUiState.PickSource(slot)
+            combine(presets.outcome, presets.bundle) { outcome, bundle -> outcome to bundle }
+                .collectLatest { (outcome, bundle) ->
+                    if (bundle != null) {
+                        refreshDraft()
+                    } else if (outcome != null) {
+                        _uiState.value = InkUiState.NotFound
+                    }
                 }
         }
+        viewModelScope.launch {
+            drafts.revisions.drop(1).collectLatest { refreshDraft() }
+        }
+    }
+
+    fun refreshDraft() {
+        val bundle = presets.bundle.value ?: return
+        val exam = bundle.exams.firstOrNull { it.id == examId && it.status == ExamStatus.ACTIVE }
+        val spec = exam?.documents?.firstOrNull { it.type.name.lowercase() == docType }
+        if ((_uiState.value as? InkUiState.Review)?.save?.state == SaveState.SAVING) return
+        if (slot?.spec != null && slot?.spec != spec) {
+            job?.cancel()
+            renderJob?.cancel()
+            renderVersion++
+            lastCrop = null
+            _uiState.value = InkUiState.Loading
+        }
+        val previous = _uiState.value
+        if (previous != InkUiState.Loading && previous != InkUiState.NotFound && previous !is InkUiState.PickSource &&
+            (previous as? InkUiState.Review)?.restored != true
+        ) {
+            return
+        }
+        job?.cancel()
+        job = viewModelScope.launch {
+            if (exam == null || spec == null || DocKind.of(spec.type) in setOf(DocKind.PHOTO, DocKind.PDF_DOCUMENT)) {
+                _uiState.value = InkUiState.NotFound
+                return@launch
+            }
+            val slot = InkSlot(exam.id, exam.name, exam.isUnverified, spec)
+            val draft = drafts.read(exam.id, spec, slot.kind)
+            exams = bundle.exams
+            popular = bundle.popular
+            val next = if (draft == null || previous is InkUiState.PickSource) {
+                InkUiState.PickSource(slot)
+            } else {
+                restored(slot, draft.bytes)
+            }
+            if (_uiState.value === previous && presets.bundle.value == bundle) _uiState.value = next
+        }
+    }
+
+    private suspend fun restored(slot: InkSlot, bytes: ByteArray): InkUiState.Review {
+        val confirmed = preferences.handwritingConfirmed.first()
+        return withContext(work) {
+            InkUiState.Review(
+                slot,
+                InkReviewOptions(crispBlack = false),
+                ready(bytes, slot, InkQuality.OK, exams, popular),
+                confirmed,
+                restored = true,
+            )
+        }
+    }
+
+    fun onReplace() {
+        val review = _uiState.value as? InkUiState.Review ?: return
+        if (!review.restored || review.save.state == SaveState.SAVING) return
+        job?.cancel()
+        _uiState.value = InkUiState.PickSource(review.slot)
     }
 
     private val slot: InkSlot?
@@ -209,6 +283,8 @@ constructor(
     fun onImageSelected(uri: String) {
         val slot = slot ?: return
         if ((_uiState.value as? InkUiState.Review)?.save?.state == SaveState.SAVING) return
+        renderJob?.cancel()
+        renderVersion++
         job?.cancel()
         _uiState.value = InkUiState.Opening(slot)
         job =
@@ -364,7 +440,7 @@ constructor(
         change: (InkReviewOptions) -> InkReviewOptions,
     ) {
         val review = _uiState.value as? InkUiState.Review ?: return
-        if (review.save.state == SaveState.SAVING || !review.slot.hasInkOptions) return
+        if (review.save.state == SaveState.SAVING || review.restored || !review.slot.hasInkOptions) return
         render(review.slot, change(review.options), review.handwritingConfirmed, debounce)
     }
 
@@ -381,13 +457,14 @@ constructor(
         val working = InkReviewResult.Working(slot.targetKb)
         // While the slider moves, the last result stays on screen until the debounce has passed.
         val shown = (_uiState.value as? InkUiState.Review)?.result?.takeIf { debounce } ?: working
-        _uiState.value = InkUiState.Review(slot, options, shown, confirmed, rendering = true)
+        _uiState.value = InkUiState.Review(slot, options, shown, confirmed, rendering = true, before = source)
         renderJob =
             viewModelScope.launch {
                 if (debounce) {
                     delay(SLIDER_DEBOUNCE_MS)
                     if (version != renderVersion) return@launch
-                    _uiState.value = InkUiState.Review(slot, options, working, confirmed, rendering = true)
+                    _uiState.value =
+                        InkUiState.Review(slot, options, working, confirmed, rendering = true, before = source)
                 }
                 val ink = InkOptions(crispBlack = options.crispBlack, inkFactor = options.inkFactor)
                 val result =
@@ -397,13 +474,37 @@ constructor(
 
                             is PipelineOutcome.Success -> {
                                 val quality = outcome.result.ink?.quality ?: InkQuality.OK
-                                ready(outcome.result.fit.bytes, slot, quality)
+                                ready(outcome.result.fit.bytes, slot, quality, exams, popular)
                             }
                         }
                     }
                 if (version != renderVersion) return@launch
+                if (presets.bundle.value?.exams?.firstOrNull { it.id == slot.examId }?.documents
+                        ?.firstOrNull { it.type == slot.spec.type } != slot.spec
+                ) {
+                    return@launch
+                }
+                val retained = if (result is InkReviewResult.Ready && result.meetsRules) {
+                    try {
+                        drafts.retain(slot.examId, slot.spec, slot.kind, result.bytes)
+                    } catch (cancelled: CancellationException) {
+                        throw cancelled
+                    } catch (_: Exception) {
+                        false
+                    }
+                } else {
+                    true
+                }
+                if (version != renderVersion) return@launch
                 val current = _uiState.value as? InkUiState.Review
-                _uiState.value = InkUiState.Review(slot, options, result, current?.handwritingConfirmed ?: confirmed)
+                _uiState.value = InkUiState.Review(
+                    slot,
+                    options,
+                    result,
+                    current?.handwritingConfirmed ?: confirmed,
+                    before = source,
+                    retainFailed = !retained,
+                )
             }
     }
 
@@ -432,16 +533,23 @@ constructor(
             bytes: ByteArray,
             slot: InkSlot,
             quality: InkQuality,
+            exams: List<Exam>,
+            popular: List<String>,
         ): InkReviewResult.Ready {
             val inspected = Inspector.inspect(bytes)
-            val verdict = MatchEngine.evaluate(slot.spec, FileFacts.of(inspected, slot.kind)).verdict
+            val facts = FileFacts.of(inspected, slot.kind)
+            val evaluation = MatchEngine.evaluate(slot.spec, facts)
+            val verdict = evaluation.verdict
             return InkReviewResult.Ready(
                 bytes = bytes,
                 kb = (bytes.size + KB / 2) / KB,
                 width = inspected.width ?: 0,
                 height = inspected.height ?: 0,
-                meetsRules = verdict == Verdict.EXACT || verdict == Verdict.ACCEPTED,
+                meetsRules = (verdict == Verdict.EXACT || verdict == Verdict.ACCEPTED) &&
+                    ExportVerifier.verifies(bytes, bytes, slot.spec, slot.kind),
                 quality = quality,
+                note = MatchNote.of(facts, exams, popular),
+                checks = ReviewChecks.of(evaluation),
             )
         }
     }

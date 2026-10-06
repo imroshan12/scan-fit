@@ -1,7 +1,5 @@
-import CoreGraphics
 import DesignSystem
 import Imaging
-import ImageIO
 import SwiftUI
 
 /// UI_UX §3 Review: the fitted photo, its numbers and verdict, and the photo options.
@@ -10,40 +8,28 @@ struct PhotoReviewView: View {
     let model: PhotoFlowViewModel
     let strings: Strings
 
-    @State private var image: CGImage?
-
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: ScanFitSpacing.lg) {
-                preview
+                BeforeAfterImage(before: review.before, after: readyBytes, strings: strings)
                 result
                 ExportStatusView(state: model.exportState, strings: strings)
-                options
+                if review.retainFailed { NoticeCard(text: strings.draftRetainFailed, kind: .warning) }
+                if review.restored {
+                    Button { model.replaceDraft() } label: {
+                        Label(strings.draftReplace, systemImage: "arrow.triangle.2.circlepath")
+                    }
                     .disabled(model.exportState == .saving)
+                } else {
+                    options.disabled(model.exportState == .saving)
+                }
             }
             .padding(ScanFitSpacing.screenMargin)
-        }
-        .task(id: readyBytes) {
-            let bytes = readyBytes
-            image = await Task.detached(priority: .userInitiated) { Self.decode(bytes) }.value
         }
     }
 
     private var readyBytes: [UInt8] {
         if case let .ready(ready) = review.result { ready.bytes } else { [] }
-    }
-
-    /// The fitted photo as it will be written, at most 280 pt tall; a placeholder while it is being made.
-    private var preview: some View {
-        let aspect = image.map { CGFloat($0.width) / CGFloat($0.height) } ?? 200.0 / 230.0
-        return ZStack {
-            RoundedRectangle(cornerRadius: ScanFitRadius.card).fill(ScanFitColor.surfaceVariant)
-            if let image, case .ready = review.result {
-                Image(decorative: image, scale: 1).resizable().scaledToFit()
-            }
-        }
-        .aspectRatio(aspect, contentMode: .fit)
-        .frame(maxWidth: .infinity, maxHeight: 280)
     }
 
     @ViewBuilder
@@ -55,12 +41,10 @@ struct PhotoReviewView: View {
                 if let targetKb { Text(strings.flowStepFit(kb: targetKb)).scanFitText(.body) }
             }
         case let .ready(ready):
-            Text(strings.photoResult(kb: ready.kb, width: ready.width, height: ready.height))
-                .scanFitText(.figure)
-                .accessibilityLabel(strings.photoResultA11y(
-                    count: ready.kb, width: String(ready.width), height: String(ready.height)
-                ))
+            ReviewChecksRow(kb: ready.kb, width: ready.width, height: ready.height,
+                            checks: ready.checks, strings: strings)
             verdict(ready)
+            MatchNoteCard(note: ready.note, strings: strings)
         case let .failed(error):
             NoticeCard(text: message(error), kind: .error)
         }
@@ -125,8 +109,4 @@ struct PhotoReviewView: View {
         }
     }
 
-    private nonisolated static func decode(_ bytes: [UInt8]) -> CGImage? {
-        guard !bytes.isEmpty, let source = CGImageSourceCreateWithData(Data(bytes) as CFData, nil) else { return nil }
-        return CGImageSourceCreateImageAtIndex(source, 0, nil)
-    }
 }

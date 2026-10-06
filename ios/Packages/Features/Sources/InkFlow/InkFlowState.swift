@@ -64,6 +64,9 @@ public struct InkReady: Sendable, Equatable {
     public let meetsRules: Bool
     /// The coverage gate (§3 step 8): a warning only, saving is still allowed.
     public let quality: InkQuality
+    /// Which other exams accept these bytes (ALGORITHMS 4 "Match note on review").
+    public let note: MatchNote
+    public var checks: ReviewChecks = .unchecked
 }
 
 public enum InkReviewResult: Sendable, Equatable {
@@ -78,6 +81,9 @@ public struct InkReviewState: Sendable, Equatable {
     public var result: InkReviewResult
     /// The handwriting tick (signatures only): from the device, or ticked now.
     public var handwritingConfirmed: Bool
+    public var before: Raster?
+    public var restored = false
+    public var retainFailed = false
 }
 
 /// The ink flow's steps (UI_UX §3 Capture/crop, Review). Same states as Android's `InkUiState`.

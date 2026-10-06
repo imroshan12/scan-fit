@@ -1,53 +1,47 @@
 package app.scanfit.feature.flowink
 
-import android.graphics.BitmapFactory
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.toggleable
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import app.scanfit.core.data.export.SaveState
 import app.scanfit.core.designsystem.R
+import app.scanfit.core.designsystem.components.BeforeAfterImage
+import app.scanfit.core.designsystem.components.MatchNoteCard
 import app.scanfit.core.designsystem.components.NoticeCard
 import app.scanfit.core.designsystem.components.NoticeKind
-import app.scanfit.core.designsystem.theme.ScanFitRadius
+import app.scanfit.core.designsystem.components.ReviewChecksRow
 import app.scanfit.core.designsystem.theme.ScanFitSpacing
 import app.scanfit.core.designsystem.theme.ScanFitTheme
 import app.scanfit.core.designsystem.theme.ScanFitType
 import app.scanfit.core.imaging.FitError
 import app.scanfit.core.imaging.InkQuality
+import app.scanfit.core.imaging.toBitmap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
@@ -58,10 +52,18 @@ internal fun InkReviewContent(
     state: InkUiState.Review,
     actions: InkActions,
 ) {
+    val before by key(state.before) {
+        produceState<ImageBitmap?>(null, state.before) {
+            value = state.before?.let { raster ->
+                withContext(Dispatchers.Default) { raster.toBitmap().asImageBitmap() }
+            }
+        }
+    }
+    val shown = if (state.rendering) InkReviewResult.Working(state.slot.targetKb) else state.result
     ScrollColumn {
-        when (val result = state.result) {
+        BeforeAfterImage(before, (shown as? InkReviewResult.Ready)?.bytes)
+        when (val result = shown) {
             is InkReviewResult.Working -> {
-                ResultImage(null, state)
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(ScanFitSpacing.sm),
                     verticalAlignment = Alignment.CenterVertically,
@@ -72,8 +74,9 @@ internal fun InkReviewContent(
             }
 
             is InkReviewResult.Ready -> {
-                ResultImage(result.bytes, state)
+                ReviewChecksRow(result.kb, result.width, result.height, result.checks)
                 ResultSummary(result, state.slot)
+                MatchNoteCard(result.note)
                 when (result.quality) {
                     InkQuality.TOO_FAINT -> NoticeCard(stringResource(R.string.ink_too_faint), NoticeKind.WARNING)
                     InkQuality.TOO_DARK -> NoticeCard(stringResource(R.string.ink_too_dark), NoticeKind.WARNING)
@@ -82,7 +85,6 @@ internal fun InkReviewContent(
             }
 
             is InkReviewResult.Failed -> {
-                ResultImage(null, state)
                 val max = state.slot.spec.sizeKb.max?.roundToInt() ?: 0
                 val text =
                     when (result.error) {
@@ -100,40 +102,17 @@ internal fun InkReviewContent(
             else -> Unit
         }
         val editable = state.save.state != SaveState.SAVING
-        if (state.slot.hasInkOptions) InkOptionsRow(state.options, actions, editable)
+        if (state.retainFailed) NoticeCard(stringResource(R.string.draft_retain_failed), NoticeKind.WARNING)
+        if (state.restored) {
+            TextButton(onClick = actions.onReplace, enabled = editable) {
+                Icon(Icons.Filled.Refresh, contentDescription = null)
+                Text(stringResource(R.string.draft_replace))
+            }
+        } else if (state.slot.hasInkOptions) {
+            InkOptionsRow(state.options, actions, editable)
+        }
         if (state.slot.needsHandwritingConfirmation) {
             HandwritingConfirmation(state.handwritingConfirmed, actions.onConfirmHandwriting, editable)
-        }
-    }
-}
-
-/** The fitted file as it will be written, at most 200 dp tall, on a light card so white paper reads as paper. */
-@Composable
-private fun ResultImage(
-    bytes: ByteArray?,
-    state: InkUiState.Review,
-) {
-    val bitmap by produceState<ImageBitmap?>(null, bytes) {
-        value =
-            bytes?.let {
-                withContext(Dispatchers.Default) { BitmapFactory.decodeByteArray(it, 0, it.size)?.asImageBitmap() }
-            }
-    }
-    val w = state.slot.spec.dimensions.width
-    val h = state.slot.spec.dimensions.height
-    val fallback = if (w != null && h != null) w.toFloat() / h else PLACEHOLDER_ASPECT
-    val aspect = bitmap?.let { it.width.toFloat() / it.height } ?: fallback
-    Box(
-        modifier =
-        Modifier
-            .fillMaxWidth()
-            .heightIn(max = PREVIEW_MAX_HEIGHT)
-            .aspectRatio(aspect, matchHeightConstraintsFirst = true)
-            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(ScanFitRadius.card)),
-        contentAlignment = Alignment.Center,
-    ) {
-        bitmap?.let {
-            Image(it, contentDescription = null, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
         }
     }
 }
@@ -145,19 +124,6 @@ private fun ResultSummary(
     slot: InkSlot,
 ) {
     val colors = ScanFitTheme.colors
-    val a11y =
-        pluralStringResource(
-            R.plurals.photo_result_a11y,
-            result.kb,
-            result.kb,
-            result.width.toString(),
-            result.height.toString(),
-        )
-    Text(
-        stringResource(R.string.photo_result, result.kb, result.width, result.height),
-        style = ScanFitType.figure,
-        modifier = Modifier.semantics { contentDescription = a11y },
-    )
     val missed = stringResource(R.string.photo_misses_rules, slot.examName)
     val met = stringResource(R.string.photo_meets_rules, slot.examName)
     val (icon, tint: Color, text) =
@@ -226,8 +192,6 @@ private fun HandwritingConfirmation(
     }
 }
 
-private const val PLACEHOLDER_ASPECT = 7f / 3f
-private val PREVIEW_MAX_HEIGHT = 200.dp
 private const val DARKNESS_SUM = 1.2
 private const val MIN_DARKNESS = 0.3f
 private const val MAX_DARKNESS = 0.9f

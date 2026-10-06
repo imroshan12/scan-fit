@@ -36,7 +36,7 @@ let package = Package(
         .target(name: "Home", dependencies: [core, presets, model, data]),
         .target(name: "Kit", dependencies: [core]),
         .target(name: "Settings", dependencies: [core, presets, data]),
-        .target(name: "Exams", dependencies: [core, model, data]),
+        .target(name: "Exams", dependencies: [core, model, data, match]),
         .target(name: "PhotoFlow", dependencies: [core, model, imaging, vision, match, inspect, data]),
         .target(name: "InkFlow", dependencies: [core, model, imaging, match, inspect, data]),
         // Empty until their phase (ROADMAP Phase 2-4)

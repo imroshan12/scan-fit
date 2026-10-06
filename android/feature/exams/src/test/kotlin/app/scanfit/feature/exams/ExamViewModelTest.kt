@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import app.scanfit.core.model.DocType
 import app.scanfit.core.presets.PresetsLoadOutcome
 import app.scanfit.core.presets.PresetsSummary
+import app.scanfit.core.testing.FakeDraftStore
 import app.scanfit.core.testing.FakePresetsRepository
 import app.scanfit.core.testing.FakeUserPreferences
 import app.scanfit.core.testing.SpecPresets
@@ -34,7 +35,7 @@ class ExamViewModelTest {
         id: String,
         prefs: FakeUserPreferences = FakeUserPreferences(),
         presets: FakePresetsRepository = FakePresetsRepository(ready, SpecPresets.bundle),
-    ) = ExamViewModel(SavedStateHandle(mapOf(ExamViewModel.EXAM_ID to id)), presets, prefs)
+    ) = ExamViewModel(SavedStateHandle(mapOf(ExamViewModel.EXAM_ID to id)), presets, prefs, FakeDraftStore())
 
     @Test
     fun showsTheExamFromTheTrustedPresets() = runTest {

@@ -40,6 +40,9 @@
     <string name="doc_signature">Signature</string>
     <string name="doc_thumb_impression">Thumb impression</string>
     <string name="doc_triple_signature">Signature (3 times)</string>
+    <string name="draft_ready_size">Ready · %1$d KB</string>
+    <string name="draft_replace">Replace file</string>
+    <string name="draft_retain_failed">Could not keep this file for later. You can still save it now.</string>
     <string name="error_export_verify_failed">The saved file didn\'t pass our check, so we removed it. Please save again.</string>
     <string name="error_face_multiple">More than one face found. Crop to one person.</string>
     <string name="error_face_none">No face found. Retake the photo with your face clearly visible.</string>
@@ -144,11 +147,27 @@
     </plurals>
     <string name="match_fix_needs_size">%1$s %2$s needs ≤ %3$d KB</string>
     <string name="match_likely_ok">Likely OK · Unverified</string>
+    <plurals name="match_likely_ok_count">
+        <item quantity="one">Likely OK for %1$d exam · Unverified</item>
+        <item quantity="other">Likely OK for %1$d exams · Unverified</item>
+    </plurals>
+    <string name="match_need_at_least">Needs ≥ %1$d KB</string>
+    <string name="match_need_at_most">Needs ≤ %1$d KB</string>
+    <string name="match_need_baseline">Needs a standard (baseline) JPG</string>
+    <string name="match_need_jpeg">Needs a JPG file</string>
     <string name="match_none">Doesn\'t match any exam in ScanFit — that\'s fine for other forms</string>
+    <plurals name="match_preview_more">
+        <item quantity="one">+%1$d more</item>
+        <item quantity="other">+%1$d more</item>
+    </plurals>
     <plurals name="match_quick_fix">
         <item quantity="one">%1$d quick fix</item>
         <item quantity="other">%1$d quick fixes</item>
     </plurals>
+    <string name="match_sheet_other_exam">To make a file for another exam, open that exam from Home.</string>
+    <string name="match_sheet_title">Exams that accept this file</string>
+    <string name="match_verdict_accepted">Accepted</string>
+    <string name="match_verdict_exact">Exact size</string>
     <string name="photo_choose">Choose from gallery</string>
     <string name="photo_choose_another">Choose another photo</string>
     <string name="photo_choose_file">Choose from Files</string>
@@ -175,6 +194,19 @@
     <string name="photo_white_bg_unavailable">White background isn\'t available on this device.</string>
     <string name="photo_zoom_in">Zoom in</string>
     <string name="photo_zoom_out">Zoom out</string>
+    <string name="review_after">After</string>
+    <string name="review_before">Before</string>
+    <string name="review_check_fail">%1$s, does not pass this slot\'s check</string>
+    <string name="review_check_pass">%1$s, passes this slot\'s check</string>
+    <string name="review_dimensions">%1$d×%2$d</string>
+    <string name="review_dimensions_a11y">%1$s by %2$s pixels</string>
+    <string name="review_jpeg">JPG</string>
+    <string name="review_jpeg_a11y">Baseline RGB JPEG</string>
+    <string name="review_size">%1$d KB</string>
+    <plurals name="review_size_a11y">
+        <item quantity="one">%1$d kilobyte</item>
+        <item quantity="other">%1$d kilobytes</item>
+    </plurals>
     <string name="settings_about">About</string>
     <string name="settings_check_updates">Check for updates</string>
     <string name="settings_help">Help</string>

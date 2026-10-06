@@ -40,6 +40,9 @@
     <string name="doc_signature">हस्ताक्षर</string>
     <string name="doc_thumb_impression">अँगूठे का निशान</string>
     <string name="doc_triple_signature">हस्ताक्षर (3 बार)</string>
+    <string name="draft_ready_size">तैयार · %1$d KB</string>
+    <string name="draft_replace">फ़ाइल बदलें</string>
+    <string name="draft_retain_failed">यह फ़ाइल बाद के लिए नहीं रख पाए। आप इसे अभी सेव कर सकते हैं।</string>
     <string name="error_export_verify_failed">सेव की गई फ़ाइल हमारी जाँच में पास नहीं हुई, इसलिए हटा दी गई। कृपया दोबारा सेव करें।</string>
     <string name="error_face_multiple">एक से ज़्यादा चेहरे मिले। केवल एक व्यक्ति तक क्रॉप करें।</string>
     <string name="error_face_none">चेहरा नहीं मिला। चेहरा साफ़ दिखे, ऐसी फ़ोटो दोबारा लें।</string>
@@ -144,11 +147,27 @@
     </plurals>
     <string name="match_fix_needs_size">%1$s %2$s के लिए ≤ %3$d KB चाहिए</string>
     <string name="match_likely_ok">शायद ठीक · असत्यापित</string>
+    <plurals name="match_likely_ok_count">
+        <item quantity="one">%1$d परीक्षा के लिए शायद ठीक · असत्यापित</item>
+        <item quantity="other">%1$d परीक्षाओं के लिए शायद ठीक · असत्यापित</item>
+    </plurals>
+    <string name="match_need_at_least">≥ %1$d KB चाहिए</string>
+    <string name="match_need_at_most">≤ %1$d KB चाहिए</string>
+    <string name="match_need_baseline">सामान्य (baseline) JPG चाहिए</string>
+    <string name="match_need_jpeg">JPG फ़ाइल चाहिए</string>
     <string name="match_none">ScanFit की किसी परीक्षा से मेल नहीं खाता — दूसरे फ़ॉर्म के लिए यह ठीक है</string>
+    <plurals name="match_preview_more">
+        <item quantity="one">+%1$d और</item>
+        <item quantity="other">+%1$d और</item>
+    </plurals>
     <plurals name="match_quick_fix">
         <item quantity="one">%1$d त्वरित सुधार</item>
         <item quantity="other">%1$d त्वरित सुधार</item>
     </plurals>
+    <string name="match_sheet_other_exam">किसी दूसरी परीक्षा के लिए फ़ाइल बनाने हेतु होम से वह परीक्षा खोलें।</string>
+    <string name="match_sheet_title">इस फ़ाइल को स्वीकार करने वाली परीक्षाएँ</string>
+    <string name="match_verdict_accepted">मान्य</string>
+    <string name="match_verdict_exact">बिल्कुल सही साइज़</string>
     <string name="photo_choose">गैलरी से चुनें</string>
     <string name="photo_choose_another">दूसरी फ़ोटो चुनें</string>
     <string name="photo_choose_file">फ़ाइल्स से चुनें</string>
@@ -175,6 +194,19 @@
     <string name="photo_white_bg_unavailable">इस डिवाइस पर सफ़ेद बैकग्राउंड उपलब्ध नहीं है।</string>
     <string name="photo_zoom_in">ज़ूम इन करें</string>
     <string name="photo_zoom_out">ज़ूम आउट करें</string>
+    <string name="review_after">बाद में</string>
+    <string name="review_before">पहले</string>
+    <string name="review_check_fail">%1$s, इस दस्तावेज़ की जाँच सफल नहीं</string>
+    <string name="review_check_pass">%1$s, इस दस्तावेज़ की जाँच सफल</string>
+    <string name="review_dimensions">%1$d×%2$d</string>
+    <string name="review_dimensions_a11y">%1$s गुणा %2$s पिक्सेल</string>
+    <string name="review_jpeg">JPG</string>
+    <string name="review_jpeg_a11y">बेसलाइन RGB JPEG</string>
+    <string name="review_size">%1$d KB</string>
+    <plurals name="review_size_a11y">
+        <item quantity="one">%1$d किलोबाइट</item>
+        <item quantity="other">%1$d किलोबाइट</item>
+    </plurals>
     <string name="settings_about">ऐप के बारे में</string>
     <string name="settings_check_updates">अपडेट जाँचें</string>
     <string name="settings_help">मदद</string>

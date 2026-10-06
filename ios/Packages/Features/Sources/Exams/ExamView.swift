@@ -8,6 +8,7 @@ import SwiftUI
 public struct ExamView: View {
     @State private var model: ExamViewModel
     @Environment(\.locale) private var locale
+    @Environment(\.scenePhase) private var scenePhase
     private let strings: Strings
     private let openable: Set<DocType>
 
@@ -34,7 +35,13 @@ public struct ExamView: View {
                     }
                 }
             }
-            .task { await model.onAppear() }
+            .task {
+                await model.onAppear()
+                await model.observeDrafts()
+            }
+            .task(id: scenePhase) {
+                if scenePhase == .active { await model.onAppear() }
+            }
     }
 
     @ViewBuilder
@@ -95,7 +102,6 @@ public struct ExamView: View {
         .padding(.vertical, ScanFitSpacing.xs)
     }
 
-    /// UI_UX §4 `DocRow`. The status stays "Not started" until export lands.
     private func docRow(_ doc: DocSpec) -> some View {
         VStack(alignment: .leading, spacing: ScanFitSpacing.xs) {
             HStack(spacing: ScanFitSpacing.sm) {
@@ -105,10 +111,14 @@ public struct ExamView: View {
                 }
             }
             Text(strings.specSummary(doc)).scanFitText(.figure)
-            if model.preferences.isSaved(model.examId, doc.type) {
+            switch model.status(doc.type) {
+            case .saved:
                 Label(strings.examStatusSaved, systemImage: "checkmark.circle.fill")
                     .scanFitText(.caption).foregroundStyle(ScanFitColor.success)
-            } else {
+            case let .ready(kb):
+                Label(strings.draftReadySize(kb: kb), systemImage: "checkmark.circle")
+                    .scanFitText(.caption).foregroundStyle(ScanFitColor.success)
+            case .notStarted:
                 Text(strings.examStatusNotStarted).scanFitText(.caption).foregroundStyle(ScanFitColor.onSurfaceVariant)
             }
         }

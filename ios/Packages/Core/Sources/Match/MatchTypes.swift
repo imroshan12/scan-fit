@@ -106,11 +106,33 @@ public struct MatchEntry: Sendable, Equatable {
     public let fix: FixAction?
     public let failed: [Constraint]
     public let issues: [Issue]
+    /// The slot's size window, for the match note's "needs ≤ 20 KB" (ALGORITHMS 9.7).
+    public let sizeKb: SizeKB
+
+    public init(
+        examId: String, examName: String, body: String, docType: DocType, verdict: Verdict, unverified: Bool,
+        fix: FixAction?, failed: [Constraint], issues: [Issue], sizeKb: SizeKB = SizeKB()
+    ) {
+        self.examId = examId
+        self.examName = examName
+        self.body = body
+        self.docType = docType
+        self.verdict = verdict
+        self.unverified = unverified
+        self.fix = fix
+        self.failed = failed
+        self.issues = issues
+        self.sizeKb = sizeKb
+    }
 }
 
 public struct MatchResult: Sendable, Equatable {
     /// Only exact, accepted and near-miss entries, sorted (ALGORITHMS 9.7).
     public let entries: [MatchEntry]
+
+    public init(entries: [MatchEntry]) {
+        self.entries = entries
+    }
 
     /// Exams with at least one verified exact/accepted slot: the headline "Accepted by N exams".
     public var acceptedExamIds: [String] {

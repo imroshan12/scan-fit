@@ -16,11 +16,16 @@ public final class InkFlowViewModel {
     public let docType: DocType
     public private(set) var exportState: ExportState = .idle
     public private(set) var renderPending = false
+    public private(set) var draftValidationPending = false
     public let exporter: any DocumentExporting
 
     @ObservationIgnored private let preferences: UserPreferences?
+    @ObservationIgnored private let drafts: any DraftStore
     @ObservationIgnored private let tools: any InkTools
     @ObservationIgnored private let load: @Sendable () async -> PresetBundle?
+    /// Every exam and the popularity order, for the review's match note.
+    @ObservationIgnored private var exams: [Exam] = []
+    @ObservationIgnored private var popular: [String] = []
     @ObservationIgnored private var generation = 0
     @ObservationIgnored private var lastCrop: InkCropState?
     @ObservationIgnored private var cropped: Raster?
@@ -36,6 +41,7 @@ public final class InkFlowViewModel {
         tools: any InkTools = LiveInkTools(),
         preferences: UserPreferences? = nil,
         exporter: any DocumentExporting = FilesExporter(),
+        drafts: any DraftStore = NoDraftStore(),
         load: @escaping @Sendable () async -> PresetBundle?
     ) {
         self.examId = examId
@@ -43,26 +49,23 @@ public final class InkFlowViewModel {
         self.tools = tools
         self.preferences = preferences
         self.exporter = exporter
+        self.drafts = drafts
         self.load = load
     }
 
-    /// Loads once; later calls (re-appearing views) do nothing.
+    /// Resolves the trusted slot and revalidates restored reviews on entry.
     public func onAppear() async {
+        guard exportState != .saving else { return }
+        if case let .review(review) = state, review.restored { await restoreDraft(); return }
         guard state == .loading else { return }
-        let id = examId, type = docType
-        guard let exam = await load()?.exams.first(where: { $0.id == id }),
-              let spec = exam.documents.first(where: { $0.type == type })
-        else {
-            state = .notFound
-            return
-        }
-        let slot = InkSlot(examId: exam.id, examName: exam.name, unverified: exam.isUnverified, spec: spec)
-        state = slot.kind == .photo || slot.kind == .pdfDocument ? .notFound : .pickSource(slot, openFailed: false)
+        await restoreDraft()
     }
 
     /// The picked or captured file's bytes; nil when it could not be read.
     public func imageSelected(_ bytes: [UInt8]?) async {
         guard let slot = state.slot, exportState != .saving else { return }
+        draftValidationPending = false
+        renderTask?.cancel()
         generation += 1
         let gen = generation
         state = .opening(slot)
@@ -134,7 +137,7 @@ public final class InkFlowViewModel {
     }
 
     public var canSave: Bool {
-        guard exportState != .saving, case let .review(review) = state else { return false }
+        guard !draftValidationPending, exportState != .saving, case let .review(review) = state else { return false }
         guard !review.slot.needsHandwritingConfirmation || review.handwritingConfirmed else { return false }
         if renderPending { return true }
         guard case let .ready(ready) = review.result else { return false }
@@ -165,13 +168,15 @@ public final class InkFlowViewModel {
     public func back() -> Bool {
         guard let slot = state.slot else { return false }
         if exportState == .saving { return true }
+        draftValidationPending = false
         switch state {
-        case .review:
+        case let .review(review):
             renderTask?.cancel()
             generation += 1
             renderPending = false
             exportState = .idle
-            state = lastCrop.map { .crop($0) } ?? .pickSource(slot, openFailed: false)
+            state = review.restored ? .pickSource(slot, openFailed: false)
+                : lastCrop.map { .crop($0) } ?? .pickSource(slot, openFailed: false)
             return true
         case .crop, .opening:
             generation += 1
@@ -191,50 +196,68 @@ public final class InkFlowViewModel {
     }
 
     private func updateOptions(debounce: Bool, _ change: (inout InkReviewOptions) -> Void) {
-        guard exportState != .saving, case let .review(review) = state, review.slot.hasInkOptions else { return }
+        guard exportState != .saving, case let .review(review) = state,
+              !review.restored, review.slot.hasInkOptions else { return }
         var options = review.options
         change(&options)
         exportState = exportState == .saved ? .idle : exportState
         startRender(review.slot, options, confirmed: review.handwritingConfirmed, debounce: debounce)
     }
 
-    /// Cleanup → pad to aspect → fit → re-inspect (§3, §9.5). A newer change cancels the running one. While the slider
-    /// moves, the last result stays on screen until the debounce has passed.
+    /// Cleanup → pad to aspect → fit → re-inspect (§3, §9.5). A newer change cancels the running one.
     private func startRender(_ slot: InkSlot, _ options: InkReviewOptions, confirmed: Bool, debounce: Bool) {
         renderTask?.cancel()
+        generation += 1
+        let gen = generation
         renderPending = true
         let working = InkReviewResult.working(targetKb: slot.targetKb)
-        let shown: InkReviewResult
-        if debounce, case let .review(current) = state { shown = current.result } else { shown = working }
-        state = .review(InkReviewState(slot: slot, options: options, result: shown, handwritingConfirmed: confirmed))
+        state = .review(InkReviewState(
+            slot: slot, options: options, result: working, handwritingConfirmed: confirmed, before: cropped
+        ))
         renderTask = Task { [weak self] in
             if debounce {
                 try? await Task.sleep(for: Self.sliderDebounce)
                 guard !Task.isCancelled else { return }
                 self?.setResult(slot, options, working)
             }
-            await self?.render(slot, options)
+            await self?.render(slot, options, generation: gen)
         }
     }
 
-    private func setResult(_ slot: InkSlot, _ options: InkReviewOptions, _ result: InkReviewResult) {
+    private func setResult(
+        _ slot: InkSlot, _ options: InkReviewOptions, _ result: InkReviewResult, retainFailed: Bool = false
+    ) {
         let confirmed = if case let .review(current) = state { current.handwritingConfirmed } else { false }
-        state = .review(InkReviewState(slot: slot, options: options, result: result, handwritingConfirmed: confirmed))
+        state = .review(InkReviewState(
+            slot: slot, options: options, result: result, handwritingConfirmed: confirmed,
+            before: cropped, retainFailed: retainFailed
+        ))
     }
 
-    private func render(_ slot: InkSlot, _ options: InkReviewOptions) async {
+    private func render(_ slot: InkSlot, _ options: InkReviewOptions, generation gen: Int) async {
         guard let source = cropped else { return }
         let tools = self.tools, spec = slot.spec, pipeline = slot.pipeline, kind = slot.kind
+        let exams = self.exams, popular = self.popular
         let ink = InkOptions(crispBlack: options.crispBlack, inkFactor: options.inkFactor)
         let result: InkReviewResult = await Self.background {
             switch tools.fit(source, spec: spec, pipeline: pipeline, ink: ink) {
-            case let .success(r): return .ready(Self.ready(r.fit.bytes, spec, kind, r.ink?.quality ?? .ok))
+            case let .success(r):
+                return .ready(Self.ready(r.fit.bytes, spec, kind, r.ink?.quality ?? .ok, exams, popular))
             case let .failure(error): return .failed(error)
             }
         } ?? .failed(.encodingFailed)
-        guard !Task.isCancelled else { return }
+        guard !Task.isCancelled, gen == generation else { return }
+        var retainFailed = false
+        if case let .ready(ready) = result {
+            do {
+                try await drafts.retain(ready.bytes, examID: examId, spec: spec, kind: kind)
+            } catch {
+                retainFailed = true
+            }
+        }
+        guard !Task.isCancelled, gen == generation else { return }
         renderPending = false
-        setResult(slot, options, result)
+        setResult(slot, options, result, retainFailed: retainFailed)
     }
 
     /// Runs image work off the main actor. A thrown error becomes nil.
@@ -257,17 +280,94 @@ public final class InkFlowViewModel {
 
     /// Re-inspects the fitted bytes and evaluates them as the slot's kind, as the export will be (rule 3).
     private nonisolated static func ready(
-        _ bytes: [UInt8], _ spec: DocSpec, _ kind: DocKind, _ quality: InkQuality
+        _ bytes: [UInt8], _ spec: DocSpec, _ kind: DocKind, _ quality: InkQuality, _ exams: [Exam], _ popular: [String]
     ) -> InkReady {
         let inspected = Inspector.inspect(bytes)
-        let verdict = MatchEngine.evaluate(spec, FileFacts(inspected, docKind: kind)).verdict
+        let facts = FileFacts(inspected, docKind: kind)
+        let evaluation = MatchEngine.evaluate(spec, facts)
         return InkReady(
             bytes: bytes,
             kb: (bytes.count + 512) / 1024,
             width: inspected.width ?? 0,
             height: inspected.height ?? 0,
-            meetsRules: verdict == .exact || verdict == .accepted,
-            quality: quality
+            meetsRules: evaluation.verdict == .exact || evaluation.verdict == .accepted,
+            quality: quality,
+            note: MatchNote.of(facts, exams: exams, popularity: popular),
+            checks: .of(evaluation)
         )
+    }
+}
+
+public extension InkFlowViewModel {
+    #if DEBUG
+    static func preview(_ review: InkReviewState) -> InkFlowViewModel {
+        let model = InkFlowViewModel(examId: review.slot.examId, docType: review.slot.spec.type) { nil }
+        model.state = .review(review)
+        return model
+    }
+    #endif
+
+    func replaceDraft() {
+        guard exportState != .saving, case let .review(review) = state, review.restored else { return }
+        renderTask?.cancel()
+        generation += 1
+        renderPending = false
+        draftValidationPending = false
+        exportState = .idle
+        lastCrop = nil
+        cropped = nil
+        state = .pickSource(review.slot, openFailed: false)
+    }
+
+    func onForeground() async {
+        guard exportState != .saving, case let .review(review) = state, review.restored else { return }
+        await restoreDraft()
+    }
+
+    func observeDrafts() async {
+        let stream = await drafts.revisions()
+        for await _ in stream {
+            guard !Task.isCancelled else { return }
+            await onForeground()
+        }
+    }
+}
+
+private extension InkFlowViewModel {
+    func restoreDraft() async {
+        generation += 1
+        let gen = generation
+        draftValidationPending = true
+        defer { if gen == generation { draftValidationPending = false } }
+        let bundle = await load()
+        guard !Task.isCancelled, gen == generation else { return }
+        exams = bundle?.exams ?? []
+        popular = bundle?.popular ?? []
+        guard let exam = exams.first(where: { $0.id == examId && $0.status == .active }),
+              let spec = exam.documents.first(where: { $0.type == docType }) else {
+            state = .notFound
+            return
+        }
+        let slot = InkSlot(examId: exam.id, examName: exam.name, unverified: exam.isUnverified, spec: spec)
+        guard slot.kind != .photo, slot.kind != .pdfDocument else { state = .notFound; return }
+        let draft = await drafts.load(examID: examId, spec: spec, kind: slot.kind)
+        guard !Task.isCancelled, gen == generation else { return }
+        let exams = exams, popular = popular
+        if let draft, let ready = await Self.background({
+            Self.ready(draft.bytes, spec, slot.kind, .ok, exams, popular)
+        }) {
+            guard !Task.isCancelled, gen == generation else { return }
+            lastCrop = nil
+            cropped = nil
+            renderTask = nil
+            renderPending = false
+            exportState = .idle
+            state = .review(InkReviewState(
+                slot: slot, options: InkReviewOptions(crispBlack: false), result: .ready(ready),
+                handwritingConfirmed: preferences?.handwritingConfirmed ?? false, restored: true
+            ))
+        } else {
+            state = .pickSource(slot, openFailed: false)
+        }
     }
 }

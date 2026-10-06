@@ -29,6 +29,13 @@ iOS Files lifecycle regressions explicitly deliver sheet dismissal before the sa
 must not resolve the export or delete its staged source. A real-exporter integration test verifies the destination then checks
 Review's Saved state, the existing exam's preferences and status loaded after relaunch.
 
+Retained draft tests on both platforms consume all 11 `draft_cases` using real private temporary files. They cover
+relaunch byte equality, expiry boundaries/future timestamps, current preset changes, corruption, DPI/privacy checks,
+unsupported records, oversized input, symlinks and atomic replacement failures. Feature tests cover Ready/Saved
+precedence, reactive refresh, retired exams, restored review without processing, handwriting confirmation, Replace/Back,
+retention failure with immediate Save, cancelled/superseded retention and unchanged exported bytes. iOS also exercises
+restored Files export with dismissal preceding the completion delegate. Device disk-full/provider/backup QA remains open.
+
 ## 2. Key journeys (UI tests, both platforms)
 
 1. First launch → search "ibps po" → checklist → photo from gallery (fixture injected via a fake

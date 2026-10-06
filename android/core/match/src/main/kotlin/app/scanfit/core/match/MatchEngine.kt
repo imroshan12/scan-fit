@@ -64,6 +64,7 @@ object MatchEngine {
                         e.fix,
                         e.failed,
                         e.issues,
+                        slot.sizeKb,
                     )
             }
         }
