@@ -160,7 +160,15 @@ of the photo fixture ≤ 800 ms on a mid device (benchmark test).
               verification; stale/corrupt/expired/retired files cannot show Ready. Restored reviews are read-only and export the
               same bytes, retaining handwriting confirmation. Failure warns without disabling immediate export or losing the
               previous good draft. _Open:_ physical-device QA; cleaned originals and export history come with My Kit.
-- [ ] My Kit (store cleaned originals, "Use for exam…", export history)
+- [ ] My Kit (store cleaned originals, "Use for exam…", export history) - [x] [A][I] Prepared-file browser (2026-10-06, user-reported empty Kit): lists verified retained photo/ink files by
+      active exam, including hidden unverified exams with their badge. Re-entry/foreground/store revisions refresh the
+      list; files reopen the existing restored review and Done returns to Kit. Tests cover actual file relaunch,
+      invalid/expired/current-preset removal, empty/error/retry, ordering and stale loads. _Open:_ reusable cleaned
+      originals, "Use for exam…", export history and device navigation/accessibility QA; current files retain the 30-day policy.
+- [x] [S][A][I] Signature ink-loss fix (2026-10-06, reported for UPSC ESE on iOS): signature/triple-signature cleanup
+      no longer erodes strokes or deletes small connected components. All 3 `ink_preservation_cases` and native UPSC ESE
+      fit/encode regressions pass. Documents keep their filters; thumbs unchanged. _Open:_ confirmation with the user's
+      source image; previously damaged retained files must be replaced from the original.
 - [ ] Custom resize with the live match note
 - [ ] Checker with issue fixes and per-exam verdicts
 - [x] ~~Screenshot tests for every screen × light/dark × font 1.0/2.0 × EN/HI~~ — dropped (2026-10-03, product decision)

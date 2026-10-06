@@ -78,6 +78,12 @@ do not certify an unverified preset; the separate "Likely OK · Unverified" verd
 **Checker.** Drop zone / picker → a result card listing each check with a pass/fail icon, human
 text, and a Fix button. Then the "Which exam is this for?" picker → per-exam verdict.
 
+**My Kit (current Phase 2 slice).** Prepared files are listed in native exam sections, with a confidence badge,
+document label and rounded KB. A row opens that exam's retained read-only review; Done returns to Kit. Available
+low-confidence exams remain listed even if hidden from Home. Loading is distinct from empty; unavailable trusted
+presets show a retryable error. Refresh on entry, foreground and retained-file changes. The original/cleaned-source
+library, cross-exam reuse and export history are follow-ups; current prepared files use the 30-day retention policy.
+
 **Custom resize.** Inputs: KB min/max (steppers + text), dimensions (px or cm+DPI toggle),
 format, aspect lock. Live preview, estimated size, and the match note updating live.
 

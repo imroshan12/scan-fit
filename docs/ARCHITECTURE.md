@@ -78,6 +78,11 @@ for the bounded pre-effect crop), and
 Engines are `actor`s or `Sendable` structs. View models are `@MainActor @Observable`. Long work
 runs in `Task` with cancellation checked between steps (the user can back out mid-fit).
 
+Kit's prepared-file browser depends only on Core data/model/match (plus presets on Android), not on flow features.
+It enumerates active trusted slots through the existing draft verifier and retains only exam/slot/rounded-KB metadata
+in view state. Store revisions and entry/foreground trigger cancellable reloads. The app resolves FlowRoute links and
+owns separate Home/Kit navigation paths, so Done from a Kit review returns to Kit. No new file store or Kit DB yet.
+
 ## 4. Layering (same on both)
 
 `View → ViewModel(UiState, intents) → UseCase → Repository/Engine → Platform API`

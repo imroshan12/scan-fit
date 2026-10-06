@@ -1,7 +1,8 @@
 # HANDOFF.md — where work stopped (read this first when picking the project up)
 
 Last updated: **2026-10-06**. Current phase: **Phase 2 — Core flows** (docs/ROADMAP.md). Latest commit: `cabb530 Phase 2: Signature flow`.
-Match note, review comparison/chips and retained drafts/Ready rows remain **uncommitted** in the working tree.
+Match note, review comparison/chips, retained drafts/Ready rows, signature preservation and My Kit browsing remain
+**uncommitted** in the working tree.
 The user commits; a session never runs `git add/commit/push`.
 
 ## 1. State in one screen
@@ -18,12 +19,14 @@ The user commits; a session never runs `git add/commit/push`.
 | Screenshot tests                             | Removed for good (user decision 2026-10-03). Don't add them back (CLAUDE.md Definition of done).                                                                                                                                                                                               |
 
 Gates last run (2026-10-06): Android `./gradlew spotlessCheck detekt testDebugUnitTest :core:match:test lint :app:assembleDebug`
-green (303 unit tests). iOS: strict SwiftLint **from ios/**, full Core and Features SwiftPM regressions, DesignSystemTests
+green (315 unit tests). iOS: strict SwiftLint **from ios/**, full Core (166 tests) and Features (90 tests) SwiftPM regressions, DesignSystemTests
 (11 including 4 decode-lifecycle checks), and iPhone 17 simulator app build. Spec: 57 tool tests, `gen_strings.py --check`,
 debug preset build/sign/verify. Both platforms consume all eight `export_cases`, 18 `crop_cases`, 6 `match_note_cases` and
 8 `review_check_cases` and all 11 `draft_cases`. Draft tests also cover actual file relaunch, atomic replacement failures,
 symlinks/size limits, cancellation, current/retired presets, Ready/Saved precedence and restored Files save callback ordering.
-Device/provider QA and new coverage measurements remain open. New `review.*` and `draft.*` Hindi messages are
+All 3 `ink_preservation_cases` pass on both platforms, with native UPSC ESE triple-signature fit/encode regressions.
+Engine coverage refreshed: Android inspect 95.1%, match 97.8%, imaging 98.8%; iOS Inspect 96.7%, Match 96.6%, Imaging 97.8%.
+Device/provider QA remains open. New `review.*`, `draft.*` and `kit.*` Hindi messages are
 drafted with `TODO_HI:`. The spec suite still emits pre-existing unclosed-file `ResourceWarning`s in `exam_search.py`.
 
 ## 2. Decisions made with the user (not obvious from the code)
@@ -44,7 +47,27 @@ drafted with `TODO_HI:`. The spec suite still emits pre-existing unclosed-file `
 - UPSC ESE / CMS are low-confidence presets ("assumed common UPSC rules"). Offered to the user, not started: verify them against the
   official notices, and/or a search hint when a query only matches hidden exams.
 
-## 3. Open issue: "Done does nothing" on the user's physical device
+## 3. Device reports and remaining confirmation
+
+### iOS reports: missing signature ink and empty My Kit (2026-10-06)
+
+- **Signature:** user reported missing parts after preparing a signature for UPSC ESE. Confirmed a destructive cleanup
+  path: 3×3 binary opening + small-component removal erased every pixel of a 1-pixel stroke plus detached dot (112 → 0).
+  Signature and triple-signature variants now keep the Sauvola mask unchanged; document morphology and thumb cleanup
+  stay unchanged. All 112 pixels survive the regression. Three shared preservation cases and a full UPSC ESE fit/encode
+  test retain all three stroke groups and disconnected dots on both platforms. Fine background marks may also remain:
+  prefer preserving real ink; use crop to exclude unrelated marks.
+- **My Kit:** the tab was still the Phase 0 unconditional empty placeholder, not a persistence failure. It now lists
+  currently verified retained photo/ink files by exam, including unverified exams hidden from Home, and opens the existing
+  read-only review. Kit maintains loading/empty/error/retry states, revalidates on entry/foreground/revisions and keeps
+  only metadata in its model. Separate navigation returns Done to Kit. No new store or external dependency added.
+- **Recovery/QA:** previously retained/exported damaged signatures cannot regain deleted strokes; select Replace file
+  and re-import the original in the updated build. Files from before draft retention, expired files or failed private
+  retention cannot be recovered from Saved alone. The user's actual source has not been inspected; low-contrast ink may
+  expose an additional thresholding issue. Ask for anonymized original/result if loss remains. Physical-device confirmation
+  is still required for both fixes. Kit originals, cross-exam reuse and export history remain unimplemented.
+
+### Open issue: "Done does nothing" on the user's physical device
 
 - Not reproducible on the simulator: Done pops back to the exam from Popular, from search, and after cancelling the Files picker.
 - Untested path: the **camera** (full-screen cover over the flow) — the likely trigger for `@Environment(\.dismiss)` misbehaving.
@@ -68,6 +91,18 @@ drafted with `TODO_HI:`. The spec suite still emits pre-existing unclosed-file `
   device is still needed with the updated build. Files saved before the fix are not retroactively marked; save again to verify.
 
 ## 4. What changed (by area, for review)
+
+### Signature preservation and My Kit prepared files (2026-10-06)
+
+- **Spec:** ALGORITHMS §3/9.5 now preserve signature masks, correcting the stale wording that called triple signatures
+  document cleanup. Three `ink_preservation_cases`; §1.6.1 adds the Kit prepared-file browser contract. Shared Kit empty/
+  error copy updated and generated in both languages.
+- **Engines:** conditional morphology in both `InkCleanup` implementations; shared count/trim/coordinate conformance
+  and native UPSC ESE triple-signature fit, JPEG inspection and slot-match tests. Document/thumb behavior unchanged.
+- **Kit:** Kotlin `KitViewModel`/`KitScreen` and Swift `KitViewModel`/`KitView`, Core-only dependencies, native exam sections
+  with confidence badges and FlowRoute links. App owns independent Kit navigation. Tests cover metadata ordering,
+  active/hidden-low-confidence exams, actual filesystem relaunch, corruption/expiry/current specs, revisions, cancellation
+  and retry; previews include light/dark/Hindi/largest text. Cleaned originals, cross-exam reuse and history remain open.
 
 ### Retained drafts and Ready rows (2026-10-06)
 

@@ -36,6 +36,14 @@ precedence, reactive refresh, retired exams, restored review without processing,
 retention failure with immediate Save, cancelled/superseded retention and unchanged exported bytes. iOS also exercises
 restored Files export with dismissal preceding the completion delegate. Device disk-full/provider/backup QA remains open.
 
+Signature preservation runs all 3 `ink_preservation_cases` on both engines, asserting exact dark-pixel counts, trim
+bounds and disconnected-mark coordinates. Native UPSC ESE triple-signature pipeline tests use real fitting/encoding,
+re-inspect final JPEG bytes and verify all three signature groups and dots survive. The failing-before-fix thin-stroke
+regression removed 112/112 ink pixels. Kit tests cover trusted slot enumeration, hidden low-confidence exam inclusion,
+deterministic rows, current preset/TTL validation, actual filesystem relaunch, retry and cancelled/superseded refreshes.
+Kit listing must neither retain image bytes in UI state nor change historical Saved status. Manual iOS/Android Kit →
+review → Replace/re-save → Done and accessibility checks remain open; old damaged files require replacement.
+
 ## 2. Key journeys (UI tests, both platforms)
 
 1. First launch → search "ibps po" → checklist → photo from gallery (fixture injected via a fake
