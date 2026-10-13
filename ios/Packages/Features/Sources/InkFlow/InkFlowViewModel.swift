@@ -12,8 +12,8 @@ import ScanModel
 @Observable
 public final class InkFlowViewModel {
     public private(set) var state: InkState = .loading
-    public let examId: String
-    public let docType: DocType
+    /// The exam slot or Custom size this flow makes a file for (ALGORITHMS 11).
+    public let target: FlowTarget
     public private(set) var exportState: ExportState = .idle
     public private(set) var renderPending = false
     public private(set) var draftValidationPending = false
@@ -35,7 +35,7 @@ public final class InkFlowViewModel {
     private nonisolated static let maxInputBytes = 64 * 1024 * 1024
     private static let sliderDebounce = Duration.milliseconds(300)
 
-    public init(
+    public convenience init(
         examId: String,
         docType: DocType,
         tools: any InkTools = LiveInkTools(),
@@ -44,8 +44,21 @@ public final class InkFlowViewModel {
         drafts: any DraftStore = NoDraftStore(),
         load: @escaping @Sendable () async -> PresetBundle?
     ) {
-        self.examId = examId
-        self.docType = docType
+        self.init(
+            target: .exam(examId: examId, docType: docType), tools: tools, preferences: preferences,
+            exporter: exporter, drafts: drafts, load: load
+        )
+    }
+
+    public init(
+        target: FlowTarget,
+        tools: any InkTools = LiveInkTools(),
+        preferences: UserPreferences? = nil,
+        exporter: any DocumentExporting = FilesExporter(),
+        drafts: any DraftStore = NoDraftStore(),
+        load: @escaping @Sendable () async -> PresetBundle?
+    ) {
+        self.target = target
         self.tools = tools
         self.preferences = preferences
         self.exporter = exporter
@@ -161,7 +174,9 @@ public final class InkFlowViewModel {
         exportState = await exporter.save(ExportRequest(
             bytes: ready.bytes, filename: filename, spec: review.slot.spec, kind: review.slot.kind
         ))
-        if exportState == .saved { preferences?.recordSaved(examId, docType) }
+        if exportState == .saved, !review.slot.custom {
+            preferences?.recordSaved(review.slot.examId, review.slot.spec.type)
+        }
     }
 
     /// Back inside the flow: Review -> Crop -> PickSource. false = leave the flow.
@@ -248,9 +263,10 @@ public final class InkFlowViewModel {
         } ?? .failed(.encodingFailed)
         guard !Task.isCancelled, gen == generation else { return }
         var retainFailed = false
-        if case let .ready(ready) = result {
+        // Only a file that meets an exam slot's rules is kept for later (ALGORITHMS 1.6.1); a Custom size has no draft.
+        if case let .ready(ready) = result, ready.meetsRules, !slot.custom {
             do {
-                try await drafts.retain(ready.bytes, examID: examId, spec: spec, kind: kind)
+                try await drafts.retain(ready.bytes, examID: slot.examId, spec: spec, kind: kind)
             } catch {
                 retainFailed = true
             }
@@ -343,14 +359,13 @@ private extension InkFlowViewModel {
         guard !Task.isCancelled, gen == generation else { return }
         exams = bundle?.exams ?? []
         popular = bundle?.popular ?? []
-        guard let exam = exams.first(where: { $0.id == examId && $0.status == .active }),
-              let spec = exam.documents.first(where: { $0.type == docType }) else {
+        guard let resolved = target.resolve(bundle) else {
             state = .notFound
             return
         }
-        let slot = InkSlot(examId: exam.id, examName: exam.name, unverified: exam.isUnverified, spec: spec)
+        let spec = resolved.spec, slot = InkSlot(resolved)
         guard slot.kind != .photo, slot.kind != .pdfDocument else { state = .notFound; return }
-        let draft = await drafts.load(examID: examId, spec: spec, kind: slot.kind)
+        let draft = slot.custom ? nil : await drafts.load(examID: slot.examId, spec: spec, kind: slot.kind)
         guard !Task.isCancelled, gen == generation else { return }
         let exams = exams, popular = popular
         if let draft, let ready = await Self.background({

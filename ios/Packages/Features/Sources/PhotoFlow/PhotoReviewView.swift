@@ -43,29 +43,13 @@ struct PhotoReviewView: View {
         case let .ready(ready):
             ReviewChecksRow(kb: ready.kb, width: ready.width, height: ready.height,
                             checks: ready.checks, strings: strings)
-            verdict(ready)
+            SlotVerdict(
+                meetsRules: ready.meetsRules, examName: review.slot.examName, unverified: review.slot.unverified,
+                custom: review.slot.custom, strings: strings
+            )
             MatchNoteCard(note: ready.note, strings: strings)
         case let .failed(error):
             NoticeCard(text: message(error), kind: .error)
-        }
-    }
-
-    /// Icon + text, never colour alone (UI_UX §6). A low-confidence preset never gets "meets the rules" (rule 6).
-    private func verdict(_ ready: ReviewReady) -> some View {
-        let slot = review.slot
-        let ok = ready.meetsRules && !slot.unverified
-        let text = if !ready.meetsRules {
-            strings.photoMissesRules(exam: slot.examName)
-        } else if slot.unverified {
-            strings.matchLikelyOk
-        } else {
-            strings.photoMeetsRules(exam: slot.examName)
-        }
-        return Label {
-            Text(text).scanFitText(.body)
-        } icon: {
-            Image(systemName: ok ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
-                .foregroundStyle(ok ? ScanFitColor.success : ScanFitColor.warning)
         }
     }
 

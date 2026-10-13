@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
+import app.scanfit.core.model.CustomSize
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -36,6 +37,12 @@ interface UserPreferences {
     val handwritingConfirmed: Flow<Boolean>
 
     suspend fun confirmHandwriting()
+
+    /** Custom sizes in their canonical text, newest first, at most 5 (ALGORITHMS 11). */
+    val recentCustomSizes: Flow<List<String>>
+
+    /** Moves [text] (a canonical Custom size) to the front of [recentCustomSizes]. */
+    suspend fun rememberCustomSize(text: String)
 }
 
 data class SavedDocument(val examId: String, val docType: String)
@@ -87,6 +94,18 @@ class DataStoreUserPreferences(
         store.edit { it[HANDWRITING_CONFIRMED] = true }
     }
 
+    override val recentCustomSizes: Flow<List<String>> =
+        data.map { prefs -> prefs[RECENT_CUSTOM].orEmpty().split(RECENT_SEPARATOR).filter { it.isNotEmpty() } }
+            .distinctUntilChanged()
+
+    override suspend fun rememberCustomSize(text: String) {
+        require(CustomSize.parse(text)?.text == text) { "not a canonical Custom size" }
+        store.edit { prefs ->
+            val recent = prefs[RECENT_CUSTOM].orEmpty().split(RECENT_SEPARATOR).filter { it.isNotEmpty() }
+            prefs[RECENT_CUSTOM] = CustomSize.remember(recent, text).joinToString(RECENT_SEPARATOR)
+        }
+    }
+
     private companion object {
         // Exam ids match ^[a-z0-9_]+$ (spec/schema), so a comma can never be part of one.
         const val SEPARATOR = ","
@@ -94,6 +113,10 @@ class DataStoreUserPreferences(
         val SHOW_UNVERIFIED = booleanPreferencesKey("show_unverified_exams")
         val SAVED_DOCUMENTS = stringSetPreferencesKey("saved_documents")
         val HANDWRITING_CONFIRMED = booleanPreferencesKey("handwriting_confirmed")
+        val RECENT_CUSTOM = stringPreferencesKey("recent_custom_sizes")
+
+        // A canonical Custom size never contains '|' (ALGORITHMS 11).
+        const val RECENT_SEPARATOR = "|"
 
         /** On by default (ALGORITHMS §10): an unverified exam is listed with its badge rather than missing. */
         const val SHOW_UNVERIFIED_DEFAULT = true

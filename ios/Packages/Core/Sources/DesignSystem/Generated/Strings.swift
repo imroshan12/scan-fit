@@ -66,12 +66,72 @@ public struct Strings: Sendable {
     public var commonDone: String { tr("common.done") }
     /// "Fix"
     public var commonFix: String { tr("common.fix") }
+    /// "Next"
+    public var commonNext: String { tr("common.next") }
     /// "Retry"
     public var commonRetry: String { tr("common.retry") }
     /// "Save"
     public var commonSave: String { tr("common.save") }
     /// "Share"
     public var commonShare: String { tr("common.share") }
+    /// "Any size"
+    public var customAnySize: String { tr("custom.any_size") }
+    /// "Handwritten document"
+    public var customDocDocument: String { tr("custom.doc_document") }
+    /// "Photo"
+    public var customDocPhoto: String { tr("custom.doc_photo") }
+    /// "Signature"
+    public var customDocSignature: String { tr("custom.doc_signature") }
+    /// "Thumb impression"
+    public var customDocThumb: String { tr("custom.doc_thumb") }
+    /// "DPI"
+    public var customDpi: String { tr("custom.dpi") }
+    /// "DPI must be between 72 and 1200."
+    public var customErrorDpiRange: String { tr("custom.error_dpi_range") }
+    /// "Height must be between 16 and 2000 pixels."
+    public var customErrorHeightRange: String { tr("custom.error_height_range") }
+    /// "Enter the largest file size the form allows."
+    public var customErrorMaxKbMissing: String { tr("custom.error_max_kb_missing") }
+    /// "Max must be between 1 and 5120 KB."
+    public var customErrorMaxKbRange: String { tr("custom.error_max_kb_range") }
+    /// "Min must be less than max."
+    public var customErrorMinKbRange: String { tr("custom.error_min_kb_range") }
+    /// "Enter both width and height, or leave both empty."
+    public var customErrorSizePair: String { tr("custom.error_size_pair") }
+    /// "Width must be between 16 and 2000 pixels."
+    public var customErrorWidthRange: String { tr("custom.error_width_range") }
+    /// "Height"
+    public var customHeight: String { tr("custom.height") }
+    /// "= {width:int} × {height:int} px"
+    public func customInPixels(width: Int, height: Int) -> String { fmt("custom.in_pixels", [width, height]) }
+    /// "For a form that isn't in ScanFit. Copy the limits from its notice."
+    public var customIntro: String { tr("custom.intro") }
+    /// "File size"
+    public var customKbHeading: String { tr("custom.kb_heading") }
+    /// "Max KB"
+    public var customMaxKb: String { tr("custom.max_kb") }
+    /// "Meets your size"
+    public var customMeets: String { tr("custom.meets") }
+    /// "Min KB (optional)"
+    public var customMinKb: String { tr("custom.min_kb") }
+    /// "Doesn't meet your size"
+    public var customMisses: String { tr("custom.misses") }
+    /// "Recent sizes"
+    public var customRecent: String { tr("custom.recent") }
+    /// "Dimensions"
+    public var customSizeHeading: String { tr("custom.size_heading") }
+    /// "Leave both empty to keep the picture's own size."
+    public var customSizeHint: String { tr("custom.size_hint") }
+    /// "Custom size"
+    public var customTitle: String { tr("custom.title") }
+    /// "Centimetres"
+    public var customUnitCm: String { tr("custom.unit_cm") }
+    /// "Pixels"
+    public var customUnitPx: String { tr("custom.unit_px") }
+    /// "What are you making?"
+    public var customWhat: String { tr("custom.what") }
+    /// "Width"
+    public var customWidth: String { tr("custom.width") }
     /// "Category certificate"
     public var docCategoryCertificate: String { tr("doc.category_certificate") }
     /// "Class 10 certificate"
@@ -422,7 +482,7 @@ public struct Strings: Sendable {
     public var toolsChecker: String { tr("tools.checker") }
     /// "Live photo coach"
     public var toolsCoach: String { tr("tools.coach") }
-    /// "Custom resize"
+    /// "Custom size"
     public var toolsCustomResize: String { tr("tools.custom_resize") }
     /// "Printable guide sheet"
     public var toolsGuideSheet: String { tr("tools.guide_sheet") }

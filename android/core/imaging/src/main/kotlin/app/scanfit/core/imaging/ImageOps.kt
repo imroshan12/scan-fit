@@ -133,6 +133,13 @@ internal object ImageOps {
         h: Int,
     ): IntArray = dilate(erode(mask, w, h), w, h)
 
+    /** 3x3 binary dilation; outside the image is background. */
+    fun dilate3x3(
+        mask: IntArray,
+        w: Int,
+        h: Int,
+    ): IntArray = dilate(mask, w, h)
+
     private fun erode(
         m: IntArray,
         w: Int,

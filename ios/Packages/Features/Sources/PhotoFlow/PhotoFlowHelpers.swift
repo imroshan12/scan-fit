@@ -1,5 +1,6 @@
 import Foundation
 import Imaging
+import ScanData
 import ScanModel
 import ScanVision
 
@@ -39,5 +40,25 @@ extension PhotoFlowViewModel {
             return String(repeating: "0", count: max(0, width - digits.count)) + digits
         }
         return "\(pad(components.day ?? 1, 2))/\(pad(components.month ?? 1, 2))/\(pad(components.year ?? 2000, 4))"
+    }
+}
+
+public extension PhotoFlowViewModel {
+    /// The flow for one slot of a trusted exam preset (ALGORITHMS 2); see `init(target:)` for a Custom size.
+    convenience init(
+        examId: String,
+        docType: DocType,
+        tools: any PhotoTools = LivePhotoTools(),
+        faces: any FaceDetector = VisionFaceDetector(),
+        segmenter: any PersonSegmenter = VisionPersonSegmenter(),
+        preferences: UserPreferences? = nil,
+        exporter: any DocumentExporting = FilesExporter(),
+        drafts: any DraftStore = NoDraftStore(),
+        load: @escaping @Sendable () async -> PresetBundle?
+    ) {
+        self.init(
+            target: .exam(examId: examId, docType: docType), tools: tools, faces: faces, segmenter: segmenter,
+            preferences: preferences, exporter: exporter, drafts: drafts, load: load
+        )
     }
 }

@@ -195,12 +195,16 @@ Android `Downloads/ScanFit/<Exam>/`, iOS `Files › ScanFit › <Exam>/`.
    k = 0.34, R = 128. **Signatures (including triple): preserve the thresholded mask without erosion or component
    removal**, since fine strokes, dots and disconnected flourishes are meaningful ink. Documents only: morphological
    open (3×3) and small-component filtering as §9.5. Crop unwanted marks manually rather than deleting signature parts.
-   **Thumb**: no binarisation (ridges matter). Apply CLAHE-like contrast stretch (clip at the 2nd/98th
-   percentile) on N, then gamma 0.8.
+   **Thumb**: no binarisation (ridges matter), and **no local-mean normalisation**: a thumb print is a large dark
+   object, so step 3 alone turns every heavily inked area wider than its blur white and loses the print's shape.
+   Instead estimate the paper from paper pixels only (the print is masked out, a wide blur fills it in from the
+   surrounding paper), normalise by that, then stretch linearly from the darkest ink to near-white paper and darken
+   the mid-greys slightly so faint ridges stay visible (§9.5). Never lighten ink.
 5. **Render**: background = pure white. Ink colour = the original pixel darkened ×0.6 (keeps blue or
    black), or pure black when "Crisp black" is on (default for signatures).
-6. **Trim**: bounding box of the ink + padding of 8% of the box's long side. Thumb: square crop
-   centred on the ink centroid.
+6. **Trim**: bounding box of the ink + padding of 8% of the box's long side. Thumb: a square crop centred on the
+   (robust) bounding box of the ink, so the whole print is always inside — never on the ink centroid, which
+   clips the side away from the heavier ink.
 7. **Fit to aspect** by padding with white (§1.2), then §1.
 8. **Quality gate**: ink coverage must be 0.5–35% of the area; otherwise warn "too faint" or
    "too dark / not on white paper".
@@ -440,10 +444,28 @@ Input raster: long side already ≤ 1600 (§1.1). Variants: `signature` (includi
   `max(4, 0.0002 · area)` pixels. Conformance: `ink_preservation_cases` retain all threshold-detected signature pixels,
   including one-pixel strokes and isolated marks on each of three signatures. The trim must include all retained marks.
 - Render: background white; ink is black when `crispBlack`, else the original RGB × 0.6. Default `crispBlack`: signature yes, document no.
-- Thumb: no mask. Stretch `N` between its 2nd and 98th percentile (if they coincide, skip the stretch), then gamma 0.8; output grey as RGB.
-  "Ink" (for centring and the gate) = stretched pixels below 128.
-- Trim: ink bounding box padded by 8 % of its longer side on every side (white beyond the image). Thumb: a **square** of side
-  `1.16 × max(bboxW, bboxH)` centred on the centroid of the ink pixels.
+- **Thumb** (no binarisation; `percentile(p)` of a histogram of `n` values = the smallest level whose cumulative count
+  exceeds `⌊p·n⌋`):
+  1. Candidates: `N₁` = the `N` above (σ = shortSide/30). Otsu level `v*` of the histogram of `L` = the `v` maximising
+     `w₀·w₁·(μ₀ − μ₁)²` for the split `L ≤ v` / `L > v` (first maximum; `v* = 255` when `L` has a single level).
+     A pixel is a **candidate** (ink or its halo) if `N₁ < 230` or `L ≤ v*`; then dilate the candidates twice with a
+     3×3 square (outside the image is not a candidate).
+  2. Paper: `P` = percentile(0.5) of `L` over non-candidates (255 if every pixel is a candidate). `M` = 255 on
+     non-candidates, 0 on candidates; `B = blur(M)`, `C = blur(L on non-candidates, 0 on candidates)`, both with the
+     box-blur Gaussian above at σ₂ = shortSide/8; `bg = (C·255 + 5·P) / (B + 5)` (integer division). Far from any
+     paper `bg → P`, so a print filling the crop is normalised by the global paper level, not by itself.
+  3. `N = min(255, (L·255 + bg/2) / max(bg, 1))` with this `bg`.
+  4. Tone: black point `b` = percentile(0.02) of `N` over candidates (0 if there are none), white point 235:
+     `s = min(max(N − b, 0), 235 − b) / (235 − b)` (`s = N/255` if `b ≥ 235`), `out = round(255 · s^1.25)`.
+     Paper at ≥ 235 becomes pure white; the exponent darkens mid-greys (faint ridges) and never lightens ink. Output grey as RGB.
+  5. Ink for the trim = `out < 240` (every visible mark, including a faint rim); ink for the gate = `out < 128`.
+- Trim: ink bounding box padded by 8 % of its longer side on every side (white beyond the image). Thumb: with `k` trim-ink
+  pixels, `x₀`, `x₁` = the x-coordinates at sorted positions `⌊0.005·(k−1)⌋` and `⌊0.995·(k−1)⌋` (likewise `y₀`, `y₁`), so a
+  few stray specks cannot stretch the box. A **square** of side `s = max(1, round(1.16 · max(x₁−x₀+1, y₁−y₀+1)))` with origin
+  `(⌊(x₀+x₁+1)/2⌋ − ⌊s/2⌋, ⌊(y₀+y₁+1)/2⌋ − ⌊s/2⌋)`: centred on the box, which it always contains. `k = 0` → the whole image, `TOO_FAINT`.
+  Thumb coverage = gate-ink pixels inside the square ÷ `s²` (pixels beyond the image are white).
+  Conformance: `thumb_preservation_cases` (parametric prints: a heavy-ink core stays dark, the print never touches the
+  output border, shaded paper turns white).
 - Aspect (§1.2): pad with white, centred, to the slot aspect (`width/height` for exact/preferred, midpoint for range, unchanged for none).
 - Quality gate on the trimmed image: coverage `< 0.5 %` → `TOO_FAINT`, `> 35 %` → `TOO_DARK`, else `OK`.
 - The three conformance pipelines: `signature_cleanup` (signature), `thumb_cleanup` (thumb), `document_cleanup` (document), always followed by the aspect pad and `fit`.
@@ -539,6 +561,12 @@ A fit case names either `preset` + `doc`, or an inline `spec` (a full document o
 `exif: "none"` (no APP1), `dpi` (JFIF units 1 and both densities equal), `export_filename` (§9.8), `decodes` (re-decodes without error),
 `max_ms_midrange` (measured by the benchmark, not asserted in unit tests). Other sections: `inspect_cases`, `decode_cases`, `patch_cases`,
 `geometry_cases`, `crop_cases`, `match_cases`, `match_note_cases`, `search_cases` (their keys are documented inline in the file).
+`thumb_preservation_cases` draw a grey print parametrically: paper luma `round(left + (right − left)·x/(W−1))`; inside the
+`print` ellipse `(cx, cy, rx, ry)` a pixel is a ridge when `⌊2d/period⌋` is even, `d` = distance to the centre with `y` scaled
+by `rx/ry`, coloured `ridge` luma, or `rim` luma beyond normalised radius `rim[0]`; the optional `core` ellipse is solid.
+Expectations: the output box of pixels `< visible_below` matches the source ink box (`< paper − ink_delta`) within
+`box_tolerance` (nothing clipped); the core shrunk to 70 % has mean `≤ core_max_mean`; no pixel `< border_clear_above` lies
+in the outer `border` pixels; at least `white_min_fraction` of the output is `≥ 250`; `ink_min` pixels are `< ink_below`.
 
 ## 10. Exam search and browse (Home, PRD F1)
 
@@ -573,3 +601,34 @@ then normalised name by scalar order; then id.
 
 **Browse(category).** The visible exams of the category, ordered by popularity rank, then normalised name, then id.
 **Popular(n).** The first `n` visible exams in `popular` order; unknown or invisible ids are skipped.
+
+## 11. Custom size (PRD F9)
+
+For a form that is not in the catalogue. The user says what the file is and copies the limits from the form's notice; the app
+then runs the **same** photo or ink flow (§2, §3) against a synthetic slot built from those limits. There is no second pipeline.
+
+**Input.** `doc` ∈ `photo`, `signature`, `thumb_impression`, `handwritten_declaration` (shown as Photo, Signature, Thumb
+impression, Handwritten document); it picks the flow (photo flow for `photo`, ink flow with the §9.5 variant otherwise) and the
+match kind (§4). `width`, `height`: both or neither, in pixels or in centimetres (`px = round(cm × dpi / 2.54)`, half up; a
+pixel value with decimals is rounded the same way). Neither = keep the picture's own size. `min_kb` (optional) and `max_kb`
+(required): whole KB. `dpi`: whole number, default 200 when empty.
+
+**Validation**, codes in this order (all that apply):
+`max_kb_missing` (no max) · `max_kb_range` (max outside 1–5120) · `min_kb_range` (min given and not `0 ≤ min < max`) ·
+`size_pair` (only one of width/height) · `width_range` / `height_range` (outside 16–2000 px after conversion; 2000 keeps the
+§1.1 decode cap at 4000 px for low-end phones) · `dpi_range` (outside 72–1200). Any code blocks Continue and shows next to its field.
+
+**Slot.** `type = doc`, `formats = [jpg]`, `size_kb = {min: min_kb if > 0 else null, max: max_kb, target: null}`,
+`dimensions = {mode: exact, width, height}` when given, else `{mode: none}`, `dpi`, no `filename`, no `declaration_text`.
+Exam id `custom`, exam name `Custom` (not translated: it names the file and the folder), so §9.8 gives
+`signature_Custom_140x60_16kb.jpg` and Android saves to `Downloads/ScanFit/Custom/`.
+
+**Flow differences from an exam slot.** No retained draft, no Saved/Ready status (there is no checklist), no handwriting
+confirmation (the CAPITAL-letters rule belongs to exams), and the verdict reads "Meets your size" / "Doesn't meet your size"
+(EXACT or ACCEPTED for the synthetic slot, §9.7). The review's match note lists the catalogue exams that accept the file (§4).
+
+**Canonical text** (navigation argument and recent sizes): `<doc>;<W>x<H>;<min>-<max>;<dpi>`, with `-` for no size and `0` for
+no minimum: `signature;140x60;10-20;200`, `photo;-;0-50;200`. Parsing accepts exactly this form for a size that passes the
+validation above, else nothing. **Recent sizes:** the last 5 distinct texts, newest first, kept on the device; Continue moves
+its text to the front. Conformance: `custom_size_cases` (`fields` → codes, or slot summary + text; `parse` text → canonical text or null),
+computed by `spec/tools/custom_size.py`.

@@ -59,4 +59,16 @@ struct UserPreferencesTests {
         #expect(prefs.handwritingConfirmed)
         #expect(UserPreferences(defaults: defaults).handwritingConfirmed)
     }
+
+    @Test("recent custom sizes are newest first, distinct and remembered across a restart")
+    func recentCustomSizes() {
+        let defaults = fresh()
+        let prefs = UserPreferences(defaults: defaults)
+        #expect(prefs.recentCustomSizes.isEmpty)
+        prefs.rememberCustomSize("signature;140x60;10-20;200")
+        prefs.rememberCustomSize("photo;-;0-50;200")
+        prefs.rememberCustomSize("signature;140x60;10-20;200")
+        #expect(prefs.recentCustomSizes == ["signature;140x60;10-20;200", "photo;-;0-50;200"])
+        #expect(UserPreferences(defaults: defaults).recentCustomSizes == prefs.recentCustomSizes)
+    }
 }

@@ -83,6 +83,15 @@ It enumerates active trusted slots through the existing draft verifier and retai
 in view state. Store revisions and entry/foreground trigger cancellable reloads. The app resolves FlowRoute links and
 owns separate Home/Kit navigation paths, so Done from a Kit review returns to Kit. No new file store or Kit DB yet.
 
+**Flow targets (ALGORITHMS 11).** The photo and ink flows make a file for a `FlowTarget`: one slot of a trusted exam preset,
+or a `CustomSize` (Android `core:model` `FlowTarget`/`CustomSize`; iOS `ScanModel`). `FlowTarget.resolve(bundle)` gives the
+`FlowSlot` the flow works on; a Custom size becomes a synthetic slot, so there is one imaging pipeline, one export and one
+verifier. The flows branch on `slot.custom` only for the four documented differences: no retained draft, no Saved/Ready
+status, no handwriting tick, "your size" verdict text. Routes carry the canonical size text
+(`custom/<photo|ink>?custom=signature;140x60;10-20;200`, iOS `FlowRoute(custom:)`), never a serialised spec, so a
+restored back stack can only rebuild a size that passes validation. `:feature:custom` / `Custom` holds only the form;
+the app composes it with the flows (features never import each other). Recent sizes live in `UserPreferences`.
+
 ## 4. Layering (same on both)
 
 `View → ViewModel(UiState, intents) → UseCase → Repository/Engine → Platform API`

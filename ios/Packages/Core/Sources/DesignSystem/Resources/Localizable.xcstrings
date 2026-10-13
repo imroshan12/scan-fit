@@ -307,6 +307,23 @@
         }
       }
     },
+    "common.next": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "आगे"
+          }
+        }
+      }
+    },
     "common.retry": {
       "extractionState": "manual",
       "localizations": {
@@ -354,6 +371,499 @@
           "stringUnit": {
             "state": "translated",
             "value": "शेयर करें"
+          }
+        }
+      }
+    },
+    "custom.any_size": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Any size"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "कोई भी साइज़"
+          }
+        }
+      }
+    },
+    "custom.doc_document": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handwritten document"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "हस्तलिखित दस्तावेज़"
+          }
+        }
+      }
+    },
+    "custom.doc_photo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photo"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "फ़ोटो"
+          }
+        }
+      }
+    },
+    "custom.doc_signature": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signature"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "हस्ताक्षर"
+          }
+        }
+      }
+    },
+    "custom.doc_thumb": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thumb impression"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "अंगूठे का निशान"
+          }
+        }
+      }
+    },
+    "custom.dpi": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DPI"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "DPI"
+          }
+        }
+      }
+    },
+    "custom.error_dpi_range": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DPI must be between 72 and 1200."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "DPI 72 से 1200 के बीच होना चाहिए।"
+          }
+        }
+      }
+    },
+    "custom.error_height_range": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Height must be between 16 and 2000 pixels."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ऊँचाई 16 से 2000 पिक्सेल के बीच होनी चाहिए।"
+          }
+        }
+      }
+    },
+    "custom.error_max_kb_missing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the largest file size the form allows."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "फ़ॉर्म में दी गई सबसे बड़ी फ़ाइल साइज़ भरें।"
+          }
+        }
+      }
+    },
+    "custom.error_max_kb_range": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Max must be between 1 and 5120 KB."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "अधिकतम 1 से 5120 KB के बीच होना चाहिए।"
+          }
+        }
+      }
+    },
+    "custom.error_min_kb_range": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Min must be less than max."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "न्यूनतम, अधिकतम से कम होना चाहिए।"
+          }
+        }
+      }
+    },
+    "custom.error_size_pair": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter both width and height, or leave both empty."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "चौड़ाई और ऊँचाई दोनों भरें, या दोनों खाली छोड़ें।"
+          }
+        }
+      }
+    },
+    "custom.error_width_range": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Width must be between 16 and 2000 pixels."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "चौड़ाई 16 से 2000 पिक्सेल के बीच होनी चाहिए।"
+          }
+        }
+      }
+    },
+    "custom.height": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Height"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ऊँचाई"
+          }
+        }
+      }
+    },
+    "custom.in_pixels": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "= %1$lld × %2$lld px"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "= %1$lld × %2$lld px"
+          }
+        }
+      }
+    },
+    "custom.intro": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For a form that isn't in ScanFit. Copy the limits from its notice."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ऐसे फ़ॉर्म के लिए जो ScanFit में नहीं है। उसके नोटिस से सीमाएँ भरें।"
+          }
+        }
+      }
+    },
+    "custom.kb_heading": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "File size"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "फ़ाइल साइज़"
+          }
+        }
+      }
+    },
+    "custom.max_kb": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Max KB"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "अधिकतम KB"
+          }
+        }
+      }
+    },
+    "custom.meets": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meets your size"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "आपके साइज़ के अनुसार है"
+          }
+        }
+      }
+    },
+    "custom.min_kb": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Min KB (optional)"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "न्यूनतम KB (वैकल्पिक)"
+          }
+        }
+      }
+    },
+    "custom.misses": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Doesn't meet your size"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "आपके साइज़ के अनुसार नहीं है"
+          }
+        }
+      }
+    },
+    "custom.recent": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recent sizes"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "हाल के साइज़"
+          }
+        }
+      }
+    },
+    "custom.size_heading": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dimensions"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "माप"
+          }
+        }
+      }
+    },
+    "custom.size_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave both empty to keep the picture's own size."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "तस्वीर का अपना साइज़ रखने के लिए दोनों खाली छोड़ें।"
+          }
+        }
+      }
+    },
+    "custom.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Custom size"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "कस्टम साइज़"
+          }
+        }
+      }
+    },
+    "custom.unit_cm": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Centimetres"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "सेंटीमीटर"
+          }
+        }
+      }
+    },
+    "custom.unit_px": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pixels"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "पिक्सेल"
+          }
+        }
+      }
+    },
+    "custom.what": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What are you making?"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "आप क्या बना रहे हैं?"
+          }
+        }
+      }
+    },
+    "custom.width": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Width"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "चौड़ाई"
           }
         }
       }
@@ -3531,7 +4041,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Custom resize"
+            "value": "Custom size"
           }
         },
         "hi": {

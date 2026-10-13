@@ -84,8 +84,16 @@ low-confidence exams remain listed even if hidden from Home. Loading is distinct
 presets show a retryable error. Refresh on entry, foreground and retained-file changes. The original/cleaned-source
 library, cross-exam reuse and export history are follow-ups; current prepared files use the 30-day retention policy.
 
-**Custom resize.** Inputs: KB min/max (steppers + text), dimensions (px or cm+DPI toggle),
-format, aspect lock. Live preview, estimated size, and the match note updating live.
+**Custom size** (built 2026-10-13, ALGORITHMS 11). Reached from Tools and from Home ("Not listed? Use Custom size.",
+under the lists and under "no matches"). One scrolling form: "What are you making?" (Photo · Signature · Thumb impression ·
+Handwritten document), Dimensions (Pixels/Centimetres segmented control, Width, Height, DPI; "= 276 × 354 px" while in
+centimetres; empty = keep the picture's own size), File size (Min KB optional, Max KB required), Recent sizes (last 5,
+one tap refills the form). Number pads with a keyboard bar (Next walks the fields, Done closes); Continue is hidden while
+typing and pinned at the bottom otherwise. Errors appear under their field (icon + text) once the field has text, and all
+of them after a failed Continue; nothing is shouted on first view. Continue opens the same photo or ink flow as an exam
+slot; its review says "Meets your size", lists the catalogue exams that also accept the file, saves as `…_Custom_…jpg`,
+and never touches the exam checklist. Deferred: format choice (always JPG), aspect lock, a live size estimate before
+capture.
 
 **Paywall.** One screen: 3 benefit rows with icons, a yearly/lifetime segmented choice
 (lifetime labelled "Pay once"), price in local currency from the store, "Restore purchases",

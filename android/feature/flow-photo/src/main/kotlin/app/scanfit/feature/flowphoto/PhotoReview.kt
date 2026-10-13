@@ -37,6 +37,7 @@ import app.scanfit.core.designsystem.components.MatchNoteCard
 import app.scanfit.core.designsystem.components.NoticeCard
 import app.scanfit.core.designsystem.components.NoticeKind
 import app.scanfit.core.designsystem.components.ReviewChecksRow
+import app.scanfit.core.designsystem.components.SlotVerdict
 import app.scanfit.core.designsystem.theme.ScanFitSpacing
 import app.scanfit.core.designsystem.theme.ScanFitTheme
 import app.scanfit.core.designsystem.theme.ScanFitType
@@ -75,7 +76,7 @@ internal fun ReviewContent(
 
             is ReviewResult.Ready -> {
                 ReviewChecksRow(result.kb, result.width, result.height, result.checks)
-                ResultSummary(result, state.slot)
+                SlotVerdict(result.meetsRules, state.slot.examName, state.slot.unverified, state.slot.custom)
                 MatchNoteCard(result.note)
             }
 
@@ -110,33 +111,6 @@ internal fun ReviewContent(
                 enabled = state.save.state != SaveState.SAVING,
             )
         }
-    }
-}
-
-/** `34 KB · 200×230 · JPG` and the verdict: icon + text, never colour alone (UI_UX §6). */
-@Composable
-private fun ResultSummary(
-    result: ReviewResult.Ready,
-    slot: PhotoSlot,
-) {
-    val colors = ScanFitTheme.colors
-    val missed = stringResource(R.string.photo_misses_rules, slot.examName)
-    val met = stringResource(R.string.photo_meets_rules, slot.examName)
-    val (icon, tint, text) =
-        when {
-            !result.meetsRules -> Triple(Icons.Filled.Warning, colors.warning, missed)
-
-            // A low-confidence preset never gets "meets the rules" (CLAUDE.md rule 6).
-            slot.unverified -> Triple(Icons.Filled.Warning, colors.warning, stringResource(R.string.match_likely_ok))
-
-            else -> Triple(Icons.Filled.CheckCircle, colors.success, met)
-        }
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(ScanFitSpacing.sm),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(icon, contentDescription = null, tint = tint)
-        Text(text, style = ScanFitType.body)
     }
 }
 

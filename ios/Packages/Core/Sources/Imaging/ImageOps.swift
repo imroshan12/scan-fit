@@ -92,6 +92,9 @@ enum ImageOps {
     /// 3x3 binary opening; erosion treats outside as ink, dilation as background (ALGORITHMS 9.5).
     static func open3x3(_ mask: [Int], _ w: Int, _ h: Int) -> [Int] { dilate(erode(mask, w, h), w, h) }
 
+    /// 3x3 binary dilation; outside the image is background.
+    static func dilate3x3(_ mask: [Int], _ w: Int, _ h: Int) -> [Int] { dilate(mask, w, h) }
+
     private static func erode(_ m: [Int], _ w: Int, _ h: Int) -> [Int] {
         var out = [Int](repeating: 0, count: m.count)
         for y in 0..<h {

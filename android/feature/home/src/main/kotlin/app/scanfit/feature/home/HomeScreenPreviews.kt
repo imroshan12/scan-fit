@@ -27,6 +27,7 @@ private fun HomeSectionsPreview() {
             {},
             {},
             {},
+            {},
         )
     }
 }
@@ -35,18 +36,18 @@ private fun HomeSectionsPreview() {
 @Composable
 private fun HomeResultsPreview() {
     ScanFitTheme {
-        HomeScreen(HomeUiState(PresetsStatus.Ready(55, 2), query = "po", results = previewItems), {}, {}, {})
+        HomeScreen(HomeUiState(PresetsStatus.Ready(55, 2), query = "po", results = previewItems), {}, {}, {}, {})
     }
 }
 
 @Preview(name = "No results", showBackground = true)
 @Composable
 private fun HomeNoResultsPreview() {
-    ScanFitTheme { HomeScreen(HomeUiState(PresetsStatus.Ready(55, 2), query = "zzzz"), {}, {}, {}) }
+    ScanFitTheme { HomeScreen(HomeUiState(PresetsStatus.Ready(55, 2), query = "zzzz"), {}, {}, {}, {}) }
 }
 
 @Preview(name = "Loading", showBackground = true)
 @Composable
 private fun HomeLoadingPreview() {
-    ScanFitTheme { HomeScreen(HomeUiState(), {}, {}, {}) }
+    ScanFitTheme { HomeScreen(HomeUiState(), {}, {}, {}, {}) }
 }

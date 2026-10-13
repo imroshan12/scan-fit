@@ -36,6 +36,7 @@ import app.scanfit.core.designsystem.components.MatchNoteCard
 import app.scanfit.core.designsystem.components.NoticeCard
 import app.scanfit.core.designsystem.components.NoticeKind
 import app.scanfit.core.designsystem.components.ReviewChecksRow
+import app.scanfit.core.designsystem.components.SlotVerdict
 import app.scanfit.core.designsystem.theme.ScanFitSpacing
 import app.scanfit.core.designsystem.theme.ScanFitTheme
 import app.scanfit.core.designsystem.theme.ScanFitType
@@ -75,7 +76,7 @@ internal fun InkReviewContent(
 
             is InkReviewResult.Ready -> {
                 ReviewChecksRow(result.kb, result.width, result.height, result.checks)
-                ResultSummary(result, state.slot)
+                SlotVerdict(result.meetsRules, state.slot.examName, state.slot.unverified, state.slot.custom)
                 MatchNoteCard(result.note)
                 when (result.quality) {
                     InkQuality.TOO_FAINT -> NoticeCard(stringResource(R.string.ink_too_faint), NoticeKind.WARNING)
@@ -114,33 +115,6 @@ internal fun InkReviewContent(
         if (state.slot.needsHandwritingConfirmation) {
             HandwritingConfirmation(state.handwritingConfirmed, actions.onConfirmHandwriting, editable)
         }
-    }
-}
-
-/** `16 KB · 140×60 · JPG` and the verdict: icon + text, never colour alone (UI_UX §6). */
-@Composable
-private fun ResultSummary(
-    result: InkReviewResult.Ready,
-    slot: InkSlot,
-) {
-    val colors = ScanFitTheme.colors
-    val missed = stringResource(R.string.photo_misses_rules, slot.examName)
-    val met = stringResource(R.string.photo_meets_rules, slot.examName)
-    val (icon, tint: Color, text) =
-        when {
-            !result.meetsRules -> Triple(Icons.Filled.Warning, colors.warning, missed)
-
-            // A low-confidence preset never gets "meets the rules" (CLAUDE.md rule 6).
-            slot.unverified -> Triple(Icons.Filled.Warning, colors.warning, stringResource(R.string.match_likely_ok))
-
-            else -> Triple(Icons.Filled.CheckCircle, colors.success, met)
-        }
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(ScanFitSpacing.sm),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(icon, contentDescription = null, tint = tint)
-        Text(text, style = ScanFitType.body)
     }
 }
 

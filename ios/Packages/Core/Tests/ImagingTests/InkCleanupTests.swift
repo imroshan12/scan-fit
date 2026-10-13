@@ -81,7 +81,9 @@ struct InkCleanupTests {
         let ridges = Raster.make(300, 300) { x, y in
             let dx = x - 120, dy = y - 150
             let d = Int((Double(dx * dx + dy * dy)).squareRoot())
-            return d < 70 && d % 8 < 4 ? 0x28328C : 0xEAE6DC
+            // Ridges graded from dark at the centre to light at the edge: the output must keep the grades.
+            let ink = 0x28 + d * 2
+            return d < 70 && d % 8 < 4 ? ink << 16 | ink << 8 | ink : 0xEAE6DC
         }
         let out = InkCleanup.clean(ridges, variant: .thumb)
         #expect(out.raster.width == out.raster.height && (150...175).contains(out.raster.width))

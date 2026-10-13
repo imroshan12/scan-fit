@@ -1,5 +1,6 @@
 package app.scanfit
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,7 +10,10 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,17 +30,46 @@ import app.scanfit.core.designsystem.theme.ScanFitType
  * in :app because features never depend on each other (ARCHITECTURE section 2).
  */
 @Composable
-fun ToolsScreen(modifier: Modifier = Modifier) {
+fun ToolsScreen(
+    onCustomSize: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+        // Custom size is the first tool that has landed (ALGORITHMS 11); the rest are still listed as coming soon.
+        Row(
+            modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onCustomSize)
+                .heightIn(min = ScanFitSpacing.minTouchTarget)
+                .padding(horizontal = ScanFitSpacing.screenMargin, vertical = ScanFitSpacing.md)
+                .semantics(mergeDescendants = true) {},
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(
+                stringResource(R.string.tools_custom_resize),
+                style = ScanFitType.body,
+                color = MaterialTheme.colorScheme.onBackground,
+            )
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
+        }
+        HorizontalDivider()
+        ComingSoon()
+    }
+}
+
+@Composable
+private fun ComingSoon() {
     val tools =
         listOf(
-            R.string.tools_custom_resize,
             R.string.tools_checker,
             R.string.tools_pdf,
             R.string.tools_scan,
             R.string.tools_guide_sheet,
             R.string.tools_coach,
         )
-    Column(modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+    Column {
         tools.forEach { title ->
             Row(
                 modifier =

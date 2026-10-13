@@ -33,6 +33,7 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -68,11 +69,12 @@ import app.scanfit.core.model.ExamCategory
 @Composable
 fun HomeRoute(
     onOpenExam: (String) -> Unit,
+    onCustomSize: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    HomeScreen(state, viewModel::onQueryChange, viewModel::onCategorySelected, onOpenExam, modifier)
+    HomeScreen(state, viewModel::onQueryChange, viewModel::onCategorySelected, onOpenExam, onCustomSize, modifier)
 }
 
 @Composable
@@ -81,6 +83,7 @@ internal fun HomeScreen(
     onQueryChange: (String) -> Unit,
     onCategorySelected: (ExamCategory?) -> Unit,
     onOpenExam: (String) -> Unit,
+    onCustomSize: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     // The text lives here (Compose text-field guidance); the ViewModel derives everything else from it.
@@ -106,6 +109,7 @@ internal fun HomeScreen(
         item { CategoryChips(state.category, onCategorySelected) }
         if (state.showsSections) {
             sections(state, onOpenExam)
+            item { CustomSizeLink(onCustomSize) }
         } else if (state.presets !is PresetsStatus.Ready) {
             // Nothing to search until the signed presets are verified: say that, never "no matches".
             item { PresetsStatusCard(state.presets) }
@@ -118,9 +122,21 @@ internal fun HomeScreen(
                     modifier = Modifier.padding(horizontal = ScanFitSpacing.screenMargin, vertical = ScanFitSpacing.lg),
                 )
             }
+            item { CustomSizeLink(onCustomSize) }
         } else {
             items(state.results, key = { "result:" + it.id }) { ExamRow(it, onOpenExam) }
         }
+    }
+}
+
+/** "Not listed? Use Custom size." (UI_UX §3 Home): forms outside the catalogue (ALGORITHMS 11). */
+@Composable
+private fun CustomSizeLink(onCustomSize: () -> Unit) {
+    TextButton(
+        onClick = onCustomSize,
+        modifier = Modifier.padding(horizontal = ScanFitSpacing.sm).heightIn(min = ScanFitSpacing.minTouchTarget),
+    ) {
+        Text(stringResource(R.string.home_empty_hint), style = ScanFitType.body)
     }
 }
 

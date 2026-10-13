@@ -1222,6 +1222,31 @@
 			"expect_exact_includes": ["ibps_po"]
 		}
 	],
+	"thumb_preservation_cases": [
+		{"id": "heavy_core_under_shadow", "_why": "a heavily inked core wider than the local blur must stay dark; shaded paper turns white", "width": 480, "height": 560, "paper": [168, 236], "print": [240, 280, 160, 200], "ridge": [10, 70], "rim": [0.85, 170], "core": [240, 280, 55, 70, 50], "expect": {"core_max_mean": 110, "ink_delta": 20, "visible_below": 240, "border": 3, "border_clear_above": 240, "box_tolerance": 3, "white_min_fraction": 0.3, "quality": "ok"}},
+		{"id": "offset_heavy_ink_is_not_clipped", "_why": "heavier ink on one side moves the ink centroid; the square must still contain the whole print", "width": 480, "height": 560, "paper": [228, 236], "print": [240, 280, 160, 200], "ridge": [10, 70], "core": [175, 380, 70, 90, 45], "expect": {"core_max_mean": 110, "ink_delta": 20, "visible_below": 240, "border": 3, "border_clear_above": 240, "box_tolerance": 3, "white_min_fraction": 0.3, "quality": "ok"}},
+		{"id": "faint_ridges_stay_visible", "_why": "light ridges on flat paper are kept, never lightened away", "width": 400, "height": 480, "paper": [224, 228], "print": [200, 240, 130, 165], "ridge": [10, 150], "expect": {"ink_below": 200, "ink_min": 20000, "ink_delta": 20, "visible_below": 240, "border": 3, "border_clear_above": 240, "box_tolerance": 3, "white_min_fraction": 0.3, "quality": "ok"}}
+	],
+	"custom_size_cases": [
+		{"id": "signature_in_pixels", "_why": "a typical form signature: exact pixels and a KB window", "fields": {"doc": "signature", "width": 140, "height": 60, "min_kb": 10, "max_kb": 20, "unit": "px"}, "expect": {"text": "signature;140x60;10-20;200", "slot": {"type": "signature", "mode": "exact", "width": 140, "height": 60, "min_kb": 10, "max_kb": 20, "dpi": 200}}},
+		{"id": "photo_in_centimetres", "_why": "3.5 x 4.5 cm at 200 dpi rounds half up to 276 x 354 px", "fields": {"doc": "photo", "unit": "cm", "width": 3.5, "height": 4.5, "min_kb": 20, "max_kb": 50, "dpi": 200}, "expect": {"text": "photo;276x354;20-50;200", "slot": {"type": "photo", "mode": "exact", "width": 276, "height": 354, "min_kb": 20, "max_kb": 50, "dpi": 200}}},
+		{"id": "photo_keeps_its_own_size", "_why": "no size: dimensions mode none; no minimum; default dpi", "fields": {"doc": "photo", "max_kb": 100, "unit": "px"}, "expect": {"text": "photo;-;0-100;200", "slot": {"type": "photo", "mode": "none", "width": null, "height": null, "min_kb": null, "max_kb": 100, "dpi": 200}}},
+		{"id": "thumb_at_300_dpi", "_why": "2.5 cm square at 300 dpi = 295 px", "fields": {"doc": "thumb_impression", "unit": "cm", "width": 2.5, "height": 2.5, "max_kb": 50, "dpi": 300}, "expect": {"text": "thumb_impression;295x295;0-50;300", "slot": {"type": "thumb_impression", "mode": "exact", "width": 295, "height": 295, "min_kb": null, "max_kb": 50, "dpi": 300}}},
+		{"id": "document_zero_minimum", "_why": "a minimum of 0 is no minimum", "fields": {"doc": "handwritten_declaration", "width": 800, "height": 400, "min_kb": 0, "max_kb": 100, "unit": "px"}, "expect": {"text": "handwritten_declaration;800x400;0-100;200", "slot": {"type": "handwritten_declaration", "mode": "exact", "width": 800, "height": 400, "min_kb": null, "max_kb": 100, "dpi": 200}}},
+		{"id": "decimal_pixels_round_half_up", "_why": "pixel decimals round half up", "fields": {"doc": "signature", "width": 139.5, "height": 59.4, "max_kb": 20, "unit": "px"}, "expect": {"text": "signature;140x59;0-20;200", "slot": {"type": "signature", "mode": "exact", "width": 140, "height": 59, "min_kb": null, "max_kb": 20, "dpi": 200}}},
+		{"id": "missing_max", "_why": "max is required", "fields": {"doc": "signature", "width": 140, "height": 60, "min_kb": 10, "unit": "px"}, "expect": {"errors": ["max_kb_missing"]}},
+		{"id": "max_out_of_range", "_why": "max above 5120 KB", "fields": {"doc": "photo", "max_kb": 6000, "unit": "px"}, "expect": {"errors": ["max_kb_range"]}},
+		{"id": "min_not_below_max", "_why": "min must be below max", "fields": {"doc": "photo", "width": 200, "height": 230, "min_kb": 50, "max_kb": 50, "unit": "px"}, "expect": {"errors": ["min_kb_range"]}},
+		{"id": "one_side_only", "_why": "width without height", "fields": {"doc": "signature", "width": 140, "max_kb": 20, "unit": "px"}, "expect": {"errors": ["size_pair"]}},
+		{"id": "too_large_after_conversion", "_why": "30 cm at 200 dpi is 2362 px, over 2000", "fields": {"doc": "photo", "unit": "cm", "width": 30, "height": 4, "max_kb": 50, "dpi": 200}, "expect": {"errors": ["width_range"]}},
+		{"id": "too_small_and_bad_dpi", "_why": "every applicable code, in order", "fields": {"doc": "signature", "width": 10, "height": 3000, "min_kb": -1, "max_kb": 0, "dpi": 50, "unit": "px"}, "expect": {"errors": ["max_kb_range", "min_kb_range", "width_range", "height_range", "dpi_range"]}},
+		{"id": "parse_canonical", "_why": "the canonical text round-trips", "parse": "signature;140x60;10-20;200", "expect": {"text": "signature;140x60;10-20;200"}},
+		{"id": "parse_no_size", "_why": "'-' means keep the picture's size", "parse": "photo;-;0-50;200", "expect": {"text": "photo;-;0-50;200"}},
+		{"id": "parse_rejects_bad_window", "_why": "a text that fails validation is not a size", "parse": "photo;200x230;50-20;200", "expect": {"text": null}},
+		{"id": "parse_rejects_unknown_doc", "_why": "only the four custom docs", "parse": "pdf;-;0-50;200", "expect": {"text": null}},
+		{"id": "parse_rejects_leading_zero", "_why": "exactly the canonical form", "parse": "signature;0140x60;10-20;200", "expect": {"text": null}},
+		{"id": "parse_rejects_missing_dpi", "_why": "all four parts are required", "parse": "signature;140x60;10-20", "expect": {"text": null}}
+	],
 	"match_note_cases": [
 		{
 			"id": "preview_takes_three_and_counts_the_rest",

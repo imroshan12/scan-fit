@@ -30,7 +30,7 @@ import app.scanfit.core.match.ReviewChecks
 import app.scanfit.core.match.Verdict
 import app.scanfit.core.model.DocSpec
 import app.scanfit.core.model.Exam
-import app.scanfit.core.model.ExamStatus
+import app.scanfit.core.model.FlowTarget
 import app.scanfit.core.presets.PresetsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
@@ -54,6 +54,8 @@ data class InkSlot(
     val examName: String,
     val unverified: Boolean,
     val spec: DocSpec,
+    /** A Custom size (ALGORITHMS 11): no draft, no Saved status, no handwriting tick, "your size" verdicts. */
+    val custom: Boolean = false,
 ) {
     val kind: DocKind get() = DocKind.of(spec.type)
 
@@ -73,8 +75,8 @@ data class InkSlot(
                 InkVariant.DOCUMENT -> Pipeline.DOCUMENT_CLEANUP
             }
 
-    /** Signatures need the one-time "running handwriting" confirmation before saving (§9.5). */
-    val needsHandwritingConfirmation: Boolean get() = kind == DocKind.SIGNATURE
+    /** Exam signatures need the one-time "running handwriting" confirmation before saving (§9.5, §11). */
+    val needsHandwritingConfirmation: Boolean get() = kind == DocKind.SIGNATURE && !custom
 
     /** "Crisp black" and "Darker ink" apply to binarised ink only; a thumb keeps its ridges (§9.5). */
     val hasInkOptions: Boolean get() = variant != InkVariant.THUMB
@@ -179,8 +181,8 @@ constructor(
     @InkWork private val work: CoroutineDispatcher,
     private val drafts: DraftStore,
 ) : ViewModel() {
-    private val examId: String = savedState.get<String>(EXAM_ID).orEmpty()
-    private val docType: String = savedState.get<String>(DOC_TYPE).orEmpty()
+    private val target: FlowTarget? =
+        FlowTarget.of(savedState.get<String>(EXAM_ID), savedState.get<String>(DOC_TYPE), savedState.get<String>(CUSTOM))
 
     private val _uiState = MutableStateFlow<InkUiState>(InkUiState.Loading)
     val uiState: StateFlow<InkUiState> = _uiState.asStateFlow()
@@ -198,7 +200,8 @@ constructor(
         viewModelScope.launch {
             combine(presets.outcome, presets.bundle) { outcome, bundle -> outcome to bundle }
                 .collectLatest { (outcome, bundle) ->
-                    if (bundle != null) {
+                    // A Custom size needs no preset, only the exams for its match note, so it opens without them.
+                    if (bundle != null || (outcome != null && target is FlowTarget.Custom)) {
                         refreshDraft()
                     } else if (outcome != null) {
                         _uiState.value = InkUiState.NotFound
@@ -211,9 +214,15 @@ constructor(
     }
 
     fun refreshDraft() {
-        val bundle = presets.bundle.value ?: return
-        val exam = bundle.exams.firstOrNull { it.id == examId && it.status == ExamStatus.ACTIVE }
-        val spec = exam?.documents?.firstOrNull { it.type.name.lowercase() == docType }
+        val target = target
+        val bundle = presets.bundle.value
+        if (target == null) {
+            _uiState.value = InkUiState.NotFound
+            return
+        }
+        if (bundle == null && target !is FlowTarget.Custom) return
+        val resolved = target.resolve(bundle)
+        val spec = resolved?.spec
         if ((_uiState.value as? InkUiState.Review)?.save?.state == SaveState.SAVING) return
         if (slot?.spec != null && slot?.spec != spec) {
             job?.cancel()
@@ -230,14 +239,14 @@ constructor(
         }
         job?.cancel()
         job = viewModelScope.launch {
-            if (exam == null || spec == null || DocKind.of(spec.type) in setOf(DocKind.PHOTO, DocKind.PDF_DOCUMENT)) {
+            if (resolved == null || DocKind.of(resolved.spec.type) in setOf(DocKind.PHOTO, DocKind.PDF_DOCUMENT)) {
                 _uiState.value = InkUiState.NotFound
                 return@launch
             }
-            val slot = InkSlot(exam.id, exam.name, exam.isUnverified, spec)
-            val draft = drafts.read(exam.id, spec, slot.kind)
-            exams = bundle.exams
-            popular = bundle.popular
+            val slot = InkSlot(resolved.examId, resolved.examName, resolved.unverified, resolved.spec, resolved.custom)
+            val draft = if (slot.custom) null else drafts.read(slot.examId, slot.spec, slot.kind)
+            exams = bundle?.exams.orEmpty()
+            popular = bundle?.popular.orEmpty()
             val next = if (draft == null || previous is InkUiState.PickSource) {
                 InkUiState.PickSource(slot)
             } else {
@@ -371,7 +380,8 @@ constructor(
         val ready = review.result as? InkReviewResult.Ready ?: return null
         if (!review.canSave) return null
         val slot = review.slot
-        val request = ExportRequest(slot.examId, slot.examName, slot.spec, slot.kind, ready.bytes)
+        val request =
+            ExportRequest(slot.examId, slot.examName, slot.spec, slot.kind, ready.bytes, recordsSaved = !slot.custom)
         _uiState.value = review.copy(save = SaveResult(SaveState.SAVING))
         if (exporter.destinations.requiresPicker) {
             pendingSave = request
@@ -479,12 +489,9 @@ constructor(
                         }
                     }
                 if (version != renderVersion) return@launch
-                if (presets.bundle.value?.exams?.firstOrNull { it.id == slot.examId }?.documents
-                        ?.firstOrNull { it.type == slot.spec.type } != slot.spec
-                ) {
-                    return@launch
-                }
-                val retained = if (result is InkReviewResult.Ready && result.meetsRules) {
+                // The preset changed while fitting: this output was made for rules that no longer apply.
+                if (target?.resolve(presets.bundle.value)?.spec != slot.spec) return@launch
+                val retained = if (result is InkReviewResult.Ready && result.meetsRules && !slot.custom) {
                     try {
                         drafts.retain(slot.examId, slot.spec, slot.kind, result.bytes)
                     } catch (cancelled: CancellationException) {
@@ -509,9 +516,10 @@ constructor(
     }
 
     companion object {
-        /** Navigation arguments: `exam/{examId}/ink/{docType}` (docType = preset wire name, e.g. `signature`). */
-        const val EXAM_ID = "examId"
-        const val DOC_TYPE = "docType"
+        /** Navigation arguments: `exam/{examId}/ink/{docType}` or `custom/ink?custom={text}` (ALGORITHMS 11). */
+        const val EXAM_ID = FlowTarget.EXAM_ID
+        const val DOC_TYPE = FlowTarget.DOC_TYPE
+        const val CUSTOM = FlowTarget.CUSTOM
 
         private const val SLIDER_DEBOUNCE_MS = 300L
         private const val MIN_INK = 0.3

@@ -26,7 +26,7 @@ import app.scanfit.core.match.ReviewChecks
 import app.scanfit.core.match.Verdict
 import app.scanfit.core.model.DocSpec
 import app.scanfit.core.model.Exam
-import app.scanfit.core.model.ExamStatus
+import app.scanfit.core.model.FlowTarget
 import app.scanfit.core.presets.PresetsRepository
 import app.scanfit.core.vision.FaceBox
 import app.scanfit.core.vision.FaceCheck
@@ -54,6 +54,8 @@ data class PhotoSlot(
     val examName: String,
     val unverified: Boolean,
     val spec: DocSpec,
+    /** A Custom size (ALGORITHMS 11): no draft, no Saved status, "your size" verdicts. */
+    val custom: Boolean = false,
 ) {
     /** The aspect the crop is locked to (ALGORITHMS 9.6); a free-ratio slot keeps the photo's own shape. */
     val aspect: Double? get() = Geometry.targetAspect(spec)
@@ -160,8 +162,8 @@ constructor(
     exporter: DocumentExporter,
     private val drafts: DraftStore,
 ) : ViewModel() {
-    private val examId: String = savedState.get<String>(EXAM_ID).orEmpty()
-    private val docType: String = savedState.get<String>(DOC_TYPE).orEmpty()
+    private val target: FlowTarget? =
+        FlowTarget.of(savedState.get<String>(EXAM_ID), savedState.get<String>(DOC_TYPE), savedState.get<String>(CUSTOM))
 
     private val _uiState = MutableStateFlow<PhotoUiState>(PhotoUiState.Loading)
     val uiState: StateFlow<PhotoUiState> = _uiState.asStateFlow()
@@ -181,7 +183,8 @@ constructor(
         viewModelScope.launch {
             combine(presets.outcome, presets.bundle) { outcome, bundle -> outcome to bundle }
                 .collectLatest { (outcome, bundle) ->
-                    if (bundle != null) {
+                    // A Custom size needs no preset, only the exams for its match note, so it opens without them.
+                    if (bundle != null || (outcome != null && target is FlowTarget.Custom)) {
                         refreshDraft()
                     } else if (outcome != null) {
                         _uiState.value = PhotoUiState.NotFound
@@ -194,9 +197,15 @@ constructor(
     }
 
     fun refreshDraft() {
-        val bundle = presets.bundle.value ?: return
-        val exam = bundle.exams.firstOrNull { it.id == examId && it.status == ExamStatus.ACTIVE }
-        val spec = exam?.documents?.firstOrNull { it.type.name.lowercase() == docType }
+        val target = target
+        val bundle = presets.bundle.value
+        if (target == null) {
+            _uiState.value = PhotoUiState.NotFound
+            return
+        }
+        if (bundle == null && target !is FlowTarget.Custom) return
+        val resolved = target.resolve(bundle)
+        val spec = resolved?.spec
         if ((_uiState.value as? PhotoUiState.Review)?.save?.state == SaveState.SAVING) return
         if (slot?.spec != null && slot?.spec != spec) {
             job?.cancel()
@@ -213,14 +222,15 @@ constructor(
         }
         job?.cancel()
         job = viewModelScope.launch {
-            if (exam == null || spec == null) {
+            if (resolved == null || DocKind.of(resolved.spec.type) != DocKind.PHOTO) {
                 _uiState.value = PhotoUiState.NotFound
                 return@launch
             }
-            val slot = PhotoSlot(exam.id, exam.name, exam.isUnverified, spec)
-            val draft = drafts.read(exam.id, spec, DocKind.PHOTO)
-            exams = bundle.exams
-            popular = bundle.popular
+            val slot =
+                PhotoSlot(resolved.examId, resolved.examName, resolved.unverified, resolved.spec, resolved.custom)
+            val draft = if (slot.custom) null else drafts.read(slot.examId, slot.spec, DocKind.PHOTO)
+            exams = bundle?.exams.orEmpty()
+            popular = bundle?.popular.orEmpty()
             val next = if (draft == null || previous is PhotoUiState.PickSource) {
                 PhotoUiState.PickSource(slot)
             } else {
@@ -439,12 +449,9 @@ constructor(
                         }
                     }
                 if (version != renderVersion) return@launch
-                if (presets.bundle.value?.exams?.firstOrNull { it.id == slot.examId }?.documents
-                        ?.firstOrNull { it.type == slot.spec.type } != slot.spec
-                ) {
-                    return@launch
-                }
-                val retained = if (result is ReviewResult.Ready && result.meetsRules) {
+                // The preset changed while fitting: this output was made for rules that no longer apply.
+                if (target?.resolve(presets.bundle.value)?.spec != slot.spec) return@launch
+                val retained = if (result is ReviewResult.Ready && result.meetsRules && !slot.custom) {
                     attempt { drafts.retain(slot.examId, slot.spec, DocKind.PHOTO, result.bytes) } == true
                 } else {
                     true
@@ -480,9 +487,10 @@ constructor(
     }
 
     companion object {
-        /** Navigation arguments: `exam/{examId}/photo/{docType}` (docType = preset wire name, e.g. `photo`). */
-        const val EXAM_ID = "examId"
-        const val DOC_TYPE = "docType"
+        /** Navigation arguments: `exam/{examId}/photo/{docType}` or `custom/photo?custom={text}` (ALGORITHMS 11). */
+        const val EXAM_ID = FlowTarget.EXAM_ID
+        const val DOC_TYPE = FlowTarget.DOC_TYPE
+        const val CUSTOM = FlowTarget.CUSTOM
 
         private const val TYPING_DEBOUNCE_MS = 400L
         private const val MAX_NAME = 60

@@ -62,6 +62,18 @@ class DataStoreUserPreferencesTest {
     }
 
     @Test
+    fun recentCustomSizesAreNewestFirstDistinctAndOnlyCanonical() = runTest {
+        val prefs = prefs()
+        assertTrue(prefs.recentCustomSizes.first().isEmpty())
+        prefs.rememberCustomSize("signature;140x60;10-20;200")
+        prefs.rememberCustomSize("photo;-;0-50;200")
+        prefs.rememberCustomSize("signature;140x60;10-20;200")
+        assertEquals(listOf("signature;140x60;10-20;200", "photo;-;0-50;200"), prefs.recentCustomSizes.first())
+        val rejected = runCatching { prefs.rememberCustomSize("signature;140x60;20-10;200") }
+        assertTrue("a non-canonical size is a programming error", rejected.isFailure)
+    }
+
+    @Test
     fun savedDocumentsSurviveStoreRestartAndDoNotDuplicate() = runTest {
         val owner = Job()
         val store = PreferenceDataStoreFactory.create(

@@ -2,6 +2,7 @@ package app.scanfit.core.testing
 
 import app.scanfit.core.data.SavedDocument
 import app.scanfit.core.data.UserPreferences
+import app.scanfit.core.model.CustomSize
 import kotlinx.coroutines.flow.MutableStateFlow
 
 /** In-memory [UserPreferences] for view-model tests. */
@@ -34,5 +35,11 @@ class FakeUserPreferences(
 
     override suspend fun confirmHandwriting() {
         handwritingConfirmed.value = true
+    }
+
+    override val recentCustomSizes = MutableStateFlow(emptyList<String>())
+
+    override suspend fun rememberCustomSize(text: String) {
+        recentCustomSizes.value = CustomSize.remember(recentCustomSizes.value, text)
     }
 }

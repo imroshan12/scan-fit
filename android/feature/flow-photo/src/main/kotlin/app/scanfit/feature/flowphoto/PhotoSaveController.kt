@@ -24,7 +24,15 @@ internal class PhotoSaveController(
         val ready = review.result as? ReviewResult.Ready ?: return null
         if (review.rendering || !ready.meetsRules || review.save.state == SaveState.SAVING) return null
         val slot = review.slot
-        val request = ExportRequest(slot.examId, slot.examName, slot.spec, DocKind.PHOTO, ready.bytes)
+        val request =
+            ExportRequest(
+                slot.examId,
+                slot.examName,
+                slot.spec,
+                DocKind.PHOTO,
+                ready.bytes,
+                recordsSaved = !slot.custom,
+            )
         state.value = review.copy(save = SaveResult(SaveState.SAVING))
         if (exporter.destinations.requiresPicker) {
             pending = request

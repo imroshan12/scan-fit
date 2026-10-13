@@ -129,7 +129,9 @@ class InkCleanupTest {
                 val dx = x - 120
                 val dy = y - 150
                 val d = kotlin.math.sqrt((dx * dx + dy * dy).toDouble()).toInt()
-                if (d < 70 && d % 8 < 4) 0x28328C else 0xEAE6DC
+                // Ridges graded from dark at the centre to light at the edge: the output must keep the grades.
+                val ink = 0x28 + d * 2
+                if (d < 70 && d % 8 < 4) (ink shl 16) or (ink shl 8) or ink else 0xEAE6DC
             }
         val out = InkCleanup.clean(ridges, InkVariant.THUMB)
         assertEquals(out.raster.width, out.raster.height)

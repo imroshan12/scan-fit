@@ -1,4 +1,5 @@
 import DesignSystem
+import Custom
 import Exams
 import Home
 import Kit
@@ -19,6 +20,7 @@ struct RootView: View {
     /// The Home stack's path, so a flow can leave itself explicitly (see `PhotoFlowView.onExit`).
     @State private var homePath = NavigationPath()
     @State private var kitPath = NavigationPath()
+    @State private var toolsPath = NavigationPath()
     @State private var selectedTab = Tab.home
 
     private enum Tab: Hashable { case home, kit, tools, settings }
@@ -63,6 +65,9 @@ struct RootView: View {
                             if !homePath.isEmpty { homePath.removeLast() }
                         }
                     }
+                    .navigationDestination(for: CustomSizeRoute.self) { _ in
+                        customSize(strings: strings) { homePath.append(FlowRoute(custom: $0)) }
+                    }
             }
             .tabItem { Label(strings.tabHome, systemImage: "house") }
             .tag(Tab.home)
@@ -76,9 +81,19 @@ struct RootView: View {
             }
             .tabItem { Label(strings.tabKit, systemImage: "tray.full") }
             .tag(Tab.kit)
-            ToolsView(strings: strings)
-                .tabItem { Label(strings.tabTools, systemImage: "wrench.and.screwdriver") }
-                .tag(Tab.tools)
+            NavigationStack(path: $toolsPath) {
+                ToolsView(strings: strings)
+                    .navigationDestination(for: CustomSizeRoute.self) { _ in
+                        customSize(strings: strings) { toolsPath.append(FlowRoute(custom: $0)) }
+                    }
+                    .navigationDestination(for: FlowRoute.self) { route in
+                        flow(route, strings: strings) {
+                            if !toolsPath.isEmpty { toolsPath.removeLast() }
+                        }
+                    }
+            }
+            .tabItem { Label(strings.tabTools, systemImage: "wrench.and.screwdriver") }
+            .tag(Tab.tools)
             SettingsView(presets: presets, preferences: container.preferences, strings: strings)
                 .tabItem { Label(strings.tabSettings, systemImage: "gearshape") }
                 .tag(Tab.settings)
@@ -91,14 +106,18 @@ struct RootView: View {
         }
     }
 
+    /// The Custom size form (ALGORITHMS 11); Continue opens the photo or ink flow for the size on the same stack.
+    private func customSize(strings: Strings, open: @escaping (CustomSize) -> Void) -> some View {
+        CustomView(model: CustomViewModel(preferences: container.preferences), strings: strings, onContinue: open)
+    }
+
     /// The photo flow for photo slots, the ink flow for everything else the exam screen lets the user open.
     @ViewBuilder
     private func flow(_ route: FlowRoute, strings: Strings, onExit: @escaping () -> Void) -> some View {
         if Self.photoFlowTypes.contains(route.docType) {
             PhotoFlowView(
                 model: PhotoFlowViewModel(
-                    examId: route.examId, docType: route.docType, preferences: container.preferences,
-                    drafts: container.drafts
+                    target: route.target, preferences: container.preferences, drafts: container.drafts
                 ) {
                     await container.trustedBundle()
                 },
@@ -108,8 +127,7 @@ struct RootView: View {
         } else {
             InkFlowView(
                 model: InkFlowViewModel(
-                    examId: route.examId, docType: route.docType, preferences: container.preferences,
-                    drafts: container.drafts
+                    target: route.target, preferences: container.preferences, drafts: container.drafts
                 ) {
                     await container.trustedBundle()
                 },

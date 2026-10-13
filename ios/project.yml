@@ -85,6 +85,8 @@ targets:
             - package: Features
               product: Kit
             - package: Features
+              product: Custom
+            - package: Features
               product: Settings
         postBuildScripts:
             - name: Embed signed presets

@@ -44,7 +44,10 @@ class KitViewModelTest {
     private val presets = FakePresetsRepository(ready, bundle)
     private val bytes = TestJpeg.make(200, 230, 35 * 1024 + 512)
 
-    @Before fun setUp() = Dispatchers.setMain(UnconfinedTestDispatcher())
+    // One scheduler for Main and the draft reads: an obsolete read cannot resume after the test reset Main.
+    private val dispatcher = UnconfinedTestDispatcher()
+
+    @Before fun setUp() = Dispatchers.setMain(dispatcher)
 
     @After fun tearDown() = Dispatchers.resetMain()
 
@@ -58,7 +61,7 @@ class KitViewModelTest {
     fun loadingCompletedFailureRetryAndVerifiedEmptyAreDistinct() = runTest {
         presets.bundle.value = null
         presets.outcome.value = null
-        val model = KitViewModel(presets, drafts)
+        val model = KitViewModel(presets, drafts, dispatcher)
         model.uiState.test {
             assertEquals(KitUiState.Loading, awaitItem())
             presets.outcome.value = PresetsLoadOutcome.MissingEmbedded
@@ -71,7 +74,7 @@ class KitViewModelTest {
             assertEquals(KitUiState.Empty, resolved())
         }
         val inconsistent = FakePresetsRepository(ready, null)
-        KitViewModel(inconsistent, drafts).uiState.test { assertEquals(KitUiState.Error, resolved()) }
+        KitViewModel(inconsistent, drafts, dispatcher).uiState.test { assertEquals(KitUiState.Error, resolved()) }
     }
 
     @Test
@@ -83,7 +86,7 @@ class KitViewModelTest {
         assertTrue(drafts.retain(bank.id, photo, DocKind.PHOTO, bytes))
         val triple = upsc.documents.first { it.type == DocType.TRIPLE_SIGNATURE }
         assertTrue(drafts.retain(upsc.id, triple, DocKind.SIGNATURE, TestJpeg.make(240, 180, 40 * 1024)))
-        KitViewModel(presets, drafts).uiState.test {
+        KitViewModel(presets, drafts, dispatcher).uiState.test {
             val state = resolved() as KitUiState.Ready
             assertEquals(listOf(upsc.id, bank.id), state.exams.map { it.id })
             assertEquals(Confidence.LOW, state.exams.first().confidence)
@@ -101,7 +104,7 @@ class KitViewModelTest {
         drafts.records[bank.id to signature.type] = RetainedDraft(TestJpeg.make(140, 60, 16 * 1024), drafts.now - app.scanfit.core.data.draft.FileDraftStore.TTL_MILLIS)
         val reads = AtomicInteger()
         drafts.beforeRead = { reads.incrementAndGet() }
-        KitViewModel(presets, drafts).uiState.test {
+        KitViewModel(presets, drafts, dispatcher).uiState.test {
             assertEquals(KitUiState.Empty, resolved())
             assertTrue(drafts.records.isEmpty())
             assertTrue("cleanup may restart once, not indefinitely", reads.get() <= 3 * bundle.exams.sumOf { it.documents.size })
@@ -112,15 +115,15 @@ class KitViewModelTest {
     @Test
     fun currentSlotChangesAndRemovedOrRetiredExamsRemoveRows() = runTest {
         drafts.retain(bank.id, photo, DocKind.PHOTO, bytes)
-        KitViewModel(presets, drafts).uiState.test {
+        KitViewModel(presets, drafts, dispatcher).uiState.test {
             assertTrue(resolved() is KitUiState.Ready)
             presets.bundle.value = bundle.copy(exams = listOf(bank.copy(status = ExamStatus.RETIRED)))
             assertEquals(KitUiState.Empty, resolved())
         }
         presets.bundle.value = bundle.copy(exams = emptyList())
-        KitViewModel(presets, drafts).uiState.test { assertEquals(KitUiState.Empty, resolved()) }
+        KitViewModel(presets, drafts, dispatcher).uiState.test { assertEquals(KitUiState.Empty, resolved()) }
         presets.bundle.value = bundle.copy(exams = listOf(bank.copy(documents = listOf(photo.copy(dpi = 300)))))
-        KitViewModel(presets, drafts).uiState.test {
+        KitViewModel(presets, drafts, dispatcher).uiState.test {
             assertEquals(KitUiState.Empty, resolved())
             assertTrue(drafts.records.isEmpty())
         }
@@ -128,7 +131,7 @@ class KitViewModelTest {
 
     @Test
     fun storeRevisionAndExplicitEntryOrForegroundRefreshRevalidate() = runTest {
-        val model = KitViewModel(presets, drafts)
+        val model = KitViewModel(presets, drafts, dispatcher)
         model.uiState.test {
             assertEquals(KitUiState.Empty, resolved())
             drafts.retain(bank.id, photo, DocKind.PHOTO, bytes)
@@ -146,7 +149,7 @@ class KitViewModelTest {
     @Test
     fun readFailureShowsRetryableErrorAndRetryReloadsPresetsAndDrafts() = runTest {
         drafts.beforeRead = { throw IOException("injected read failure") }
-        val model = KitViewModel(presets, drafts)
+        val model = KitViewModel(presets, drafts, dispatcher)
         model.uiState.test {
             assertEquals(KitUiState.Error, resolved())
             drafts.beforeRead = {}
@@ -165,7 +168,7 @@ class KitViewModelTest {
             started.complete(Unit)
             withContext(NonCancellable) { release.await() }
         }
-        KitViewModel(presets, drafts).uiState.test {
+        KitViewModel(presets, drafts, dispatcher).uiState.test {
             assertEquals(KitUiState.Loading, awaitItem())
             started.await()
             presets.bundle.value = bundle.copy(exams = emptyList())
@@ -184,7 +187,7 @@ class KitViewModelTest {
             started.complete(Unit)
             withContext(NonCancellable) { release.await() }
         }
-        val model = KitViewModel(presets, drafts)
+        val model = KitViewModel(presets, drafts, dispatcher)
         model.uiState.test {
             assertEquals(KitUiState.Loading, awaitItem())
             started.await()

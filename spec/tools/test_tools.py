@@ -13,6 +13,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import gen_analytics  # noqa: E402
 import gen_strings  # noqa: E402
 import gen_tokens  # noqa: E402
+import custom_size  # noqa: E402
 import match_note  # noqa: E402
 import photo_crop  # noqa: E402
 import release_preflight  # noqa: E402
@@ -258,6 +259,27 @@ class CasesFile(unittest.TestCase):
         self.assertGreaterEqual(len(self.cases["crop_cases"]), 10)
         for c in self.cases["crop_cases"]:
             self.assertEqual(photo_crop.expected(c), c["expect"], c["id"])
+
+    def test_custom_size_expectations_match_the_reference(self):
+        """custom_size_cases are computed by custom_size.py: a hand edit that drifts from ALGORITHMS 11 fails here."""
+        cases = self.cases["custom_size_cases"]
+        self.assertGreaterEqual(len(cases), 15)
+        for c in cases:
+            self.assertEqual(custom_size.expected(c), c["expect"], c["id"])
+            if c["expect"].get("text"):
+                self.assertEqual(custom_size.text(custom_size.parse(c["expect"]["text"])), c["expect"]["text"], c["id"])
+
+    def test_thumb_cases_draw_a_whole_print_inside_the_image(self):
+        """thumb_preservation_cases are parametric: the print must fit in the image or the no-clip check is meaningless."""
+        cases = self.cases["thumb_preservation_cases"]
+        self.assertGreaterEqual(len(cases), 3)
+        for c in cases:
+            cx, cy, rx, ry = c["print"]
+            self.assertTrue(rx < cx < c["width"] - rx and ry < cy < c["height"] - ry, c["id"])
+            self.assertLess(c["ridge"][1], min(c["paper"]) - c["expect"]["ink_delta"], c["id"])
+            for key in ("ink_delta", "visible_below", "border", "border_clear_above", "box_tolerance",
+                        "white_min_fraction", "quality"):
+                self.assertIn(key, c["expect"], c["id"])
 
     def test_match_note_expectations_match_the_reference(self):
         """match_note_cases are computed by match_note.py: a hand edit that drifts from ALGORITHMS 9.7 fails here."""

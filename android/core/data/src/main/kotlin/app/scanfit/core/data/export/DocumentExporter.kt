@@ -26,6 +26,8 @@ class ExportRequest(
     val spec: DocSpec,
     val kind: DocKind,
     bytes: ByteArray,
+    /** Exam slots record Saved on the checklist; a Custom size has no checklist (ALGORITHMS 11). */
+    val recordsSaved: Boolean = true,
 ) {
     val bytes: ByteArray = bytes.copyOf()
 
@@ -79,7 +81,7 @@ constructor(
                 SaveResult(SaveState.VERIFY_FAILED, cleanup(destination))
             } else {
                 destination.publish()
-                preferences.recordSaved(request.examId, request.spec.type.name)
+                if (request.recordsSaved) preferences.recordSaved(request.examId, request.spec.type.name)
                 SaveResult(SaveState.SAVED)
             }
         } catch (error: CancellationException) {

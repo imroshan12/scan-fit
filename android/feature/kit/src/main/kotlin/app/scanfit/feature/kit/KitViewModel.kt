@@ -11,6 +11,7 @@ import app.scanfit.core.model.PresetBundle
 import app.scanfit.core.presets.PresetsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.currentCoroutineContext
@@ -41,10 +42,15 @@ sealed interface KitUiState {
 
 @HiltViewModel
 @OptIn(ExperimentalCoroutinesApi::class)
-class KitViewModel @Inject constructor(
+class KitViewModel internal constructor(
     private val presets: PresetsRepository,
     private val drafts: DraftStore,
+    /** Where draft files are read; tests pass their scheduler so no read outlives the test. */
+    private val io: CoroutineDispatcher,
 ) : ViewModel() {
+    @Inject
+    constructor(presets: PresetsRepository, drafts: DraftStore) : this(presets, drafts, Dispatchers.IO)
+
     private val refreshes = MutableStateFlow(0L)
 
     val uiState: StateFlow<KitUiState> = combine(
@@ -58,7 +64,7 @@ class KitViewModel @Inject constructor(
         } else {
             emit(KitUiState.Loading)
             val state = try {
-                val exams = withContext(Dispatchers.IO) { availableExams(bundle) }
+                val exams = withContext(io) { availableExams(bundle) }
                 if (exams.isEmpty()) KitUiState.Empty else KitUiState.Ready(exams)
             } catch (cancelled: CancellationException) {
                 throw cancelled

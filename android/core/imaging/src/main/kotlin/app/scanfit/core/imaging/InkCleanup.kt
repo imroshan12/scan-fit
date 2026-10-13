@@ -40,11 +40,21 @@ object InkCleanup {
     private const val THUMB_SIDE = 1.16
     private const val MIN_COVERAGE = 0.005
     private const val MAX_COVERAGE = 0.35
-    private const val GAMMA = 0.8
-    private const val LOW_PERCENTILE = 0.02
-    private const val HIGH_PERCENTILE = 0.98
+    private const val BLACK_PERCENTILE = 0.02
+    private const val MEDIAN = 0.5
     private const val DARK = 128
     private const val BYTE = 255
+
+    // Thumb (ALGORITHMS 9.5): candidates below this local level, paper blur divisor and its regulariser,
+    // white point, mid-grey exponent, visible-ink level for the trim and the robust box percentiles.
+    private const val THUMB_CANDIDATE = 230
+    private const val PAPER_SIGMA_DIVISOR = 8.0
+    private const val PAPER_WEIGHT = 5
+    private const val THUMB_WHITE = 235
+    private const val THUMB_EXPONENT = 1.25
+    private const val THUMB_TRIM_INK = 240
+    private const val BOX_LOW = 0.005
+    private const val BOX_HIGH = 0.995
 
     fun clean(
         src: Raster,
@@ -57,9 +67,14 @@ object InkCleanup {
         val l = IntArray(w * h) { luma[it].toInt() and BYTE }
         val shortSide = minOf(w, h)
         val bg = ImageOps.gaussianApprox(l, w, h, shortSide / SIGMA_DIVISOR)
-        val n = IntArray(w * h) { minOf(BYTE, (l[it] * BYTE + bg[it] / 2) / maxOf(bg[it], 1)) }
-        return if (variant == InkVariant.THUMB) thumb(n, w, h) else binarised(src, n, w, h, variant, options)
+        val n = normalise(l, bg)
+        return if (variant == InkVariant.THUMB) thumb(l, n, w, h) else binarised(src, n, w, h, variant, options)
     }
+
+    private fun normalise(
+        l: IntArray,
+        bg: IntArray,
+    ) = IntArray(l.size) { minOf(BYTE, (l[it] * BYTE + bg[it] / 2) / maxOf(bg[it], 1)) }
 
     private fun binarised(
         src: Raster,
@@ -122,65 +137,149 @@ object InkCleanup {
         factor: Double,
     ) = roundHalfUp(v * factor).coerceIn(0, BYTE).toByte()
 
+    /**
+     * Thumb (ALGORITHMS 9.5): normalise by a paper-only background, stretch linearly, darken mid-greys slightly, then
+     * a square around the robust ink box. [n1] is the local-mean normalisation, used only to find candidates.
+     */
     private fun thumb(
-        n: IntArray,
+        l: IntArray,
+        n1: IntArray,
         w: Int,
         h: Int,
     ): InkResult {
-        val hist = IntArray(BYTE + 1)
-        for (v in n) hist[v]++
-        val total = w * h
-        val p2 = percentile(hist, total, LOW_PERCENTILE)
-        val p98 = percentile(hist, total, HIGH_PERCENTILE)
-        val lut =
-            IntArray(BYTE + 1) { v ->
-                val stretched = if (p98 > p2) ((v - p2) * BYTE / (p98 - p2)).coerceIn(0, BYTE) else v
-                roundHalfUp(BYTE * (stretched / BYTE.toDouble()).pow(GAMMA)).coerceIn(0, BYTE)
-            }
-        val grey = ByteArray(w * h * Raster.CHANNELS)
-        var count = 0L
-        var sx = 0L
-        var sy = 0L
-        var minX = w
-        var minY = h
-        var maxX = -1
-        var maxY = -1
+        val grey = thumbTone(l, n1, w, h)
+        val columns = IntArray(w)
+        val rows = IntArray(h)
+        var count = 0
+        val rgb = ByteArray(w * h * Raster.CHANNELS)
         for (y in 0 until h) {
             for (x in 0 until w) {
-                val v = lut[n[y * w + x]]
+                val v = grey[y * w + x]
                 val i = (y * w + x) * Raster.CHANNELS
-                grey[i] = v.toByte()
-                grey[i + 1] = v.toByte()
-                grey[i + 2] = v.toByte()
-                if (v < DARK) {
+                rgb[i] = v.toByte()
+                rgb[i + 1] = v.toByte()
+                rgb[i + 2] = v.toByte()
+                if (v < THUMB_TRIM_INK) {
+                    columns[x]++
+                    rows[y]++
                     count++
-                    sx += x
-                    sy += y
-                    minX = minOf(minX, x)
-                    maxX = maxOf(maxX, x)
-                    minY = minOf(minY, y)
-                    maxY = maxOf(maxY, y)
                 }
             }
         }
-        val full = Raster(w, h, grey)
-        if (count == 0L) return InkResult(full, InkQuality.TOO_FAINT, 0.0)
-        val side = maxOf(1, roundHalfUp(THUMB_SIDE * maxOf(maxX - minX + 1, maxY - minY + 1)))
-        val cx = roundHalfUp(sx.toDouble() / count)
-        val cy = roundHalfUp(sy.toDouble() / count)
-        val square = full.crop(cx - side / 2, cy - side / 2, side, side)
+        val full = Raster(w, h, rgb)
+        if (count == 0) return InkResult(full, InkQuality.TOO_FAINT, 0.0)
+        val low = (BOX_LOW * (count - 1)).toInt()
+        val high = (BOX_HIGH * (count - 1)).toInt()
+        val x0 = position(columns, low)
+        val x1 = position(columns, high)
+        val y0 = position(rows, low)
+        val y1 = position(rows, high)
+        val side = maxOf(1, roundHalfUp(THUMB_SIDE * maxOf(x1 - x0 + 1, y1 - y0 + 1)))
+        val ox = (x0 + x1 + 1) / 2 - side / 2
+        val oy = (y0 + y1 + 1) / 2 - side / 2
+        val square = full.crop(ox, oy, side, side)
         var inside = 0
         for (y in 0 until side) {
             for (x in 0 until side) {
-                if (square.r(x, y) < DARK &&
-                    inFull(cx - side / 2 + x, cy - side / 2 + y, w, h)
-                ) {
-                    inside++
-                }
+                if (square.r(x, y) < DARK && inFull(ox + x, oy + y, w, h)) inside++
             }
         }
         val coverage = inside.toDouble() / (side.toDouble() * side)
         return InkResult(square, gate(coverage), coverage)
+    }
+
+    /** Steps 1–4 of the thumb: candidates, paper-only background, normalisation and the tone curve. */
+    private fun thumbTone(
+        l: IntArray,
+        n1: IntArray,
+        w: Int,
+        h: Int,
+    ): IntArray {
+        val total = w * h
+        val lumaHist = IntArray(BYTE + 1)
+        for (v in l) lumaHist[v]++
+        val otsuLevel = otsu(lumaHist, total)
+        var candidates = IntArray(total) { if (n1[it] < THUMB_CANDIDATE || l[it] <= otsuLevel) 1 else 0 }
+        candidates = ImageOps.dilate3x3(ImageOps.dilate3x3(candidates, w, h), w, h)
+
+        val paperHist = IntArray(BYTE + 1)
+        var paperCount = 0
+        val weights = IntArray(total)
+        val paperLuma = IntArray(total)
+        for (i in 0 until total) {
+            if (candidates[i] == 1) continue
+            paperHist[l[i]]++
+            paperCount++
+            weights[i] = BYTE
+            paperLuma[i] = l[i]
+        }
+        val paper = if (paperCount > 0) percentile(paperHist, paperCount, MEDIAN) else BYTE
+        val sigma = minOf(w, h) / PAPER_SIGMA_DIVISOR
+        val b = ImageOps.gaussianApprox(weights, w, h, sigma)
+        val c = ImageOps.gaussianApprox(paperLuma, w, h, sigma)
+        val bg = IntArray(total) { (c[it] * BYTE + PAPER_WEIGHT * paper) / (b[it] + PAPER_WEIGHT) }
+        val n = normalise(l, bg)
+
+        val inkHist = IntArray(BYTE + 1)
+        var inkCount = 0
+        for (i in 0 until total) {
+            if (candidates[i] == 1) {
+                inkHist[n[i]]++
+                inkCount++
+            }
+        }
+        val black = if (inkCount > 0) percentile(inkHist, inkCount, BLACK_PERCENTILE) else 0
+        val lut =
+            IntArray(BYTE + 1) { v ->
+                val s =
+                    if (black >= THUMB_WHITE) {
+                        v / BYTE.toDouble()
+                    } else {
+                        (v - black).coerceIn(0, THUMB_WHITE - black).toDouble() / (THUMB_WHITE - black)
+                    }
+                roundHalfUp(BYTE * s.pow(THUMB_EXPONENT)).coerceIn(0, BYTE)
+            }
+        return IntArray(total) { lut[n[it]] }
+    }
+
+    /** The coordinate at sorted position [index] of the pixels counted per coordinate in [counts]. */
+    private fun position(
+        counts: IntArray,
+        index: Int,
+    ): Int {
+        var acc = 0
+        for (coordinate in counts.indices) {
+            acc += counts[coordinate]
+            if (acc > index) return coordinate
+        }
+        return counts.size - 1
+    }
+
+    /** Otsu level: the `v` maximising the between-class variance of the split `<= v` / `> v` (first maximum). */
+    internal fun otsu(
+        hist: IntArray,
+        total: Int,
+    ): Int {
+        var sum = 0.0
+        for (v in hist.indices) sum += v.toDouble() * hist[v]
+        var sumLow = 0.0
+        var low = 0.0
+        var best = -1.0
+        var level = BYTE
+        for (v in 0 until BYTE) {
+            low += hist[v]
+            sumLow += v.toDouble() * hist[v]
+            val high = total - low
+            if (low <= 0.0 || high <= 0.0) continue
+            val mean0 = sumLow / low
+            val mean1 = (sum - sumLow) / high
+            val between = low * high * (mean0 - mean1) * (mean0 - mean1)
+            if (between > best) {
+                best = between
+                level = v
+            }
+        }
+        return level
     }
 
     private fun inFull(

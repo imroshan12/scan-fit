@@ -39,15 +39,16 @@ let package = Package(
         .target(name: "Exams", dependencies: [core, model, data, match]),
         .target(name: "PhotoFlow", dependencies: [core, model, imaging, vision, match, inspect, data]),
         .target(name: "InkFlow", dependencies: [core, model, imaging, match, inspect, data]),
+        .target(name: "Custom", dependencies: [core, model, data]),
         // Empty until their phase (ROADMAP Phase 2-4)
         .target(name: "Coach", dependencies: [core, model]),
         .target(name: "Checker", dependencies: [core, model]),
-        .target(name: "Custom", dependencies: [core, model]),
         .target(name: "PDFTools", dependencies: [core, model]),
         .target(name: "Paywall", dependencies: [core]),
         .testTarget(name: "HomeTests", dependencies: ["Home", presets, model, data, testSupport]),
         .testTarget(name: "ExamsTests", dependencies: ["Exams", model, data, testSupport]),
         .testTarget(name: "KitTests", dependencies: ["Kit", model, data, match, imaging, inspect, testSupport]),
+        .testTarget(name: "CustomTests", dependencies: ["Custom", model, data]),
         .testTarget(name: "InkFlowTests", dependencies: ["InkFlow", model, imaging, inspect, data, testSupport]),
         .testTarget(
             name: "PhotoFlowTests",

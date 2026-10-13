@@ -9,6 +9,8 @@ public struct PhotoSlot: Sendable, Equatable {
     public let examName: String
     public let unverified: Bool
     public let spec: DocSpec
+    /// A Custom size (ALGORITHMS 11): no draft, no Saved status, "your size" verdicts.
+    public var custom = false
 
     /// The aspect the crop is locked to (ALGORITHMS 9.6); a free-ratio slot keeps the photo's own shape.
     public var aspect: Double? { Geometry.targetAspect(spec) }
@@ -90,5 +92,15 @@ public enum PhotoState: Sendable, Equatable {
         case let .crop(crop): crop.slot
         case let .review(review): review.slot
         }
+    }
+}
+
+public extension PhotoSlot {
+    /// The slot of a resolved flow target (ALGORITHMS 11).
+    init(_ slot: FlowSlot) {
+        self.init(
+            examId: slot.examId, examName: slot.examName, unverified: slot.unverified, spec: slot.spec,
+            custom: slot.custom
+        )
     }
 }

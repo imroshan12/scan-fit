@@ -13,8 +13,8 @@ import ScanVision
 @Observable
 public final class PhotoFlowViewModel {
     public private(set) var state: PhotoState = .loading
-    public let examId: String
-    public let docType: DocType
+    /// The exam slot or Custom size this flow makes a file for (ALGORITHMS 11).
+    public let target: FlowTarget
     public private(set) var exportState: ExportState = .idle
     public private(set) var renderPending = false
     public private(set) var draftValidationPending = false
@@ -41,8 +41,7 @@ public final class PhotoFlowViewModel {
     private static let typingDebounce = Duration.milliseconds(400)
 
     public init(
-        examId: String,
-        docType: DocType,
+        target: FlowTarget,
         tools: any PhotoTools = LivePhotoTools(),
         faces: any FaceDetector = VisionFaceDetector(),
         segmenter: any PersonSegmenter = VisionPersonSegmenter(),
@@ -51,8 +50,7 @@ public final class PhotoFlowViewModel {
         drafts: any DraftStore = NoDraftStore(),
         load: @escaping @Sendable () async -> PresetBundle?
     ) {
-        self.examId = examId
-        self.docType = docType
+        self.target = target
         self.tools = tools
         self.faces = faces
         self.segmenter = segmenter
@@ -258,9 +256,10 @@ public final class PhotoFlowViewModel {
         } ?? .failed(.encodingFailed)
         guard !Task.isCancelled, gen == generation else { return }
         var retainFailed = false
-        if case let .ready(ready) = result {
+        // Only a file that meets an exam slot's rules is kept for later (ALGORITHMS 1.6.1); a Custom size has no draft.
+        if case let .ready(ready) = result, ready.meetsRules, !slot.custom {
             do {
-                try await drafts.retain(ready.bytes, examID: examId, spec: spec, kind: .photo)
+                try await drafts.retain(ready.bytes, examID: slot.examId, spec: spec, kind: .photo)
             } catch {
                 retainFailed = true
             }
@@ -294,7 +293,9 @@ public final class PhotoFlowViewModel {
         exportState = await exporter.save(ExportRequest(
             bytes: ready.bytes, filename: filename, spec: review.slot.spec, kind: .photo
         ))
-        if exportState == .saved { preferences?.recordSaved(examId, docType) }
+        if exportState == .saved, !review.slot.custom {
+            preferences?.recordSaved(review.slot.examId, review.slot.spec.type)
+        }
     }
 
     private func personMask(_ source: Raster) async -> [UInt8]? {
@@ -324,13 +325,12 @@ private extension PhotoFlowViewModel {
         guard !Task.isCancelled, gen == generation else { return }
         exams = bundle?.exams ?? []
         popular = bundle?.popular ?? []
-        guard let exam = exams.first(where: { $0.id == examId && $0.status == .active }),
-              let spec = exam.documents.first(where: { $0.type == docType }), DocKind.of(spec.type) == .photo else {
+        guard let resolved = target.resolve(bundle), DocKind.of(resolved.spec.type) == .photo else {
             state = .notFound
             return
         }
-        let slot = PhotoSlot(examId: exam.id, examName: exam.name, unverified: exam.isUnverified, spec: spec)
-        let draft = await drafts.load(examID: examId, spec: spec, kind: .photo)
+        let spec = resolved.spec, slot = PhotoSlot(resolved)
+        let draft = slot.custom ? nil : await drafts.load(examID: slot.examId, spec: spec, kind: .photo)
         guard !Task.isCancelled, gen == generation else { return }
         let exams = exams, popular = popular
         if let draft, let ready = await Self.background({ Self.ready(draft.bytes, spec, exams, popular) }) {

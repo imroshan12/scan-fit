@@ -1,5 +1,6 @@
 package app.scanfit
 
+import android.net.Uri
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBox
@@ -19,13 +20,17 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import app.scanfit.core.designsystem.R
 import app.scanfit.core.designsystem.theme.ScanFitTheme
 import app.scanfit.core.model.DocType
+import app.scanfit.core.model.FlowTarget
+import app.scanfit.feature.custom.CustomRoute
 import app.scanfit.feature.exams.DocActions
 import app.scanfit.feature.exams.ExamRoute
 import app.scanfit.feature.exams.ExamViewModel
@@ -60,6 +65,7 @@ fun ScanFitApp() {
         val destination = backStack?.destination
         val flowFromKit = destination?.route?.startsWith("$EXAM_ROUTE/") == true &&
             navController.previousBackStackEntry?.destination?.route == Tab.KIT.route
+        val inCustom = destination?.route?.startsWith(CUSTOM_ROUTE) == true
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
             bottomBar = {
@@ -69,6 +75,7 @@ fun ScanFitApp() {
                             selected =
                             destination?.hierarchy?.any { it.route == tab.route } == true ||
                                 (tab == Tab.KIT && flowFromKit) ||
+                                (tab == Tab.TOOLS && inCustom) ||
                                 (
                                     tab == Tab.HOME && !flowFromKit &&
                                         destination?.route?.startsWith("$EXAM_ROUTE/") == true
@@ -89,7 +96,34 @@ fun ScanFitApp() {
         ) { padding ->
             NavHost(navController, startDestination = Tab.HOME.route, modifier = Modifier.padding(padding)) {
                 composable(Tab.HOME.route) {
-                    HomeRoute(onOpenExam = { id -> navController.navigate("$EXAM_ROUTE/$id") })
+                    HomeRoute(
+                        onOpenExam = { id -> navController.navigate("$EXAM_ROUTE/$id") },
+                        onCustomSize = { navController.navigate(CUSTOM_ROUTE) { launchSingleTop = true } },
+                    )
+                }
+                composable(CUSTOM_ROUTE) {
+                    CustomRoute(
+                        onBack = { navController.popBackStack() },
+                        onContinue = { size ->
+                            val flow = if (size.doc in PHOTO_FLOW_TYPES) PHOTO_ROUTE else INK_ROUTE
+                            val route = "$CUSTOM_ROUTE/$flow?${FlowTarget.CUSTOM}=${Uri.encode(size.text)}"
+                            navController.navigate(route) {
+                                launchSingleTop = true
+                            }
+                        },
+                    )
+                }
+                composable(
+                    "$CUSTOM_ROUTE/$PHOTO_ROUTE?${FlowTarget.CUSTOM}={${FlowTarget.CUSTOM}}",
+                    arguments = listOf(customArgument()),
+                ) {
+                    PhotoFlowRoute(onBack = { navController.popBackStack() }, onDone = { navController.popBackStack() })
+                }
+                composable(
+                    "$CUSTOM_ROUTE/$INK_ROUTE?${FlowTarget.CUSTOM}={${FlowTarget.CUSTOM}}",
+                    arguments = listOf(customArgument()),
+                ) {
+                    InkFlowRoute(onBack = { navController.popBackStack() }, onDone = { navController.popBackStack() })
                 }
                 composable("$EXAM_ROUTE/{${ExamViewModel.EXAM_ID}}") {
                     ExamRoute(
@@ -132,7 +166,9 @@ fun ScanFitApp() {
                         }
                     })
                 }
-                composable(Tab.TOOLS.route) { ToolsScreen() }
+                composable(Tab.TOOLS.route) {
+                    ToolsScreen(onCustomSize = { navController.navigate(CUSTOM_ROUTE) { launchSingleTop = true } })
+                }
                 composable(Tab.SETTINGS.route) { SettingsRoute() }
             }
         }
@@ -141,6 +177,14 @@ fun ScanFitApp() {
 
 /** `exam/<id>`: the exam checklist, opened from Home. */
 private const val EXAM_ROUTE = "exam"
+
+/** `custom`: the Custom size form; `custom/<photo|ink>?custom=<text>`: a flow for that size (ALGORITHMS 11). */
+private const val CUSTOM_ROUTE = "custom"
+
+private fun customArgument() = navArgument(FlowTarget.CUSTOM) {
+    type = NavType.StringType
+    nullable = true
+}
 
 /** `exam/<id>/photo/<docType>`: the photo flow for one of the exam's photo slots. */
 private const val PHOTO_ROUTE = "photo"

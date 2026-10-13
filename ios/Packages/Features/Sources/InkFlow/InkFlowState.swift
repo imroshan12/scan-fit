@@ -9,6 +9,8 @@ public struct InkSlot: Sendable, Equatable {
     public let examName: String
     public let unverified: Bool
     public let spec: DocSpec
+    /// A Custom size (ALGORITHMS 11): no draft, no Saved status, no handwriting tick, "your size" verdicts.
+    public var custom = false
 
     public var kind: DocKind { DocKind.of(spec.type) }
 
@@ -28,8 +30,8 @@ public struct InkSlot: Sendable, Equatable {
         }
     }
 
-    /// Signatures need the one-time "running handwriting" confirmation before saving (§9.5).
-    public var needsHandwritingConfirmation: Bool { kind == .signature }
+    /// Exam signatures need the one-time "running handwriting" confirmation before saving (§9.5, §11).
+    public var needsHandwritingConfirmation: Bool { kind == .signature && !custom }
 
     /// "Crisp black" and "Darker ink" apply to binarised ink only; a thumb keeps its ridges (§9.5).
     public var hasInkOptions: Bool { variant != .thumb }
@@ -103,5 +105,15 @@ public enum InkState: Sendable, Equatable {
         case let .crop(crop): crop.slot
         case let .review(review): review.slot
         }
+    }
+}
+
+public extension InkSlot {
+    /// The slot of a resolved flow target (ALGORITHMS 11).
+    init(_ slot: FlowSlot) {
+        self.init(
+            examId: slot.examId, examName: slot.examName, unverified: slot.unverified, spec: slot.spec,
+            custom: slot.custom
+        )
     }
 }

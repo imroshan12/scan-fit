@@ -15,12 +15,15 @@ public final class UserPreferences {
     public private(set) var savedDocuments: [String: [String]]
     /// The one-time "I signed in running handwriting, not CAPITAL letters" tick (ALGORITHMS 9.5).
     public private(set) var handwritingConfirmed: Bool
+    /// Custom sizes in their canonical text, newest first, at most 5 (ALGORITHMS 11).
+    public private(set) var recentCustomSizes: [String]
 
     @ObservationIgnored private let defaults: UserDefaults
     private static let pinnedKey = "pinned_exam_ids"
     private static let unverifiedKey = "show_unverified_exams"
     private static let savedKey = "saved_documents"
     private static let handwritingKey = "handwriting_confirmed"
+    private static let recentCustomKey = "recent_custom_sizes"
 
     public init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -29,6 +32,14 @@ public final class UserPreferences {
         showUnverified = defaults.object(forKey: Self.unverifiedKey) as? Bool ?? true
         savedDocuments = defaults.dictionary(forKey: Self.savedKey) as? [String: [String]] ?? [:]
         handwritingConfirmed = defaults.bool(forKey: Self.handwritingKey)
+        recentCustomSizes = defaults.stringArray(forKey: Self.recentCustomKey) ?? []
+    }
+
+    /// Moves `text` (a canonical Custom size) to the front of `recentCustomSizes`.
+    public func rememberCustomSize(_ text: String) {
+        precondition(CustomSize.parse(text)?.text == text, "not a canonical Custom size")
+        recentCustomSizes = CustomSize.remember(recentCustomSizes, text)
+        defaults.set(recentCustomSizes, forKey: Self.recentCustomKey)
     }
 
     public func isPinned(_ examId: String) -> Bool { pinnedExamIds.contains(examId) }

@@ -1,8 +1,7 @@
 # HANDOFF.md — where work stopped (read this first when picking the project up)
 
-Last updated: **2026-10-06**. Current phase: **Phase 2 — Core flows** (docs/ROADMAP.md). Latest commit: `cabb530 Phase 2: Signature flow`.
-Match note, review comparison/chips, retained drafts/Ready rows, signature preservation and My Kit browsing remain
-**uncommitted** in the working tree.
+Last updated: **2026-10-13**. Current phase: **Phase 2 — Core flows** (docs/ROADMAP.md). Latest commit: `ab1b6d3 Bug fixes`.
+Custom size, the thumb cleanup rewrite and the review fixes of 2026-10-13 are **uncommitted** in the working tree.
 The user commits; a session never runs `git add/commit/push`.
 
 ## 1. State in one screen
@@ -15,11 +14,16 @@ The user commits; a session never runs `git add/commit/push`.
 | Export / save                                | Single-file save + verify-after-write plus private 30-day retained final drafts (2026-10-06), shared by photo/ink. Restored reviews re-save identical bytes. Save all, share, Open folder, cleaned originals and export history remain open.                                                   |
 | Ink flows                                    | Built on both apps (2026-10-05): signature, triple signature, thumbs, NEET fingers, declaration. Free crop, cleanup variant by type, crisp black / darker ink, one-time handwriting tick, save + verify. Verified end to end on the iPhone 11 Pro Max simulator; Android hand check open (§5). |
 | Review                                       | Built on both apps: match note (2026-10-05), Before/After + hold-to-compare and output-derived KB/dimensions/JPG chips (2026-10-06). No Fix button in exam flows (decision, §2). Gesture/accessibility device QA remains open.                                                                 |
-| My Kit, Custom, Checker                      | Not started.                                                                                                                                                                                                                                                                                   |
+| Custom size                                  | Built on both apps (2026-10-13): ALGORITHMS §11, a `FlowTarget` runs the same photo/ink flows for any px/cm/KB size. Form with recent sizes, from Tools and Home. JPG only. |
+| Thumb cleanup                                | Rewritten 2026-10-13 (user report: details cleared). Paper-only background, linear stretch, box-centred square; 3 `thumb_preservation_cases`. Device check with a real inked thumb open. |
+| My Kit, Checker                              | Kit browses retained drafts (2026-10-06); originals/history and the Checker not started.                                                                                                                                                                                                                                                                                   |
 | Screenshot tests                             | Removed for good (user decision 2026-10-03). Don't add them back (CLAUDE.md Definition of done).                                                                                                                                                                                               |
 
-Gates last run (2026-10-06): Android `./gradlew spotlessCheck detekt testDebugUnitTest :core:match:test lint :app:assembleDebug`
-green (315 unit tests). iOS: strict SwiftLint **from ios/**, full Core (166 tests) and Features (90 tests) SwiftPM regressions, DesignSystemTests
+Gates last run (2026-10-13): Android `./gradlew spotlessCheck detekt testDebugUnitTest :core:match:test :core:model:test lint
+:app:assembleDebug` green (332 unit tests). iOS strict SwiftLint, full Core and Features SwiftPM suites, app tests on the iPhone 17
+simulator and a build on the iPhone 11 Pro Max simulator; spec 59 tool tests and `gen_strings.py --check`. Both platforms pass
+all 18 `custom_size_cases` and 3 `thumb_preservation_cases`. Coverage was not re-measured this session.
+Earlier gates (2026-10-06): Android 315 unit tests. iOS: strict SwiftLint **from ios/**, full Core (166 tests) and Features (90 tests) SwiftPM regressions, DesignSystemTests
 (11 including 4 decode-lifecycle checks), and iPhone 17 simulator app build. Spec: 57 tool tests, `gen_strings.py --check`,
 debug preset build/sign/verify. Both platforms consume all eight `export_cases`, 18 `crop_cases`, 6 `match_note_cases` and
 8 `review_check_cases` and all 11 `draft_cases`. Draft tests also cover actual file relaunch, atomic replacement failures,
@@ -48,6 +52,20 @@ drafted with `TODO_HI:`. The spec suite still emits pre-existing unclosed-file `
   official notices, and/or a search hint when a query only matches hidden exams.
 
 ## 3. Device reports and remaining confirmation
+
+### Thumb impression loses detail (user report, 2026-10-13)
+
+- **Cause (two bugs, both platforms):** (1) the thumb was normalised by a *local* mean (`L / blur(L)`, σ = shortSide/30) —
+  correct for thin signature strokes, wrong for a print: any heavily inked area wider than the blur (the core where ridges
+  merge, heavy pressure) normalised to ~white, and the 2–98 % stretch + gamma 0.8 lightened faint ridges further. (2) the
+  square was centred on the ink *centroid*, so heavier ink on one side clipped the opposite edge.
+- **Fix (ALGORITHMS §9.5 thumb):** candidates = local contrast OR Otsu-dark, dilated; the paper level comes from non-candidate
+  pixels only (normalised convolution, σ = shortSide/8, regularised to the median paper); linear stretch from the darkest ink
+  to near-white paper with a mild 1.25 exponent (never lightens ink); the square is centred on the robust (0.5–99.5 %) box of
+  visible ink (`< 240`), so it always contains the whole print. Signature/document cleanup unchanged.
+- **Tests:** 3 parametric `thumb_preservation_cases` (heavy core under shadow, offset heavy ink, faint ridges) fail on the old
+  code and pass on both platforms; a real IBPS left-thumb fit keeps the dark core after JPEG. Mutation-checked on both.
+- **Open:** confirm with the user's real thumb photo; a thumb taken off-centre with a lot of background is the riskiest case.
 
 ### iOS reports: missing signature ink and empty My Kit (2026-10-06)
 
@@ -91,6 +109,28 @@ drafted with `TODO_HI:`. The spec suite still emits pre-existing unclosed-file `
   device is still needed with the updated build. Files saved before the fix are not retroactively marked; save again to verify.
 
 ## 4. What changed (by area, for review)
+
+### Custom size, thumb fix and review findings (2026-10-13)
+
+- **Spec:** ALGORITHMS §11 Custom size (+ 18 `custom_size_cases`, `spec/tools/custom_size.py`); §3/§9.5 thumb rewritten
+  (+ 3 `thumb_preservation_cases`). New strings `custom.*`, `common.next` (Hindi `TODO_HI:`); `tools.custom_resize` → "Custom size".
+- **Model:** Android `core:model` `CustomSize`/`CustomSizeFields`/`CustomSizeError`/`SizeUnit`, `FlowTarget`/`FlowSlot`,
+  `DocType.wire`; iOS `ScanModel` the same, `FlowRoute` now wraps a `FlowTarget` (`init(custom:)`), `CustomSizeRoute`.
+- **Flows:** photo + ink VMs take a target (iOS `init(target:)`, Android nav args incl. `custom`), resolve it once, and skip
+  drafts/Saved/handwriting for Custom. `ExportRequest.recordsSaved` (Android). Shared `SlotVerdict` replaces the duplicated
+  verdict code in four review files.
+- **Custom feature:** Android `:feature:custom` (`CustomViewModel`, `CustomScreen`, `CustomActions`, previews, 6 tests),
+  routes `custom` and `custom/<photo|ink>?custom=<text>` in `ScanFitApp`, Tools row + Home link. iOS `Custom` target
+  (`CustomViewModel`, `CustomView`, previews, `CustomTests`), Tools/Home stacks in `RootView`, `project.yml` + xcodegen.
+- **Review findings fixed along the way:**
+  - iOS retained a draft for every rendered file, even one that missed the rules; Android only for passing files. iOS
+    now matches (ALGORITHMS §1.6.1 says only verified files are kept).
+  - `KitViewModelTest` was flaky (~1 in 3 full runs): the draft read ran on the real IO dispatcher and resumed after the
+    test reset Main. `KitViewModel` now takes its IO dispatcher (Hilt still injects `Dispatchers.IO`).
+  - Lint: `HomeRoute`'s new callback is required, keeping `modifier` the first optional parameter.
+- **Not changed, recommended next (architecture):** the photo and ink VMs still duplicate ~150 lines each per platform
+  (render versioning, draft restore, save). Extract a shared `ReviewSession` (render generation, retain policy, save
+  lifecycle) before the Checker adds a third flow. `PhotoFlowViewModel.swift` sits at the 400-line SwiftLint limit.
 
 ### Signature preservation and My Kit prepared files (2026-10-06)
 
@@ -221,7 +261,10 @@ drafted with `TODO_HI:`. The spec suite still emits pre-existing unclosed-file `
 5. **Draft device QA:** make a photo/signature without exporting, return to the exam (Ready), relaunch, reopen the retained
    review, save, and confirm identical bytes + Saved. Check Replace/cancel and storage failure; a failed replacement must
    keep the previous good draft. Restored signatures must still require the one-time handwriting confirmation.
-6. Finish wider export actions: sharing retained bytes, Save all with partial-failure handling, Open folder, then My Kit
+6. **Custom size device QA:** Android form + flows on a phone (the emulator cannot run); cm input with a decimal keypad
+   in Hindi; recent sizes after relaunch; a size with no dimensions (keep the picture's size).
+7. **Thumb with a real print:** the user's own thumb photo through IBPS and a Custom size; compare Before/After.
+8. Finish wider export actions: sharing retained bytes, Save all with partial-failure handling, Open folder, then My Kit
    cleaned originals/export history, Custom and Checker (reuse `MatchNote`; add Fix there). Verify UPSC ESE / CMS presets
    only with official sources and user direction.
 
@@ -235,6 +278,9 @@ drafted with `TODO_HI:`. The spec suite still emits pre-existing unclosed-file `
 - SwiftUI toggles/checkboxes on the simulator often ignore quick synthetic taps; tap with `duration: 0.15–0.2`. Not an app bug.
 - The Files save picker on the simulator writes to "On My iPhone" inside the simulator's data container; inspect the file there.
 - `cases.json` may be reformatted (Prettier, tabs) at any time; the writers use `replace_json_array`, so rerunning them is safe.
+- Synthetic test images for ink cleanup: write them with PIL in the scratchpad (`.venv/bin/python`); a throwaway Swift test
+  can run the real pipeline and write PNGs — delete it afterwards. The thumb cases in `cases.json` are parametric, not files.
+- The iPhone 11 Pro Max simulator may be shut down after `xcodebuild test`; `xcrun simctl boot <udid>` before `addmedia`.
 - After moving a Kotlin type between modules, "Incremental compilation failed" can appear; rerun once with `--rerun-tasks`.
 - Vision fails on the simulator ("Could not create inference context") unless requests run on the CPU — already handled.
 - The Android emulator (`Medium_Phone_API_35`, single core) froze with `-memory 4096` ("System UI isn't responding", adb hung),

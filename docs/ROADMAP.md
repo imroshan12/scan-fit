@@ -84,9 +84,10 @@ of the photo fixture ≤ 800 ms on a mid device (benchmark test).
 
 ## Phase 2 — Core flows (A: W3–W5, I: W4–W6)
 
-> **Status (2026-10-06):** Home, photo flow and ink flows built on both apps; export (verify-after-write, Saved checklist rows) is
+> **Status (2026-10-13):** Home, photo flow and ink flows built on both apps; export (verify-after-write, Saved checklist rows) is
 > shared by both flows from the core layer; reviews show the match note, Before/After comparison and technical verdict chips.
 > Photo/ink now retain verified final drafts for 30 days; Ready rows survive relaunch and reopen read-only reviews.
+> 2026-10-13: Custom size (any px/cm/KB) runs the same flows; thumb cleanup no longer whitens heavy ink or clips the print.
 > Device/provider QA remains open. Details and decisions: docs/HANDOFF.md.
 
 - [x] Home: search (EN + Hindi aliases, fuzzy), categories, pinned exams, popular list
@@ -169,7 +170,14 @@ of the photo fixture ≤ 800 ms on a mid device (benchmark test).
       no longer erodes strokes or deletes small connected components. All 3 `ink_preservation_cases` and native UPSC ESE
       fit/encode regressions pass. Documents keep their filters; thumbs unchanged. _Open:_ confirmation with the user's
       source image; previously damaged retained files must be replaced from the original.
-- [ ] Custom resize with the live match note
+- [x] Custom size (PRD F9) with the match note
+    - _Done (both apps, 2026-10-13):_ ALGORITHMS §11 (validation codes, px/cm@dpi, synthetic slot, canonical text, recent sizes);
+      18 `custom_size_cases` from `spec/tools/custom_size.py`, passed by Kotlin and Swift. A `FlowTarget` (exam slot or Custom
+      size) feeds the **same** photo/ink flows: no draft, no Saved status, no handwriting tick, "Meets your size". Form in
+      `:feature:custom` / `Custom` (doc kind, px/cm, DPI, min/max KB, recent sizes, keyboard Next/Done); entry from Tools and
+      Home. VM tests: Custom form 6 + 6, custom flows 6 Android + 5 iOS. Checked by hand on the iPhone 11 Pro Max simulator.
+    - _Deviations:_ JPG only (no format choice), no aspect lock or live size estimate before capture (the review shows the
+      real size). Near-miss Fix is still for the Checker.
 - [ ] Checker with issue fixes and per-exam verdicts
 - [x] ~~Screenshot tests for every screen × light/dark × font 1.0/2.0 × EN/HI~~ — dropped (2026-10-03, product decision)
     - Built on both apps (Roborazzi, swift-snapshot-testing), then removed: baselines made every UI change slow. Screens are checked
