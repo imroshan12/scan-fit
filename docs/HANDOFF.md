@@ -58,6 +58,19 @@ drafted with `TODO_HI:`. The spec suite still emits pre-existing unclosed-file `
 
 ## 3. Device reports and remaining confirmation
 
+### Save sheet swiped away → endless spinner (user report, 2026-10-15)
+
+- **Symptom (iOS):** dismissing the Files save sheet without saving left Save as a spinner forever, Share disabled; in the
+  ink/photo flows Back is hidden while saving, so the user was stuck. Reproduced on the iPhone 11 Pro Max simulator.
+- **Cause:** the iOS 26 Files export sheet has no Cancel button; swiping it down closes the picker **without** calling
+  `documentPickerWasCancelled`. `FilesExporter.presentationDismissed()` only cleared the sheet (by design, because the
+  picker's result can arrive just after the dismissal — the 2026-10-04 Saved-status bug), so the save never resolved.
+- **Fix (`ios/Packages/Core/Sources/ScanData/FilesExporter.swift`, every flow + Save all):** a dismissal still is not a
+  cancellation, but if no picker result arrives within a 2 s grace the save resolves as cancelled (`.idle`; Save all → all
+  idle) and staging is removed. A counter makes a late check a no-op for a newer save. 3 new tests (single, Save all, stale
+  check); removing the cancel fails both dismissal tests in 2.5 s. Checked on the simulator: swipe → Save returns; a real save
+  (with "Replace") still verifies and shows Done. Android is unaffected (its picker always returns, null on Back).
+
 ### Thumb impression loses detail (user report, 2026-10-13)
 
 - **Cause (two bugs, both platforms):** (1) the thumb was normalised by a *local* mean (`L / blur(L)`, σ = shortSide/30) —
@@ -328,6 +341,7 @@ drafted with `TODO_HI:`. The spec suite still emits pre-existing unclosed-file `
   Never leave the stub in the source.
 - Ink flows need no face: add a fixture to the simulator's Photos with
   `xcrun simctl addmedia <udid> spec/fixtures/images/signature_paper_shadow.jpg`, then pick it from the gallery.
+- The iOS 26 Files export sheet has no Cancel: swipe it down from the top (swipe 160→850 pt) to test a dismissal.
 - SwiftUI toggles/checkboxes on the simulator often ignore quick synthetic taps; tap with `duration: 0.15–0.2`. Not an app bug.
 - The Files save picker on the simulator writes to "On My iPhone" inside the simulator's data container; inspect the file there.
 - `cases.json` may be reformatted (Prettier, tabs) at any time; the writers use `replace_json_array`, so rerunning them is safe.

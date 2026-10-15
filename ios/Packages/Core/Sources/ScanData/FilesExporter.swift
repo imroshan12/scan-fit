@@ -22,8 +22,18 @@ public final class FilesExporter: DocumentExporting {
     @ObservationIgnored private var saving = false
     /// The running Save all: its requests and who waits for the outcome.
     @ObservationIgnored private var batch: (requests: [ExportRequest], resume: BatchContinuation)?
+    /// Counts presented pickers, so a late dismissal check never cancels a newer save.
+    @ObservationIgnored private var presentation = 0
+    private let dismissalGrace: Duration
 
-    public init() {}
+    public convenience init() {
+        self.init(dismissalGrace: .seconds(2))
+    }
+
+    /// `dismissalGrace`: how long a dismissed sheet waits for the picker's own result before it counts as cancelled.
+    public init(dismissalGrace: Duration) {
+        self.dismissalGrace = dismissalGrace
+    }
 
     public func save(_ request: ExportRequest) async -> ExportState {
         guard !saving else { return .saveFailed }
@@ -46,12 +56,23 @@ public final class FilesExporter: DocumentExporting {
         stagedURL = staged
         return await withCheckedContinuation { continuation in
             self.continuation = continuation
+            presentation += 1
             document = Document(urls: [staged])
         }
     }
 
+    /// The sheet went away. UIKit may still deliver the picker's result just after this (§3 of HANDOFF, 2026-10-04), so
+    /// this is not a cancellation yet. But a swipe-down on iOS 26 closes the picker without calling either delegate
+    /// method, so if nothing arrives within `dismissalGrace` the save resolves as cancelled instead of waiting forever.
     public func presentationDismissed() {
         document = nil
+        guard continuation != nil || batch != nil else { return }
+        let dismissed = presentation
+        Task { [dismissalGrace] in
+            try? await Task.sleep(for: dismissalGrace)
+            guard presentation == dismissed, continuation != nil || batch != nil else { return }
+            cancelled()
+        }
     }
 
     /// Save all (ALGORITHMS 1.6.2): one Files picker for every file; each returned URL is matched to its request by
@@ -80,6 +101,7 @@ public final class FilesExporter: DocumentExporting {
         stagedURL = staged.first
         return await withCheckedContinuation { continuation in
             batch = (requests, continuation)
+            presentation += 1
             document = Document(urls: staged)
         }
     }

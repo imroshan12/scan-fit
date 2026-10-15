@@ -300,8 +300,11 @@ CI means GitHub starts a fresh computer, checks out the code and runs the steps 
 | Workflow | Starts on | Jobs |
 |---|---|---|
 | `spec.yml` | changes under `spec/` or `web/` | `validate`, then `publish-presets` (on `main` only) |
-| `android.yml` | changes under `android/` or `spec/`, and tags `android-v*` | `build` (always), `release` (tags only) |
-| `ios.yml` | changes under `ios/` or `spec/`, and tags `ios-v*` | `build` (always), `release` (tags only) |
+| `android.yml` | **every push to `main`**, tags `android-v*`, PRs touching `android/` or `spec/` | `build` (always), `release` (main pushes and tags) |
+| `ios.yml` | **every push to `main`**, tags `ios-v*`, PRs touching `ios/` or `spec/` | `build` (always), `release` (main pushes and tags) |
+
+On `main` a running build is never cancelled by a newer push (a signed upload must not stop half way); GitHub builds only the
+newest waiting push after it. Pull requests still cancel their older runs.
 
 ### 7.1 `build` jobs: run on every push and pull request
 
@@ -318,7 +321,17 @@ embed checks) would otherwise appear only on release day. So every push builds t
 presets key made by `spec/tools/rehearsal_key.sh`. That script refuses to run anywhere except GitHub Actions, because it overwrites
 `prod_public_key.b64`. No secret is used.
 
-### 7.2 `release` jobs: run only for tags
+### 7.2 `release` jobs: every push to `main`, and tags
+
+**Every push to `main`** (after `build` passes) makes a signed **test build**, a pre-release (machine-drafted Hindi allowed):
+- **iOS:** uploaded to **TestFlight** as `MARKETING_VERSION` from `ios/project.yml` (e.g. `0.1.0`) with build number = the run number.
+  Raise `MARKETING_VERSION` once that version has been released on the App Store, or Apple rejects new builds of it.
+- **Android:** a signed AAB + APK kept as the run's artifact `android-release-<version>-main.<run>`, `versionName` =
+  `scanfit.versionName` from `android/gradle.properties` + `-main.<run>`, `versionCode` = the run number. Uploading to Play stays manual.
+
+Both use the same secrets and environment as a tag release. **If the environment has required reviewers, every push to `main`
+waits for an approval**: remove the reviewers (or keep them only on tags by moving tag releases to a separate environment) if you
+want builds to appear without a click.
 
 A tag looks like `android-v1.2.3`, `android-v1.2.3-rc1`, `ios-v1.2.3` or `ios-v1.2.3-rc1`.
 
@@ -450,8 +463,8 @@ If your app has no such data, skip the signed-bundle parts (11.4) and you still 
 1. **A signed release build on your own machine.** Android: an upload keystore and a Gradle signing config. iOS: an archive that exports.
 2. **One source of version numbers**, overridable from outside (a Gradle property, Xcode build settings).
 3. **CI `build` job on every push:** tests, lint, a debug build.
-4. **Android `release` job on a tag:** secrets, an approval gate, signed AAB as an artifact.
-5. **iOS `release` job on a tag:** App Store Connect API key (Admin), cloud signing, upload to TestFlight.
+4. **Android `release` job on every push to `main` and on a tag:** secrets, an approval gate, signed AAB as an artifact.
+5. **iOS `release` job on every push to `main` and on a tag:** App Store Connect API key (Admin), cloud signing, upload to TestFlight.
 6. **Safety nets:** release rehearsal on every push, a preflight script, refuse-to-fall-back rules.
 7. **(Optional) signed data bundle.**
 

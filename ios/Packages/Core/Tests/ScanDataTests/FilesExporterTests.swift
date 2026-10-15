@@ -25,6 +25,15 @@ struct FilesExporterTests {
         return try #require(exporter.document?.url)
     }
 
+    /// True once the staged folder is gone (the save resolved), false after ~2 s, so a stuck save fails instead of hanging.
+    private func resolved(_ staged: URL) async throws -> Bool {
+        for _ in 0..<200 {
+            if !FileManager.default.fileExists(atPath: staged.deletingLastPathComponent().path) { return true }
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        return false
+    }
+
     @Test("cancel is silent, removes only staging, preserves existing files and allows retry")
     func cancel() async throws {
         let exporter = FilesExporter()
@@ -95,6 +104,47 @@ struct FilesExporterTests {
         exporter.cancelled()
         #expect(try await saving.value == .idle)
         #expect(!FileManager.default.fileExists(atPath: url.deletingLastPathComponent().path))
+    }
+
+    @Test("a sheet swiped away with no picker result resolves as cancelled instead of saving forever")
+    func dismissalWithoutResult() async throws {
+        let exporter = FilesExporter(dismissalGrace: .milliseconds(50))
+        let saving = Task { await exporter.save(try request()) }
+        let url = try await staged(exporter)
+        exporter.presentationDismissed()
+        try #require(try await resolved(url), "a dismissed sheet must not leave the save waiting")
+        #expect(try await saving.value == .idle)
+        #expect(exporter.document == nil)
+    }
+
+    @Test("a swiped-away Save all resolves every file as idle")
+    func batchDismissalWithoutResult() async throws {
+        let exporter = FilesExporter(dismissalGrace: .milliseconds(50))
+        let requests = [try request()]
+        let saving = Task { await exporter.saveAll(requests) }
+        let url = try await staged(exporter)
+        exporter.presentationDismissed()
+        try #require(try await resolved(url), "a dismissed sheet must not leave Save all waiting")
+        let outcome = await saving.value
+        #expect(outcome.states == [.idle])
+        #expect(outcome.folder == nil)
+    }
+
+    @Test("a stale dismissal check never cancels the next save")
+    func staleDismissalCheck() async throws {
+        let exporter = FilesExporter(dismissalGrace: .milliseconds(100))
+        let request = try request()
+        let first = Task { await exporter.save(request) }
+        _ = try await staged(exporter)
+        exporter.presentationDismissed()
+        exporter.cancelled()
+        #expect(await first.value == .idle)
+        let second = Task { await exporter.save(request) }
+        _ = try await staged(exporter)
+        try await Task.sleep(for: .milliseconds(300))
+        #expect(exporter.document != nil, "the new picker is still waiting for the user")
+        exporter.cancelled()
+        #expect(await second.value == .idle)
     }
 
     @Test("a corrupted returned destination fails verification and is cleaned")

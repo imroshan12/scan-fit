@@ -2,17 +2,20 @@ name: android
 on:
   pull_request:
     paths: ['android/**', 'spec/**', '.github/workflows/android.yml']
+  # Every push to main builds, tests and ships a signed test build (job `release`), whatever it changed. Tags make a
+  # versioned release. Pull requests stay path-filtered so they stay fast.
   push:
     branches: [main]
     tags: ['android-v*']
-    paths: ['android/**', 'spec/**', '.github/workflows/android.yml']
 
 permissions:
   contents: read
 
 concurrency:
   group: android-${{ github.ref }}
-  cancel-in-progress: true
+  # A newer PR push cancels the old run; on main a running build finishes (never stop a signed upload half way) and only the
+  # newest waiting push is built next.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
@@ -60,12 +63,13 @@ jobs:
             android/**/build/reports/**
             android/**/build/test-results/**
 
-  # Tags: android-v1.2.3 is a final release (Hindi must be reviewed: no TODO_HI). android-v1.2.3-rc1 / -beta1 is a
-  # pre-release for internal / closed testing (machine-drafted Hindi allowed). docs/RELEASE_CHECKLIST.md lists the secrets.
+  # Every push to main: a signed test build, versionName = gradle.properties version + "-main.<run>" (pre-release, machine-
+  # drafted Hindi allowed). Tags: android-v1.2.3 is a final release (Hindi must be reviewed: no TODO_HI); android-v1.2.3-rc1 /
+  # -beta1 is a pre-release for internal / closed testing. docs/RELEASE_CHECKLIST.md lists the secrets.
   # Release builds embed spec/signing/prod_public_key.b64 and refuse the dev key (EmbedPresetsTask).
   release:
     needs: build
-    if: startsWith(github.ref, 'refs/tags/android-v')
+    if: startsWith(github.ref, 'refs/tags/android-v') || (github.event_name == 'push' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     timeout-minutes: 45
     environment: android-release      # protect with required reviewers in repo settings
@@ -79,11 +83,18 @@ jobs:
           distribution: temurin
           java-version: '21'
       - uses: gradle/actions/setup-gradle@v4
-      - name: Version and channel from the tag
+      - name: Version and channel (from the tag, or gradle.properties for a main build)
         id: tag
         run: |
-          VERSION="${GITHUB_REF_NAME#android-v}"
-          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]] || { echo "::error::tag must look like android-v1.2.3 or android-v1.2.3-rc1"; exit 1; }
+          if [[ "$GITHUB_REF_TYPE" == tag ]]; then
+            VERSION="${GITHUB_REF_NAME#android-v}"
+            [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]] || { echo "::error::tag must look like android-v1.2.3 or android-v1.2.3-rc1"; exit 1; }
+          else
+            BASE="$(sed -n 's/^scanfit\.versionName=//p' android/gradle.properties)"
+            [[ "$BASE" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::scanfit.versionName in android/gradle.properties must be x.y.z, got '$BASE'"; exit 1; }
+            VERSION="$BASE-main.$GITHUB_RUN_NUMBER"
+          fi
+          echo "::notice title=Android build::$VERSION ($GITHUB_RUN_NUMBER)"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           if [[ "$VERSION" == *-* ]]; then
             echo "hindi_flag=--allow-todo-hi" >> "$GITHUB_OUTPUT"; echo "final=" >> "$GITHUB_OUTPUT"
