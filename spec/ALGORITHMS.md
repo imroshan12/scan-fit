@@ -104,8 +104,8 @@ The iOS picker chooses the folder; `ScanFit/<Exam>/` is recommended, not forced.
 never deleted on picker cancellation. Save failures keep the review available for retry.
 Only after successful verification and publication, persist the exam/document's Saved checklist status
 locally. A later failed or cancelled save does not clear a previously verified Saved status. This status
-records a successful export, not a guarantee that the user has kept the file. Export history, sharing,
-and Save all remain Phase 2 follow-ups; private retained drafts are defined in §1.6.1. Conformance: `export_cases`.
+records a successful export, not a guarantee that the user has kept the file. Sharing and Save all are §1.6.2; export
+history remains a follow-up; private retained drafts are defined in §1.6.1. Conformance: `export_cases`.
 
 ### 1.6.1 Retained drafts and Ready checklist rows
 
@@ -155,6 +155,36 @@ draft reads, not untrusted filesystem metadata. Kit does not retain JPEGs in its
 These are prepared exam files, not reusable cleaned originals or export history. Existing missing/expired files and
 files produced before draft retention was implemented cannot be recovered from a historical Saved marker. Originals,
 cross-exam reuse and history remain separate My Kit follow-ups. Viewing Kit never records Saved or extends retention.
+
+### 1.6.2 Share and Save all
+
+**Share** (review screen, secondary action next to Save). Enabled exactly when Save is (a ready render that meets the
+slot, no save running, and the one-time handwriting confirmation for exam signatures). Share hands the system share sheet
+the **review bytes unchanged**, named per §1.7/§9.8: write them to an app-private share folder (Android cache `share/`,
+exposed read-only through the app's FileProvider for that one intent; iOS temporary `share/`), re-read the file and require
+byte equality before presenting the sheet, else show `export.share_failed`. One staged file at a time: the folder is
+emptied before each share and on app start. Sharing is user-initiated, so CLAUDE.md rule 2 holds (the app sends nothing
+itself), but the destination cannot be re-read, so Share never records Saved and never changes the save state.
+
+**Save all** (exam checklist, bottom action `exam.save_all` with the count). The plan is computed from the checklist in
+preset document order (`SaveAllPlan`, conformance `save_all_cases`): a slot is **included** when its row is Ready (§1.6.1:
+an available verified draft and no Saved record); an exam signature or triple signature whose handwriting confirmation
+is still missing is **held** instead (its row stays Ready; `export.save_all_held` explains; the review asks for the tick). The action shows only when at
+least one slot is included and the platform saves without a per-file picker: Android API 29+ (MediaStore, no prompt) and
+iOS (one Files export picker for all files, `UIDocumentPickerViewController(forExporting:)` with every staged URL; the
+user picks one folder). Android 8–9 needs a picker per file, so there the rows are saved one by one (deviation).
+
+Each included slot re-reads its draft (it may have expired since the checklist loaded; a missing draft is a failure for
+that slot), then runs the full §1.6 write → re-read → verify → publish as the slot's `DocKind`, sequentially, and records
+Saved per verified file. A failure never stops the others and never removes another file. iOS matches each returned URL to
+its request by **byte equality** (the picker may rename on "Keep both"), so a URL that matches no request is never
+verified as, or deleted for, the wrong slot. Cancelling the iOS picker saves nothing and records nothing.
+
+Outcome: `saved` count and the `failed` slots. All saved: `flow.saved_to` with the folder (Android
+`Downloads/ScanFit/<examShort>`, iOS the picked folder's localized name, or `export.files_app` at a provider's root) and, on Android, `flow.open_folder` (opens the system
+Downloads view; a specific subfolder cannot be targeted portably). Some failed: `export.save_all_partial` and a retry that
+re-plans from the current checklist, so already-saved slots are not written twice. Nothing is held in memory beyond the
+JPEGs of the running save.
 
 ### 1.7 Export naming
 
@@ -560,7 +590,7 @@ A fit case names either `preset` + `doc`, or an inline `spec` (a full document o
 (inclusive), `aspect` ± `aspect_tol`, `background_mean_min` (median luma of the whole image ≥ value), `ink_pixels_min_pct` (% of pixels with luma < 128 ≥ value),
 `exif: "none"` (no APP1), `dpi` (JFIF units 1 and both densities equal), `export_filename` (§9.8), `decodes` (re-decodes without error),
 `max_ms_midrange` (measured by the benchmark, not asserted in unit tests). Other sections: `inspect_cases`, `decode_cases`, `patch_cases`,
-`geometry_cases`, `crop_cases`, `match_cases`, `match_note_cases`, `search_cases` (their keys are documented inline in the file).
+`geometry_cases`, `crop_cases`, `match_cases`, `match_note_cases`, `save_all_cases`, `search_cases` (their keys are documented inline in the file).
 `thumb_preservation_cases` draw a grey print parametrically: paper luma `round(left + (right − left)·x/(W−1))`; inside the
 `print` ellipse `(cx, cy, rx, ry)` a pixel is a ridge when `⌊2d/period⌋` is even, `d` = distance to the centre with `y` scaled
 by `rx/ry`, coloured `ridge` luma, or `rim` luma beyond normalised radius `rim[0]`; the optional `core` ellipse is solid.

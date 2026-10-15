@@ -1,5 +1,6 @@
 import DesignSystem
 import Foundation
+import ScanData
 import ScanModel
 import SwiftUI
 
@@ -35,6 +36,20 @@ public struct ExamView: View {
                     }
                 }
             }
+            .safeAreaInset(edge: .bottom) { saveAllBar }
+        #if os(iOS)
+            .sheet(item: Binding(
+                get: { (model.exporter as? FilesExporter)?.document },
+                set: { if $0 == nil { (model.exporter as? FilesExporter)?.presentationDismissed() } }
+            )) { document in
+                if let exporter = model.exporter as? FilesExporter {
+                    FilesExportPicker(
+                        urls: document.urls, onPicked: exporter.completed, onCancelled: exporter.cancelled
+                    )
+                        .interactiveDismissDisabled()
+                }
+            }
+        #endif
             .task {
                 await model.onAppear()
                 await model.observeDrafts()
@@ -80,6 +95,52 @@ public struct ExamView: View {
                     .listRowBackground(ScanFitColor.warningContainer)
                 }
             }
+        }
+    }
+
+    /// "Save all (N)" (UI_UX §3, ALGORITHMS 1.6.2), progress while the picker and checks run, then the result.
+    @ViewBuilder
+    private var saveAllBar: some View {
+        let plan = model.saveAllPlan
+        let status = model.saveAllStatus
+        if case .ready = model.state, status != .idle || !plan.included.isEmpty || !plan.held.isEmpty {
+            VStack(alignment: .leading, spacing: ScanFitSpacing.sm) {
+                switch status {
+                case .saving:
+                    HStack(spacing: ScanFitSpacing.sm) {
+                        ProgressView()
+                        Text(strings.exportSaving).scanFitText(.body)
+                    }
+                    .frame(maxWidth: .infinity, minHeight: ScanFitSpacing.minTouchTarget)
+                case let .done(saved, total, folder):
+                    NoticeCard(
+                        text: saved == total
+                            ? strings.flowSavedTo(count: saved, folder: folder ?? strings.exportFilesApp)
+                            : strings.exportSaveAllPartial(saved: saved, total: total),
+                        kind: saved == total ? .info : .error
+                    )
+                    HStack(spacing: ScanFitSpacing.md) {
+                        if saved != total {
+                            Button(strings.commonRetry) { Task { await model.saveAll() } }
+                        }
+                        Button(strings.commonClose) { model.saveAllDismissed() }
+                    }
+                case .idle:
+                    if !plan.held.isEmpty {
+                        Text(strings.exportSaveAllHeld).scanFitText(.caption)
+                            .foregroundStyle(ScanFitColor.onSurfaceVariant)
+                    }
+                    if !plan.included.isEmpty {
+                        Button { Task { await model.saveAll() } } label: {
+                            Text(strings.examSaveAll(count: plan.included.count))
+                                .frame(maxWidth: .infinity, minHeight: ScanFitSpacing.minTouchTarget)
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
+                }
+            }
+            .padding(ScanFitSpacing.screenMargin)
+            .background(.bar)
         }
     }
 

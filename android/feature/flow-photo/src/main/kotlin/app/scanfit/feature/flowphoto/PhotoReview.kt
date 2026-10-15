@@ -97,6 +97,7 @@ internal fun ReviewContent(
             SaveState.VERIFY_FAILED -> NoticeCard(stringResource(R.string.export_verify_failed), NoticeKind.ERROR)
             else -> Unit
         }
+        if (state.shareFailed) NoticeCard(stringResource(R.string.export_share_failed), NoticeKind.ERROR)
         if (state.retainFailed) NoticeCard(stringResource(R.string.draft_retain_failed), NoticeKind.WARNING)
         if (state.restored) {
             TextButton(onClick = actions.onReplace, enabled = state.save.state != SaveState.SAVING) {

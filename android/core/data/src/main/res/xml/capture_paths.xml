@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
     <cache-path name="capture" path="capture/" />
+    <!-- One staged file for the share sheet (ALGORITHMS 1.6.2), emptied before each share and on app start. -->
+    <cache-path name="share" path="share/" />
 </paths>

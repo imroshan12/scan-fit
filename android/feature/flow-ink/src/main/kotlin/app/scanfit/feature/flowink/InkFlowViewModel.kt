@@ -10,6 +10,7 @@ import app.scanfit.core.data.export.ExportRequest
 import app.scanfit.core.data.export.ExportVerifier
 import app.scanfit.core.data.export.SaveResult
 import app.scanfit.core.data.export.SaveState
+import app.scanfit.core.data.export.ShareStager
 import app.scanfit.core.imaging.AndroidImageDecoder
 import app.scanfit.core.imaging.CropAdjust
 import app.scanfit.core.imaging.CropCorner
@@ -158,6 +159,9 @@ sealed interface InkUiState {
         val before: Raster? = null,
         val restored: Boolean = false,
         val retainFailed: Boolean = false,
+        /** A staged file for the share sheet (ALGORITHMS 1.6.2): the screen opens it once, then `onShareHandled`. */
+        val shareUri: String? = null,
+        val shareFailed: Boolean = false,
     ) : InkUiState {
         val canSave: Boolean
             get() =
@@ -180,6 +184,7 @@ constructor(
     private val exporter: DocumentExporter,
     @InkWork private val work: CoroutineDispatcher,
     private val drafts: DraftStore,
+    private val share: ShareStager,
 ) : ViewModel() {
     private val target: FlowTarget? =
         FlowTarget.of(savedState.get<String>(EXAM_ID), savedState.get<String>(DOC_TYPE), savedState.get<String>(CUSTOM))
@@ -389,6 +394,30 @@ constructor(
         }
         export(request, null)
         return null
+    }
+
+    /**
+     * Shares exactly the review bytes under the §9.8 name (ALGORITHMS 1.6.2). Allowed whenever Save is; it never
+     * records Saved, because the destination cannot be re-read.
+     */
+    fun onShare() {
+        val review = _uiState.value as? InkUiState.Review ?: return
+        val ready = review.result as? InkReviewResult.Ready ?: return
+        if (!review.canSave) return
+        val slot = review.slot
+        val name = ExportRequest(slot.examId, slot.examName, slot.spec, slot.kind, ready.bytes).fileName
+        viewModelScope.launch {
+            val uri = share.stage(name, ready.bytes)
+            val current = _uiState.value as? InkUiState.Review ?: return@launch
+            if (current.result !== ready) return@launch
+            _uiState.value = current.copy(shareUri = uri, shareFailed = uri == null)
+        }
+    }
+
+    /** The share sheet was opened (or the failure message read). */
+    fun onShareHandled() {
+        val review = _uiState.value as? InkUiState.Review ?: return
+        _uiState.value = review.copy(shareUri = null)
     }
 
     /** The destination picker's answer (Android 8–9): `null` = cancelled, or the launch failed. */

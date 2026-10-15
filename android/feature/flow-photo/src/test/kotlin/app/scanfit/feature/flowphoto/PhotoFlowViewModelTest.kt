@@ -14,6 +14,7 @@ import app.scanfit.core.testing.FakeExportDestinations
 import app.scanfit.core.testing.FakeFaceDetector
 import app.scanfit.core.testing.FakePersonSegmenter
 import app.scanfit.core.testing.FakePresetsRepository
+import app.scanfit.core.testing.FakeShareStager
 import app.scanfit.core.testing.FakeUserPreferences
 import app.scanfit.core.testing.SpecPresets
 import app.scanfit.core.vision.FaceBox
@@ -39,6 +40,7 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class PhotoFlowViewModelTest {
     private val dispatcher = UnconfinedTestDispatcher()
+    private val share = FakeShareStager()
     private val tools = FakePhotoTools().apply { files[PHOTO] = byteArrayOf(1, 2, 3) }
     private val face = FaceBox(400.0, 500.0, 200.0, 240.0)
     private val faces = FakeFaceDetector(listOf(face))
@@ -63,6 +65,7 @@ class PhotoFlowViewModelTest {
         dispatcher,
         DocumentExporter(FakeExportDestinations(), FakeUserPreferences()),
         FakeDraftStore(),
+        share,
     )
 
     private val PhotoFlowViewModel.state get() = uiState.value
@@ -192,6 +195,27 @@ class PhotoFlowViewModelTest {
         assertTrue("IBPS PO accepts its own photo", note.preview.any { it.id == "ibps_po" } || rows.any { it.examId == "ibps_po" })
         assertTrue("the IBPS family shares the photo rules", note.accepted > 1)
         assertTrue("SSC captures the photo live: never listed", rows.none { it.examId == "ssc_cgl" })
+    }
+
+    @Test
+    fun shareStagesTheReviewBytesAndIsOffWhileTheFileMissesTheRules() = runTest(dispatcher) {
+        val m = model()
+        val ready = reviewed(m).result as ReviewResult.Ready
+        m.onShare()
+        advanceUntilIdle()
+        val review = m.state as PhotoUiState.Review
+        assertTrue(review.shareUri.orEmpty().startsWith("content://test/share/photo_IBPS-PO_200x230_"))
+        assertTrue(ready.bytes.contentEquals(share.staged?.second))
+        m.onShareHandled()
+        assertNull((m.state as PhotoUiState.Review).shareUri)
+        tools.fit = { r -> FakePhotoTools.success(r, FakePhotoTools.jpeg(200, 230, 60 * 1024)) }
+        val shared = share.staged
+        val other = model()
+        assertFalse((reviewed(other).result as ReviewResult.Ready).meetsRules)
+        other.onShare()
+        advanceUntilIdle()
+        assertSame("a file that misses the rules is not shared", shared, share.staged)
+        assertNull((other.state as PhotoUiState.Review).shareUri)
     }
 
     @Test

@@ -54,6 +54,12 @@ interface ExportDestinations {
     val requiresPicker: Boolean
 
     suspend fun create(request: ExportRequest, pickedUri: String?): ExportDestination
+
+    /** Where files for [examName] land, for "4 files saved to …" (ALGORITHMS 1.6.2). */
+    fun folderLabel(
+        examId: String,
+        examName: String,
+    ): String = "Downloads/ScanFit/" + ExportNaming.examShort(examName).ifEmpty { examId }
 }
 
 /**

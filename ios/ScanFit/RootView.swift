@@ -6,6 +6,7 @@ import Kit
 import InkFlow
 import PhotoFlow
 import Presets
+import ScanData
 import ScanModel
 import Settings
 import SwiftUI
@@ -100,6 +101,8 @@ struct RootView: View {
         }
         .tint(ScanFitColor.primary)
         .task {
+            // A file staged for the share sheet never outlives the session (ALGORITHMS 1.6.2).
+            await ShareStager.clear()
             if case let .ready(summary) = await container.presetsOutcome.value {
                 presets = summary
             }

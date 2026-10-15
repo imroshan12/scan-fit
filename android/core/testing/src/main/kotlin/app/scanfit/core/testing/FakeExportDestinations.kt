@@ -3,6 +3,7 @@ package app.scanfit.core.testing
 import app.scanfit.core.data.export.ExportDestination
 import app.scanfit.core.data.export.ExportDestinations
 import app.scanfit.core.data.export.ExportRequest
+import app.scanfit.core.model.DocType
 import kotlinx.coroutines.CompletableDeferred
 import java.io.IOException
 
@@ -16,15 +17,20 @@ class FakeExportDestinations(
     var gate: CompletableDeferred<Unit>? = null
     var lastRequest: ExportRequest? = null
 
+    /** Slots whose write fails, for Save all partial-failure tests. */
+    var failingTypes: Set<DocType> = emptySet()
+    val requests = mutableListOf<ExportRequest>()
+
     override suspend fun create(request: ExportRequest, pickedUri: String?): ExportDestination {
         events += "create"
         lastRequest = request
+        requests += request
         if (operation == "create_failed") throw IOException("create")
         return object : ExportDestination {
             override suspend fun write(bytes: ByteArray) {
                 events += "write"
                 gate?.await()
-                if (operation == "write_failed") throw IOException("write")
+                if (operation == "write_failed" || request.spec.type in failingTypes) throw IOException("write")
             }
 
             override suspend fun read(): ByteArray {

@@ -1247,6 +1247,14 @@
 		{"id": "parse_rejects_leading_zero", "_why": "exactly the canonical form", "parse": "signature;0140x60;10-20;200", "expect": {"text": null}},
 		{"id": "parse_rejects_missing_dpi", "_why": "all four parts are required", "parse": "signature;140x60;10-20", "expect": {"text": null}}
 	],
+	"save_all_cases": [
+		{"id": "all_ready_confirmed", "_why": "every Ready slot is saved, in preset order", "documents": ["photo", "signature", "left_thumb", "handwritten_declaration"], "ready": ["handwritten_declaration", "photo", "signature", "left_thumb"], "saved": [], "handwriting_confirmed": true, "expect": {"included": ["photo", "signature", "left_thumb", "handwritten_declaration"], "held": []}},
+		{"id": "saved_rows_are_skipped", "_why": "Saved takes precedence over Ready (1.6.1): never written twice", "documents": ["photo", "signature", "left_thumb", "handwritten_declaration"], "ready": ["photo", "signature", "left_thumb"], "saved": ["photo"], "handwriting_confirmed": true, "expect": {"included": ["signature", "left_thumb"], "held": []}},
+		{"id": "signature_waits_for_the_tick", "_why": "an unconfirmed signature is held, the rest are saved", "documents": ["photo", "signature", "left_thumb", "handwritten_declaration"], "ready": ["photo", "signature"], "saved": [], "handwriting_confirmed": false, "expect": {"included": ["photo"], "held": ["signature"]}},
+		{"id": "triple_signature_is_a_signature", "_why": "UPSC triple signature needs the same tick", "documents": ["photo", "triple_signature"], "ready": ["photo", "triple_signature"], "saved": [], "handwriting_confirmed": false, "expect": {"included": ["photo"], "held": ["triple_signature"]}},
+		{"id": "not_started_rows_are_ignored", "_why": "only Ready rows take part", "documents": ["photo", "signature", "left_thumb", "handwritten_declaration"], "ready": [], "saved": ["signature"], "handwriting_confirmed": true, "expect": {"included": [], "held": []}},
+		{"id": "only_a_held_signature", "_why": "nothing to save: the action is hidden", "documents": ["photo", "signature"], "ready": ["signature"], "saved": [], "handwriting_confirmed": false, "expect": {"included": [], "held": ["signature"]}}
+	],
 	"match_note_cases": [
 		{
 			"id": "preview_takes_three_and_counts_the_rest",

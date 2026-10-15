@@ -1667,6 +1667,57 @@
         }
       }
     },
+    "export.files_app": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Files"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Files"
+          }
+        }
+      }
+    },
+    "export.save_all_held": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open your signature once to confirm it is in running handwriting, then save it."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "अपना हस्ताक्षर एक बार खोलकर पुष्टि करें कि यह सामान्य लिखावट में है, फिर उसे सेव करें।"
+          }
+        }
+      }
+    },
+    "export.save_all_partial": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved %1$lld of %2$lld. Try again for the rest."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%2$lld में से %1$lld सेव हुईं। बाकी के लिए फिर से कोशिश करें।"
+          }
+        }
+      }
+    },
     "export.save_failed": {
       "extractionState": "manual",
       "localizations": {
@@ -1714,6 +1765,23 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "सेव हो रहा है…"
+          }
+        }
+      }
+    },
+    "export.share_failed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not prepare the file to share. Please try again."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "शेयर करने के लिए फ़ाइल तैयार नहीं हो सकी। कृपया फिर से कोशिश करें।"
           }
         }
       }

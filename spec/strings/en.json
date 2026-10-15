@@ -180,6 +180,10 @@
 	"export.saved": "Saved",
 	"export.save_failed": "Could not save the file. Please try again.",
 	"export.verify_failed": "The saved file did not pass verification. Please try again.",
+	"export.share_failed": "Could not prepare the file to share. Please try again.",
+	"export.save_all_partial": "Saved {saved:int} of {total:int}. Try again for the rest.",
+	"export.save_all_held": "Open your signature once to confirm it is in running handwriting, then save it.",
+	"export.files_app": "Files",
 
 	"error.generic": "Something went wrong. Please try again.",
 	"error.fit_too_detailed": "Too detailed to fit in {max_kb:int} KB. Try a plainer background or crop closer.",

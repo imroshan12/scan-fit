@@ -18,6 +18,7 @@ import app.scanfit.core.presets.PresetsSummary
 import app.scanfit.core.testing.FakeDraftStore
 import app.scanfit.core.testing.FakeExportDestinations
 import app.scanfit.core.testing.FakePresetsRepository
+import app.scanfit.core.testing.FakeShareStager
 import app.scanfit.core.testing.FakeUserPreferences
 import app.scanfit.core.testing.SpecPresets
 import app.scanfit.core.testing.TestJpeg
@@ -43,6 +44,7 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class InkFlowViewModelTest {
     private val dispatcher = UnconfinedTestDispatcher()
+    private val share = FakeShareStager()
     private val tools = FakeInkTools().apply { files[PHOTO] = byteArrayOf(1, 2, 3) }
     private val destinations = FakeExportDestinations()
 
@@ -65,6 +67,7 @@ class InkFlowViewModelTest {
         DocumentExporter(destination, prefs),
         dispatcher,
         FakeDraftStore(),
+        share,
     )
 
     private val InkFlowViewModel.state get() = uiState.value
@@ -297,6 +300,35 @@ class InkFlowViewModelTest {
         assertEquals(SaveState.SAVED, m.review.save.state)
         assertEquals(setOf(SavedDocument("ibps_po", "SIGNATURE")), prefs.savedDocuments.first())
         assertEquals(DocKind.SIGNATURE, destinations.lastRequest?.kind)
+    }
+
+    @Test
+    fun shareStagesTheReviewBytesUnderTheExportNameAndRecordsNothing() = runTest(dispatcher) {
+        val prefs = FakeUserPreferences(handwritingConfirmed = true)
+        val m = model(prefs = prefs)
+        val ready = reviewed(m).result as InkReviewResult.Ready
+        m.onShare()
+        advanceUntilIdle()
+        assertEquals("content://test/share/signature_IBPS-PO_140x60_16kb.jpg", m.review.shareUri)
+        assertTrue("exactly the review bytes", ready.bytes.contentEquals(share.staged?.second))
+        assertTrue("sharing is not saving", prefs.savedDocuments.first().isEmpty() && destinations.events.isEmpty())
+        m.onShareHandled()
+        assertNull(m.review.shareUri)
+    }
+
+    @Test
+    fun shareWaitsForTheHandwritingTickAndReportsAFailedStage() = runTest(dispatcher) {
+        val m = model()
+        reviewed(m)
+        m.onShare()
+        advanceUntilIdle()
+        assertNull("same gate as Save", share.staged)
+        m.onConfirmHandwriting()
+        share.fails = true
+        m.onShare()
+        advanceUntilIdle()
+        assertTrue(m.review.shareFailed)
+        assertNull(m.review.shareUri)
     }
 
     @Test

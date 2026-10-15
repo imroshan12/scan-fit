@@ -147,7 +147,15 @@ of the photo fixture ≤ 800 ms on a mid device (benchmark test).
           `SlotEvaluation`; all 8 `review_check_cases` pass on both apps. Comparison leaves rendering, Saved and export bytes
           unchanged; pending edits/failures hide stale results. Light/dark/Hindi/largest-font previews and focused flow tests pass.
           _Open QA:_ real-device gestures, TalkBack/VoiceOver and minimum-runtime checks; no new dependencies or screenshot tests.
-- [ ] Export + verify-after-write (§1.6), naming (§1.7), Save all, share, "Open folder"
+- [x] Export + verify-after-write (§1.6), naming (§1.7), Save all, share, "Open folder"
+    - [x] [S][A][I] Share and Save all (2026-10-13): ALGORITHMS §1.6.2; 6 `save_all_cases` from `spec/tools/save_all.py`.
+          Share stages exactly the review bytes (re-read, byte-equal) under the §9.8 name in a private cache folder emptied per
+          share and on app start, same gate as Save, never records Saved. Save all saves every Ready row through the full
+          verified export, sequentially, failures isolated, retry re-plans; exam signatures without the tick are held. iOS: one
+          Files picker for all files, returned URLs matched to requests by bytes (survives "Keep both" renames, never touches an
+          unmatched file). Android 10+: MediaStore with progress, then Open folder (system Downloads view).
+          _Deviations:_ no Save all on Android 8–9 (one picker per file); Open folder cannot target the subfolder; iOS shows no
+          per-file progress (one picker). Export history is still open (My Kit).
     - [x] [S][A][I] Single-photo save + destination verification + persistent Saved rows (2026-10-04).
           _Done:_ pending MediaStore on API 29+, CreateDocument below; iOS Files export picker with coordinated security-scoped re-read.
           Bytes must match Review and pass format, encoding, dimensions, KB, DPI and privacy metadata checks. Cancellation is silent;

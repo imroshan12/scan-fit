@@ -17,6 +17,8 @@ public final class InkFlowViewModel {
     public private(set) var exportState: ExportState = .idle
     public private(set) var renderPending = false
     public private(set) var draftValidationPending = false
+    /// The share sheet's file, or the staging failure (ALGORITHMS 1.6.2).
+    public internal(set) var share: ShareStatus = .none
     public let exporter: any DocumentExporting
 
     @ObservationIgnored private let preferences: UserPreferences?

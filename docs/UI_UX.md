@@ -57,7 +57,16 @@ with a locked aspect, pinch-zoom, rotate 90°, corner handles for 4-point perspe
 └───────────────────────────────┘
 ```
 
-Photo review currently saves one file: Save to Downloads (Android API 29+) or Save to Files (iOS / older Android).
+Photo and ink review save one file: Save to Downloads (Android API 29+) or Save to Files (iOS / older Android). **Share**
+(2026-10-13, ALGORITHMS 1.6.2) is a text button under Save with the same gate; it opens the system share sheet with exactly
+the review bytes under the export name and never marks the row Saved. A staging failure shows `export.share_failed`.
+
+**Save all** (exam checklist bottom bar, 2026-10-13): "Save all (N)" counts the Ready rows. An exam signature still
+waiting for the handwriting tick is held, with a one-line note under the button. iOS opens one Files picker for every
+file (one folder); Android 10+ writes to `Downloads/ScanFit/<Exam>/` with no prompt and shows progress "Saving… 2/4";
+Android 8–9 has no Save all (one picker per file would be worse than saving each row). The result replaces the button:
+all saved → "4 files saved to …" with Open folder (Android: the system Downloads view) and Close; some failed →
+"Saved 3 of 4. Try again for the rest." with Retry (re-plans, so saved rows are not written again) and Close.
 During saving, edits and back are disabled. Picker cancellation leaves review unchanged; failure shows a retryable error.
 Only a re-opened, verified destination shows Saved and changes the primary action to Done; editing again returns to Save.
 The exam's Saved row persists across launches. iOS lets the user choose the Files folder.

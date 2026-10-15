@@ -9,6 +9,7 @@ import app.scanfit.core.presets.PresetsSummary
 import app.scanfit.core.testing.FakeDraftStore
 import app.scanfit.core.testing.FakeExportDestinations
 import app.scanfit.core.testing.FakePresetsRepository
+import app.scanfit.core.testing.FakeShareStager
 import app.scanfit.core.testing.FakeUserPreferences
 import app.scanfit.core.testing.SpecPresets
 import app.scanfit.core.testing.TestJpeg
@@ -32,6 +33,7 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class InkDraftViewModelTest {
     private val dispatcher = UnconfinedTestDispatcher()
+    private val share = FakeShareStager()
     private val drafts = FakeDraftStore()
     private val tools = FakeInkTools().apply { files["photo"] = byteArrayOf(1) }
     private val preferences = FakeUserPreferences()
@@ -52,6 +54,7 @@ class InkDraftViewModelTest {
         DocumentExporter(destination, preferences),
         dispatcher,
         drafts,
+        share,
     )
 
     private val InkFlowViewModel.review get() = uiState.value as InkUiState.Review

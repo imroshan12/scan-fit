@@ -11,6 +11,7 @@ import app.scanfit.core.presets.PresetsSummary
 import app.scanfit.core.testing.FakeDraftStore
 import app.scanfit.core.testing.FakeExportDestinations
 import app.scanfit.core.testing.FakePresetsRepository
+import app.scanfit.core.testing.FakeShareStager
 import app.scanfit.core.testing.FakeUserPreferences
 import app.scanfit.core.testing.SpecPresets
 import kotlinx.coroutines.Dispatchers
@@ -32,6 +33,7 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class InkCustomViewModelTest {
     private val dispatcher = UnconfinedTestDispatcher()
+    private val share = FakeShareStager()
     private val tools = FakeInkTools().apply { files[PHOTO] = byteArrayOf(1, 2, 3) }
     private val destinations = FakeExportDestinations()
     private val drafts = FakeDraftStore()
@@ -54,6 +56,7 @@ class InkCustomViewModelTest {
         DocumentExporter(destinations, prefs),
         dispatcher,
         drafts,
+        share,
     )
 
     @Test

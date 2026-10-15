@@ -5,12 +5,14 @@ import app.scanfit.core.data.draft.DraftStatus
 import app.scanfit.core.data.draft.FileDraftStore
 import app.scanfit.core.data.draft.RetainedDraft
 import app.scanfit.core.data.draft.draftStatus
+import app.scanfit.core.data.export.DocumentExporter
 import app.scanfit.core.match.DocKind
 import app.scanfit.core.model.DocType
 import app.scanfit.core.model.ExamStatus
 import app.scanfit.core.presets.PresetsLoadOutcome
 import app.scanfit.core.presets.PresetsSummary
 import app.scanfit.core.testing.FakeDraftStore
+import app.scanfit.core.testing.FakeExportDestinations
 import app.scanfit.core.testing.FakePresetsRepository
 import app.scanfit.core.testing.FakeUserPreferences
 import app.scanfit.core.testing.SpecPresets
@@ -44,7 +46,14 @@ class ExamDraftViewModelTest {
 
     @After fun tearDown() = Dispatchers.resetMain()
 
-    private fun model() = ExamViewModel(SavedStateHandle(mapOf("examId" to exam.id)), presets, preferences, drafts)
+    private fun model() = ExamViewModel(
+        SavedStateHandle(mapOf("examId" to exam.id)),
+        presets,
+        preferences,
+        drafts,
+        DocumentExporter(FakeExportDestinations(), preferences),
+        dispatcher,
+    )
 
     @Test
     fun validDraftShowsRoundedKbOnEntryAndRelaunchWithoutMutatingSaved() = runTest(dispatcher) {

@@ -102,6 +102,7 @@ internal fun InkReviewContent(
             SaveState.VERIFY_FAILED -> NoticeCard(stringResource(R.string.export_verify_failed), NoticeKind.ERROR)
             else -> Unit
         }
+        if (state.shareFailed) NoticeCard(stringResource(R.string.export_share_failed), NoticeKind.ERROR)
         val editable = state.save.state != SaveState.SAVING
         if (state.retainFailed) NoticeCard(stringResource(R.string.draft_retain_failed), NoticeKind.WARNING)
         if (state.restored) {

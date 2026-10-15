@@ -1,9 +1,11 @@
 package app.scanfit
 
 import android.app.Application
+import app.scanfit.core.data.export.AndroidShareStager
 import app.scanfit.core.presets.PresetsRepository
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -20,5 +22,7 @@ class ScanFitApplication : Application() {
         super.onCreate()
         // Verify the embedded presets once, at launch, off the main thread. Home and Settings observe the outcome.
         appScope.launch { presets.loadEmbedded() }
+        // A file staged for the share sheet never outlives the session (ALGORITHMS 1.6.2).
+        appScope.launch(Dispatchers.IO) { AndroidShareStager.clear(this@ScanFitApplication) }
     }
 }

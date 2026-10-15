@@ -1,7 +1,7 @@
 # HANDOFF.md — where work stopped (read this first when picking the project up)
 
-Last updated: **2026-10-13**. Current phase: **Phase 2 — Core flows** (docs/ROADMAP.md). Latest commit: `ab1b6d3 Bug fixes`.
-Custom size, the thumb cleanup rewrite and the review fixes of 2026-10-13 are **uncommitted** in the working tree.
+Last updated: **2026-10-13** (evening). Current phase: **Phase 2 — Core flows** (docs/ROADMAP.md). Latest commit:
+`6334124 Bug fixes and UI updates` (Custom size + thumb fix). **Uncommitted:** Share and Save all (§4 first entry).
 The user commits; a session never runs `git add/commit/push`.
 
 ## 1. State in one screen
@@ -11,6 +11,7 @@ The user commits; a session never runs `git add/commit/push`.
 | Home (search, categories, My exams, Popular) | Done on both apps (ROADMAP Phase 2, ticked).                                                                                                                                                                                                                                                   |
 | Exam checklist                               | Photo/ink rows reopen retained files. Verified private drafts show "Ready · KB" after relaunch; historical Saved takes precedence. Missing/invalid/expired drafts never show Ready. Broader PDF/live-photo flows remain open.                                                                  |
 | Photo flow                                   | Built on both apps, including save, retry, cancellation and Done after success. Physical-device camera/navigation confirmation remains open (§3).                                                                                                                                              |
+| Share / Save all                             | Built on both apps (2026-10-13): Share under Save (exact review bytes, never Saved); Save all on the checklist (every Ready row, verified per file, failures isolated, retry re-plans). iOS one Files picker for all files. Hand-checked on the iPhone 11 Pro Max simulator. |
 | Export / save                                | Single-file save + verify-after-write plus private 30-day retained final drafts (2026-10-06), shared by photo/ink. Restored reviews re-save identical bytes. Save all, share, Open folder, cleaned originals and export history remain open.                                                   |
 | Ink flows                                    | Built on both apps (2026-10-05): signature, triple signature, thumbs, NEET fingers, declaration. Free crop, cleanup variant by type, crisp black / darker ink, one-time handwriting tick, save + verify. Verified end to end on the iPhone 11 Pro Max simulator; Android hand check open (§5). |
 | Review                                       | Built on both apps: match note (2026-10-05), Before/After + hold-to-compare and output-derived KB/dimensions/JPG chips (2026-10-06). No Fix button in exam flows (decision, §2). Gesture/accessibility device QA remains open.                                                                 |
@@ -109,6 +110,27 @@ drafted with `TODO_HI:`. The spec suite still emits pre-existing unclosed-file `
   device is still needed with the updated build. Files saved before the fix are not retroactively marked; save again to verify.
 
 ## 4. What changed (by area, for review)
+
+### Share and Save all (2026-10-13, evening)
+
+- **Spec:** ALGORITHMS §1.6.2; 6 `save_all_cases` from `spec/tools/save_all.py`. Strings `export.share_failed`,
+  `export.save_all_partial`, `export.save_all_held`, `export.files_app` (Hindi `TODO_HI:`); existing `exam.save_all`,
+  `flow.saved_to`, `flow.open_folder`, `common.share` are now used.
+- **Android:** `:core:data` `SaveAllPlan`, `ShareStager`/`AndroidShareStager` (cache `share/` exposed through the existing
+  `${applicationId}.capture` FileProvider; cleared on app start in `ScanFitApplication`), `ExportDestinations.folderLabel`.
+  `ExamViewModel` has `onSaveAll`/`onSaveAllDismissed`, `SaveAllStatus`, takes `DocumentExporter` and an IO dispatcher
+  (internal constructor for tests). `SaveAllBar.kt` (+ previews) in `:feature:exams`. Photo/ink VMs take a `ShareStager`;
+  `onShare`/`onShareHandled`; Review states carry `shareUri`/`shareFailed`; designsystem `ShareEffect` fires the chooser.
+  Tests: `SaveAllPlanConformanceTest`, `ExamSaveAllViewModelTest` (6), share tests in both flows, fakes
+  `FakeShareStager` + `FakeExportDestinations.failingTypes/requests`.
+- **iOS:** ScanData `SaveAll.swift` (`SaveAllPlan`, `SaveAllOutcome`, `DocumentExporting.saveAll` default, `ShareStager`,
+  `SharedFile`, `ShareStatus`); `FilesExporter.saveAll` stages every file for one picker and matches returned URLs by bytes
+  (`verifyAll`, `folderName`). DesignSystem `FilesExportPicker(urls:)`, `ShareSheet`. `ExamViewModel.saveAll()` and
+  `saveAllStatus`; `ExamView` bottom bar + multi-file picker sheet. Photo/ink VMs: `share`/`shareHandled`, `share` status;
+  views add the Share button and sheet. `RootView` clears staged shares on start. Exams target now also uses Imaging/Inspect.
+  Tests: `SaveAllTests` (6, incl. "Keep both" rename and unmatched file), `ExamSaveAllTests` (4), share tests in both flows.
+- **Simulator check:** IBPS thumb → Share (sheet shows `left_thumb_IBPS-PO_240x240_….jpg`) → back → checklist "Ready · 22 KB"
+  → Save all (1) → Files picker → row Saved, "1 file saved to …". That showed the provider-root folder name, now "Files".
 
 ### Custom size, thumb fix and review findings (2026-10-13)
 
@@ -264,8 +286,9 @@ drafted with `TODO_HI:`. The spec suite still emits pre-existing unclosed-file `
 6. **Custom size device QA:** Android form + flows on a phone (the emulator cannot run); cm input with a decimal keypad
    in Hindi; recent sizes after relaunch; a size with no dimensions (keep the picture's size).
 7. **Thumb with a real print:** the user's own thumb photo through IBPS and a Custom size; compare Before/After.
-8. Finish wider export actions: sharing retained bytes, Save all with partial-failure handling, Open folder, then My Kit
-   cleaned originals/export history, Custom and Checker (reuse `MatchNote`; add Fix there). Verify UPSC ESE / CMS presets
+8. **Share / Save all device QA:** Android 10+ Save all + Open folder; Android share to WhatsApp/Drive; iOS "Keep both"
+   in a folder that already has the files; a partial failure (e.g. full storage) and Retry.
+9. Next features: My Kit cleaned originals/export history, Custom and Checker (reuse `MatchNote`; add Fix there). Verify UPSC ESE / CMS presets
    only with official sources and user direction.
 
 ## 6. Testing tips that cost time to learn

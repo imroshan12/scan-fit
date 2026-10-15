@@ -12,6 +12,7 @@ import app.scanfit.core.testing.FakeExportDestinations
 import app.scanfit.core.testing.FakeFaceDetector
 import app.scanfit.core.testing.FakePersonSegmenter
 import app.scanfit.core.testing.FakePresetsRepository
+import app.scanfit.core.testing.FakeShareStager
 import app.scanfit.core.testing.FakeUserPreferences
 import app.scanfit.core.testing.SpecPresets
 import app.scanfit.core.vision.FaceBox
@@ -39,6 +40,7 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class PhotoSaveViewModelTest {
     private val dispatcher = UnconfinedTestDispatcher()
+    private val share = FakeShareStager()
     private val tools = FakePhotoTools().apply { files["photo"] = byteArrayOf(1) }
     private val preferences = FakeUserPreferences()
     private val destinations = FakeExportDestinations()
@@ -62,6 +64,7 @@ class PhotoSaveViewModelTest {
             dispatcher,
             DocumentExporter(destination, preferences),
             FakeDraftStore(),
+            share,
         )
         model.onImageSelected("photo")
         model.onCropDone()

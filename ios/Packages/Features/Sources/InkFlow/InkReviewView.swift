@@ -14,6 +14,7 @@ struct InkReviewView: View {
                 BeforeAfterImage(before: review.before, after: readyBytes, strings: strings)
                 result
                 ExportStatusView(state: model.exportState, strings: strings)
+                if model.share == .failed { NoticeCard(text: strings.exportShareFailed, kind: .error) }
                 if review.retainFailed { NoticeCard(text: strings.draftRetainFailed, kind: .warning) }
                 Group {
                     if review.restored {

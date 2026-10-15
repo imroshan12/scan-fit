@@ -102,9 +102,13 @@
     <string name="exam_status_saved">सेव हो गया</string>
     <string name="exam_unpin">मेरी परीक्षाओं से हटाएँ</string>
     <string name="exam_verified_on">स्पेक्स %1$s को सत्यापित</string>
+    <string name="export_files_app">Files</string>
+    <string name="export_save_all_held">अपना हस्ताक्षर एक बार खोलकर पुष्टि करें कि यह सामान्य लिखावट में है, फिर उसे सेव करें।</string>
+    <string name="export_save_all_partial">%2$d में से %1$d सेव हुईं। बाकी के लिए फिर से कोशिश करें।</string>
     <string name="export_save_failed">फ़ाइल सेव नहीं हो सकी। कृपया फिर कोशिश करें।</string>
     <string name="export_saved">सेव हो गया</string>
     <string name="export_saving">सेव हो रहा है…</string>
+    <string name="export_share_failed">शेयर करने के लिए फ़ाइल तैयार नहीं हो सकी। कृपया फिर से कोशिश करें।</string>
     <string name="export_verify_failed">सेव की गई फ़ाइल जाँच में पास नहीं हुई। कृपया फिर कोशिश करें।</string>
     <string name="fix_compress_to_target">साइज़ घटाकर फ़िट करें</string>
     <string name="fix_convert_to_jpeg">JPG में बदलें</string>

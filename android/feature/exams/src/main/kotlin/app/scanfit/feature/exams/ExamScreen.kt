@@ -79,8 +79,21 @@ fun ExamRoute(
         viewModel.refreshDrafts()
         onPauseOrDispose { }
     }
-    ExamScreen(state, onBack, viewModel::onTogglePin, modifier, docActions)
+    ExamScreen(
+        state,
+        onBack,
+        viewModel::onTogglePin,
+        modifier,
+        docActions,
+        SaveAllActions(viewModel::onSaveAll, viewModel::onSaveAllDismissed),
+    )
 }
+
+/** Save all on the checklist (ALGORITHMS 1.6.2). */
+class SaveAllActions(
+    val onSaveAll: () -> Unit = {},
+    val onDismiss: () -> Unit = {},
+)
 
 /**
  * Which document rows open a flow, and what opening one does. The app decides, because features never depend on each
@@ -99,9 +112,13 @@ internal fun ExamScreen(
     onTogglePin: () -> Unit,
     modifier: Modifier = Modifier,
     docActions: DocActions = DocActions(),
+    saveAllActions: SaveAllActions = SaveAllActions(),
 ) {
     Scaffold(
         modifier = modifier,
+        bottomBar = {
+            if (state is ExamUiState.Ready) SaveAllBar(state, saveAllActions.onSaveAll, saveAllActions.onDismiss)
+        },
         topBar = {
             TopAppBar(
                 title = {
@@ -326,7 +343,7 @@ private fun formatDate(
     iso
 }
 
-private val previewExam: Exam by lazy {
+internal val previewExam: Exam by lazy {
     PresetBundle.decodeExam(
         """
         {"id":"ibps_po","name":"IBPS PO / MT","body":"IBPS","category":"banking","live_photo_capture":true,

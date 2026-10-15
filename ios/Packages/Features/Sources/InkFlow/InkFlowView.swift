@@ -74,6 +74,9 @@ public struct InkFlowView: View {
                         .interactiveDismissDisabled()
                 }
             }
+            .sheet(item: Binding(get: { model.share.file }, set: { if $0 == nil { model.shareHandled() } })) { file in
+                ShareSheet(url: file.url) { model.shareHandled() }
+            }
             .fullScreenCover(isPresented: $showCamera) {
                 CameraPicker { bytes in
                     showCamera = false
@@ -143,10 +146,18 @@ public struct InkFlowView: View {
             if model.exportState == .saved {
                 primary(strings.commonDone, busy: false) { onExit() }
             } else {
-                primary(strings.flowSaveFiles, busy: model.exportState == .saving) {
-                    Task { await model.save() }
+                VStack(spacing: 0) {
+                    primary(strings.flowSaveFiles, busy: model.exportState == .saving) {
+                        Task { await model.save() }
+                    }
+                    .disabled(!model.canSave)
+                    // Share sits under Save (ALGORITHMS 1.6.2): same gate, never records Saved.
+                    Button(strings.commonShare) { Task { await model.share() } }
+                        .frame(maxWidth: .infinity, minHeight: ScanFitSpacing.minTouchTarget)
+                        .disabled(!model.canSave || model.renderPending)
+                        .padding(.bottom, ScanFitSpacing.sm)
+                        .background(.bar)
                 }
-                .disabled(!model.canSave)
             }
         default:
             EmptyView()

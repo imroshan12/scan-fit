@@ -22,6 +22,8 @@ public struct ExportRequest: Sendable {
 @MainActor
 public protocol DocumentExporting: AnyObject {
     func save(_ request: ExportRequest) async -> ExportState
+    /// Saves several files (Save all, ALGORITHMS 1.6.2); cancelling saves nothing and returns `.idle` for each.
+    func saveAll(_ requests: [ExportRequest]) async -> SaveAllOutcome
 }
 
 /// Where the bytes go: written, re-read, published, or removed after a failure.

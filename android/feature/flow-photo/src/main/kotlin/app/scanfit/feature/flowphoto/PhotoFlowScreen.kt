@@ -32,6 +32,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -54,6 +55,7 @@ import app.scanfit.core.data.export.SaveState
 import app.scanfit.core.designsystem.R
 import app.scanfit.core.designsystem.components.NoticeCard
 import app.scanfit.core.designsystem.components.NoticeKind
+import app.scanfit.core.designsystem.components.ShareEffect
 import app.scanfit.core.designsystem.components.labelRes
 import app.scanfit.core.designsystem.components.specSummary
 import app.scanfit.core.designsystem.theme.ScanFitRadius
@@ -149,9 +151,11 @@ fun PhotoFlowRoute(
             },
             onDone = onDone,
             onReplace = viewModel::onReplace,
+            onShare = viewModel::onShare,
         ),
         modifier = modifier,
     )
+    ShareEffect((state as? PhotoUiState.Review)?.shareUri, viewModel::onShareHandled)
 }
 
 /** Everything the screen can ask for; [onTakePhoto] is null on a device without a camera. */
@@ -172,6 +176,7 @@ internal class PhotoActions(
     val onSave: () -> Unit = {},
     val onDone: () -> Unit = {},
     val onReplace: () -> Unit = {},
+    val onShare: () -> Unit = {},
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -268,19 +273,28 @@ private fun BottomAction(
             else -> return
         }
     Surface(tonalElevation = 2.dp) {
-        Button(
-            onClick = onClick,
-            enabled = enabled,
-            modifier =
-            Modifier
-                .fillMaxWidth()
-                .padding(ScanFitSpacing.screenMargin)
-                .heightIn(min = ScanFitSpacing.minTouchTarget),
-        ) {
-            if (state is PhotoUiState.Crop && state.checking) {
-                CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
-            } else {
-                Text(stringResource(label))
+        Column(Modifier.padding(ScanFitSpacing.screenMargin)) {
+            Button(
+                onClick = onClick,
+                enabled = enabled,
+                modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = ScanFitSpacing.minTouchTarget),
+            ) {
+                if (state is PhotoUiState.Crop && state.checking) {
+                    CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+                } else {
+                    Text(stringResource(label))
+                }
+            }
+            // Share sits under Save (ALGORITHMS 1.6.2): same gate, never records Saved.
+            if (state is PhotoUiState.Review && state.save.state != SaveState.SAVING) {
+                TextButton(
+                    onClick = actions.onShare,
+                    enabled = enabled,
+                    modifier = Modifier.fillMaxWidth().heightIn(min = ScanFitSpacing.minTouchTarget),
+                ) { Text(stringResource(R.string.common_share)) }
             }
         }
     }

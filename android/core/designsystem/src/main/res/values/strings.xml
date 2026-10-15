@@ -102,9 +102,13 @@
     <string name="exam_status_saved">Saved</string>
     <string name="exam_unpin">Remove from My exams</string>
     <string name="exam_verified_on">Specs verified %1$s</string>
+    <string name="export_files_app">Files</string>
+    <string name="export_save_all_held">Open your signature once to confirm it is in running handwriting, then save it.</string>
+    <string name="export_save_all_partial">Saved %1$d of %2$d. Try again for the rest.</string>
     <string name="export_save_failed">Could not save the file. Please try again.</string>
     <string name="export_saved">Saved</string>
     <string name="export_saving">Saving…</string>
+    <string name="export_share_failed">Could not prepare the file to share. Please try again.</string>
     <string name="export_verify_failed">The saved file did not pass verification. Please try again.</string>
     <string name="fix_compress_to_target">Compress to fit</string>
     <string name="fix_convert_to_jpeg">Convert to JPG</string>

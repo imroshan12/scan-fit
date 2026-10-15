@@ -8,6 +8,7 @@ import app.scanfit.core.data.export.DocumentExporter
 import app.scanfit.core.data.export.ExportVerifier
 import app.scanfit.core.data.export.SaveResult
 import app.scanfit.core.data.export.SaveState
+import app.scanfit.core.data.export.ShareStager
 import app.scanfit.core.imaging.AndroidImageDecoder
 import app.scanfit.core.imaging.AutoFraming
 import app.scanfit.core.imaging.BackgroundWhitening
@@ -145,6 +146,9 @@ sealed interface PhotoUiState {
         val before: Raster? = null,
         val restored: Boolean = false,
         val retainFailed: Boolean = false,
+        /** A staged file for the share sheet (ALGORITHMS 1.6.2): the screen opens it once, then `onShareHandled`. */
+        val shareUri: String? = null,
+        val shareFailed: Boolean = false,
     ) : PhotoUiState
 }
 
@@ -161,13 +165,14 @@ constructor(
     @PhotoWork private val work: CoroutineDispatcher,
     exporter: DocumentExporter,
     private val drafts: DraftStore,
+    share: ShareStager,
 ) : ViewModel() {
     private val target: FlowTarget? =
         FlowTarget.of(savedState.get<String>(EXAM_ID), savedState.get<String>(DOC_TYPE), savedState.get<String>(CUSTOM))
 
     private val _uiState = MutableStateFlow<PhotoUiState>(PhotoUiState.Loading)
     val uiState: StateFlow<PhotoUiState> = _uiState.asStateFlow()
-    internal val saves = PhotoSaveController(_uiState, viewModelScope, work, exporter)
+    internal val saves = PhotoSaveController(_uiState, viewModelScope, work, exporter, share)
 
     private var job: Job? = null
     private var renderJob: Job? = null

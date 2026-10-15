@@ -208,6 +208,21 @@ struct PhotoFlowViewModelTests {
         #expect(!rows.contains { $0.examId == "ssc_cgl" }, "SSC captures the photo live: never listed")
     }
 
+    @Test("share stages the review bytes, and is off while the file misses the rules")
+    func share() async throws {
+        let m = try await model()
+        guard case let .ready(ready) = try await reviewed(m).result else { Issue.record("not ready"); return }
+        await m.share()
+        let file = try #require(m.share.file)
+        #expect(file.url.lastPathComponent.hasPrefix("photo_IBPS-PO_200x230_"))
+        #expect([UInt8](try Data(contentsOf: file.url)) == ready.bytes)
+        tools.setFit { FakePhotoTools.success($0, FakePhotoTools.jpeg(width: 200, height: 230, size: 60 * 1024)) }
+        let other = try await model()
+        _ = try await reviewed(other)
+        await other.share()
+        #expect(other.share == .none, "a file that misses the rules is not shared")
+    }
+
     @Test("a file outside the window does not meet the rules; a fit error is shown")
     func failures() async throws {
         tools.setFit { FakePhotoTools.success($0, FakePhotoTools.jpeg(width: 200, height: 230, size: 60 * 1024)) }

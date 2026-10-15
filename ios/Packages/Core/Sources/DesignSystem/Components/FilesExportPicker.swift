@@ -2,22 +2,28 @@
     import SwiftUI
     import UIKit
 
-    /// The Files export picker for one staged file (ALGORITHMS 1.6). It only reports the user's choice: the caller
-    /// re-opens and verifies the returned URL. A dismissed sheet is not a cancellation; only the delegate says so.
+    /// The Files export picker for staged files (ALGORITHMS 1.6; several for Save all, 1.6.2). It only reports the
+    /// user's choice: the caller re-opens and verifies the returned URLs. A dismissed sheet is not a cancellation; only
+    /// the delegate says so.
     public struct FilesExportPicker: UIViewControllerRepresentable {
-        private let url: URL
+        private let urls: [URL]
         private let onPicked: @MainActor ([URL]) -> Void
         private let onCancelled: @MainActor () -> Void
 
         public init(url: URL, onPicked: @escaping @MainActor ([URL]) -> Void,
                     onCancelled: @escaping @MainActor () -> Void) {
-            self.url = url
+            self.init(urls: [url], onPicked: onPicked, onCancelled: onCancelled)
+        }
+
+        public init(urls: [URL], onPicked: @escaping @MainActor ([URL]) -> Void,
+                    onCancelled: @escaping @MainActor () -> Void) {
+            self.urls = urls
             self.onPicked = onPicked
             self.onCancelled = onCancelled
         }
 
         public func makeUIViewController(context: Context) -> UIDocumentPickerViewController {
-            let picker = UIDocumentPickerViewController(forExporting: [url], asCopy: true)
+            let picker = UIDocumentPickerViewController(forExporting: urls, asCopy: true)
             picker.delegate = context.coordinator
             return picker
         }

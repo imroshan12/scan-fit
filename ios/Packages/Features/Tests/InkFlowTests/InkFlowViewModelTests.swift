@@ -259,6 +259,31 @@ struct InkFlowViewModelTests {
         #expect(exporter.requests.last?.filename == "signature_IBPS-PO_140x60_16kb.jpg")
     }
 
+    @Test("share stages exactly the review bytes under the export name and records nothing")
+    func share() async throws {
+        let prefs = preferences(confirmed: true)
+        let m = try await model(prefs: prefs)
+        guard case let .ready(ready) = try await reviewed(m).result else { Issue.record("not ready"); return }
+        await m.share()
+        let file = try #require(m.share.file)
+        #expect(file.url.lastPathComponent == "signature_IBPS-PO_140x60_16kb.jpg")
+        #expect([UInt8](try Data(contentsOf: file.url)) == ready.bytes)
+        #expect(exporter.requests.isEmpty && !prefs.isSaved("ibps_po", .signature), "sharing is not saving")
+        m.shareHandled()
+        #expect(m.share == .none)
+    }
+
+    @Test("share waits for the handwriting tick, like Save")
+    func shareGate() async throws {
+        let m = try await model()
+        _ = try await reviewed(m)
+        await m.share()
+        #expect(m.share == .none)
+        m.confirmHandwriting()
+        await m.share()
+        #expect(m.share.file != nil)
+    }
+
     @Test("a remembered tick is not asked again")
     func remembered() async throws {
         let m = try await model(prefs: preferences(confirmed: true))

@@ -13,6 +13,7 @@ import app.scanfit.core.testing.FakeExportDestinations
 import app.scanfit.core.testing.FakeFaceDetector
 import app.scanfit.core.testing.FakePersonSegmenter
 import app.scanfit.core.testing.FakePresetsRepository
+import app.scanfit.core.testing.FakeShareStager
 import app.scanfit.core.testing.FakeUserPreferences
 import app.scanfit.core.testing.SpecPresets
 import app.scanfit.core.testing.TestJpeg
@@ -37,6 +38,7 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class PhotoDraftViewModelTest {
     private val dispatcher = UnconfinedTestDispatcher()
+    private val share = FakeShareStager()
     private val drafts = FakeDraftStore()
     private val tools = FakePhotoTools().apply { files["photo"] = byteArrayOf(1) }
     private val faces = FakeFaceDetector(listOf(FaceBox(400.0, 500.0, 200.0, 240.0)))
@@ -60,6 +62,7 @@ class PhotoDraftViewModelTest {
         dispatcher,
         DocumentExporter(destination, preferences),
         drafts,
+        share,
     )
 
     private val PhotoFlowViewModel.review get() = uiState.value as PhotoUiState.Review

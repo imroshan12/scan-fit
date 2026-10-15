@@ -4,7 +4,9 @@ import android.content.Context
 import app.scanfit.core.data.draft.DraftStore
 import app.scanfit.core.data.draft.FileDraftStore
 import app.scanfit.core.data.export.AndroidExportDestinations
+import app.scanfit.core.data.export.AndroidShareStager
 import app.scanfit.core.data.export.ExportDestinations
+import app.scanfit.core.data.export.ShareStager
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -23,6 +25,9 @@ internal abstract class DataModule {
 
     @Binds
     abstract fun imageSource(source: AndroidImageSource): ImageSource
+
+    @Binds
+    abstract fun shareStager(stager: AndroidShareStager): ShareStager
 
     companion object {
         @Provides

@@ -226,12 +226,20 @@ public struct Strings: Sendable {
     public var examUnpin: String { tr("exam.unpin") }
     /// "Specs verified {date:str}"
     public func examVerifiedOn(date: String) -> String { fmt("exam.verified_on", [date]) }
+    /// "Files"
+    public var exportFilesApp: String { tr("export.files_app") }
+    /// "Open your signature once to confirm it is in running handwriting, then save it."
+    public var exportSaveAllHeld: String { tr("export.save_all_held") }
+    /// "Saved {saved:int} of {total:int}. Try again for the rest."
+    public func exportSaveAllPartial(saved: Int, total: Int) -> String { fmt("export.save_all_partial", [saved, total]) }
     /// "Could not save the file. Please try again."
     public var exportSaveFailed: String { tr("export.save_failed") }
     /// "Saved"
     public var exportSaved: String { tr("export.saved") }
     /// "Saving…"
     public var exportSaving: String { tr("export.saving") }
+    /// "Could not prepare the file to share. Please try again."
+    public var exportShareFailed: String { tr("export.share_failed") }
     /// "The saved file did not pass verification. Please try again."
     public var exportVerifyFailed: String { tr("export.verify_failed") }
     /// "Compress to fit"

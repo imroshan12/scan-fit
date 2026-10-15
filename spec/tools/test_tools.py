@@ -16,6 +16,7 @@ import gen_tokens  # noqa: E402
 import custom_size  # noqa: E402
 import match_note  # noqa: E402
 import photo_crop  # noqa: E402
+import save_all  # noqa: E402
 import release_preflight  # noqa: E402
 from _common import SPEC, require  # noqa: E402
 
@@ -268,6 +269,13 @@ class CasesFile(unittest.TestCase):
             self.assertEqual(custom_size.expected(c), c["expect"], c["id"])
             if c["expect"].get("text"):
                 self.assertEqual(custom_size.text(custom_size.parse(c["expect"]["text"])), c["expect"]["text"], c["id"])
+
+    def test_save_all_expectations_match_the_reference(self):
+        """save_all_cases are computed by save_all.py: a hand edit that drifts from ALGORITHMS 1.6.2 fails here."""
+        cases = self.cases["save_all_cases"]
+        self.assertGreaterEqual(len(cases), 5)
+        for c in cases:
+            self.assertEqual(save_all.plan(c), c["expect"], c["id"])
 
     def test_thumb_cases_draw_a_whole_print_inside_the_image(self):
         """thumb_preservation_cases are parametric: the print must fit in the image or the no-clip check is meaningless."""
