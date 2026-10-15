@@ -30,6 +30,7 @@ import app.scanfit.core.designsystem.R
 import app.scanfit.core.designsystem.theme.ScanFitTheme
 import app.scanfit.core.model.DocType
 import app.scanfit.core.model.FlowTarget
+import app.scanfit.feature.checker.CheckerRoute
 import app.scanfit.feature.custom.CustomRoute
 import app.scanfit.feature.exams.DocActions
 import app.scanfit.feature.exams.ExamRoute
@@ -65,7 +66,7 @@ fun ScanFitApp() {
         val destination = backStack?.destination
         val flowFromKit = destination?.route?.startsWith("$EXAM_ROUTE/") == true &&
             navController.previousBackStackEntry?.destination?.route == Tab.KIT.route
-        val inCustom = destination?.route?.startsWith(CUSTOM_ROUTE) == true
+        val inCustom = destination?.route?.let { it.startsWith(CUSTOM_ROUTE) || it == CHECKER_ROUTE } == true
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
             bottomBar = {
@@ -99,8 +100,10 @@ fun ScanFitApp() {
                     HomeRoute(
                         onOpenExam = { id -> navController.navigate("$EXAM_ROUTE/$id") },
                         onCustomSize = { navController.navigate(CUSTOM_ROUTE) { launchSingleTop = true } },
+                        onChecker = { navController.navigate(CHECKER_ROUTE) { launchSingleTop = true } },
                     )
                 }
+                composable(CHECKER_ROUTE) { CheckerRoute(onBack = { navController.popBackStack() }) }
                 composable(CUSTOM_ROUTE) {
                     CustomRoute(
                         onBack = { navController.popBackStack() },
@@ -167,7 +170,10 @@ fun ScanFitApp() {
                     })
                 }
                 composable(Tab.TOOLS.route) {
-                    ToolsScreen(onCustomSize = { navController.navigate(CUSTOM_ROUTE) { launchSingleTop = true } })
+                    ToolsScreen(
+                        onCustomSize = { navController.navigate(CUSTOM_ROUTE) { launchSingleTop = true } },
+                        onChecker = { navController.navigate(CHECKER_ROUTE) { launchSingleTop = true } },
+                    )
                 }
                 composable(Tab.SETTINGS.route) { SettingsRoute() }
             }
@@ -177,6 +183,9 @@ fun ScanFitApp() {
 
 /** `exam/<id>`: the exam checklist, opened from Home. */
 private const val EXAM_ROUTE = "exam"
+
+/** `checker`: the pre-submit Checker (ALGORITHMS 12). */
+private const val CHECKER_ROUTE = "checker"
 
 /** `custom`: the Custom size form; `custom/<photo|ink>?custom=<text>`: a flow for that size (ALGORITHMS 11). */
 private const val CUSTOM_ROUTE = "custom"

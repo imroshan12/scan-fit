@@ -186,7 +186,16 @@ of the photo fixture ≤ 800 ms on a mid device (benchmark test).
       Home. VM tests: Custom form 6 + 6, custom flows 6 Android + 5 iOS. Checked by hand on the iPhone 11 Pro Max simulator.
     - _Deviations:_ JPG only (no format choice), no aspect lock or live size estimate before capture (the review shows the
       real size). Near-miss Fix is still for the Checker.
-- [ ] Checker with issue fixes and per-exam verdicts
+- [x] Checker with issue fixes and per-exam verdicts
+    - _Done (both apps, 2026-10-15):_ ALGORITHMS §12; 10 `checker_cases` from `spec/tools/checker.py`, passed by Kotlin and
+      Swift (`CheckerStatus`, `CheckerTargets` in `core:match` / `Match`). Pick from gallery or Files (image or PDF) → the file's
+      own problems → the user says what it is (chips) → match note + exam list (popular first, search) → per-slot verdict with
+      every issue in numbers → "Make it fit" refits a copy to that slot, re-inspected and verified on save; Save records Saved
+      for that exam, Share never does; exam signatures need the handwriting tick. Entry from Tools and Home. VM tests: 7
+      Android + 6 iOS. Checked by hand on the iPhone 11 Pro Max simulator.
+    - _Deviations:_ one Fix (refit the whole copy to the chosen slot) instead of per-issue actions; no PDF fixes (PDF slots
+      say "PDF tools are coming soon"); the kind is chosen by the user, never guessed; the refit uses the plain fit pipeline
+      (no ink cleanup — the ink flow does that); no `checker_run` analytics event yet.
 - [x] ~~Screenshot tests for every screen × light/dark × font 1.0/2.0 × EN/HI~~ — dropped (2026-10-03, product decision)
     - Built on both apps (Roborazzi, swift-snapshot-testing), then removed: baselines made every UI change slow. Screens are checked
       with previews (light/dark/largest font/Hindi), by hand on the low-end profiles and by view-model tests (docs/TESTING.md §1).

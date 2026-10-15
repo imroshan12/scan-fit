@@ -70,11 +70,19 @@ import app.scanfit.core.model.ExamCategory
 fun HomeRoute(
     onOpenExam: (String) -> Unit,
     onCustomSize: () -> Unit,
+    onChecker: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    HomeScreen(state, viewModel::onQueryChange, viewModel::onCategorySelected, onOpenExam, onCustomSize, modifier)
+    HomeScreen(
+        state,
+        viewModel::onQueryChange,
+        viewModel::onCategorySelected,
+        onOpenExam,
+        HomeLinks(onCustomSize, onChecker),
+        modifier,
+    )
 }
 
 @Composable
@@ -83,7 +91,7 @@ internal fun HomeScreen(
     onQueryChange: (String) -> Unit,
     onCategorySelected: (ExamCategory?) -> Unit,
     onOpenExam: (String) -> Unit,
-    onCustomSize: () -> Unit,
+    links: HomeLinks,
     modifier: Modifier = Modifier,
 ) {
     // The text lives here (Compose text-field guidance); the ViewModel derives everything else from it.
@@ -109,7 +117,7 @@ internal fun HomeScreen(
         item { CategoryChips(state.category, onCategorySelected) }
         if (state.showsSections) {
             sections(state, onOpenExam)
-            item { CustomSizeLink(onCustomSize) }
+            item { ToolLinks(links) }
         } else if (state.presets !is PresetsStatus.Ready) {
             // Nothing to search until the signed presets are verified: say that, never "no matches".
             item { PresetsStatusCard(state.presets) }
@@ -122,21 +130,35 @@ internal fun HomeScreen(
                     modifier = Modifier.padding(horizontal = ScanFitSpacing.screenMargin, vertical = ScanFitSpacing.lg),
                 )
             }
-            item { CustomSizeLink(onCustomSize) }
+            item { ToolLinks(links) }
         } else {
             items(state.results, key = { "result:" + it.id }) { ExamRow(it, onOpenExam) }
         }
     }
 }
 
-/** "Not listed? Use Custom size." (UI_UX §3 Home): forms outside the catalogue (ALGORITHMS 11). */
+/** Ways out of the catalogue (UI_UX §3 Home): Custom size (ALGORITHMS 11) and the Checker (ALGORITHMS 12). */
+class HomeLinks(
+    val onCustomSize: () -> Unit = {},
+    val onChecker: () -> Unit = {},
+)
+
+/** "Not listed? Use Custom size." and "Already have a file? Check it." */
 @Composable
-private fun CustomSizeLink(onCustomSize: () -> Unit) {
-    TextButton(
-        onClick = onCustomSize,
-        modifier = Modifier.padding(horizontal = ScanFitSpacing.sm).heightIn(min = ScanFitSpacing.minTouchTarget),
-    ) {
-        Text(stringResource(R.string.home_empty_hint), style = ScanFitType.body)
+private fun ToolLinks(links: HomeLinks) {
+    Column {
+        TextButton(
+            onClick = links.onCustomSize,
+            modifier = Modifier.padding(horizontal = ScanFitSpacing.sm).heightIn(min = ScanFitSpacing.minTouchTarget),
+        ) {
+            Text(stringResource(R.string.home_empty_hint), style = ScanFitType.body)
+        }
+        TextButton(
+            onClick = links.onChecker,
+            modifier = Modifier.padding(horizontal = ScanFitSpacing.sm).heightIn(min = ScanFitSpacing.minTouchTarget),
+        ) {
+            Text(stringResource(R.string.home_check_file), style = ScanFitType.body)
+        }
     }
 }
 

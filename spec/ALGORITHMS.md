@@ -590,7 +590,7 @@ A fit case names either `preset` + `doc`, or an inline `spec` (a full document o
 (inclusive), `aspect` ± `aspect_tol`, `background_mean_min` (median luma of the whole image ≥ value), `ink_pixels_min_pct` (% of pixels with luma < 128 ≥ value),
 `exif: "none"` (no APP1), `dpi` (JFIF units 1 and both densities equal), `export_filename` (§9.8), `decodes` (re-decodes without error),
 `max_ms_midrange` (measured by the benchmark, not asserted in unit tests). Other sections: `inspect_cases`, `decode_cases`, `patch_cases`,
-`geometry_cases`, `crop_cases`, `match_cases`, `match_note_cases`, `save_all_cases`, `search_cases` (their keys are documented inline in the file).
+`geometry_cases`, `crop_cases`, `match_cases`, `match_note_cases`, `save_all_cases`, `checker_cases`, `search_cases` (their keys are documented inline in the file).
 `thumb_preservation_cases` draw a grey print parametrically: paper luma `round(left + (right − left)·x/(W−1))`; inside the
 `print` ellipse `(cx, cy, rx, ry)` a pixel is a ridge when `⌊2d/period⌋` is even, `d` = distance to the centre with `y` scaled
 by `rx/ry`, coloured `ridge` luma, or `rim` luma beyond normalised radius `rim[0]`; the optional `core` ellipse is solid.
@@ -662,3 +662,31 @@ no minimum: `signature;140x60;10-20;200`, `photo;-;0-50;200`. Parsing accepts ex
 validation above, else nothing. **Recent sizes:** the last 5 distinct texts, newest first, kept on the device; Continue moves
 its text to the front. Conformance: `custom_size_cases` (`fields` → codes, or slot summary + text; `parse` text → canonical text or null),
 computed by `spec/tools/custom_size.py`.
+
+## 12. Checker (PRD F10)
+
+"Will this file be accepted?" for a file the user already has. Nothing is changed unless the user asks for a fix.
+
+**Input.** One file from the gallery or Files, read with the usual 64 MiB bound, inspected by §5 with its file name
+(the name feeds `EXTENSION_MISMATCH`). The file's own checks (§5 context-free issues) show at once.
+
+**What is this file?** The user picks the `DocKind` (Photo, Signature, Thumb, Fingers, Declaration, PDF document); the
+app never guesses. With a kind, the match note (§4, §9.7) lists the exams that accept the file as it is.
+
+**Which exam is it for?** A list of (active exam, slot) pairs whose slot type matches the kind (§4 mapping; an exam with
+two matching slots appears twice, e.g. NEET left and right hand fingers), in popularity order then name, with the
+§10 search over exam names and aliases. Choosing one evaluates the slot (§9.7) and shows the technical chips
+(`review_check_cases` mapping), the file's issues followed by the slot's issues, and a status
+(`CheckerStatus.of`, conformance `checker_cases`, `spec/tools/checker.py`):
+
+1. verdict `UNKNOWN` → `unknown` ("Spec not verified yet");
+2. verdict EXACT or ACCEPTED → `ok`, or `likely_ok` when the exam is unverified (rule 6: never "valid");
+3. otherwise, if the file is an image the app can decode (`jpeg`, `png`, `webp`, `heic`) and the slot accepts `jpg`/`jpeg`
+   → `fix`: offer "Make it fit for <exam>";
+4. otherwise → `no_fix` (a PDF, an undecodable file, or a slot that wants a PDF; PDF tools come with §6).
+
+**Make it fit** decodes the file (§1.1, oriented upright, EXIF dropped), then runs the plain §1 pipeline for the slot: photo
+kinds crop centred to the slot aspect, other kinds pad with white; no cleanup, face check or strip. The result shows like a
+review (image, chips, slot verdict, match note) with Save and Share (§1.6, §1.6.2). Save uses the slot's kind and §9.8 name
+and records Saved for that exam slot like any verified export; an exam signature still needs the one-time handwriting
+tick. The original file is never modified.

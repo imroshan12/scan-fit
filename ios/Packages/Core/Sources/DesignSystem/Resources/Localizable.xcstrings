@@ -188,6 +188,397 @@
         }
       }
     },
+    "checker.change_exam": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change exam"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "परीक्षा बदलें"
+          }
+        }
+      }
+    },
+    "checker.choose_another": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose another file"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "दूसरी फ़ाइल चुनें"
+          }
+        }
+      }
+    },
+    "checker.facts": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · %2$lld KB"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ · %2$lld KB"
+          }
+        }
+      }
+    },
+    "checker.file_heading": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This file"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "यह फ़ाइल"
+          }
+        }
+      }
+    },
+    "checker.fix": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make it fit for %1$@"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ के लिए ठीक करें"
+          }
+        }
+      }
+    },
+    "checker.fixed_heading": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fixed copy"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ठीक की गई कॉपी"
+          }
+        }
+      }
+    },
+    "checker.fixing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Making it fit…"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ठीक किया जा रहा है…"
+          }
+        }
+      }
+    },
+    "checker.intro": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pick the file you plan to upload. ScanFit checks it against the exam's rules and changes nothing unless you ask."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "जो फ़ाइल आप अपलोड करने वाले हैं उसे चुनें। ScanFit उसे परीक्षा के नियमों से जाँचता है और आपके कहे बिना कुछ नहीं बदलता।"
+          }
+        }
+      }
+    },
+    "checker.kind_declaration": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handwritten declaration"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "हस्तलिखित घोषणा"
+          }
+        }
+      }
+    },
+    "checker.kind_fingers": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fingers and thumb"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "उँगलियाँ और अंगूठा"
+          }
+        }
+      }
+    },
+    "checker.kind_pdf": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PDF document"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "PDF दस्तावेज़"
+          }
+        }
+      }
+    },
+    "checker.kind_photo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photo"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "फ़ोटो"
+          }
+        }
+      }
+    },
+    "checker.kind_signature": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signature"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "हस्ताक्षर"
+          }
+        }
+      }
+    },
+    "checker.kind_thumb": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thumb impression"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "अंगूठे का निशान"
+          }
+        }
+      }
+    },
+    "checker.needs_pdf": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This slot needs a PDF. PDF tools are coming soon."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "इस स्लॉट के लिए PDF चाहिए। PDF टूल जल्द आ रहे हैं।"
+          }
+        }
+      }
+    },
+    "checker.no_fix": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ScanFit can't fix this file here. Make a new one from the exam's checklist."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ScanFit यह फ़ाइल यहाँ ठीक नहीं कर सकता। परीक्षा की चेकलिस्ट से नई फ़ाइल बनाएँ।"
+          }
+        }
+      }
+    },
+    "checker.no_issues": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No problems with the file itself."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "फ़ाइल में अपने आप में कोई समस्या नहीं है।"
+          }
+        }
+      }
+    },
+    "checker.open_failed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't open this file. Try another one."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "यह फ़ाइल नहीं खुल सकी। कोई दूसरी चुनें।"
+          }
+        }
+      }
+    },
+    "checker.original_kept": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your original file is not changed."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "आपकी मूल फ़ाइल नहीं बदली गई है।"
+          }
+        }
+      }
+    },
+    "checker.search": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search exams"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "परीक्षा खोजें"
+          }
+        }
+      }
+    },
+    "checker.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check a file"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "फ़ाइल जाँचें"
+          }
+        }
+      }
+    },
+    "checker.what": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What is this file?"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "यह फ़ाइल क्या है?"
+          }
+        }
+      }
+    },
+    "checker.which": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Which exam is it for?"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "यह किस परीक्षा के लिए है?"
+          }
+        }
+      }
+    },
     "common.back": {
       "extractionState": "manual",
       "localizations": {
@@ -2163,6 +2554,23 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "सभी"
+          }
+        }
+      }
+    },
+    "home.check_file": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already have a file? Check it."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "पहले से फ़ाइल है? उसे जाँचें।"
           }
         }
       }

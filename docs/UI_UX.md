@@ -17,7 +17,7 @@
 
 ```
 Tabs:  Home  ·  My Kit  ·  Tools  ·  Settings
-Home ─ search exams ─ My exams (pinned) ─ Popular now (Remote Config) ─ "Fix a file" (Checker) card
+Home ─ search exams ─ My exams (pinned) ─ Popular now (Remote Config) ─ "Already have a file? Check it." (Checker) link
   └ Exam screen (checklist) ─ Photo flow | Signature flow | Thumb flow | Declaration flow | Certificates
                             ─ "Captured live on portal" row → Live coach
                             ─ Save all
@@ -84,8 +84,20 @@ Comparison never changes options, Saved or export bytes. Three wrapping KB/dimen
 pass/fail labels backed by the re-inspected output. Pending edits and failures hide old output/chips. Technical passes
 do not certify an unverified preset; the separate "Likely OK · Unverified" verdict stays. See ALGORITHMS §4.
 
-**Checker.** Drop zone / picker → a result card listing each check with a pass/fail icon, human
-text, and a Fix button. Then the "Which exam is this for?" picker → per-exam verdict.
+**Checker** (ALGORITHMS §12, built 2026-10-15). One scrolling screen, top to bottom:
+1. *Pick* — "Choose from gallery" / "Choose from Files" (images and PDFs). Opening failures say so in place.
+2. *This file* — format · KB · W×H, then the file's own problems (EXIF rotation, GPS, CMYK, progressive, wrong extension) as
+   icon + text rows, or "No problems with the file itself." "Choose another file" restarts.
+3. *What is this file?* — wrapping chips (Photo, Signature, Thumb impression, Fingers and thumb, Handwritten declaration, PDF
+   document); the selected chip carries a tick. The app never guesses the kind.
+4. *Which exam is it for?* — the match note for the file as it is, a search field, and every (exam, slot) of that kind:
+   popular first, unverified exams with their badge.
+5. *Result* — exam + slot with "Change exam" (system Back does the same), the KB/dimension/format chips, the slot verdict
+   ("likely OK" for unverified) and each issue with its numbers ("Too big: 605 KB (maximum 20)."). When fixable:
+   "Make it fit for <exam>". PDF-only slots and undecodable files explain why there is no fix.
+6. *Fixed copy* — the image, chips, verdict, match note, "Your original file is not changed.", the one-time handwriting tick
+   for signatures, then a bottom bar with Save (Downloads / Files) and Share. After a verified save the button reads Done and
+   returns to the exam list.
 
 **My Kit (current Phase 2 slice).** Prepared files are listed in native exam sections, with a confidence badge,
 document label and rounded KB. A row opens that exam's retained read-only review; Done returns to Kit. Available

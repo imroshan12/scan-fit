@@ -52,6 +52,52 @@ public struct Strings: Sendable {
     public var categoryTeaching: String { tr("category.teaching") }
     /// "UPSC"
     public var categoryUpsc: String { tr("category.upsc") }
+    /// "Change exam"
+    public var checkerChangeExam: String { tr("checker.change_exam") }
+    /// "Choose another file"
+    public var checkerChooseAnother: String { tr("checker.choose_another") }
+    /// "{format:str} · {kb:int} KB"
+    public func checkerFacts(format: String, kb: Int) -> String { fmt("checker.facts", [format, kb]) }
+    /// "This file"
+    public var checkerFileHeading: String { tr("checker.file_heading") }
+    /// "Make it fit for {exam:str}"
+    public func checkerFix(exam: String) -> String { fmt("checker.fix", [exam]) }
+    /// "Fixed copy"
+    public var checkerFixedHeading: String { tr("checker.fixed_heading") }
+    /// "Making it fit…"
+    public var checkerFixing: String { tr("checker.fixing") }
+    /// "Pick the file you plan to upload. ScanFit checks it against the exam's rules and changes nothing unless you ask."
+    public var checkerIntro: String { tr("checker.intro") }
+    /// "Handwritten declaration"
+    public var checkerKindDeclaration: String { tr("checker.kind_declaration") }
+    /// "Fingers and thumb"
+    public var checkerKindFingers: String { tr("checker.kind_fingers") }
+    /// "PDF document"
+    public var checkerKindPdf: String { tr("checker.kind_pdf") }
+    /// "Photo"
+    public var checkerKindPhoto: String { tr("checker.kind_photo") }
+    /// "Signature"
+    public var checkerKindSignature: String { tr("checker.kind_signature") }
+    /// "Thumb impression"
+    public var checkerKindThumb: String { tr("checker.kind_thumb") }
+    /// "This slot needs a PDF. PDF tools are coming soon."
+    public var checkerNeedsPdf: String { tr("checker.needs_pdf") }
+    /// "ScanFit can't fix this file here. Make a new one from the exam's checklist."
+    public var checkerNoFix: String { tr("checker.no_fix") }
+    /// "No problems with the file itself."
+    public var checkerNoIssues: String { tr("checker.no_issues") }
+    /// "Couldn't open this file. Try another one."
+    public var checkerOpenFailed: String { tr("checker.open_failed") }
+    /// "Your original file is not changed."
+    public var checkerOriginalKept: String { tr("checker.original_kept") }
+    /// "Search exams"
+    public var checkerSearch: String { tr("checker.search") }
+    /// "Check a file"
+    public var checkerTitle: String { tr("checker.title") }
+    /// "What is this file?"
+    public var checkerWhat: String { tr("checker.what") }
+    /// "Which exam is it for?"
+    public var checkerWhich: String { tr("checker.which") }
     /// "Back"
     public var commonBack: String { tr("common.back") }
     /// "Cancel"
@@ -282,6 +328,8 @@ public struct Strings: Sendable {
     public var flowToggleWhiteBg: String { tr("flow.toggle_white_bg") }
     /// "All"
     public var homeCategoryAll: String { tr("home.category_all") }
+    /// "Already have a file? Check it."
+    public var homeCheckFile: String { tr("home.check_file") }
     /// "Not listed? Use Custom size."
     public var homeEmptyHint: String { tr("home.empty_hint") }
     /// "Check a photo, signature or PDF before you upload it."

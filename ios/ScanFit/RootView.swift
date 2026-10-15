@@ -1,3 +1,4 @@
+import Checker
 import DesignSystem
 import Custom
 import Exams
@@ -69,6 +70,7 @@ struct RootView: View {
                     .navigationDestination(for: CustomSizeRoute.self) { _ in
                         customSize(strings: strings) { homePath.append(FlowRoute(custom: $0)) }
                     }
+                    .navigationDestination(for: CheckerRoute.self) { _ in checker(strings: strings) }
             }
             .tabItem { Label(strings.tabHome, systemImage: "house") }
             .tag(Tab.home)
@@ -87,6 +89,7 @@ struct RootView: View {
                     .navigationDestination(for: CustomSizeRoute.self) { _ in
                         customSize(strings: strings) { toolsPath.append(FlowRoute(custom: $0)) }
                     }
+                    .navigationDestination(for: CheckerRoute.self) { _ in checker(strings: strings) }
                     .navigationDestination(for: FlowRoute.self) { route in
                         flow(route, strings: strings) {
                             if !toolsPath.isEmpty { toolsPath.removeLast() }
@@ -112,6 +115,14 @@ struct RootView: View {
     /// The Custom size form (ALGORITHMS 11); Continue opens the photo or ink flow for the size on the same stack.
     private func customSize(strings: Strings, open: @escaping (CustomSize) -> Void) -> some View {
         CustomView(model: CustomViewModel(preferences: container.preferences), strings: strings, onContinue: open)
+    }
+
+    /// The pre-submit Checker (ALGORITHMS 12): a file the user already has, against the exam slot they choose.
+    private func checker(strings: Strings) -> some View {
+        CheckerView(
+            model: CheckerViewModel(preferences: container.preferences) { await container.trustedBundle() },
+            strings: strings
+        )
     }
 
     /// The photo flow for photo slots, the ink flow for everything else the exam screen lets the user open.

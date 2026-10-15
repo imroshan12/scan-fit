@@ -1,7 +1,7 @@
 # HANDOFF.md — where work stopped (read this first when picking the project up)
 
-Last updated: **2026-10-13** (evening). Current phase: **Phase 2 — Core flows** (docs/ROADMAP.md). Latest commit:
-`6334124 Bug fixes and UI updates` (Custom size + thumb fix). **Uncommitted:** Share and Save all (§4 first entry).
+Last updated: **2026-10-15**. Current phase: **Phase 2 — Core flows** (docs/ROADMAP.md). Latest commit:
+`84bc42a icon and project changes` (includes Share and Save all). **Uncommitted:** the Checker (§4 first entry).
 The user commits; a session never runs `git add/commit/push`.
 
 ## 1. State in one screen
@@ -17,11 +17,15 @@ The user commits; a session never runs `git add/commit/push`.
 | Review                                       | Built on both apps: match note (2026-10-05), Before/After + hold-to-compare and output-derived KB/dimensions/JPG chips (2026-10-06). No Fix button in exam flows (decision, §2). Gesture/accessibility device QA remains open.                                                                 |
 | Custom size                                  | Built on both apps (2026-10-13): ALGORITHMS §11, a `FlowTarget` runs the same photo/ink flows for any px/cm/KB size. Form with recent sizes, from Tools and Home. JPG only. |
 | Thumb cleanup                                | Rewritten 2026-10-13 (user report: details cleared). Paper-only background, linear stretch, box-centred square; 3 `thumb_preservation_cases`. Device check with a real inked thumb open. |
-| My Kit, Checker                              | Kit browses retained drafts (2026-10-06); originals/history and the Checker not started.                                                                                                                                                                                                                                                                                   |
+| Checker                                      | Built on both apps (2026-10-15): ALGORITHMS §12. Pick a file (gallery/Files, image or PDF) → its own problems → kind chips → exam list → per-slot verdict → "Make it fit" refits a verified copy; Save (records Saved) and Share. From Tools and Home. Hand-checked on the iPhone 11 Pro Max simulator. |
+| My Kit                                       | Kit browses retained drafts (2026-10-06); cleaned originals and export history not started. |
 | Screenshot tests                             | Removed for good (user decision 2026-10-03). Don't add them back (CLAUDE.md Definition of done).                                                                                                                                                                                               |
 
-Gates last run (2026-10-13): Android `./gradlew spotlessCheck detekt testDebugUnitTest :core:match:test :core:model:test lint
-:app:assembleDebug` green (332 unit tests). iOS strict SwiftLint, full Core and Features SwiftPM suites, app tests on the iPhone 17
+Gates last run (2026-10-15): Android `./gradlew spotlessCheck detekt testDebugUnitTest :core:match:test :core:model:test lint
+:app:assembleDebug` green (352 unit tests). iOS strict SwiftLint, full Core and Features SwiftPM suites, app tests on the
+iPhone 17 simulator and a build on the iPhone 11 Pro Max simulator; spec 61 tool tests, `gen_strings.py --check`, presets
+re-signed with the dev key and verified. Both platforms pass all 10 `checker_cases`.
+Previous gates (2026-10-13): Android 332 unit tests. iOS strict SwiftLint, full Core and Features SwiftPM suites, app tests on the iPhone 17
 simulator and a build on the iPhone 11 Pro Max simulator; spec 59 tool tests and `gen_strings.py --check`. Both platforms pass
 all 18 `custom_size_cases` and 3 `thumb_preservation_cases`. Coverage was not re-measured this session.
 Earlier gates (2026-10-06): Android 315 unit tests. iOS: strict SwiftLint **from ios/**, full Core (166 tests) and Features (90 tests) SwiftPM regressions, DesignSystemTests
@@ -110,6 +114,30 @@ drafted with `TODO_HI:`. The spec suite still emits pre-existing unclosed-file `
   device is still needed with the updated build. Files saved before the fix are not retroactively marked; save again to verify.
 
 ## 4. What changed (by area, for review)
+
+### Checker (2026-10-15)
+
+- **Spec:** ALGORITHMS §12 (input, "What is this file?", "Which exam is it for?", status rules, Make it fit / Save / Share /
+  handwriting tick / original never modified). `spec/tools/checker.py` writes 10 `checker_cases`; `test_tools.py` checks them.
+  Strings `checker.*` and `home.check_file` in en + hi (Hindi drafted `TODO_HI:`).
+- **Engine (both):** `CheckerStatus.of(format, slot, verdict, unverified)` → ok / likely_ok / fix / no_fix / unknown, and
+  `CheckerTargets.of(bundle, kind, query)` → every active (exam, slot) of a kind, popular first or in search order (NEET UG
+  lists twice for fingers). Android `core/match/.../Checker.kt`, iOS `Packages/Core/Sources/Match/Checker.swift`.
+- **Android:** `:feature:checker` (`CheckerViewModel`, `CheckerScreen`, `CheckerResult`, `CheckerTools` with a `@CheckerWork`
+  dispatcher, previews in 4 states × light/dark/large font/Hindi). Route `checker` from Tools and Home (`HomeLinks`).
+  7 VM tests (`FakeCheckerTools`).
+- **iOS:** `Checker` feature (`CheckerViewModel`, `CheckerView`, `CheckerTargetSection`, `CheckerKindChips` with a small
+  `WrappingLayout`, `CheckerTools`, previews). `CheckerRoute` (ScanModel) pushed from Tools and Home; `RootView` maps it in both
+  stacks; `project.yml` adds the product. 6 VM tests (`swift test --filter CheckerViewModel`); the handwriting gate was
+  mutation-checked (removing it fails 3 expectations).
+- **Hand check (iPhone 11 Pro Max simulator):** Tools → Checker and Home → "Already have a file? Check it." → gallery →
+  `signature_paper_shadow.jpg` (605 KB, 2400×1400) → Signature → IBPS PO → "Too big" + "shape doesn't match" → Make it fit →
+  15 KB 273×117 (upscaled to reach the 10 KB minimum, §1.4), "Meets the IBPS PO / MT rules" → Save to Files → Saved → Done
+  returns to the exam list. Found and fixed during the check: content was centred (now leading) and the kind menu had no
+  label with nothing chosen (now wrapping chips, like Android's FilterChips).
+- **Decisions (mine, revisit with the user):** one Fix that refits the copy to the chosen slot, not per-issue buttons; no PDF
+  fixes yet; the kind is always chosen by the user; the refit uses the plain fit pipeline (no ink cleanup, so a shadowed
+  paper background stays — the ink flow is the way to clean a signature). No `checker_run` analytics event yet.
 
 ### Share and Save all (2026-10-13, evening)
 
@@ -288,7 +316,9 @@ drafted with `TODO_HI:`. The spec suite still emits pre-existing unclosed-file `
 7. **Thumb with a real print:** the user's own thumb photo through IBPS and a Custom size; compare Before/After.
 8. **Share / Save all device QA:** Android 10+ Save all + Open folder; Android share to WhatsApp/Drive; iOS "Keep both"
    in a folder that already has the files; a partial failure (e.g. full storage) and Retry.
-9. Next features: My Kit cleaned originals/export history, Custom and Checker (reuse `MatchNote`; add Fix there). Verify UPSC ESE / CMS presets
+9. **Checker device QA:** Android end to end on a phone (Files picker with a PDF, CreateDocument on Android 9, share); iOS
+   with a HEIC from Photos and a file from iCloud Drive; Hindi at the largest font (chips wrap).
+10. Next features: My Kit cleaned originals/export history; PDF tools (the Checker's PDF slots point there). Verify UPSC ESE / CMS presets
    only with official sources and user direction.
 
 ## 6. Testing tips that cost time to learn

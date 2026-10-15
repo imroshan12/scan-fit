@@ -13,6 +13,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import gen_analytics  # noqa: E402
 import gen_strings  # noqa: E402
 import gen_tokens  # noqa: E402
+import checker  # noqa: E402
 import custom_size  # noqa: E402
 import match_note  # noqa: E402
 import photo_crop  # noqa: E402
@@ -269,6 +270,13 @@ class CasesFile(unittest.TestCase):
             self.assertEqual(custom_size.expected(c), c["expect"], c["id"])
             if c["expect"].get("text"):
                 self.assertEqual(custom_size.text(custom_size.parse(c["expect"]["text"])), c["expect"]["text"], c["id"])
+
+    def test_checker_expectations_match_the_reference(self):
+        """checker_cases are computed by checker.py: a hand edit that drifts from ALGORITHMS 12 fails here."""
+        cases = self.cases["checker_cases"]
+        self.assertGreaterEqual(len(cases), 8)
+        for c in cases:
+            self.assertEqual(checker.status(c), c["expect"], c["id"])
 
     def test_save_all_expectations_match_the_reference(self):
         """save_all_cases are computed by save_all.py: a hand edit that drifts from ALGORITHMS 1.6.2 fails here."""

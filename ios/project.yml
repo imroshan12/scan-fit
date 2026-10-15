@@ -87,6 +87,8 @@ targets:
             - package: Features
               product: Custom
             - package: Features
+              product: Checker
+            - package: Features
               product: Settings
         postBuildScripts:
             - name: Embed signed presets

@@ -1255,6 +1255,18 @@
 		{"id": "not_started_rows_are_ignored", "_why": "only Ready rows take part", "documents": ["photo", "signature", "left_thumb", "handwritten_declaration"], "ready": [], "saved": ["signature"], "handwriting_confirmed": true, "expect": {"included": [], "held": []}},
 		{"id": "only_a_held_signature", "_why": "nothing to save: the action is hidden", "documents": ["photo", "signature"], "ready": ["signature"], "saved": [], "handwriting_confirmed": false, "expect": {"included": [], "held": ["signature"]}}
 	],
+	"checker_cases": [
+		{"id": "exact_is_ok", "_why": "a verified slot accepts it", "format": "jpeg", "verdict": "exact", "unverified": false, "slot_formats": ["jpg"], "expect": "ok"},
+		{"id": "accepted_unverified_is_likely_ok", "_why": "rule 6: never valid for a low-confidence exam", "format": "jpeg", "verdict": "accepted", "unverified": true, "slot_formats": ["jpg"], "expect": "likely_ok"},
+		{"id": "too_big_jpeg_can_be_fixed", "_why": "a near miss on size is refitted", "format": "jpeg", "verdict": "near_miss", "unverified": false, "slot_formats": ["jpg"], "expect": "fix"},
+		{"id": "wrong_dimensions_can_be_fixed", "_why": "a dims failure is not a near miss, but a refit crops or pads it", "format": "jpeg", "verdict": "no", "unverified": false, "slot_formats": ["jpg"], "expect": "fix"},
+		{"id": "png_converts_to_jpg", "_why": "a PNG decodes and is re-encoded", "format": "png", "verdict": "near_miss", "unverified": false, "slot_formats": ["jpg"], "expect": "fix"},
+		{"id": "heic_converts_to_jpg", "_why": "HEIC decodes on both platforms", "format": "heic", "verdict": "no", "unverified": false, "slot_formats": ["jpg"], "expect": "fix"},
+		{"id": "pdf_file_cannot_be_refitted", "_why": "PDF tools come with section 6", "format": "pdf", "verdict": "no", "unverified": false, "slot_formats": ["jpg"], "expect": "no_fix"},
+		{"id": "slot_wants_a_pdf", "_why": "an image for a PDF-only slot is not fixed here", "format": "jpeg", "verdict": "no", "unverified": false, "slot_formats": ["pdf"], "expect": "no_fix"},
+		{"id": "unknown_file", "_why": "a file we cannot decode", "format": "unknown", "verdict": "no", "unverified": false, "slot_formats": ["jpg"], "expect": "no_fix"},
+		{"id": "unknown_spec", "_why": "no limits: nothing to fit to", "format": "jpeg", "verdict": "unknown", "unverified": false, "slot_formats": ["jpg"], "expect": "unknown"}
+	],
 	"match_note_cases": [
 		{
 			"id": "preview_takes_three_and_counts_the_rest",

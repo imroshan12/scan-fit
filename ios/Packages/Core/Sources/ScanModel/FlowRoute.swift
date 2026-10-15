@@ -69,3 +69,8 @@ public struct FlowRoute: Hashable, Sendable {
 public struct CustomSizeRoute: Hashable, Sendable {
     public init() {}
 }
+
+/// Navigation value for the pre-submit Checker (ALGORITHMS 12), pushed from Home or Tools.
+public struct CheckerRoute: Hashable, Sendable {
+    public init() {}
+}

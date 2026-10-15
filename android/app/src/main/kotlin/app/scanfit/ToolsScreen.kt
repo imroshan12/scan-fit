@@ -32,38 +32,43 @@ import app.scanfit.core.designsystem.theme.ScanFitType
 @Composable
 fun ToolsScreen(
     onCustomSize: () -> Unit,
+    onChecker: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-        // Custom size is the first tool that has landed (ALGORITHMS 11); the rest are still listed as coming soon.
-        Row(
-            modifier =
-            Modifier
-                .fillMaxWidth()
-                .clickable(onClick = onCustomSize)
-                .heightIn(min = ScanFitSpacing.minTouchTarget)
-                .padding(horizontal = ScanFitSpacing.screenMargin, vertical = ScanFitSpacing.md)
-                .semantics(mergeDescendants = true) {},
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Text(
-                stringResource(R.string.tools_custom_resize),
-                style = ScanFitType.body,
-                color = MaterialTheme.colorScheme.onBackground,
-            )
-            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
-        }
-        HorizontalDivider()
+        // Custom size (ALGORITHMS 11) and the Checker (ALGORITHMS 12) have landed; the rest are still coming soon.
+        ToolRow(R.string.tools_custom_resize, onCustomSize)
+        ToolRow(R.string.tools_checker, onChecker)
         ComingSoon()
     }
+}
+
+@Composable
+private fun ToolRow(
+    title: Int,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier =
+        Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .heightIn(min = ScanFitSpacing.minTouchTarget)
+            .padding(horizontal = ScanFitSpacing.screenMargin, vertical = ScanFitSpacing.md)
+            .semantics(mergeDescendants = true) {},
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(stringResource(title), style = ScanFitType.body, color = MaterialTheme.colorScheme.onBackground)
+        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
+    }
+    HorizontalDivider()
 }
 
 @Composable
 private fun ComingSoon() {
     val tools =
         listOf(
-            R.string.tools_checker,
             R.string.tools_pdf,
             R.string.tools_scan,
             R.string.tools_guide_sheet,

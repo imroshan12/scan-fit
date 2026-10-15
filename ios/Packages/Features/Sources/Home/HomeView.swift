@@ -49,7 +49,10 @@ public struct HomeView: View {
                 Section(strings.homeSectionPopular) { rows(model.popular, prefix: "popular") }
             }
             Section { status }.listRowSeparator(.hidden)
-            Section { customSizeLink }
+            Section {
+                customSizeLink
+                checkerLink
+            }
         } else if model.presets == .loading || model.presets == .failed {
             // Nothing to search until the signed presets are verified: say that, never "no matches".
             Section { status }.listRowSeparator(.hidden)
@@ -59,6 +62,7 @@ public struct HomeView: View {
                 .foregroundStyle(ScanFitColor.onSurfaceVariant)
                 .listRowSeparator(.hidden)
             customSizeLink
+            checkerLink
         } else {
             rows(model.results, prefix: "result")
         }
@@ -68,6 +72,14 @@ public struct HomeView: View {
     private var customSizeLink: some View {
         NavigationLink(value: CustomSizeRoute()) {
             Text(strings.homeEmptyHint).scanFitText(.body).foregroundStyle(ScanFitColor.primary)
+                .frame(minHeight: ScanFitSpacing.minTouchTarget, alignment: .leading)
+        }
+    }
+
+    /// "Already have a file? Check it." (UI_UX §3 Home): the pre-submit Checker (ALGORITHMS 12).
+    private var checkerLink: some View {
+        NavigationLink(value: CheckerRoute()) {
+            Text(strings.homeCheckFile).scanFitText(.body).foregroundStyle(ScanFitColor.primary)
                 .frame(minHeight: ScanFitSpacing.minTouchTarget, alignment: .leading)
         }
     }

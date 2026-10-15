@@ -42,6 +42,7 @@ dependencies {
     implementation(project(":feature:flow-ink"))
     implementation(project(":feature:kit"))
     implementation(project(":feature:custom"))
+    implementation(project(":feature:checker"))
     implementation(project(":feature:settings"))
 
     implementation(libs.androidx.core.ktx)

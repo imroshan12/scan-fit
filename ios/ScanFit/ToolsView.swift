@@ -2,7 +2,8 @@ import DesignSystem
 import ScanModel
 import SwiftUI
 
-/// Tools tab. Custom size has landed (ALGORITHMS 11); the other tools are listed until their features land.
+/// Tools tab. Custom size (ALGORITHMS 11) and the Checker (ALGORITHMS 12) have landed; the other tools are listed
+/// until their features land.
 /// Navigation to each feature is composed in the app target because features never depend on each other
 /// (ARCHITECTURE §3), so the stack and its destinations live in `RootView`.
 struct ToolsView: View {
@@ -10,7 +11,6 @@ struct ToolsView: View {
 
     private var comingSoon: [(title: String, symbol: String)] {
         [
-            (strings.toolsChecker, "checkmark.shield"),
             (strings.toolsPdf, "doc.richtext"),
             (strings.toolsScan, "doc.viewfinder"),
             (strings.toolsGuideSheet, "printer"),
@@ -23,6 +23,7 @@ struct ToolsView: View {
             NavigationLink(value: CustomSizeRoute()) {
                 row(strings.toolsCustomResize, "arrow.up.left.and.down.right.magnifyingglass")
             }
+            NavigationLink(value: CheckerRoute()) { row(strings.toolsChecker, "checkmark.shield") }
             ForEach(comingSoon, id: \.title) { tool in
                 HStack(spacing: ScanFitSpacing.md) {
                     row(tool.title, tool.symbol)
