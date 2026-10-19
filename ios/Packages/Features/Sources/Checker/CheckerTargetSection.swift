@@ -1,6 +1,7 @@
 import DesignSystem
 import Imaging
 import Match
+import PDF
 import ScanModel
 import SwiftUI
 
@@ -87,6 +88,9 @@ struct CheckerTargetSection: View {
                 ProgressView()
                 Text(strings.checkerFixing).scanFitText(.body)
             }
+        case let .pdfFailed(error):
+            let max = Int(result.target.slot.sizeKb.max ?? 0)
+            NoticeCard(text: Self.pdfErrorText(error, max: max, strings: strings), kind: .error)
         case let .failed(error):
             let max = Int(result.target.slot.sizeKb.max ?? 0)
             NoticeCard(
@@ -96,8 +100,18 @@ struct CheckerTargetSection: View {
             )
         case let .ready(copy):
             Text(strings.checkerFixedHeading).scanFitText(.headline).accessibilityAddTraits(.isHeader)
-            BeforeAfterImage(before: nil, after: copy.bytes, strings: strings)
-            ReviewChecksRow(kb: copy.kb, width: copy.width, height: copy.height, checks: copy.checks, strings: strings)
+            if let pdf = copy.pdf {
+                // A PDF (ALGORITHMS 6.6): its first page and `182 KB · 1 page · PDF`.
+                RasterImage(raster: pdf.preview, description: strings.pdfPreview)
+                    .frame(maxWidth: .infinity, maxHeight: 200)
+                Text(strings.pdfHistoryRow(kb: copy.kb, pages: strings.pdfPages(count: pdf.pages)))
+                    .scanFitText(.figure)
+            } else {
+                BeforeAfterImage(before: nil, after: copy.bytes, strings: strings)
+                ReviewChecksRow(
+                    kb: copy.kb, width: copy.width, height: copy.height, checks: copy.checks, strings: strings
+                )
+            }
             SlotVerdict(
                 meetsRules: copy.meetsRules, examName: result.target.exam.name,
                 unverified: result.target.exam.isUnverified, custom: false, strings: strings
@@ -115,6 +129,17 @@ struct CheckerTargetSection: View {
             }
             ExportStatusView(state: model.exportState, strings: strings)
             if model.share == .failed { NoticeCard(text: strings.exportShareFailed, kind: .error) }
+        }
+    }
+
+    static func pdfErrorText(_ error: PdfError, max: Int, strings: Strings) -> String {
+        switch error {
+        case .encrypted: strings.pdfErrorEncrypted
+        case .cannotReach: strings.pdfErrorCannotReach(max: max)
+        case .unreadable, .noPages: strings.pdfErrorUnreadable
+        case .tooManyPages: strings.pdfErrorTooMany
+        case .unknownLimit: strings.pdfErrorUnknownLimit
+        case .failed: strings.pdfErrorFailed
         }
     }
 }

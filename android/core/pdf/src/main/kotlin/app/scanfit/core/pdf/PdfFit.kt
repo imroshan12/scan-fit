@@ -70,6 +70,12 @@ data class PdfChoice(
 /** The fit selection of ALGORITHMS 9.10 (`pdf_fit_cases`). Pure. */
 object PdfFit {
     val QUALITY_GRID = listOf(85, 75, 65, 55, 45, 40)
+
+    /** The last rung (100 DPI) only: iOS ImageIO compresses less than libjpeg at equal quality (ALGORITHMS 9.10). */
+    private val LOW_TAIL = listOf(35, 30, 25, 20)
+
+    /** The qualities tried at [dpi], highest first. */
+    fun grid(dpi: Int): List<Int> = if (dpi == PdfLayout.DPI_LADDER.last()) QUALITY_GRID + LOW_TAIL else QUALITY_GRID
     const val MAX_PAGES = 20
     private const val KB = 1024.0
     private const val TOP_DPI = 200
@@ -86,7 +92,7 @@ object PdfFit {
         return null
     }
 
-    /** The choice at one DPI, or `null` when even quality 40 is over `goal.hi`. */
+    /** The choice at one DPI, or `null` when even its lowest quality is over `goal.hi`. */
     fun choose(
         window: PdfWindow,
         dpi: Int,
@@ -103,6 +109,7 @@ object PdfFit {
                 dpi == TOP_DPI -> PdfStrategy.QUALITY
                 else -> PdfStrategy.LOWER_DPI
             }
-        return PdfChoice(dpi, QUALITY_GRID[index], if (padded) roundHalfUp(window.target * KB).toLong() else null, strategy)
+        val padTo = if (padded) roundHalfUp(window.target * KB).toLong() else null
+        return PdfChoice(dpi, grid(dpi)[index], padTo, strategy)
     }
 }

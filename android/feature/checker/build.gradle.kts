@@ -7,6 +7,7 @@ dependencies {
     implementation(project(":core:presets"))
     implementation(project(":core:imaging"))
     implementation(project(":core:match"))
+    implementation(project(":core:pdf"))
     implementation(libs.androidx.activity.compose)
     testImplementation(project(":core:testing"))
 }

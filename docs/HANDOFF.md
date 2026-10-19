@@ -1,8 +1,8 @@
 # HANDOFF.md — where work stopped (read this first when picking the project up)
 
-Last updated: **2026-10-15** (evening). Current phase: **Phase 2 — Core flows** (docs/ROADMAP.md). Latest commit:
-`6728819 Fix dismiss bug` (includes the Checker). **Uncommitted:** My Kit originals, "Use for exam…" and export history
-(§4 first entry).
+Last updated: **2026-10-20**. Current phase: **Phase 3 — PDF, scan, guide sheet** (Phase 2 device QA still open, docs/ROADMAP.md).
+Latest commit: `b7513ef New changes` (My Kit, plus the first half of the PDF tools). **Uncommitted:** the rest of the PDF
+tools on both apps (§4 first entry).
 The user commits; a session never runs `git add/commit/push`.
 
 ## 1. State in one screen
@@ -20,9 +20,17 @@ The user commits; a session never runs `git add/commit/push`.
 | Thumb cleanup                                | Rewritten 2026-10-13 (user report: details cleared). Paper-only background, linear stretch, box-centred square; 3 `thumb_preservation_cases`. Device check with a real inked thumb open. |
 | Checker                                      | Built on both apps (2026-10-15): ALGORITHMS §12. Pick a file (gallery/Files, image or PDF) → its own problems → kind chips → exam list → per-slot verdict → "Make it fit" refits a verified copy; Save (records Saved) and Share. From Tools and Home. Hand-checked on the iPhone 11 Pro Max simulator. |
 | My Kit                                       | Built on both apps (2026-10-15): ALGORITHMS §13. Three views (Prepared · Originals · History). Save to My Kit on new photo/ink reviews; "Use for exam…" starts a slot's flow from an original; every verified export listed with 30-day re-share; Clear history. Hand-checked on the iPhone 11 Pro Max simulator (signature → Save to My Kit → Originals → Use for exam → IBPS save → History → Share); Android not walked by hand. |
+| PDF tools                                    | Built on both apps (2026-10-15/20): ALGORITHMS §6 + §9.10. Tools → Images to PDF · Compress · Merge · ID card; an exam's PDF row opens the same PDF maker (records Saved); Checker "Make it fit" makes a PDF for PDF slots; PDF exports join My Kit History. Grayscale + cleanup on by default, Tools need a Max KB (user decisions). Not run by hand on a simulator or device yet. |
 | Screenshot tests                             | Removed for good (user decision 2026-10-03). Don't add them back (CLAUDE.md Definition of done).                                                                                                                                                                                               |
 
-Gates last run (2026-10-15, evening, My Kit): Android `./gradlew spotlessCheck detekt testDebugUnitTest :core:match:test
+Gates last run (2026-10-20, PDF tools): Android `./gradlew spotlessCheck detekt testDebugUnitTest :core:match:test
+:core:model:test lint :app:assembleDebug` green (427 unit tests, lint clean). iOS strict SwiftLint (0), Core SwiftPM (all
+suites, incl. `PDFTests`: every `pdf_*` case through the real CoreGraphics renderer, ~90 s in debug) and Features SwiftPM
+(145 tests) with no warnings, app tests on the iPhone 17 simulator (TEST SUCCEEDED). Spec: `test_tools.py` (66),
+`build_presets.py --sign-dev/--verify`, `gen_strings.py --check`, `gen_tokens.py --check`. Not done: the iPhone 11 Pro Max
+build/hand walk and any device check. Seen once: `InkFlowViewModel` "share stages exactly the review bytes…" failed in a
+full Features run and passed on re-run (shared share-staging folder across parallel suites; pre-existing, not PDF code).
+Previous gates (2026-10-15, evening, My Kit): Android `./gradlew spotlessCheck detekt testDebugUnitTest :core:match:test
 :core:model:test lint :app:assembleDebug` green (401 unit tests, lint 0 issues). iOS strict SwiftLint (0), Core (200) and
 Features (131) SwiftPM suites with no warnings, app tests on the iPhone 17 simulator, a warning-free build on the iPhone 11
 Pro Max simulator plus the hand walk in §1. Spec: `test_tools.py`, `build_presets.py`, `gen_strings.py --check`,
@@ -44,6 +52,12 @@ Device/provider QA remains open. New `review.*`, `draft.*` and `kit.*` Hindi mes
 drafted with `TODO_HI:`. The spec suite still emits pre-existing unclosed-file `ResourceWarning`s in `exam_search.py`.
 
 ## 2. Decisions made with the user (not obvious from the code)
+
+- **PDF tools (user, 2026-10-15, question cards):** an exam's PDF row opens a PDF maker for that slot; certificate PDFs are
+  grayscale + cleanup by default (both toggles); Tools require a Max KB (quick picks 100/200/300/500, default 200); merge
+  and compress rasterise pages (text not selectable) so both apps hit a KB target without a PDF library. My calls: the app
+  writes its own image PDF (byte-identical on both apps); a Tools limit (no minimum) never pads; a fixed quality grid,
+  extended to q20 at 100 DPI because ImageIO compresses less than libjpeg; at most 20 pages; no Pro limits until Phase 4.
 
 - **Low-end profile:** Android 4 GB RAM + API 29; iPhone 11 Pro Max on iOS 17 (the app minimum). CI uses an iPhone 11 Pro Max simulator.
 - **"Show unverified exams" is ON by default** (ALGORITHMS §10). Unverified exams are listed with the "Unverified — check notice"
@@ -138,6 +152,42 @@ drafted with `TODO_HI:`. The spec suite still emits pre-existing unclosed-file `
   device is still needed with the updated build. Files saved before the fix are not retroactively marked; save again to verify.
 
 ## 4. What changed (by area, for review)
+
+### PDF tools (2026-10-15 → 2026-10-20)
+
+- **Spec:** ALGORITHMS §6 rewritten (6.1 jobs/sources/options, 6.2 preparing pictures, 6.3 fit, 6.4 writer, 6.5 verify,
+  6.6 screens/names/Checker) and §9.10 numbers (layout, page cleanup, `num`, writer bytes, pad, fit, job checks); §9.8 PDF
+  names; §12 rule 4 (PDF slots are fixable); §13.3 PDF history entries (`format`, `pages`, `exports/<id>.pdf`). Schema doc
+  types `document` and `id_card` (Tools). `spec/tools/pdf.py` (reference, `--write-cases`, `--write-fixtures`), 4 sample PDFs
+  in `spec/fixtures/pdfs/`, new `pdf_layout_cases` (11), `pdf_writer_cases` (6, sha256), `pdf_fit_cases` (10),
+  `pdf_job_cases` (13), `page_cleanup_cases` (2), `pdf_name_cases` (5), 3 new `checker_cases`. ~62 `pdf.*`/`tools.pdf_*`
+  strings (Hindi `TODO_HI:`); `checker.needs_pdf` reworded. `gen_strings.py` also rewrote the iOS String Catalog in its own
+  format (the committed one had been reformatted by Xcode); that big diff is the generator's output.
+- **Engine (both):** `PdfLayout`, `PdfWriter` (byte-identical to Python: sha256 cases), `PdfFit`, `PdfJob`, `PdfEngine`
+  (prepares pictures once as q95 JPEGs, measures each DPI with one page raster at a time, final pass, pad), `PageCleanup`
+  (Imaging; reuses the thumb's paper tone, now `InkCleanup.paperTone`). Renderers: Android `AndroidPdfOpener`
+  (`PdfRenderer` over a private temp copy), iOS `CGPdfOpener` (CoreGraphics, handles `/Rotate`).
+- **Export/Kit (both):** `ExportRequest.pdf: PdfExport?` (+ MIME / `pdfFileName` on Android), `verifiesPdf`
+  (§6.5), Kit `ExportRecord.pages`/`copyName`, PDF copies `exports/<id>.pdf`, sweep by file name, old entries load as JPEG.
+  Android `ShareEffect` sends `application/pdf` for `.pdf` names. `TestPdf` in `:core:testing` / `TestSupport`.
+- **Android UI:** `FreeCropEditor` moved from `:feature:flow-ink` to the design system (designsystem now `api(:core:imaging)`).
+  `:feature:pdf` (`PdfMakerTools` + Hilt, `PdfMakerViewModel`, `PdfMakerScreen`, `PdfMakerSections`, `PdfResultSection`,
+  `PdfActions`, previews in 7 states × light/dark/largest font/Hindi). Routes `pdf/{tool}` (Tools rows) and
+  `exam/{examId}/pdf/{docType}` (every non-photo/ink exam row). Checker: `CheckerTools.makePdf`, `FixState.Ready.pdf`,
+  `Failed.pdfError`, PDF preview + facts in the fixed copy. Kit History PDF row.
+- **iOS UI:** DesignSystem `FreeCropEditor` (InkCropView now uses it) and `RasterImage`; ScanModel `PdfRoute`,
+  `DocSpec.pdf(...)`. `PDFTools` (`PdfMakerTools`, `PdfMakerViewModel`, `PdfMakerView`, `PdfMakerSections`, previews in 7
+  states). `ExamView(pdfMaker:)` links PDF slots; `ToolsView` PDF section; `RootView` maps `PdfRoute` in Home and Tools;
+  `project.yml` + xcodegen. Checker PDF fix (`FixState.pdfFailed`, `PdfFix`). Kit History PDF row.
+- **Tests:** Android `PdfConformanceTest` (layout, writer sha256, fit, num), `PdfJobConformanceTest` (all job cases, the
+  exit-gate compressions, with `FixturePdfOpener`), `PdfEngineTest` (9), `PageCleanupConformanceTest`, PDF names in
+  `ExportNamingTest`, PDF verify/Kit tests in `:core:data`, `PdfMakerViewModelTest` (14), 2 new Checker tests. iOS
+  `PDFTests` (conformance 5, job cases with the real CGPDF renderer, engine 10), `PageCleanupConformanceTests`,
+  `PdfExportTests` (3), `PdfMakerViewModelTests` (12), 2 new Checker tests.
+- **Found while testing:** a Tools PDF with no minimum was padded to the midpoint (fixed: no minimum, no pad); iOS could
+  not reach 100 KB for a dense scan where Android could (ImageIO's quality scale; fixed by the q35–20 tail at 100 DPI); the
+  text-only fixture pads on Android (fixture renderer draws no text) but not on iOS (real text), so that job case no
+  longer pins the strategy.
 
 ### My Kit: originals, "Use for exam…", export history (2026-10-15, evening)
 
@@ -372,7 +422,12 @@ drafted with `TODO_HI:`. The spec suite still emits pre-existing unclosed-file `
    "Use for exam…" into another exam (photo face check runs; ink opens at the crop); Done returns to the original; Delete;
    a full Kit (30). History: save, Save all, Checker save and Custom size each add a row; Share from history; Clear history.
    Hindi at the largest font (segmented labels, history rows). iOS simulator walk done (§1); Android and real devices not yet.
-11. Next features: PDF tools (the Checker's PDF slots point there, Phase 2 exit gate needs the JEE class 10 PDF). Verify UPSC ESE / CMS presets
+11. **PDF tools device QA (new):** Android on a phone first (Robolectric cannot run `PdfRenderer`, so the real renderer is
+   untested): compress a real certificate PDF (also one with `/Rotate`, one password-protected), merge two PDFs, images →
+   PDF with crop/rotate, ID card front/back, JEE Main class 10 row → Save → row Saved → History share. iOS the same on the
+   iPhone 11 Pro Max simulator and a device. Time a 3-page compress on the low-end profiles (the iOS debug job suite takes
+   ~90 s on a Mac; measure release before optimising). Hindi at the largest font (add buttons wrap).
+12. Next features: Scan entry, guide sheet (Phase 3). Verify UPSC ESE / CMS presets
    only with official sources and user direction.
 
 ## 6. Testing tips that cost time to learn

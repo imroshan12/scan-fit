@@ -20,8 +20,8 @@ possible, so design around it. "Spike" = time-boxed proof in Phase 0/1 before bu
 | Document scanning UI | ML Kit Document Scanner (Play services; no camera permission; auto-capture, crop, cleanup) | VisionKit `VNDocumentCameraViewController` | 🟢/🟡 | Android: needs Play services and **≥1.7 GB RAM**, otherwise returns UNSUPPORTED → fall back to CameraX capture + manual 4-corner crop (build this anyway for signature-on-paper) |
 | Live camera analysis (coach) | CameraX `ImageAnalysis` (`STRATEGY_KEEP_ONLY_LATEST`, 640×480) | `AVCaptureVideoDataOutput` + Vision sequence handler | 🟢 | Throttle to 10–15 fps analysed. Front camera |
 | Name/date strip text render | `Canvas` + `StaticLayout` | Core Graphics / `ImageRenderer` | 🟢 | Devanagari names render with system fonts |
-| PDF read/rasterize | `PdfRenderer` (framework) | PDFKit `PDFPage.thumbnail`/draw into `CGContext` | 🟢 | Encrypted PDFs: framework can't open → "remove password first" in v1 |
-| PDF write / merge | `PdfDocument` (Canvas pages) | `UIGraphicsPDFRenderer`, `PDFDocument.insert` | 🟢 | Output is image-based (fine for portals) |
+| PDF read/rasterize | `PdfRenderer` (framework) | CoreGraphics `CGPDFDocument` drawn into a `CGContext` | 🟢 | Encrypted PDFs: refused by the Inspector's `/Encrypt` flag → "remove password first" in v1. Robolectric cannot run `PdfRenderer`: JVM tests use a fixture renderer, device QA covers the real one |
+| PDF write / merge | **Own ~200-line writer on both apps** (ALGORITHMS 9.10), not `PdfDocument`/`UIGraphicsPDFRenderer` | same | 🟢 | Output is image-based (fine for portals). Built 2026-10-15: exact size control (`PdfDocument` re-encodes images losslessly, far too big), byte-identical output on both apps, and a padding object for portal minimums. No dependency |
 | PDF password protect (v1.1) | needs a library: **PdfBox-Android** (Apache-2.0) | PDFKit `write(to:withOptions: [.userPasswordOption…])` | 🟡 | Adds ~3 MB on Android; v1.1 only |
 | OCR (v1.1 search, Aadhaar mask) | ML Kit Text Recognition v2 (Latin + **Devanagari** bundled models) | Vision `VNRecognizeTextRequest` | 🟡 | **Spike:** confirm Vision's Hindi support on the minimum iOS version; if missing, Hindi search is Android-first |
 | Photo picking without permissions | Photo Picker (`PickVisualMedia`, backported via Play services) | `PhotosPicker` (out of process, no permission) | 🟢 | |
@@ -55,6 +55,9 @@ Size: about +8.6 MB to an arm64 download (3.2 MB faces, 5.4 MB segmentation, com
 15 MB budget (ARCHITECTURE §11). If the budget tightens, Play-services Subject Segmentation adds 0 MB but downloads its model on
 first use. iOS: Vision only (no dependency).
 **Removed in Phase 2:** Roborazzi and swift-snapshot-testing (screenshot tests dropped, docs/TESTING.md §1).
+**Phase 3 (PDF tools):** no new dependency. Android `PdfRenderer` + the app's own PDF writer; iOS CoreGraphics + the same
+writer. iOS ImageIO compresses less than libjpeg at an equal quality number, so the PDF quality grid continues to 20 at
+100 DPI (ALGORITHMS 9.10).
 **Tooling:** ktlint via Spotless, detekt, SwiftLint, SwiftFormat, fastlane, Gradle Play Publisher.
 Licence check in CI (no GPL/AGPL in the app binary).
 

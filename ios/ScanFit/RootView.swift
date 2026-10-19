@@ -5,6 +5,7 @@ import Exams
 import Home
 import Kit
 import InkFlow
+import PDFTools
 import PhotoFlow
 import Presets
 import ScanData
@@ -64,8 +65,12 @@ struct RootView: View {
                                 await container.trustedBundle()
                             },
                             strings: strings,
-                            openable: Self.photoFlowTypes.union(Self.inkFlowTypes)
+                            openable: Self.photoFlowTypes.union(Self.inkFlowTypes),
+                            pdfMaker: true
                         )
+                    }
+                    .navigationDestination(for: PdfRoute.self) { route in
+                        pdfMaker(route, strings: strings) { if !homePath.isEmpty { homePath.removeLast() } }
                     }
                     .navigationDestination(for: FlowRoute.self) { route in
                         flow(route, strings: strings) {
@@ -114,6 +119,9 @@ struct RootView: View {
                             if !toolsPath.isEmpty { toolsPath.removeLast() }
                         }
                     }
+                    .navigationDestination(for: PdfRoute.self) { route in
+                        pdfMaker(route, strings: strings) { if !toolsPath.isEmpty { toolsPath.removeLast() } }
+                    }
             }
             .tabItem { Label(strings.tabTools, systemImage: "wrench.and.screwdriver") }
             .tag(Tab.tools)
@@ -143,6 +151,17 @@ struct RootView: View {
                 await container.trustedBundle()
             },
             strings: strings
+        )
+    }
+
+    /// The PDF tools and an exam slot's PDF maker (ALGORITHMS 6); Done after a verified save leaves the screen.
+    private func pdfMaker(_ route: PdfRoute, strings: Strings, onDone: @escaping () -> Void) -> some View {
+        PdfMakerView(
+            model: PdfMakerViewModel(route: route, preferences: container.preferences, kit: container.kit) {
+                await container.trustedBundle()
+            },
+            strings: strings,
+            onDone: onDone
         )
     }
 

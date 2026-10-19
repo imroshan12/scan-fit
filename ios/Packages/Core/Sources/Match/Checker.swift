@@ -8,13 +8,20 @@ public enum CheckerStatus: String, Sendable, Equatable {
 
     private static let decodable: Set<DetectedFormat> = [.jpeg, .png, .webp, .heic]
 
+    /// `encrypted` is the Inspector's flag for a PDF: no PDF can be made from it (ALGORITHMS 6.1).
     public static func of(
-        _ format: DetectedFormat, slot: DocSpec, verdict: Verdict, unverified: Bool
+        _ format: DetectedFormat, slot: DocSpec, verdict: Verdict, unverified: Bool, encrypted: Bool = false
     ) -> CheckerStatus {
         if verdict == .unknown { return .unknown }
         if verdict == .exact || verdict == .accepted { return unverified ? .likelyOk : .ok }
         let takesJpeg = slot.formats.contains(.jpg) || slot.formats.contains(.jpeg)
-        return decodable.contains(format) && takesJpeg ? .fix : .noFix
+        if decodable.contains(format) && takesJpeg { return .fix }
+        return slot.formats.contains(.pdf) && pdfSource(format, encrypted: encrypted) ? .fix : .noFix
+    }
+
+    /// A file the PDF engine can make a PDF from: a decodable picture or a PDF without a password.
+    public static func pdfSource(_ format: DetectedFormat, encrypted: Bool) -> Bool {
+        decodable.contains(format) || (format == .pdf && !encrypted)
     }
 }
 

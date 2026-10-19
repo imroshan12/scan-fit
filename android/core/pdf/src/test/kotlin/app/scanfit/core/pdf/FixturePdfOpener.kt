@@ -27,9 +27,9 @@ class FixturePdfOpener : PdfOpener {
                         Regex("q ([\\d.]+) 0 0 ([\\d.]+) ([\\d.]+) ([\\d.]+) cm /Im(\\d+) Do Q").findAll(String(content, Charsets.ISO_8859_1))
                             .toList()
                             .map { m ->
-                                val (w, h, x, y) = m.groupValues.subList(1, 5).map(String::toDouble)
+                                val n = m.groupValues.subList(1, 5).map(String::toDouble)
                                 val image = images[m.groupValues[5]] ?: return null
-                                Draw(stream(bytes, text, objects[image] ?: return null), w, h, x, y)
+                                Draw(stream(bytes, text, objects[image] ?: return null), n[0], n[1], n[2], n[3])
                             }
                     }.orEmpty()
                 FixturePage(PdfSize(box.groupValues[1].toDouble(), box.groupValues[2].toDouble()), draws)

@@ -27,6 +27,11 @@ CARD_H = 54 * MM
 CARD_GAP = 15 * MM
 DPI_LADDER = [200, 150, 120, 100]
 QUALITY_GRID = [85, 75, 65, 55, 45, 40]
+LOW_TAIL = [35, 30, 25, 20]  # the last rung only (100 DPI): ImageIO compresses less than libjpeg at equal quality
+
+
+def grid(dpi):
+    return QUALITY_GRID + LOW_TAIL if dpi == DPI_LADDER[-1] else QUALITY_GRID
 MAX_PAGES = 20
 
 
@@ -189,7 +194,8 @@ def choose(case):
         sizes = case["sizes"].get(str(dpi))
         if sizes is None or sizes[-1] > hi:
             continue
-        for q, size in zip(QUALITY_GRID, sizes):
+        assert len(sizes) == len(grid(dpi)), f"{dpi}: {len(sizes)} sizes"
+        for q, size in zip(grid(dpi), sizes):
             if size <= hi:
                 padded = (case["size_kb"].get("min") or 0) > 0 and size < w["lo"] * 1024
                 return {

@@ -9,7 +9,15 @@ import app.scanfit.core.imaging.AndroidJpegEncoder
 import app.scanfit.core.imaging.FitPipeline
 import app.scanfit.core.imaging.PipelineOutcome
 import app.scanfit.core.imaging.Raster
+import app.scanfit.core.inspect.DetectedFormat
+import app.scanfit.core.inspect.Inspector
 import app.scanfit.core.model.DocSpec
+import app.scanfit.core.pdf.AndroidPdfOpener
+import app.scanfit.core.pdf.PdfEngine
+import app.scanfit.core.pdf.PdfJob
+import app.scanfit.core.pdf.PdfOutcome
+import app.scanfit.core.pdf.PdfSource
+import app.scanfit.core.pdf.PdfTool
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -40,6 +48,12 @@ interface CheckerTools {
         image: Raster,
         spec: DocSpec,
     ): PipelineOutcome
+
+    /** ALGORITHMS 6.6: a one-source PDF for a PDF slot, grayscale and cleanup on. */
+    suspend fun makePdf(
+        bytes: ByteArray,
+        spec: DocSpec,
+    ): PdfOutcome
 }
 
 class AndroidCheckerTools
@@ -49,6 +63,7 @@ constructor(
     private val source: ImageSource,
 ) : CheckerTools {
     private val pipeline = FitPipeline(AndroidJpegEncoder)
+    private val pdf = PdfEngine(AndroidPdfOpener(context.cacheDir), AndroidImageDecoder::decode, AndroidJpegEncoder)
 
     override suspend fun read(uri: String): ByteArray? = source.read(uri)
 
@@ -71,6 +86,15 @@ constructor(
         image: Raster,
         spec: DocSpec,
     ): PipelineOutcome = pipeline.run(image, spec)
+
+    override suspend fun makePdf(
+        bytes: ByteArray,
+        spec: DocSpec,
+    ): PdfOutcome {
+        val pdfFile = Inspector.detectFormat(bytes) == DetectedFormat.PDF
+        val source = if (pdfFile) PdfSource.Document(bytes) else PdfSource.Image(bytes)
+        return pdf.make(PdfJob(PdfTool.EXAM, listOf(source), spec.sizeKb))
+    }
 }
 
 /** Image work runs here, never on the main thread (CLAUDE.md rule 4). */

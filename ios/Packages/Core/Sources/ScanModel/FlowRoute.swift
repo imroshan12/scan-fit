@@ -78,3 +78,24 @@ public struct CustomSizeRoute: Hashable, Sendable {
 public struct CheckerRoute: Hashable, Sendable {
     public init() {}
 }
+
+/// Navigation value for the PDF maker (ALGORITHMS 6.6): a PDF tool (`images`, `compress`, `merge`, `id_card`) from
+/// Tools, or an exam's PDF slot from its checklist. Pushed by those screens, shown by the app target.
+public struct PdfRoute: Hashable, Sendable {
+    /// The tool's wire name; `exam` for a slot.
+    public let tool: String
+    public let examId: String?
+    public let docType: DocType?
+
+    public init(tool: String) {
+        self.tool = tool
+        examId = nil
+        docType = nil
+    }
+
+    public init(examId: String, docType: DocType) {
+        tool = "exam"
+        self.examId = examId
+        self.docType = docType
+    }
+}

@@ -3,6 +3,7 @@ import Foundation
 import Imaging
 import Inspect
 import Match
+import PDF
 import ScanData
 import ScanModel
 import Testing
@@ -28,6 +29,26 @@ final class FakeCheckerTools: CheckerTools, @unchecked Sendable {
     var fitted: [DocSpec] { lock.withLock { storedFitted } }
 
     func decode(_: [UInt8], maxLongSide _: Int) -> Raster? { decoded }
+
+    private var storedPdfOutcome: PdfOutcome = .made(PdfMade(
+        bytes: TestPdf.make(pages: 1, size: 120 * 1024), pages: 1, dpi: 200, quality: 85, strategy: .quality,
+        preview: nil
+    ))
+    private var storedPdfs: [DocSpec] = []
+
+    var pdfOutcome: PdfOutcome {
+        get { lock.withLock { storedPdfOutcome } }
+        set { lock.withLock { storedPdfOutcome = newValue } }
+    }
+
+    var pdfs: [DocSpec] { lock.withLock { storedPdfs } }
+
+    func makePdf(_: [UInt8], spec: DocSpec) async throws -> PdfOutcome {
+        lock.withLock {
+            storedPdfs.append(spec)
+            return storedPdfOutcome
+        }
+    }
 
     func fit(_ image: Raster, spec: DocSpec) -> Result<PipelineResult, FitError> {
         lock.withLock {
@@ -135,6 +156,44 @@ struct CheckerViewModelTests {
         // Export history (ALGORITHMS 13.3): the fixed copy is listed under its exam and export name.
         #expect(await kit.exports.map(\.fileName) == ["signature_IBPS-PO_140x60_16kb.jpg"])
         #expect(original == big, "the original is not changed")
+    }
+
+    private func jeeCertificate(_ m: CheckerViewModel) throws -> CheckerTarget {
+        try #require(m.targets.first { $0.exam.id == "jee_main" && $0.slot.type == .class10Certificate })
+    }
+
+    @Test("a photo for a PDF slot becomes a PDF that is saved for that slot")
+    func pdfFix() async throws {
+        let prefs = preferences()
+        let m = try model(prefs)
+        await m.fileSelected(TestJpeg.make(width: 1200, height: 1600, size: 400 * 1024), name: "marksheet.jpg")
+        await m.choose(kind: .pdfDocument)
+        m.choose(target: try jeeCertificate(m))
+        #expect(m.result?.status == .fix)
+        await m.makeItFit()
+        guard case let .ready(copy) = m.fix else { Issue.record("no PDF"); return }
+        #expect(copy.pdf?.pages == 1 && copy.meetsRules && m.canSave)
+        #expect(tools.pdfs.map(\.type) == [.class10Certificate] && tools.fitted.isEmpty)
+        await m.save()
+        #expect(m.exportState == .saved)
+        #expect(exporter.requests.last?.filename == "class10_certificate_JEE-Main_120kb.pdf")
+        #expect(prefs.isSaved("jee_main", .class10Certificate))
+    }
+
+    @Test("a locked PDF cannot be fixed; a PDF that cannot be made says why")
+    func pdfFailures() async throws {
+        let m = try model()
+        await m.fileSelected(TestPdf.make(pages: 1, size: 400 * 1024, encrypted: true), name: "locked.pdf")
+        await m.choose(kind: .pdfDocument)
+        m.choose(target: try jeeCertificate(m))
+        #expect(m.result?.status == .noFix)
+        tools.pdfOutcome = .failed(.cannotReach)
+        await m.fileSelected(TestPdf.make(pages: 2, size: 900 * 1024), name: "big.pdf")
+        await m.choose(kind: .pdfDocument)
+        m.choose(target: try jeeCertificate(m))
+        #expect(m.result?.status == .fix)
+        await m.makeItFit()
+        #expect(m.fix == .pdfFailed(.cannotReach))
     }
 
     @Test("a signature waits for the handwriting tick before save or share")

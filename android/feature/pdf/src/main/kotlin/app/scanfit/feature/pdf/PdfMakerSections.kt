@@ -98,7 +98,11 @@ internal fun FilesSection(
             }
         } else {
             if (state.items.isEmpty()) {
-                Text(stringResource(R.string.pdf_empty), style = ScanFitType.body, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    stringResource(R.string.pdf_empty),
+                    style = ScanFitType.body,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
             state.items.forEachIndexed { index, item -> ItemRow(state, item, index, actions) }
             AddButtons(state, null, actions)
@@ -141,9 +145,16 @@ private fun AddButtons(
 ) {
     val enabled = !state.busy
     val pictures = state.tool != PdfTool.COMPRESS && state.tool != PdfTool.MERGE
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(ScanFitSpacing.sm), verticalArrangement = Arrangement.spacedBy(ScanFitSpacing.sm)) {
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(ScanFitSpacing.sm),
+        verticalArrangement = Arrangement.spacedBy(ScanFitSpacing.sm),
+    ) {
         if (pictures) {
-            FilledTonalButton(onClick = { actions.onChoosePictures(side) }, enabled = enabled, modifier = touch()) {
+            FilledTonalButton(
+                onClick = { actions.onChoosePictures(side) },
+                enabled = enabled,
+                modifier = Modifier.touch(),
+            ) {
                 Text(stringResource(R.string.pdf_add_gallery))
             }
         }
@@ -154,12 +165,12 @@ private fun AddButtons(
                 state.tool == PdfTool.MERGE -> R.string.pdf_add_pdf
                 else -> R.string.pdf_add_files
             }
-        OutlinedButton(onClick = { actions.onChooseFiles(side) }, enabled = enabled, modifier = touch()) {
+        OutlinedButton(onClick = { actions.onChooseFiles(side) }, enabled = enabled, modifier = Modifier.touch()) {
             Text(stringResource(files))
         }
         val camera = actions.onTakePhoto
         if (pictures && camera != null) {
-            OutlinedButton(onClick = { camera(side) }, enabled = enabled, modifier = touch()) {
+            OutlinedButton(onClick = { camera(side) }, enabled = enabled, modifier = Modifier.touch()) {
                 Text(stringResource(R.string.pdf_add_camera))
             }
         }
@@ -178,7 +189,10 @@ private fun ItemRow(
 ) {
     val enabled = !state.busy
     Column(verticalArrangement = Arrangement.spacedBy(ScanFitSpacing.xs)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(ScanFitSpacing.md), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(ScanFitSpacing.md),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             Thumbnail(item.thumbnail)
             Column(Modifier.weight(1f)) {
                 val title = label ?: if (item.document) "PDF" else stringResource(R.string.pdf_image_label, index + 1)
@@ -190,7 +204,8 @@ private fun ItemRow(
                 IconButton(onClick = { actions.onMove(item.id, -1) }, enabled = enabled && index > 0) {
                     Icon(Icons.Filled.KeyboardArrowUp, contentDescription = stringResource(R.string.pdf_move_up))
                 }
-                IconButton(onClick = { actions.onMove(item.id, 1) }, enabled = enabled && index < state.items.lastIndex) {
+                val last = index == state.items.lastIndex
+                IconButton(onClick = { actions.onMove(item.id, 1) }, enabled = enabled && !last) {
                     Icon(Icons.Filled.KeyboardArrowDown, contentDescription = stringResource(R.string.pdf_move_down))
                 }
             }
@@ -200,8 +215,12 @@ private fun ItemRow(
         }
         if (!item.document) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(ScanFitSpacing.sm)) {
-                TextButton(onClick = { actions.onCrop(item.id) }, enabled = enabled) { Text(stringResource(R.string.pdf_crop)) }
-                TextButton(onClick = { actions.onTurn(item.id) }, enabled = enabled) { Text(stringResource(R.string.pdf_rotate)) }
+                TextButton(onClick = { actions.onCrop(item.id) }, enabled = enabled) {
+                    Text(stringResource(R.string.pdf_crop))
+                }
+                TextButton(onClick = { actions.onTurn(item.id) }, enabled = enabled) {
+                    Text(stringResource(R.string.pdf_rotate))
+                }
             }
         }
     }
@@ -232,9 +251,21 @@ internal fun OptionsSection(
     Column(verticalArrangement = Arrangement.spacedBy(ScanFitSpacing.sm)) {
         Heading(stringResource(R.string.pdf_options))
         if (state.hasPictures || state.tool == PdfTool.IMAGES || state.tool == PdfTool.ID_CARD) {
-            Toggle(stringResource(R.string.pdf_cleanup), stringResource(R.string.pdf_cleanup_hint), state.options.cleanup, enabled, actions.onCleanup)
+            Toggle(
+                stringResource(R.string.pdf_cleanup),
+                stringResource(R.string.pdf_cleanup_hint),
+                state.options.cleanup,
+                enabled,
+                actions.onCleanup,
+            )
         }
-        Toggle(stringResource(R.string.pdf_grayscale), stringResource(R.string.pdf_grayscale_hint), state.options.grayscale, enabled, actions.onGrayscale)
+        Toggle(
+            stringResource(R.string.pdf_grayscale),
+            stringResource(R.string.pdf_grayscale_hint),
+            state.options.grayscale,
+            enabled,
+            actions.onGrayscale,
+        )
         if (state.tool != PdfTool.EXAM) {
             OutlinedTextField(
                 value = state.maxKbText,
@@ -289,75 +320,6 @@ private fun Toggle(
     }
 }
 
-/** The made PDF (first page, KB, pages, DPI, verdict and notes) or why it could not be made. */
-@Composable
-internal fun ResultSection(state: PdfMakerUiState) {
-    val target = state.target ?: return
-    when (val result = state.result) {
-        null -> Unit
-        is PdfResult.Failed -> NoticeCard(errorText(result.error, target), NoticeKind.ERROR)
-        is PdfResult.Ready -> Column(verticalArrangement = Arrangement.spacedBy(ScanFitSpacing.sm)) {
-            Heading(stringResource(R.string.pdf_result_heading))
-            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                Thumbnail(result.preview, PREVIEW_DP, stringResource(R.string.pdf_preview))
-            }
-            val facts =
-                listOfNotNull(
-                    stringResource(R.string.pdf_result_kb, result.kb),
-                    pluralStringResource(R.plurals.pdf_pages, result.pages, result.pages),
-                    result.dpi?.let { stringResource(R.string.pdf_result_dpi, it) },
-                ).joinToString(" · ")
-            Text(facts, style = ScanFitType.figure)
-            if (target.exam) {
-                SlotVerdict(result.meetsRules, target.examName, target.unverified, custom = false)
-            } else {
-                ToolVerdict(result.meetsRules, target)
-            }
-            val note =
-                when (result.strategy) {
-                    PdfStrategy.UNCHANGED -> R.string.pdf_unchanged
-                    PdfStrategy.PAD -> R.string.pdf_padded
-                    else -> R.string.pdf_text_as_image
-                }
-            Text(stringResource(note), style = ScanFitType.caption, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            when (state.save.state) {
-                SaveState.SAVED -> NoticeCard(stringResource(R.string.export_saved), NoticeKind.INFO)
-                SaveState.SAVE_FAILED -> NoticeCard(stringResource(R.string.export_save_failed), NoticeKind.ERROR)
-                SaveState.VERIFY_FAILED -> NoticeCard(stringResource(R.string.export_verify_failed), NoticeKind.ERROR)
-                else -> Unit
-            }
-            if (state.shareFailed) NoticeCard(stringResource(R.string.export_share_failed), NoticeKind.ERROR)
-        }
-    }
-}
-
-@Composable
-private fun ToolVerdict(
-    fits: Boolean,
-    target: PdfTarget,
-) {
-    val max = target.spec.sizeKb.max?.toInt() ?: 0
-    if (fits) {
-        Text(stringResource(R.string.pdf_fits, max), style = ScanFitType.body, color = ScanFitTheme.colors.success)
-    } else {
-        NoticeCard(stringResource(R.string.pdf_error_cannot_reach, max), NoticeKind.ERROR)
-    }
-}
-
-@Composable
-private fun errorText(
-    error: PdfError,
-    target: PdfTarget,
-): String = when (error) {
-    PdfError.ENCRYPTED -> stringResource(R.string.pdf_error_encrypted)
-    PdfError.UNREADABLE, PdfError.NO_PAGES -> stringResource(R.string.pdf_error_unreadable)
-    PdfError.TOO_MANY_PAGES -> stringResource(R.string.pdf_error_too_many)
-    PdfError.UNKNOWN_LIMIT -> stringResource(R.string.pdf_error_unknown_limit)
-    PdfError.CANNOT_REACH -> stringResource(R.string.pdf_error_cannot_reach, target.spec.sizeKb.max?.toInt() ?: 0)
-    PdfError.FAILED -> stringResource(R.string.pdf_error_failed)
-}
-
-private fun touch() = Modifier.heightIn(min = ScanFitSpacing.minTouchTarget)
+internal fun Modifier.touch() = heightIn(min = ScanFitSpacing.minTouchTarget)
 
 private const val THUMBNAIL_DP = 56
-private const val PREVIEW_DP = 240

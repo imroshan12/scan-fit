@@ -381,8 +381,10 @@ never applies to them: a PDF page is already a clean page).
 
 For the DPI ladder `[200, 150, 120, 100]`, highest first: render every page at that DPI (§9.10 layout), encode every page
 image as a baseline JPEG at each quality of the grid `[85, 75, 65, 55, 45, 40]`, and measure the written PDF (§6.4) for
-each quality. The **first DPI** whose quality-40 PDF is `≤ goal.hi` is used, at the **highest quality** of the grid whose
-PDF is `≤ goal.hi`. If even 100 DPI at quality 40 is too big → `CANNOT_REACH`: "Can't get this under X KB. Try fewer
+each quality; at the last rung (100 DPI) the grid continues with `[35, 30, 25, 20]` (iOS ImageIO's quality scale
+compresses less than Android's libjpeg, so a dense page can need it there). The **first DPI** whose lowest-quality PDF
+is `≤ goal.hi` is used, at the **highest quality** of its grid whose PDF is `≤ goal.hi`. If even 100 DPI at quality 20
+is too big → `CANNOT_REACH`: "Can't get this under X KB. Try fewer
 pages or crop the margins." When the chosen PDF is below `goal.lo` (a small file for a slot with a minimum, e.g. JEE's
 50 KB), it is **padded** (§6.4) to `round(T'·1024)` bytes — the pages are unchanged; see §1.4 for why minimums are
 padded. Exact numbers and the selection rule: §9.10 (conformance `pdf_fit_cases`).
@@ -721,11 +723,12 @@ written so all three implementations get the same bits. `A4 = 595 × 842`, `M = 
 - **Pad** to `S` bytes: none if the PDF is already `≥ S` bytes; otherwise the smallest `P ≥ 0` whose padded PDF is `≥ S`
   bytes (exactly `S`, or `S + 1` where the length's digit count grows).
 - **Fit** (`pdf_fit_cases`): window, `goal` and `T'` as §9.4 (null `max` → `UNKNOWN_LIMIT`). `size(d, q)` = written PDF
-  bytes with every page at DPI `d` and quality `q`. For `d` in `[200, 150, 120, 100]`: if `size(d, 40) ≤ goal.hi · 1024`,
-  choose the first `q` of `[85, 75, 65, 55, 45, 40]` with `size(d, q) ≤ goal.hi · 1024` and stop. None → `CANNOT_REACH`.
+  bytes with every page at DPI `d` and quality `q`. `grid(d)` = `[85, 75, 65, 55, 45, 40]`, and for `d = 100`
+  `[85, 75, 65, 55, 45, 40, 35, 30, 25, 20]`. For `d` in `[200, 150, 120, 100]`: if `size(d, last of grid(d)) ≤ goal.hi · 1024`,
+  choose the first `q` of `grid(d)` with `size(d, q) ≤ goal.hi · 1024` and stop. None → `CANNOT_REACH`.
   If the window has a minimum (`min > 0`) and `size(d, q) < goal.lo · 1024` → pad to `round(T' · 1024)`; with no
   minimum a small PDF is never padded (unlike §9.4: a Tools limit is only a maximum). Strategy: `pad` when padded, else `quality` at 200 DPI and
-  `lower_dpi` below. An implementation may stop measuring a DPI as soon as the quality-40 JPEGs alone exceed `goal.hi`.
+  `lower_dpi` below. An implementation may stop measuring a DPI as soon as its lowest-quality JPEGs alone exceed `goal.hi`.
 - **Job checks**, in order: no sources (or an ID card without exactly two pictures) → `NO_PAGES`; an encrypted PDF →
   `ENCRYPTED`; a PDF the renderer cannot open or with no pages → `UNREADABLE`; more than 20 pages → `TOO_MANY_PAGES`; the
   window (`UNKNOWN_LIMIT`); the unchanged rule (§6.1); then the pictures are prepared (one that does not decode →

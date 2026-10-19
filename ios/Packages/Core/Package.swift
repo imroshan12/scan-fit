@@ -37,7 +37,7 @@ let package = Package(
         .target(name: "Imaging", dependencies: ["ScanModel", "Inspect"]),
         .target(name: "Match", dependencies: ["ScanModel", "Inspect"]),
         .target(name: "Inspect", dependencies: ["ScanModel"]),
-        .target(name: "PDF", dependencies: ["ScanModel"]),
+        .target(name: "PDF", dependencies: ["ScanModel", "Imaging", "Inspect"]),
         .target(name: "ScanVision", dependencies: ["ScanModel", "Imaging"]),
         .target(name: "ScanData", dependencies: ["ScanModel", "Inspect", "Match"]),
         .target(name: "Billing"),
@@ -54,6 +54,7 @@ let package = Package(
         .testTarget(name: "InspectTests", dependencies: ["Inspect", "TestSupport"]),
         .testTarget(name: "ScanVisionTests", dependencies: ["ScanVision", "Imaging", "TestSupport"]),
         .testTarget(name: "MatchTests", dependencies: ["Match", "Inspect", "ScanModel", "TestSupport"]),
+        .testTarget(name: "PDFTests", dependencies: ["PDF", "Imaging", "Inspect", "ScanModel", "TestSupport"]),
         .testTarget(name: "ImagingTests", dependencies: ["Imaging", "Inspect", "Match", "ScanModel", "TestSupport"]),
     ],
     swiftLanguageModes: [.v6]

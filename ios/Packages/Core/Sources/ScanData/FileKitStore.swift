@@ -101,7 +101,7 @@ public actor FileKitStore: KitStore {
     public func history() throws -> [HistoryEntry] {
         let now = clock()
         return try ExportHistory.prune(load().exports, now: now).map {
-            let present = FileManager.default.fileExists(atPath: blob(in: exportsDir, id: $0.record.id).path)
+            let present = FileManager.default.fileExists(atPath: copy($0.record).path)
             return HistoryEntry(record: $0.record, shareable: $0.shareable && present)
         }
     }
@@ -111,18 +111,22 @@ public actor FileKitStore: KitStore {
         do {
             let bytes = request.bytes
             let file = Inspector.inspect(bytes)
-            let width = file.width ?? 0, height = file.height ?? 0
-            guard bytes.count <= KitLimits.maxCopyBytes, kitJpegReadable(bytes, width: width, height: height),
-                  !examId.isEmpty else { return false }
+            let pages = request.pdf?.pages
+            let width = pages == nil ? file.width ?? 0 : 0, height = pages == nil ? file.height ?? 0 : 0
+            let readable = pages.map { $0 >= 1 && kitPdfReadable(bytes, size: bytes.count) }
+                ?? kitJpegReadable(bytes, width: width, height: height)
+            guard bytes.count <= KitLimits.maxCopyBytes, readable, !examId.isEmpty else { return false }
             var index = try load()
             let id = newID()
             guard KitIds.isValid(id) else { return false }
-            try writeBlob(in: exportsDir, id: id, bytes: bytes) { $0 == bytes }
-            try beforeIndex()
-            index.exports.append(ExportRecord(
+            let record = ExportRecord(
                 id: id, createdAt: clock(), examId: examId, examName: examName, docType: request.spec.type,
-                kind: request.kind, fileName: request.filename, size: bytes.count, width: width, height: height
-            ))
+                kind: request.kind, fileName: request.filename, size: bytes.count, width: width, height: height,
+                pages: pages
+            )
+            try writeBlob(to: copy(record), in: exportsDir, bytes: bytes) { $0 == bytes }
+            try beforeIndex()
+            index.exports.append(record)
             try write(index)
             // Pruning on the next load drops entries past the newest 100 and their copies.
             _ = try load()
@@ -137,11 +141,12 @@ public actor FileKitStore: KitStore {
         guard KitIds.isValid(id), let index = try? load(),
               let entry = index.exports.first(where: { $0.id == id }),
               ExportHistory.shareable(createdAt: entry.createdAt, now: clock()) else { return nil }
-        if let bytes = try? readBlob(in: exportsDir, id: id, size: entry.size),
-           kitJpegReadable(bytes, width: entry.width, height: entry.height) {
+        if let bytes = try? readFile(copy(entry), limit: entry.size), bytes.count == entry.size,
+           entry.isPdf ? kitPdfReadable(bytes, size: entry.size)
+           : kitJpegReadable(bytes, width: entry.width, height: entry.height) {
             return bytes
         }
-        _ = unlink(blob(in: exportsDir, id: id).path)
+        _ = unlink(copy(entry).path)
         changed()
         return nil
     }
@@ -180,8 +185,8 @@ public actor FileKitStore: KitStore {
         let kept = Set(ExportHistory.prune(exports, now: now).map(\.record.id))
         let clean = Index(originals: originals, exports: exports.filter { kept.contains($0.id) })
         if clean != parsed { try write(clean) }
-        sweep(originalsDir, keep: Set(originals.map(\.id)))
-        let copies = clean.exports.filter { ExportHistory.shareable(createdAt: $0.createdAt, now: now) }.map(\.id)
+        sweep(originalsDir, keep: Set(originals.map { $0.id + ".jpg" }))
+        let copies = clean.exports.filter { ExportHistory.shareable(createdAt: $0.createdAt, now: now) }.map(\.copyName)
         sweep(exportsDir, keep: Set(copies))
         sweepRoot()
         return clean
@@ -199,18 +204,25 @@ public actor FileKitStore: KitStore {
     }
 
     private func sane(_ entry: ExportRecord) -> Bool {
-        KitIds.isValid(entry.id) && entry.createdAt >= 0 && entry.width > 0 && entry.height > 0
+        // A PDF has pages and no dimensions; a JPEG has dimensions.
+        let shape = entry.pages.map { $0 >= 1 && entry.width == 0 && entry.height == 0 }
+            ?? (entry.width > 0 && entry.height > 0)
+        return KitIds.isValid(entry.id) && entry.createdAt >= 0 && shape
             && (1...KitLimits.maxCopyBytes).contains(entry.size) && !entry.examId.isEmpty && !entry.fileName.isEmpty
     }
 
-    /// Removes every file in `dir` whose id is not in `keep` (temporary files included).
+    /// Removes every file in `dir` whose name is not in `keep` (temporary files included).
     private func sweep(_ dir: URL, keep: Set<String>) {
         let names = (try? FileManager.default.contentsOfDirectory(atPath: dir.path)) ?? []
-        for name in names {
-            let id = name.hasSuffix(".jpg") ? String(name.dropLast(4)) : nil
-            if let id, keep.contains(id) { continue }
+        for name in names where !keep.contains(name) {
             _ = unlink(dir.appendingPathComponent(name).path)
         }
+    }
+
+    /// An export's private copy (`exports/<id>.jpg` or `.pdf`).
+    private func copy(_ record: ExportRecord) -> URL {
+        precondition(KitIds.isValid(record.id))
+        return exportsDir.appendingPathComponent(record.copyName)
     }
 
     private func sweepRoot() {
@@ -242,7 +254,10 @@ public actor FileKitStore: KitStore {
     }
 
     private func writeBlob(in dir: URL, id: String, bytes: [UInt8], verifies: ([UInt8]) -> Bool) throws {
-        let destination = blob(in: dir, id: id)
+        try writeBlob(to: blob(in: dir, id: id), in: dir, bytes: bytes, verifies: verifies)
+    }
+
+    private func writeBlob(to destination: URL, in dir: URL, bytes: [UInt8], verifies: ([UInt8]) -> Bool) throws {
         let staged = dir.appendingPathComponent(".kit-" + UUID().uuidString + ".tmp")
         defer { _ = unlink(staged.path) }
         try Data(bytes).write(to: staged, options: .withoutOverwriting)

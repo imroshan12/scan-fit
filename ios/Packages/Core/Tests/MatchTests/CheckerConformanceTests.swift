@@ -25,7 +25,8 @@ struct CheckerConformanceTests {
             }
             let status = CheckerStatus.of(
                 try #require(DetectedFormat(rawValue: c.string("format") ?? "")), slot: slot, verdict: verdict,
-                unverified: c.bool("unverified") ?? false
+                unverified: c.bool("unverified") ?? false,
+                encrypted: c.bool("encrypted") ?? false
             )
             #expect(status.rawValue == c.string("expect"), "\(id)")
         }

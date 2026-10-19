@@ -5,7 +5,9 @@ import app.scanfit.core.imaging.Raster
 import app.scanfit.core.model.SizeKb
 import java.io.Closeable
 
-/** What the user is making (ALGORITHMS 6.1). Only [ID_CARD] changes the layout; the others differ in what they accept. */
+/**
+ * What the user is making (ALGORITHMS 6.1). Only [ID_CARD] changes the layout; the others differ in what they accept.
+ */
 enum class PdfTool(
     val wire: String,
 ) {

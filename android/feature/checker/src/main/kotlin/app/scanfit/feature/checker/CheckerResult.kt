@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
@@ -54,6 +55,8 @@ import app.scanfit.core.designsystem.theme.ScanFitSpacing
 import app.scanfit.core.designsystem.theme.ScanFitTheme
 import app.scanfit.core.designsystem.theme.ScanFitType
 import app.scanfit.core.imaging.FitError
+import app.scanfit.core.imaging.Raster
+import app.scanfit.core.imaging.toBitmap
 import app.scanfit.core.inspect.DetectedFormat
 import app.scanfit.core.inspect.Issue
 import app.scanfit.core.match.CheckerStatus
@@ -61,6 +64,7 @@ import app.scanfit.core.match.CheckerTarget
 import app.scanfit.core.model.Confidence
 import app.scanfit.core.model.DocSpec
 import app.scanfit.core.model.FileFormat
+import app.scanfit.core.pdf.PdfError
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
@@ -158,22 +162,30 @@ private fun FixSection(
             }
 
         is FixState.Failed -> {
+            val max = state.result?.target?.slot?.sizeKb?.max?.roundToInt() ?: 0
             val text =
-                when (fix.error) {
-                    FitError.TOO_DETAILED -> {
-                        val max = state.result?.target?.slot?.sizeKb?.max?.roundToInt() ?: 0
-                        stringResource(R.string.error_fit_too_detailed, max)
-                    }
-
-                    null -> stringResource(R.string.checker_open_failed)
-
-                    else -> stringResource(R.string.error_generic)
+                when {
+                    fix.pdfError == PdfError.ENCRYPTED -> stringResource(R.string.pdf_error_encrypted)
+                    fix.pdfError == PdfError.CANNOT_REACH -> stringResource(R.string.pdf_error_cannot_reach, max)
+                    fix.pdfError == PdfError.UNREADABLE -> stringResource(R.string.pdf_error_unreadable)
+                    fix.pdfError != null -> stringResource(R.string.pdf_error_failed)
+                    else -> fitErrorText(fix.error, max)
                 }
             NoticeCard(text, NoticeKind.ERROR)
         }
 
         is FixState.Ready -> FixedCopy(state, fix, actions)
     }
+}
+
+@Composable
+private fun fitErrorText(
+    error: FitError?,
+    max: Int,
+): String = when (error) {
+    FitError.TOO_DETAILED -> stringResource(R.string.error_fit_too_detailed, max)
+    null -> stringResource(R.string.checker_open_failed)
+    else -> stringResource(R.string.error_generic)
 }
 
 @Composable
@@ -184,8 +196,16 @@ private fun FixedCopy(
 ) {
     val target = state.result?.target ?: return
     Heading(stringResource(R.string.checker_fixed_heading))
-    FixedImage(fix.bytes)
-    ReviewChecksRow(fix.kb, fix.width, fix.height, fix.checks)
+    val pdf = fix.pdf
+    if (pdf == null) {
+        FixedImage(fix.bytes)
+        ReviewChecksRow(fix.kb, fix.width, fix.height, fix.checks)
+    } else {
+        // A PDF (ALGORITHMS 6.6): its first page and `182 KB · 1 page · PDF`.
+        PdfPreview(pdf.preview)
+        val pages = pluralStringResource(R.plurals.pdf_pages, pdf.pages, pdf.pages)
+        Text(stringResource(R.string.pdf_history_row, fix.kb, pages), style = ScanFitType.figure)
+    }
     SlotVerdict(fix.meetsRules, target.exam.name, target.exam.isUnverified, custom = false)
     MatchNoteCard(fix.note)
     Text(
@@ -218,6 +238,26 @@ private fun FixedCopy(
         else -> Unit
     }
     if (state.shareFailed) NoticeCard(stringResource(R.string.export_share_failed), NoticeKind.ERROR)
+}
+
+/** A made PDF's first page, at most 200 dp tall, on a light card. */
+@Composable
+private fun PdfPreview(preview: Raster?) {
+    val bitmap by produceState<ImageBitmap?>(null, preview) {
+        value = preview?.let { withContext(Dispatchers.Default) { it.toBitmap().asImageBitmap() } }
+    }
+    Box(
+        modifier =
+        Modifier
+            .fillMaxWidth()
+            .heightIn(max = 200.dp)
+            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(ScanFitRadius.card))
+            .padding(ScanFitSpacing.sm),
+        contentAlignment = Alignment.Center,
+    ) {
+        val description = stringResource(R.string.pdf_preview)
+        bitmap?.let { Image(it, contentDescription = description, contentScale = ContentScale.Fit) }
+    }
 }
 
 /** The fitted copy as it will be written, at most 200 dp tall, on a light card. */

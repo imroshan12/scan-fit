@@ -44,6 +44,8 @@ import app.scanfit.feature.home.HomeRoute
 import app.scanfit.feature.kit.KitOriginalRoute
 import app.scanfit.feature.kit.KitOriginalViewModel
 import app.scanfit.feature.kit.KitRoute
+import app.scanfit.feature.pdf.PdfMakerRoute
+import app.scanfit.feature.pdf.PdfMakerViewModel
 import app.scanfit.feature.settings.SettingsRoute
 
 /**
@@ -71,7 +73,10 @@ fun ScanFitApp() {
         val flowFromKit = destination?.route?.startsWith("$EXAM_ROUTE/") == true &&
             navController.previousBackStackEntry?.destination?.route?.startsWith(Tab.KIT.route) == true
         val inKit = destination?.route?.startsWith("$KIT_ORIGINAL_ROUTE/") == true
-        val inCustom = destination?.route?.let { it.startsWith(CUSTOM_ROUTE) || it == CHECKER_ROUTE } == true
+        val inCustom =
+            destination?.route?.let {
+                it.startsWith(CUSTOM_ROUTE) || it == CHECKER_ROUTE || it.startsWith("$PDF_ROUTE/")
+            } == true
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
             bottomBar = {
@@ -138,10 +143,16 @@ fun ScanFitApp() {
                         onBack = { navController.popBackStack() },
                         docActions =
                         DocActions(
-                            canOpen = { it in PHOTO_FLOW_TYPES || it in INK_FLOW_TYPES },
+                            // Every other slot type is a PDF slot (the PDF maker says so when it takes none).
+                            canOpen = { true },
                             onOpen = { examId, type ->
                                 // Single top: a double tap must not stack two flows (Done would land on the second).
-                                val flow = if (type in PHOTO_FLOW_TYPES) PHOTO_ROUTE else INK_ROUTE
+                                val flow =
+                                    when (type) {
+                                        in PHOTO_FLOW_TYPES -> PHOTO_ROUTE
+                                        in INK_FLOW_TYPES -> INK_ROUTE
+                                        else -> PDF_ROUTE
+                                    }
                                 val route = "$EXAM_ROUTE/$examId/$flow/${type.name.lowercase()}"
                                 navController.navigate(route) {
                                     launchSingleTop = true
@@ -169,6 +180,12 @@ fun ScanFitApp() {
                         onBack = { navController.popBackStack() },
                         onDone = { navController.popBackStack() },
                     )
+                }
+                composable("$EXAM_ROUTE/{${PdfMakerViewModel.EXAM_ID}}/$PDF_ROUTE/{${PdfMakerViewModel.DOC_TYPE}}") {
+                    PdfMakerRoute(onBack = { navController.popBackStack() }, onDone = { navController.popBackStack() })
+                }
+                composable("$PDF_ROUTE/{${PdfMakerViewModel.TOOL}}") {
+                    PdfMakerRoute(onBack = { navController.popBackStack() }, onDone = { navController.popBackStack() })
                 }
                 composable(Tab.KIT.route) {
                     KitRoute(
@@ -199,6 +216,7 @@ fun ScanFitApp() {
                     ToolsScreen(
                         onCustomSize = { navController.navigate(CUSTOM_ROUTE) { launchSingleTop = true } },
                         onChecker = { navController.navigate(CHECKER_ROUTE) { launchSingleTop = true } },
+                        onPdf = { tool -> navController.navigate("$PDF_ROUTE/$tool") { launchSingleTop = true } },
                     )
                 }
                 composable(Tab.SETTINGS.route) { SettingsRoute() }
@@ -231,6 +249,9 @@ private const val PHOTO_ROUTE = "photo"
 
 /** Document types the photo flow handles (ALGORITHMS 1.2: the kinds that are cropped, not padded). */
 private val PHOTO_FLOW_TYPES = setOf(DocType.PHOTO, DocType.POSTCARD_PHOTO)
+
+/** `pdf/<tool>`: a PDF tool; `exam/<id>/pdf/<docType>`: the PDF maker for an exam's PDF slot (ALGORITHMS 6.6). */
+private const val PDF_ROUTE = "pdf"
 
 /** `exam/<id>/ink/<docType>`: the ink flow for a signature, thumb, fingers or declaration slot. */
 private const val INK_ROUTE = "ink"

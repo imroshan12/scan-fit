@@ -3,6 +3,7 @@ import Imaging
 import Inspect
 import Match
 import Observation
+import PDF
 import ScanData
 import ScanModel
 
@@ -27,6 +28,15 @@ public enum FixState: Sendable, Equatable {
     case ready(FixedCopy)
     /// nil = the file could not be decoded.
     case failed(FitError?)
+    /// No PDF could be made for a PDF slot.
+    case pdfFailed(PdfError)
+}
+
+/// A PDF made by "Make it fit": its pages, whether the app wrote it, and its first page for display.
+public struct PdfFix: Sendable, Equatable {
+    public let pages: Int
+    public let written: Bool
+    public let preview: Raster?
 }
 
 public struct FixedCopy: Sendable, Equatable {
@@ -38,6 +48,8 @@ public struct FixedCopy: Sendable, Equatable {
     public let meetsRules: Bool
     public let checks: ReviewChecks
     public let note: MatchNote
+    /// Set when the copy is a PDF made for a PDF slot (ALGORITHMS 6.6).
+    public var pdf: PdfFix?
 }
 
 /// The pre-submit Checker (ALGORITHMS 12, UI_UX §3): checks a file and fixes a copy on request. Same rules as
@@ -136,7 +148,8 @@ public final class CheckerViewModel {
         guard let file, let kind else { return }
         let evaluation = MatchEngine.evaluate(target.slot, FileFacts(file.inspected, docKind: kind))
         let status = CheckerStatus.of(
-            file.inspected.format, slot: target.slot, verdict: evaluation.verdict, unverified: target.exam.isUnverified
+            file.inspected.format, slot: target.slot, verdict: evaluation.verdict, unverified: target.exam.isUnverified,
+            encrypted: file.inspected.pdfEncrypted
         )
         result = TargetResult(target: target, evaluation: evaluation, checks: .of(evaluation), status: status)
         fix = .none
@@ -161,6 +174,16 @@ public final class CheckerViewModel {
         exportState = .idle
         let slot = result.target.slot, tools = self.tools
         let bundle = await load()
+        let takesJpeg = slot.formats.contains(.jpg) || slot.formats.contains(.jpeg)
+        if !takesJpeg || file?.inspected.format == .pdf {
+            // A PDF slot (or a PDF for a slot that also takes one): the PDF engine (ALGORITHMS 6.6).
+            let outcome = await Task.detached(priority: .userInitiated) {
+                await Self.pdfFix(source, slot, kind, bundle, tools)
+            }.value
+            guard gen == generation else { return }
+            fix = outcome
+            return
+        }
         let outcome: FixState = await Task.detached(priority: .userInitiated) {
             guard let image = tools.decode(source, maxLongSide: Self.decodeCap(slot)) else {
                 return FixState.failed(nil)
@@ -220,11 +243,40 @@ public final class CheckerViewModel {
 
     private func request() -> ExportRequest? {
         guard case let .ready(copy) = fix, let target = result?.target, let kind else { return nil }
+        if let pdf = copy.pdf {
+            let filename = ExportNaming.pdfFileName(
+                examName: target.exam.name, slot: target.slot, bytes: copy.bytes.count
+            )
+            return ExportRequest(bytes: copy.bytes, filename: filename, spec: target.slot, kind: kind,
+                                 pdf: PdfExport(pages: pdf.pages, written: pdf.written))
+        }
         let filename = ExportNaming.fileName(
             examName: target.exam.name, slot: target.slot, width: copy.width, height: copy.height,
             bytes: copy.bytes.count
         )
         return ExportRequest(bytes: copy.bytes, filename: filename, spec: target.slot, kind: kind)
+    }
+
+    /// "Make it fit" for a PDF slot, checked as the export will check it (ALGORITHMS 6.5).
+    private nonisolated static func pdfFix(
+        _ source: [UInt8], _ slot: DocSpec, _ kind: DocKind, _ bundle: PresetBundle?, _ tools: any CheckerTools
+    ) async -> FixState {
+        guard let outcome = try? await tools.makePdf(source, spec: slot) else { return .none }
+        switch outcome {
+        case let .failed(error): return .pdfFailed(error)
+        case let .made(made):
+            let written = made.strategy != .unchanged
+            let facts = FileFacts(Inspector.inspect(made.bytes), docKind: kind)
+            let evaluation = MatchEngine.evaluate(slot, facts)
+            let export = PdfExport(pages: made.pages, written: written)
+            return .ready(FixedCopy(
+                bytes: made.bytes, kb: (made.bytes.count + 512) / 1024, width: 0, height: 0,
+                meetsRules: ExportOperation.verifiesPdf(made.bytes, expected: made.bytes, spec: slot, pdf: export),
+                checks: .of(evaluation),
+                note: bundle.map { MatchNote.of(facts, exams: $0.exams, popularity: $0.popular ?? []) } ?? .empty,
+                pdf: PdfFix(pages: made.pages, written: written, preview: made.preview)
+            ))
+        }
     }
 
     /// ALGORITHMS 1.1: decode no larger than 2x the largest target dimension (at least 1600 px).

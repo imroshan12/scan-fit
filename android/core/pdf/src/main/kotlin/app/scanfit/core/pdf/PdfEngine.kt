@@ -15,7 +15,8 @@ import kotlinx.coroutines.ensureActive
 /**
  * Makes every PDF the app writes (ALGORITHMS 6): prepares pictures once, measures the PDF at each DPI of the ladder and
  * each grid quality with one page raster in memory at a time, then writes the chosen DPI and quality (padded up to a
- * minimum when needed). Platform pieces are injected, so the JVM tests run it with real encoders and a fixture renderer.
+ * minimum when needed). Platform pieces are injected, so the JVM tests run it with real encoders and a fixture
+ * renderer.
  */
 class PdfEngine(
     private val opener: PdfOpener,
@@ -53,7 +54,9 @@ class PdfEngine(
         progress: (PdfProgress) -> Unit = {},
     ): PdfOutcome {
         val idCardSides = job.sources.size == 2 && job.sources.all { it is PdfSource.Image }
-        if (job.sources.isEmpty() || (job.tool == PdfTool.ID_CARD && !idCardSides)) return PdfOutcome.Failed(PdfError.NO_PAGES)
+        if (job.sources.isEmpty() || (job.tool == PdfTool.ID_CARD && !idCardSides)) {
+            return PdfOutcome.Failed(PdfError.NO_PAGES)
+        }
         val documents = job.sources.filterIsInstance<PdfSource.Document>()
         if (documents.any { Inspector.inspect(it.bytes).pdfEncrypted }) return PdfOutcome.Failed(PdfError.ENCRYPTED)
         val opened = mutableMapOf<PdfSource.Document, PdfPages>()
@@ -77,8 +80,14 @@ class PdfEngine(
     ): PdfOutcome {
         val pictures = job.sources.filterIsInstance<PdfSource.Image>()
         val pictureCount = if (job.tool == PdfTool.ID_CARD) 1 else pictures.size
-        if (pictureCount + opened.values.sumOf { it.pageCount } > PdfFit.MAX_PAGES) throw Failure(PdfError.TOO_MANY_PAGES)
-        val window = PdfWindow.of(job.sizeKb) ?: throw Failure(PdfError.UNKNOWN_LIMIT)
+        val window = PdfWindow.of(job.sizeKb)
+        val error =
+            when {
+                pictureCount + opened.values.sumOf { it.pageCount } > PdfFit.MAX_PAGES -> PdfError.TOO_MANY_PAGES
+                window == null -> PdfError.UNKNOWN_LIMIT
+                else -> null
+            }
+        if (error != null || window == null) return PdfOutcome.Failed(error ?: PdfError.UNKNOWN_LIMIT)
         unchanged(job, opened, window)?.let { return PdfOutcome.Made(it) }
 
         val prepared = mutableMapOf<PdfSource.Image, Prepared>()
@@ -107,7 +116,8 @@ class PdfEngine(
         val pages = opened.getValue(only)
         val size = pages.pageSize(0)
         val scale = PREVIEW_LONG_SIDE / maxOf(size.width, size.height)
-        val preview = pages.render(0, maxOf(1, roundHalfUp(size.width * scale)), maxOf(1, roundHalfUp(size.height * scale)))
+        val preview =
+            pages.render(0, maxOf(1, roundHalfUp(size.width * scale)), maxOf(1, roundHalfUp(size.height * scale)))
         return PdfMade(only.bytes, pages.pageCount, null, null, PdfStrategy.UNCHANGED, preview)
     }
 
@@ -195,7 +205,7 @@ class PdfEngine(
         ?: throw Failure(PdfError.FAILED)
 
     /**
-     * The whole PDF's size at each grid quality, or `null` as soon as quality-40 images alone are over `goal.hi`
+     * The whole PDF's size at each grid quality, or `null` as soon as the lowest-quality images alone exceed `goal.hi`
      * (ALGORITHMS 9.10 allows stopping early).
      */
     private suspend fun measure(
@@ -205,7 +215,7 @@ class PdfEngine(
         options: PdfOptions,
         progress: (PdfProgress) -> Unit,
     ): List<Long>? {
-        val grid = PdfFit.QUALITY_GRID
+        val grid = PdfFit.grid(dpi)
         val lengths = List(grid.size) { mutableListOf<List<Int>>() }
         val geometry = mutableListOf<PageGeometry>()
         var lowest = 0L
@@ -244,7 +254,9 @@ class PdfEngine(
                 if (p == 0) preview = PdfPreview.compose(page.size, images, PREVIEW_LONG_SIDE)
                 WriterPage(
                     page.size,
-                    images.map { (raster, at) -> WriterImage(jpeg(raster, choice.quality, choice.dpi), at.width, at.height, at.rect) },
+                    images.map { (raster, at) ->
+                        WriterImage(jpeg(raster, choice.quality, choice.dpi), at.width, at.height, at.rect)
+                    },
                 )
             }
         val bytes = choice.padTo?.let { PdfWriter.writePadded(written, it) } ?: PdfWriter.write(written)

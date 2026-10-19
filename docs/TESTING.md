@@ -62,6 +62,11 @@ Every platform service sits behind an interface with a fake in `core:testing` / 
 `FaceDetector`, `Segmenter`, `DocumentScanner`, `ImagePicker`, `Clock`, `PresetRemote`,
 `Entitlements`, `AdGate`, `Analytics` (records events, and asserts no event param contains a
 path/URI — a test helper fails if any string param contains `/` or `content:`).
+PDF tools: `PdfMakerTools` and `CheckerTools.makePdf` have fakes in each feature's tests; the engine takes a `PdfOpener`.
+Robolectric cannot run Android's `PdfRenderer`, so Android's `pdf_job_cases` use `FixturePdfOpener` (test-only: draws the
+DCT images of simple PDFs, leaves text white). The real `PdfRenderer` path (`AndroidPdfOpener`) is covered only by device
+QA; iOS runs every job case through the real CoreGraphics renderer. `TestPdf` (both apps) makes PDF-shaped bytes for
+data and view-model tests.
 
 ## 4. Device matrix (manual + automated smoke before each release)
 

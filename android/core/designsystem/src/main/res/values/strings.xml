@@ -29,7 +29,7 @@
     <string name="checker_kind_photo">Photo</string>
     <string name="checker_kind_signature">Signature</string>
     <string name="checker_kind_thumb">Thumb impression</string>
-    <string name="checker_needs_pdf">This slot needs a PDF. PDF tools are coming soon.</string>
+    <string name="checker_needs_pdf">ScanFit can\'t make a PDF from this file. If it has a password, remove it first.</string>
     <string name="checker_no_fix">ScanFit can\'t fix this file here. Make a new one from the exam\'s checklist.</string>
     <string name="checker_no_issues">No problems with the file itself.</string>
     <string name="checker_open_failed">Couldn\'t open this file. Try another one.</string>
@@ -279,7 +279,7 @@
     <string name="pdf_front">Front</string>
     <string name="pdf_grayscale">Black and white</string>
     <string name="pdf_grayscale_hint">About half the size. Stamps lose their colour.</string>
-    <string name="pdf_history_row">%1$d KB · PDF</string>
+    <string name="pdf_history_row">%1$d KB · %2$s · PDF</string>
     <string name="pdf_image_label">Photo %1$d</string>
     <string name="pdf_intro_compress">Choose a PDF and the size the form allows.</string>
     <string name="pdf_intro_exam">Add photos of the pages or a PDF you already have. ScanFit makes one PDF that fits.</string>

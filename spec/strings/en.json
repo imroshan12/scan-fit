@@ -233,7 +233,7 @@
 	"checker.search": "Search exams",
 	"checker.change_exam": "Change exam",
 	"checker.no_fix": "ScanFit can't fix this file here. Make a new one from the exam's checklist.",
-	"checker.needs_pdf": "This slot needs a PDF. PDF tools are coming soon.",
+	"checker.needs_pdf": "ScanFit can't make a PDF from this file. If it has a password, remove it first.",
 	"checker.fix": "Make it fit for {exam:str}",
 	"checker.fixing": "Making it fit\u2026",
 	"checker.fixed_heading": "Fixed copy",
@@ -395,7 +395,7 @@
 	"pdf.error_cannot_reach": "Can't get this under {max:int} KB. Try fewer pages or crop the margins.",
 	"pdf.error_unknown_limit": "This exam's PDF size isn't verified yet. Check the notice.",
 	"pdf.error_failed": "Couldn't make the PDF. Please try again.",
-	"pdf.history_row": "{kb:int} KB · PDF",
+	"pdf.history_row": "{kb:int} KB · {pages:str} · PDF",
 	"pdf.pages": {
 		"one": "{count:int} page",
 		"other": "{count:int} pages"

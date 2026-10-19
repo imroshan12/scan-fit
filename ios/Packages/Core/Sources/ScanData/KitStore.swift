@@ -37,12 +37,20 @@ public struct ExportRecord: Sendable, Equatable, Codable, Identifiable {
     public let kind: DocKind
     public let fileName: String
     public let size: Int
+    /// 0 for a PDF.
     public let width: Int
     public let height: Int
+    /// A PDF's page count (ALGORITHMS 13.3, `format` `pdf`); nil for a JPEG.
+    public let pages: Int?
+
+    public var isPdf: Bool { pages != nil }
+
+    /// The private copy's file name: `exports/<id>.jpg` or `exports/<id>.pdf`.
+    public var copyName: String { id + (isPdf ? ".pdf" : ".jpg") }
 
     public init(
         id: String, createdAt: Int64, examId: String, examName: String, docType: DocType, kind: DocKind,
-        fileName: String, size: Int, width: Int, height: Int
+        fileName: String, size: Int, width: Int, height: Int, pages: Int? = nil
     ) {
         self.id = id
         self.createdAt = createdAt
@@ -54,15 +62,49 @@ public struct ExportRecord: Sendable, Equatable, Codable, Identifiable {
         self.size = size
         self.width = width
         self.height = height
+        self.pages = pages
     }
 
     enum CodingKeys: String, CodingKey {
-        case id, kind, size, width, height
+        case id, kind, size, width, height, format, pages
         case createdAt = "created_at_ms"
         case examId = "exam_id"
         case examName = "exam_name"
         case docType = "doc_type"
         case fileName = "file_name"
+    }
+
+    /// Entries written before PDFs have no `format` and are JPEGs.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        let format = try c.decodeIfPresent(String.self, forKey: .format) ?? "jpg"
+        guard format == "jpg" || format == "pdf" else {
+            throw DecodingError.dataCorruptedError(forKey: .format, in: c, debugDescription: "unknown format")
+        }
+        self.init(
+            id: try c.decode(String.self, forKey: .id), createdAt: try c.decode(Int64.self, forKey: .createdAt),
+            examId: try c.decode(String.self, forKey: .examId), examName: try c.decode(String.self, forKey: .examName),
+            docType: try c.decode(DocType.self, forKey: .docType), kind: try c.decode(DocKind.self, forKey: .kind),
+            fileName: try c.decode(String.self, forKey: .fileName), size: try c.decode(Int.self, forKey: .size),
+            width: try c.decode(Int.self, forKey: .width), height: try c.decode(Int.self, forKey: .height),
+            pages: format == "pdf" ? try c.decode(Int.self, forKey: .pages) : nil
+        )
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(id, forKey: .id)
+        try c.encode(createdAt, forKey: .createdAt)
+        try c.encode(examId, forKey: .examId)
+        try c.encode(examName, forKey: .examName)
+        try c.encode(docType, forKey: .docType)
+        try c.encode(kind, forKey: .kind)
+        try c.encode(fileName, forKey: .fileName)
+        try c.encode(size, forKey: .size)
+        try c.encode(width, forKey: .width)
+        try c.encode(height, forKey: .height)
+        try c.encode(isPdf ? "pdf" : "jpg", forKey: .format)
+        try c.encodeIfPresent(pages, forKey: .pages)
     }
 }
 
@@ -164,6 +206,12 @@ func kitJpegReadable(_ bytes: [UInt8], width: Int, height: Int) -> Bool {
     return file.format == .jpeg && file.sof == "SOF0" && !file.progressive && file.color == .rgb
         && file.components == 3 && !file.hasExif && !file.hasGps && !file.hasXmp
         && file.width == width && file.height == height
+}
+
+/// The §13.3 read check of a PDF copy: a PDF without a password, of the recorded size.
+func kitPdfReadable(_ bytes: [UInt8], size: Int) -> Bool {
+    let file = Inspector.inspect(bytes)
+    return bytes.count == size && file.format == .pdf && !file.pdfEncrypted
 }
 
 /// Originals also stay within the stored-size limit.

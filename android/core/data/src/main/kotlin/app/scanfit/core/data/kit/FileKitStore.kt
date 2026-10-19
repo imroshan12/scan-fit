@@ -132,7 +132,11 @@ class FileKitStore(
             val height = file.height ?: 0
             val pages = request.pdf?.pages
             val readable =
-                if (pages != null) pages >= 1 && kitPdfReadable(bytes, bytes.size) else kitJpegReadable(bytes, width, height)
+                if (pages != null) {
+                    pages >= 1 && kitPdfReadable(bytes, bytes.size)
+                } else {
+                    kitJpegReadable(bytes, width, height)
+                }
             check(bytes.size <= KitStore.MAX_COPY_BYTES && readable)
             val index = load()
             val id = newId()
@@ -334,8 +338,10 @@ class FileKitStore(
             pages = if (o.format() == PDF) o.getValue("pages").jsonPrimitive.int else null,
         )
         check(o.format() in setOf(JPG, PDF))
+        // A PDF has pages and no dimensions; a JPEG has dimensions.
         val shape =
-            entry.pages?.let { it >= 1 && entry.width == 0 && entry.height == 0 } ?: (entry.width > 0 && entry.height > 0)
+            entry.pages?.let { it >= 1 && entry.width == 0 && entry.height == 0 }
+                ?: (entry.width > 0 && entry.height > 0)
         val sane = KitIds.isValid(entry.id) && entry.createdAtMillis >= 0 && shape &&
             entry.size in 1..KitStore.MAX_COPY_BYTES && entry.examId.isNotEmpty() && entry.fileName.isNotEmpty()
         return entry.takeIf { sane }

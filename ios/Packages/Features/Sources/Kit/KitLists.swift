@@ -136,8 +136,10 @@ struct KitHistoryList: View {
             VStack(alignment: .leading, spacing: ScanFitSpacing.xs) {
                 Text(strings.label(record.docType)).scanFitText(.body)
                 Text(exam).scanFitText(.caption)
-                Text(strings.photoResult(kb: kb, width: record.width, height: record.height) + " · "
-                    + kitDay(record.createdAt, locale: locale))
+                // A PDF (ALGORITHMS 13.3): `182 KB · 3 pages · PDF`.
+                let size = record.pages.map { strings.pdfHistoryRow(kb: kb, pages: strings.pdfPages(count: $0)) }
+                    ?? strings.photoResult(kb: kb, width: record.width, height: record.height)
+                Text(size + " · " + kitDay(record.createdAt, locale: locale))
                     .scanFitText(.caption).foregroundStyle(ScanFitColor.onSurfaceVariant)
                 if !entry.shareable {
                     Text(strings.kitHistoryExpired).scanFitText(.caption).foregroundStyle(ScanFitColor.onSurfaceVariant)

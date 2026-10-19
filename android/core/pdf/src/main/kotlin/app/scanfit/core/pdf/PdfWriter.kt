@@ -16,15 +16,16 @@ class WriterImage(
 )
 
 /**
- * The image PDF the app writes (ALGORITHMS 6.4 / 9.10): PDF 1.4, no metadata, no fonts, one DCT image XObject per placed
- * JPEG. Byte-identical to the Swift writer and the Python reference (`pdf_writer_cases`). Pure.
+ * The image PDF the app writes (ALGORITHMS 6.4 / 9.10): PDF 1.4, no metadata, no fonts, one DCT image XObject per
+ * placed JPEG. Byte-identical to the Swift writer and the Python reference (`pdf_writer_cases`). Pure.
  */
 object PdfWriter {
     private const val HUNDRED = 100
     private const val TEN = 10
     private const val HALF = 0.5
-    private val HEADER = "%PDF-1.4\n%".toByteArray() + byteArrayOf(0xE2.toByte(), 0xE3.toByte(), 0xCF.toByte(), 0xD3.toByte()) +
-        "\n".toByteArray()
+    private val HEADER =
+        "%PDF-1.4\n%".toByteArray() + byteArrayOf(0xE2.toByte(), 0xE3.toByte(), 0xCF.toByte(), 0xD3.toByte()) +
+            "\n".toByteArray()
 
     /** `num(v)` of ALGORITHMS 9.10: at most two decimals, no trailing zeros. */
     fun num(v: Double): String {
@@ -62,14 +63,17 @@ object PdfWriter {
         return sink.count
     }
 
-    /** ALGORITHMS 9.10 Pad: the smallest padding object that makes the PDF at least [target] bytes (none if already). */
+    /** ALGORITHMS 9.10 Pad: the smallest padding object making the PDF at least [target] bytes (none if already). */
     fun writePadded(
         pages: List<WriterPage>,
         target: Long,
     ): ByteArray {
         val plain = write(pages)
         if (plain.size >= target) return plain
-        val geometry = pages.map { page -> PageGeometry(page.size, page.images.map { PlacedPixels(it.width, it.height, it.rect) }) }
+        val geometry =
+            pages.map { page ->
+                PageGeometry(page.size, page.images.map { PlacedPixels(it.width, it.height, it.rect) })
+            }
         val lengths = pages.map { page -> page.images.map { it.jpeg.size } }
         fun sized(p: Int) = size(geometry, lengths, p)
         var p = maxOf(0L, target - sized(0)).toInt()
@@ -171,7 +175,8 @@ object PdfWriter {
                 obj(contentNo + 1 + j) {
                     sink.text(
                         "<< /Type /XObject /Subtype /Image /Width ${image.width} /Height ${image.height} " +
-                            "/ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length $length >>\nstream\n",
+                            "/ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode " +
+                            "/Length $length >>\nstream\n",
                     )
                     sink.data(image.jpeg, length)
                     sink.text("\nendstream")

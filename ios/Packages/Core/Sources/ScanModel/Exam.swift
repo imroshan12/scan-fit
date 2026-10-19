@@ -37,6 +37,10 @@ public enum DocType: String, Codable, Sendable, CaseIterable {
     case categoryCertificate = "category_certificate"
     case pwdCertificate = "pwd_certificate"
     case scStCertificate = "sc_st_certificate"
+    /// A PDF from the PDF tools (ALGORITHMS 6.6); no preset uses it yet.
+    case document
+    /// The ID card tool's PDF (ALGORITHMS 6.6); no preset uses it yet.
+    case idCard = "id_card"
 }
 
 public enum FileFormat: String, Codable, Sendable {
@@ -138,4 +142,17 @@ public struct Exam: Codable, Sendable, Equatable, Identifiable {
 
     /// Low-confidence presets must show the "Unverified" badge (CLAUDE.md rule 6).
     public var isUnverified: Bool { confidence == .low }
+}
+
+public extension DocSpec {
+    /// A PDF slot without dimensions: the PDF tools' synthetic slot (ALGORITHMS 6.6) and tests.
+    static func pdf(_ type: DocType, sizeKb: SizeKB, filename: String? = nil) -> DocSpec {
+        DocSpec(
+            type: type, required: true, formats: [.pdf], sizeKb: sizeKb,
+            dimensions: Dimensions(mode: .none, width: nil, height: nil, minW: nil, minH: nil, maxW: nil, maxH: nil,
+                                   aspectWOverH: nil),
+            dpi: nil, physicalCm: nil, filename: filename, nameDateStrip: nil, declarationText: nil, notes: nil,
+            rules: nil
+        )
+    }
 }

@@ -11,7 +11,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
 
 /**
- * Opens the system share sheet once for a staged JPEG or PDF (ALGORITHMS 1.6.2, 6.5; the type follows the staged name), granting read access to the chosen app only
+ * Opens the system share sheet once for a staged JPEG or PDF (ALGORITHMS 1.6.2, 6.5; the type follows the staged
+ * name), granting read access to the chosen app only
  * for this intent, then reports it handled. The user picks where the file goes; the app sends nothing itself.
  */
 @Composable

@@ -43,6 +43,7 @@ dependencies {
     implementation(project(":feature:kit"))
     implementation(project(":feature:custom"))
     implementation(project(":feature:checker"))
+    implementation(project(":feature:pdf"))
     implementation(project(":feature:settings"))
 
     implementation(libs.androidx.core.ktx)

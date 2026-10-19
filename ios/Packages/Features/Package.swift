@@ -12,6 +12,7 @@ let imaging: Target.Dependency = .product(name: "Imaging", package: "Core")
 let vision: Target.Dependency = .product(name: "ScanVision", package: "Core")
 let match: Target.Dependency = .product(name: "Match", package: "Core")
 let inspect: Target.Dependency = .product(name: "Inspect", package: "Core")
+let pdf: Target.Dependency = .product(name: "PDF", package: "Core")
 
 let package = Package(
     name: "Features",
@@ -40,16 +41,21 @@ let package = Package(
         .target(name: "PhotoFlow", dependencies: [core, model, imaging, vision, match, inspect, data]),
         .target(name: "InkFlow", dependencies: [core, model, imaging, match, inspect, data]),
         .target(name: "Custom", dependencies: [core, model, data]),
-        .target(name: "Checker", dependencies: [core, model, data, match, inspect, imaging]),
+        .target(name: "Checker", dependencies: [core, model, data, match, inspect, imaging, pdf]),
+        .target(name: "PDFTools", dependencies: [core, model, data, match, inspect, imaging, pdf]),
         // Empty until their phase (ROADMAP Phase 2-4)
         .target(name: "Coach", dependencies: [core, model]),
-        .target(name: "PDFTools", dependencies: [core, model]),
         .target(name: "Paywall", dependencies: [core]),
         .testTarget(name: "HomeTests", dependencies: ["Home", presets, model, data, testSupport]),
         .testTarget(name: "ExamsTests", dependencies: ["Exams", model, data, match, testSupport]),
         .testTarget(name: "KitTests", dependencies: ["Kit", model, data, match, imaging, inspect, testSupport]),
         .testTarget(name: "CustomTests", dependencies: ["Custom", model, data]),
-        .testTarget(name: "CheckerTests", dependencies: ["Checker", model, data, match, inspect, imaging, testSupport]),
+        .testTarget(
+            name: "CheckerTests", dependencies: ["Checker", model, data, match, inspect, imaging, pdf, testSupport]
+        ),
+        .testTarget(
+            name: "PDFToolsTests", dependencies: ["PDFTools", model, data, match, inspect, imaging, pdf, testSupport]
+        ),
         .testTarget(name: "InkFlowTests", dependencies: ["InkFlow", model, imaging, inspect, data, testSupport]),
         .testTarget(
             name: "PhotoFlowTests",

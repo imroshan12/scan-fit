@@ -34,6 +34,8 @@ public extension Strings {
         case .categoryCertificate: docCategoryCertificate
         case .pwdCertificate: docPwdCertificate
         case .scStCertificate: docScStCertificate
+        case .document: docDocument
+        case .idCard: docIdCard
         }
     }
 

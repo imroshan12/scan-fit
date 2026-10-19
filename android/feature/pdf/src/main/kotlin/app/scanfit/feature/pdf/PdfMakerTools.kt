@@ -82,7 +82,8 @@ constructor(
             if (pages.pageCount < 1) return@use null
             val size = pages.pageSize(0)
             val scale = THUMBNAIL / maxOf(size.width, size.height)
-            val thumbnail = pages.render(0, maxOf(1, (size.width * scale).toInt()), maxOf(1, (size.height * scale).toInt()))
+            val width = maxOf(1, (size.width * scale).toInt())
+            val thumbnail = pages.render(0, width, maxOf(1, (size.height * scale).toInt()))
             PdfFileInfo(document = true, pages = pages.pageCount, thumbnail = thumbnail)
         }
     }

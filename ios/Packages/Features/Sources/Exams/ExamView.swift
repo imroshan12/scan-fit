@@ -12,12 +12,17 @@ public struct ExamView: View {
     @Environment(\.scenePhase) private var scenePhase
     private let strings: Strings
     private let openable: Set<DocType>
+    /// PDF slots open the PDF maker (the app decides: features never import each other).
+    private let pdfMaker: Bool
 
     /// - Parameter openable: document types whose flow exists (the app decides: features never import each other).
-    public init(model: ExamViewModel, strings: Strings = Strings(), openable: Set<DocType> = []) {
+    public init(
+        model: ExamViewModel, strings: Strings = Strings(), openable: Set<DocType> = [], pdfMaker: Bool = false
+    ) {
         _model = State(initialValue: model)
         self.strings = strings
         self.openable = openable
+        self.pdfMaker = pdfMaker
     }
 
     public var body: some View {
@@ -80,6 +85,9 @@ public struct ExamView: View {
                     ForEach(exam.documents) { doc in
                         if openable.contains(doc.type) {
                             NavigationLink(value: FlowRoute(examId: exam.id, docType: doc.type)) { docRow(doc) }
+                        } else if pdfMaker, doc.formats.contains(.pdf) {
+                            // A PDF slot opens the PDF maker (ALGORITHMS 6.6).
+                            NavigationLink(value: PdfRoute(examId: exam.id, docType: doc.type)) { docRow(doc) }
                         } else {
                             docRow(doc)
                         }

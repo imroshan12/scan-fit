@@ -183,7 +183,9 @@ constructor(
         } else {
             viewModelScope.launch {
                 val bundle = presets.bundle.first { it != null || presets.outcome.value != null }
-                val slot = FlowTarget.ExamSlot(examId, docType.orEmpty()).resolve(bundle)?.takeIf { FileFormat.PDF in it.spec.formats }
+                val slot =
+                    FlowTarget.ExamSlot(examId, docType.orEmpty()).resolve(bundle)
+                        ?.takeIf { FileFormat.PDF in it.spec.formats }
                 _uiState.update {
                     if (slot == null) {
                         it.copy(notFound = true)
@@ -256,10 +258,14 @@ constructor(
         val items =
             when {
                 state.tool == PdfTool.COMPRESS -> listOf(item)
+
                 // ID card: replace the side when it is there, otherwise the next side (front, then back).
                 state.tool == PdfTool.ID_CARD && side != null && side < state.items.size ->
                     state.items.toMutableList().also { it[side] = item }
-                state.tool == PdfTool.ID_CARD && state.items.size >= 2 -> state.items.toMutableList().also { it[1] = item }
+
+                state.tool == PdfTool.ID_CARD && state.items.size >= 2 ->
+                    state.items.toMutableList().also { it[1] = item }
+
                 else -> state.items + item
             }
         if (state.tool != PdfTool.ID_CARD && items.sumOf { it.pages } > PdfFit.MAX_PAGES) return false
@@ -315,7 +321,9 @@ constructor(
                     repeat(item.quarterTurns) { raster = CropAdjust.rotateClockwise(raster) }
                     raster
                 } ?: return@launch
-            val rect = item.crop?.takeIf { item.cropBase == PixelSize(image.width, image.height) } ?: CropRect(0, 0, image.width, image.height)
+            val rect =
+                item.crop?.takeIf { item.cropBase == PixelSize(image.width, image.height) }
+                    ?: CropRect(0, 0, image.width, image.height)
             _uiState.update { it.copy(crop = PdfCrop(id, image, rect)) }
         }
     }
@@ -343,7 +351,12 @@ constructor(
                     val r = crop.rect
                     val cut = crop.image.crop(r.x, r.y, r.w, r.h)
                     val scale = THUMBNAIL.toDouble() / maxOf(cut.width, cut.height)
-                    if (scale >= 1) cut else Resampler.resize(cut, maxOf(1, (cut.width * scale).toInt()), maxOf(1, (cut.height * scale).toInt()))
+                    if (scale >= 1) {
+                        cut
+                    } else {
+                        val w = maxOf(1, (cut.width * scale).toInt())
+                        Resampler.resize(cut, w, maxOf(1, (cut.height * scale).toInt()))
+                    }
                 }
             val whole = crop.rect == CropRect(0, 0, crop.image.width, crop.image.height)
             edit { state ->
@@ -386,7 +399,11 @@ constructor(
         val sources =
             state.items.map { item ->
                 val data = bytes.getValue(item.id)
-                if (item.document) PdfSource.Document(data) else PdfSource.Image(data, item.quarterTurns, item.crop, item.cropBase)
+                if (item.document) {
+                    PdfSource.Document(data)
+                } else {
+                    PdfSource.Image(data, item.quarterTurns, item.crop, item.cropBase)
+                }
             }
         val job = PdfJob(state.tool, sources, target.spec.sizeKb, state.options)
         _uiState.update { it.copy(making = PdfProgress.Preparing(0, maxOf(1, sources.size)), addFailure = null) }
@@ -396,6 +413,7 @@ constructor(
                 val result =
                     when (outcome) {
                         is PdfOutcome.Failed -> PdfResult.Failed(outcome.error)
+
                         is PdfOutcome.Made -> {
                             val pdf = outcome.pdf
                             val written = pdf.strategy != PdfStrategy.UNCHANGED
@@ -406,7 +424,12 @@ constructor(
                                 pdf.dpi,
                                 pdf.strategy,
                                 pdf.preview,
-                                ExportVerifier.verifiesPdf(pdf.bytes, pdf.bytes, target.spec, PdfExport(pdf.pages, written)),
+                                ExportVerifier.verifiesPdf(
+                                    pdf.bytes,
+                                    pdf.bytes,
+                                    target.spec,
+                                    PdfExport(pdf.pages, written),
+                                ),
                             )
                         }
                     }
@@ -475,7 +498,8 @@ constructor(
         val ready = state.result as? PdfResult.Ready ?: return null
         val target = state.target ?: return null
         val pdf = PdfExport(ready.pages, written = ready.strategy != PdfStrategy.UNCHANGED)
-        return ExportRequest(target.examId, target.examName, target.spec, DocKind.PDF_DOCUMENT, ready.bytes, target.exam, pdf)
+        val kind = DocKind.PDF_DOCUMENT
+        return ExportRequest(target.examId, target.examName, target.spec, kind, ready.bytes, target.exam, pdf)
     }
 
     private fun export(
@@ -522,7 +546,8 @@ constructor(
         ): PdfTarget? {
             maxKb ?: return null
             val type = if (tool == PdfTool.ID_CARD) DocType.ID_CARD else DocType.DOCUMENT
-            val spec = DocSpec(type, true, listOf(FileFormat.PDF), SizeKb(max = maxKb.toDouble()), Dimensions(DimensionMode.NONE))
+            val size = SizeKb(max = maxKb.toDouble())
+            val spec = DocSpec(type, true, listOf(FileFormat.PDF), size, Dimensions(DimensionMode.NONE))
             return PdfTarget(TOOL_EXAM_ID, TOOL_EXAM_NAME, spec, unverified = false, exam = false)
         }
     }

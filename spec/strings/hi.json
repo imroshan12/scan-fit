@@ -233,7 +233,7 @@
 	"checker.search": "TODO_HI: परीक्षा खोजें",
 	"checker.change_exam": "TODO_HI: परीक्षा बदलें",
 	"checker.no_fix": "TODO_HI: ScanFit यह फ़ाइल यहाँ ठीक नहीं कर सकता। परीक्षा की चेकलिस्ट से नई फ़ाइल बनाएँ।",
-	"checker.needs_pdf": "TODO_HI: इस स्लॉट के लिए PDF चाहिए। PDF टूल जल्द आ रहे हैं।",
+	"checker.needs_pdf": "TODO_HI: ScanFit इस फ़ाइल से PDF नहीं बना सकता। अगर इस पर पासवर्ड है, तो पहले उसे हटाएँ।",
 	"checker.fix": "TODO_HI: {exam:str} के लिए ठीक करें",
 	"checker.fixing": "TODO_HI: ठीक किया जा रहा है\u2026",
 	"checker.fixed_heading": "TODO_HI: ठीक की गई कॉपी",
@@ -395,7 +395,7 @@
 	"pdf.error_cannot_reach": "TODO_HI: इसे {max:int} KB से छोटा नहीं कर पाए। कम पन्ने रखें या किनारे क्रॉप करें।",
 	"pdf.error_unknown_limit": "TODO_HI: इस परीक्षा की PDF साइज़ अभी जाँची नहीं गई है। नोटिस देखें।",
 	"pdf.error_failed": "TODO_HI: PDF नहीं बन पाई। फिर कोशिश करें।",
-	"pdf.history_row": "TODO_HI: {kb:int} KB · PDF",
+	"pdf.history_row": "TODO_HI: {kb:int} KB · {pages:str} · PDF",
 	"pdf.pages": {
 		"one": "TODO_HI: {count:int} पन्ना",
 		"other": "TODO_HI: {count:int} पन्ने"

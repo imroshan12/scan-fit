@@ -78,7 +78,8 @@ public actor FakeKitStore: KitStore {
         exports.append(ExportRecord(
             id: id, createdAt: now, examId: examId, examName: examName, docType: request.spec.type,
             kind: request.kind, fileName: request.filename, size: request.bytes.count,
-            width: file.width ?? 0, height: file.height ?? 0
+            width: request.pdf == nil ? file.width ?? 0 : 0, height: request.pdf == nil ? file.height ?? 0 : 0,
+            pages: request.pdf?.pages
         ))
         copies[id] = request.bytes
         changed()

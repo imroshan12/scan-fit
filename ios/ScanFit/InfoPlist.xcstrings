@@ -1,47 +1,23 @@
 {
-  "sourceLanguage" : "en",
-  "strings" : {
-    "CFBundleDisplayName" : {
-      "comment" : "Bundle display name",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "ScanFit"
-          }
-        }
-      }
-    },
-    "CFBundleName" : {
-      "comment" : "Bundle name",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "ScanFit"
-          }
-        }
-      }
-    },
-    "NSCameraUsageDescription" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ScanFit uses the camera to take your photo for exam forms. The photo stays on your phone."
+  "sourceLanguage": "en",
+  "strings": {
+    "NSCameraUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ScanFit uses the camera to take your photo for exam forms. The photo stays on your phone."
           }
         },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ScanFit परीक्षा फ़ॉर्म के लिए आपकी फ़ोटो लेने के लिए कैमरे का इस्तेमाल करता है। फ़ोटो आपके फ़ोन पर ही रहती है।"
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ScanFit परीक्षा फ़ॉर्म के लिए आपकी फ़ोटो लेने के लिए कैमरे का इस्तेमाल करता है। फ़ोटो आपके फ़ोन पर ही रहती है।"
           }
         }
       }
     }
   },
-  "version" : "1.0"
+  "version": "1.0"
 }

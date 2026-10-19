@@ -14,6 +14,10 @@ import app.scanfit.core.match.CheckerStatus
 import app.scanfit.core.match.DocKind
 import app.scanfit.core.model.DocSpec
 import app.scanfit.core.model.DocType
+import app.scanfit.core.pdf.PdfError
+import app.scanfit.core.pdf.PdfMade
+import app.scanfit.core.pdf.PdfOutcome
+import app.scanfit.core.pdf.PdfStrategy
 import app.scanfit.core.presets.PresetsLoadOutcome
 import app.scanfit.core.presets.PresetsSummary
 import app.scanfit.core.testing.FakeExportDestinations
@@ -23,6 +27,7 @@ import app.scanfit.core.testing.FakeShareStager
 import app.scanfit.core.testing.FakeUserPreferences
 import app.scanfit.core.testing.SpecPresets
 import app.scanfit.core.testing.TestJpeg
+import app.scanfit.core.testing.TestPdf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -45,6 +50,10 @@ class FakeCheckerTools : CheckerTools {
     var decoded: Raster? = Raster.of(600, 300) { _, _ -> 0xF0F0F0 }
     var fitWith: (Raster, DocSpec) -> PipelineOutcome = { raster, _ -> success(raster, TestJpeg.make(140, 60, 16 * 1024)) }
     val fitted = mutableListOf<DocSpec>()
+    var pdfWith: (ByteArray, DocSpec) -> PdfOutcome = { _, _ ->
+        PdfOutcome.Made(PdfMade(TestPdf.make(1, 120 * 1024), 1, 200, 85, PdfStrategy.QUALITY, null))
+    }
+    val madePdfs = mutableListOf<DocSpec>()
 
     override suspend fun read(uri: String): ByteArray? = files[uri]?.second
 
@@ -61,6 +70,14 @@ class FakeCheckerTools : CheckerTools {
     ): PipelineOutcome {
         fitted += spec
         return fitWith(image, spec)
+    }
+
+    override suspend fun makePdf(
+        bytes: ByteArray,
+        spec: DocSpec,
+    ): PdfOutcome {
+        madePdfs += spec
+        return pdfWith(bytes, spec)
     }
 
     companion object {
@@ -109,6 +126,53 @@ class CheckerViewModelTest {
         assertEquals(30, file.kb)
         assertTrue("a JPEG named .png", Issue.EXTENSION_MISMATCH in file.inspected.issues)
         assertNull("no kind until the user says", m.state.kind)
+    }
+
+    private fun jeeCertificate(m: CheckerViewModel) = m.state.targets.first { it.exam.id == "jee_main" && it.slot.type == DocType.CLASS10_CERTIFICATE }
+
+    @Test
+    fun aPhotoForAPdfSlotBecomesAPdfThatIsSavedForThatSlot() = runTest(dispatcher) {
+        tools.files[GOOD] = "marksheet.jpg" to TestJpeg.make(1200, 1600, 400 * 1024)
+        val prefs = FakeUserPreferences()
+        val m = model(prefs)
+        m.onFileSelected(GOOD)
+        m.onKind(DocKind.PDF_DOCUMENT)
+        advanceUntilIdle()
+        m.onTarget(jeeCertificate(m))
+        assertEquals(CheckerStatus.FIX, m.state.result?.status)
+        m.onFix()
+        advanceUntilIdle()
+        val fix = m.state.fix as FixState.Ready
+        assertEquals(1, fix.pdf?.pages)
+        assertTrue(fix.meetsRules && m.state.canSave)
+        assertEquals(DocType.CLASS10_CERTIFICATE, tools.madePdfs.single().type)
+        assertTrue("no image fit for a PDF slot", tools.fitted.isEmpty())
+        m.onSave()
+        advanceUntilIdle()
+        assertEquals(SaveState.SAVED, m.state.save.state)
+        assertEquals("class10_certificate_JEE-Main_120kb.pdf", destinations.lastRequest?.fileName)
+        assertEquals(setOf(SavedDocument("jee_main", "CLASS10_CERTIFICATE")), prefs.savedDocuments.first())
+    }
+
+    @Test
+    fun aPdfWithAPasswordCannotBeFixedAndAFailedPdfSaysWhy() = runTest(dispatcher) {
+        tools.files[BIG] = "locked.pdf" to TestPdf.make(1, 400 * 1024, encrypted = true)
+        val m = model()
+        m.onFileSelected(BIG)
+        m.onKind(DocKind.PDF_DOCUMENT)
+        advanceUntilIdle()
+        m.onTarget(jeeCertificate(m))
+        assertEquals(CheckerStatus.NO_FIX, m.state.result?.status)
+        tools.files[GOOD] = "big.pdf" to TestPdf.make(2, 900 * 1024)
+        tools.pdfWith = { _, _ -> PdfOutcome.Failed(PdfError.CANNOT_REACH) }
+        m.onFileSelected(GOOD)
+        m.onKind(DocKind.PDF_DOCUMENT)
+        advanceUntilIdle()
+        m.onTarget(jeeCertificate(m))
+        assertEquals(CheckerStatus.FIX, m.state.result?.status)
+        m.onFix()
+        advanceUntilIdle()
+        assertEquals(PdfError.CANNOT_REACH, (m.state.fix as FixState.Failed).pdfError)
     }
 
     @Test

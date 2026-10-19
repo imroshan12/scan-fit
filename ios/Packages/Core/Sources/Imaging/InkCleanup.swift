@@ -93,9 +93,17 @@ public enum InkCleanup {
         UInt8(min(max(roundHalfUp(Double(v) * factor), 0), 255))
     }
 
-    /// Thumb (ALGORITHMS 9.5): normalise by a paper-only background, stretch linearly, darken mid-greys slightly,
-    /// then a square around the robust ink box. `n1` is the local-mean normalisation, used only to find candidates.
-    private static func thumb(_ l: [Int], _ n1: [Int], _ w: Int, _ h: Int) -> InkResult {
+    /// The thumb's tone (steps 1–4) on `src`'s luma: paper white, ink kept dark. ALGORITHMS 9.10 page cleanup reuses it
+    /// for photographed pages. Returns the luma and the toned grey value of every pixel.
+    static func paperTone(_ src: Raster) -> (luma: [Int], tone: [Int]) {
+        let w = src.width, h = src.height
+        let l = src.luma().map { Int($0) }
+        let n1 = normalise(l, ImageOps.gaussianApprox(l, w, h, sigma: Double(min(w, h)) / 30.0))
+        return (l, thumbTone(l, n1, w, h))
+    }
+
+    /// Steps 1–4 of the thumb: candidates, paper-only background, normalisation and the tone curve.
+    private static func thumbTone(_ l: [Int], _ n1: [Int], _ w: Int, _ h: Int) -> [Int] {
         let total = w * h
         var lumaHist = [Int](repeating: 0, count: 256)
         for v in l { lumaHist[v] += 1 }
@@ -125,12 +133,19 @@ public enum InkCleanup {
                 : Double(min(max(v - black, 0), thumbWhite - black)) / Double(thumbWhite - black)
             return min(max(roundHalfUp(255 * pow(s, thumbExponent)), 0), 255)
         }
+        return n.map { lut[$0] }
+    }
 
+    /// Thumb (ALGORITHMS 9.5): normalise by a paper-only background, stretch linearly, darken mid-greys slightly,
+    /// then a square around the robust ink box. `n1` is the local-mean normalisation, used only to find candidates.
+    private static func thumb(_ l: [Int], _ n1: [Int], _ w: Int, _ h: Int) -> InkResult {
+        let total = w * h
+        let tone = thumbTone(l, n1, w, h)
         var grey = [UInt8](repeating: 0, count: total * 3)
         var columns = [Int](repeating: 0, count: w), rows = [Int](repeating: 0, count: h), count = 0
         for y in 0..<h {
             for x in 0..<w {
-                let v = lut[n[y * w + x]]
+                let v = tone[y * w + x]
                 let i = (y * w + x) * 3
                 grey[i] = UInt8(v); grey[i + 1] = UInt8(v); grey[i + 2] = UInt8(v)
                 if v < thumbTrimInk { columns[x] += 1; rows[y] += 1; count += 1 }

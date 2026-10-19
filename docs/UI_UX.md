@@ -84,6 +84,22 @@ Comparison never changes options, Saved or export bytes. Three wrapping KB/dimen
 pass/fail labels backed by the re-inspected output. Pending edits and failures hide old output/chips. Technical passes
 do not certify an unverified preset; the separate "Likely OK · Unverified" verdict stays. See ALGORITHMS §4.
 
+**PDF maker** (ALGORITHMS §6, built 2026-10-15). Tools → PDF lists Images to PDF, Compress a PDF, Merge PDFs and ID card on
+one page (title + one-line description each); an exam's PDF row (e.g. JEE Main "Class 10 certificate") opens the same
+screen for that slot. One scrolling screen, top to bottom:
+1. *Intro* — the exam name and window (`50–300 KB · PDF`) for a slot, then one line on what to add.
+2. *Pages / Files* — each file with a 56 dp/pt thumbnail, "Photo 2" or "PDF", `3 pages · 812 KB`; move up/down and remove
+   (icon buttons with spoken labels); pictures also have Crop (free rectangle, the ink flow's editor) and Rotate. ID card:
+   Front and Back slots, Back offered once Front is there. Add buttons: gallery (multi-select), Files (images and/or
+   PDFs as the tool accepts), camera. Unreadable, password-protected and over-20-page additions say so in place.
+3. *Options* — "Clean up photos" (pictures only) and "Black and white" (both on by default, user decision 2026-10-15),
+   each with a one-line hint; Tools add Max KB (number pad, quick picks 100 · 200 · 300 · 500, default 200).
+4. *Result* — the first page, `182 KB · 3 pages · 150 DPI`, the slot verdict ("likely OK" for unverified) or "Fits 200 KB",
+   and one note: text is now an image / already fits, nothing changed / made bigger to reach the minimum.
+Bottom bar: Make PDF (with what is missing underneath), progress "Fitting page 2 of 5…" while working (Back cancels),
+then Save (Downloads / Files; Done after a verified save) and Share. Any edit drops the result. Saving an exam slot
+marks its row Saved; every verified PDF joins My Kit History (`182 KB · 3 pages · PDF`).
+
 **Checker** (ALGORITHMS §12, built 2026-10-15). One scrolling screen, top to bottom:
 1. *Pick* — "Choose from gallery" / "Choose from Files" (images and PDFs). Opening failures say so in place.
 2. *This file* — format · KB · W×H, then the file's own problems (EXIF rotation, GPS, CMYK, progressive, wrong extension) as
@@ -94,7 +110,8 @@ do not certify an unverified preset; the separate "Likely OK · Unverified" verd
    popular first, unverified exams with their badge.
 5. *Result* — exam + slot with "Change exam" (system Back does the same), the KB/dimension/format chips, the slot verdict
    ("likely OK" for unverified) and each issue with its numbers ("Too big: 605 KB (maximum 20)."). When fixable:
-   "Make it fit for <exam>". PDF-only slots and undecodable files explain why there is no fix.
+   "Make it fit for <exam>"; for a PDF slot it makes a PDF from the picture or PDF (§6.6). Password-protected PDFs and
+   undecodable files explain why there is no fix.
 6. *Fixed copy* — the image, chips, verdict, match note, "Your original file is not changed.", the one-time handwriting tick
    for signatures, then a bottom bar with Save (Downloads / Files) and Share. After a verified save the button reads Done and
    returns to the exam list.

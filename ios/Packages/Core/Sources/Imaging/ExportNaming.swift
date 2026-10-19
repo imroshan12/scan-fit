@@ -34,4 +34,10 @@ public enum ExportNaming {
         let kb = roundHalfUp(Double(bytes) / 1024.0)
         return "\(slot.type.rawValue)_\(examShort(examName))_\(width)x\(height)_\(kb)kb.jpg"
     }
+
+    /// A PDF (ALGORITHMS 9.8 / 6.6): `<filename>.pdf`, otherwise `<docType>_<examShort>_<K>kb.pdf`.
+    public static func pdfFileName(examName: String, slot: DocSpec, bytes: Int) -> String {
+        if let filename = slot.filename { return "\(filename).pdf" }
+        return "\(slot.type.rawValue)_\(examShort(examName))_\(roundHalfUp(Double(bytes) / 1024.0))kb.pdf"
+    }
 }

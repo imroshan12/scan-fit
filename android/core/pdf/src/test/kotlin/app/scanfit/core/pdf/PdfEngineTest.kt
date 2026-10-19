@@ -112,7 +112,15 @@ class PdfEngineTest {
             return most
         }
         // Black "text", a red stamp and paper: cleanup maps the darkest ink to black, so the stamp must not be the darkest.
-        val page = Raster.of(120, 160) { x, _ -> if (x < 30) 0x101010 else if (x < 60) 0xC03030 else 0xF0F0F0 }
+        val page = Raster.of(120, 160) { x, _ ->
+            if (x < 30) {
+                0x101010
+            } else if (x < 60) {
+                0xC03030
+            } else {
+                0xF0F0F0
+            }
+        }
         val source = listOf(PdfSource.Image(AndroidJpegEncoder.encode(page, 90)))
         val colour = made(PdfJob(PdfTool.IMAGES, source, limit, PdfOptions(grayscale = false, cleanup = false)))
         val grey = made(PdfJob(PdfTool.IMAGES, source, limit, PdfOptions(grayscale = true, cleanup = false)))

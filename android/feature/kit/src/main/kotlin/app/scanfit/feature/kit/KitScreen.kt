@@ -46,6 +46,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
@@ -339,8 +340,16 @@ private fun HistoryRow(
             }
             Text(exam, style = ScanFitType.caption)
             Text(
-                stringResource(R.string.photo_result, (record.size + KB / 2) / KB, record.width, record.height) +
-                    " · " + formatDay(record.createdAtMillis),
+                record.pages.let { pages ->
+                    val kb = (record.size + KB / 2) / KB
+                    if (pages == null) {
+                        stringResource(R.string.photo_result, kb, record.width, record.height)
+                    } else {
+                        // A PDF (ALGORITHMS 13.3): `182 KB · 3 pages · PDF`.
+                        val pageCount = pluralStringResource(R.plurals.pdf_pages, pages, pages)
+                        stringResource(R.string.pdf_history_row, kb, pageCount)
+                    }
+                } + " · " + formatDay(record.createdAtMillis),
                 style = ScanFitType.caption,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

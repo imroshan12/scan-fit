@@ -50,37 +50,9 @@ import app.scanfit.core.designsystem.components.ShareEffect
 import app.scanfit.core.designsystem.components.labelRes
 import app.scanfit.core.designsystem.theme.ScanFitSpacing
 import app.scanfit.core.designsystem.theme.ScanFitType
-import app.scanfit.core.imaging.CropCorner
 import app.scanfit.core.pdf.PdfFit
 import app.scanfit.core.pdf.PdfProgress
 import app.scanfit.core.pdf.PdfTool
-
-/** Everything the PDF maker screen can ask for. */
-class PdfActions(
-    val onBack: () -> Unit = {},
-    /** Gallery pictures; the argument is the ID card side to fill, or `null` to add. */
-    val onChoosePictures: (Int?) -> Unit = {},
-    /** Files: pictures and/or PDFs, as the tool accepts; the argument is the ID card side. */
-    val onChooseFiles: (Int?) -> Unit = {},
-    /** `null` when the device has no camera. */
-    val onTakePhoto: ((Int?) -> Unit)? = null,
-    val onRemove: (Long) -> Unit = {},
-    val onMove: (Long, Int) -> Unit = { _, _ -> },
-    val onTurn: (Long) -> Unit = {},
-    val onCrop: (Long) -> Unit = {},
-    val onCropMove: (Double, Double) -> Unit = { _, _ -> },
-    val onCropResize: (CropCorner, Double, Double) -> Unit = { _, _, _ -> },
-    val onCropReset: () -> Unit = {},
-    val onCropDone: () -> Unit = {},
-    val onCropCancel: () -> Unit = {},
-    val onGrayscale: (Boolean) -> Unit = {},
-    val onCleanup: (Boolean) -> Unit = {},
-    val onMaxKb: (String) -> Unit = {},
-    val onMake: () -> Unit = {},
-    val onSave: () -> Unit = {},
-    val onShare: () -> Unit = {},
-    val onDone: () -> Unit = {},
-)
 
 /** The PDF maker (ALGORITHMS 6, UI_UX §3): wires the pickers, the camera, the save destination and Back. */
 @Composable
@@ -109,10 +81,12 @@ fun PdfMakerRoute(
     val openOne = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         added(listOfNotNull(uri?.toString()))
     }
-    val takePhoto = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { viewModel.onCaptured(it) }
-    val createDocument = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")) { uri ->
-        viewModel.onSaveDestination(uri?.toString())
-    }
+    val takePhoto =
+        rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { viewModel.onCaptured(it) }
+    val createDocument =
+        rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument(PDF_MIME)) { uri ->
+            viewModel.onSaveDestination(uri?.toString())
+        }
     val back = {
         when {
             state.crop != null -> viewModel.onCropCancel()
@@ -188,9 +162,11 @@ fun PdfMakerRoute(
 /** What the Files picker offers for a tool (ALGORITHMS 6.1). */
 private fun acceptedTypes(tool: PdfTool): Array<String> = when (tool) {
     PdfTool.IMAGES, PdfTool.ID_CARD -> arrayOf("image/*")
-    PdfTool.COMPRESS, PdfTool.MERGE -> arrayOf("application/pdf")
-    PdfTool.EXAM -> arrayOf("image/*", "application/pdf")
+    PdfTool.COMPRESS, PdfTool.MERGE -> arrayOf(PDF_MIME)
+    PdfTool.EXAM -> arrayOf("image/*", PDF_MIME)
 }
+
+private const val PDF_MIME = "application/pdf"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -206,7 +182,10 @@ internal fun PdfMakerScreen(
                 title = { Text(title(state)) },
                 navigationIcon = {
                     IconButton(onClick = actions.onBack, enabled = state.save.state != SaveState.SAVING) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.common_back),
+                        )
                     }
                 },
             )
@@ -257,10 +236,15 @@ internal fun PdfMakerScreen(
 @Composable
 private fun title(state: PdfMakerUiState): String = when (state.tool) {
     PdfTool.IMAGES -> stringResource(R.string.tools_pdf_images)
+
     PdfTool.COMPRESS -> stringResource(R.string.tools_pdf_compress)
+
     PdfTool.MERGE -> stringResource(R.string.tools_pdf_merge)
+
     PdfTool.ID_CARD -> stringResource(R.string.tools_pdf_id_card)
-    PdfTool.EXAM -> state.target?.spec?.type?.let { stringResource(it.labelRes()) } ?: stringResource(R.string.tools_pdf)
+
+    PdfTool.EXAM ->
+        state.target?.spec?.type?.let { stringResource(it.labelRes()) } ?: stringResource(R.string.tools_pdf)
 }
 
 @Composable
@@ -275,13 +259,20 @@ private fun BottomBar(
     actions: PdfActions,
 ) {
     Surface(tonalElevation = 2.dp) {
-        Column(Modifier.padding(ScanFitSpacing.screenMargin), verticalArrangement = Arrangement.spacedBy(ScanFitSpacing.sm)) {
+        Column(
+            Modifier.padding(ScanFitSpacing.screenMargin),
+            verticalArrangement = Arrangement.spacedBy(ScanFitSpacing.sm),
+        ) {
             val making = state.making
             val ready = state.result as? PdfResult.Ready
             when {
                 state.crop != null -> {
-                    Button(onClick = actions.onCropDone, modifier = fullWidth()) { Text(stringResource(R.string.common_done)) }
-                    TextButton(onClick = actions.onCropReset, modifier = fullWidth()) { Text(stringResource(R.string.photo_reset)) }
+                    Button(onClick = actions.onCropDone, modifier = Modifier.fullWidth()) {
+                        Text(stringResource(R.string.common_done))
+                    }
+                    TextButton(onClick = actions.onCropReset, modifier = Modifier.fullWidth()) {
+                        Text(stringResource(R.string.photo_reset))
+                    }
                 }
 
                 making != null -> {
@@ -301,9 +292,9 @@ private fun BottomBar(
                     Button(
                         onClick = if (saved) actions.onDone else actions.onSave,
                         enabled = saved || state.canSave,
-                        modifier = fullWidth(),
+                        modifier = Modifier.fullWidth(),
                     ) { Text(stringResource(label)) }
-                    TextButton(onClick = actions.onShare, enabled = state.canSave, modifier = fullWidth()) {
+                    TextButton(onClick = actions.onShare, enabled = state.canSave, modifier = Modifier.fullWidth()) {
                         Text(stringResource(R.string.common_share))
                     }
                 }
@@ -312,7 +303,7 @@ private fun BottomBar(
                     missingText(state)?.let {
                         Text(it, style = ScanFitType.caption, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    Button(onClick = actions.onMake, enabled = state.canMake, modifier = fullWidth()) {
+                    Button(onClick = actions.onMake, enabled = state.canMake, modifier = Modifier.fullWidth()) {
                         Text(stringResource(R.string.pdf_make))
                     }
                 }
@@ -335,4 +326,4 @@ private fun missingText(state: PdfMakerUiState): String? = when (state.missing) 
     else -> null
 }
 
-internal fun fullWidth() = Modifier.fillMaxWidth().heightIn(min = ScanFitSpacing.minTouchTarget)
+internal fun Modifier.fullWidth() = fillMaxWidth().heightIn(min = ScanFitSpacing.minTouchTarget)

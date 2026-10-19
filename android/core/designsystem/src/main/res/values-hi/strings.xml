@@ -29,7 +29,7 @@
     <string name="checker_kind_photo">फ़ोटो</string>
     <string name="checker_kind_signature">हस्ताक्षर</string>
     <string name="checker_kind_thumb">अंगूठे का निशान</string>
-    <string name="checker_needs_pdf">इस स्लॉट के लिए PDF चाहिए। PDF टूल जल्द आ रहे हैं।</string>
+    <string name="checker_needs_pdf">ScanFit इस फ़ाइल से PDF नहीं बना सकता। अगर इस पर पासवर्ड है, तो पहले उसे हटाएँ।</string>
     <string name="checker_no_fix">ScanFit यह फ़ाइल यहाँ ठीक नहीं कर सकता। परीक्षा की चेकलिस्ट से नई फ़ाइल बनाएँ।</string>
     <string name="checker_no_issues">फ़ाइल में अपने आप में कोई समस्या नहीं है।</string>
     <string name="checker_open_failed">यह फ़ाइल नहीं खुल सकी। कोई दूसरी चुनें।</string>
@@ -279,7 +279,7 @@
     <string name="pdf_front">आगे</string>
     <string name="pdf_grayscale">ब्लैक एंड व्हाइट</string>
     <string name="pdf_grayscale_hint">लगभग आधी साइज़। मुहर का रंग नहीं रहेगा।</string>
-    <string name="pdf_history_row">%1$d KB · PDF</string>
+    <string name="pdf_history_row">%1$d KB · %2$s · PDF</string>
     <string name="pdf_image_label">फ़ोटो %1$d</string>
     <string name="pdf_intro_compress">PDF चुनें और फ़ॉर्म में दी गई साइज़ लिखें।</string>
     <string name="pdf_intro_exam">पन्नों की फ़ोटो या अपनी PDF जोड़ें। ScanFit एक सही साइज़ की PDF बनाएगा।</string>

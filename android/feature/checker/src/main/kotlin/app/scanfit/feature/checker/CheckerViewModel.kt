@@ -6,12 +6,15 @@ import app.scanfit.core.data.UserPreferences
 import app.scanfit.core.data.export.DocumentExporter
 import app.scanfit.core.data.export.ExportRequest
 import app.scanfit.core.data.export.ExportVerifier
+import app.scanfit.core.data.export.PdfExport
 import app.scanfit.core.data.export.SaveResult
 import app.scanfit.core.data.export.SaveState
 import app.scanfit.core.data.export.ShareStager
 import app.scanfit.core.imaging.AndroidImageDecoder
 import app.scanfit.core.imaging.FitError
 import app.scanfit.core.imaging.PipelineOutcome
+import app.scanfit.core.imaging.Raster
+import app.scanfit.core.inspect.DetectedFormat
 import app.scanfit.core.inspect.InspectedFile
 import app.scanfit.core.inspect.Inspector
 import app.scanfit.core.match.CheckerStatus
@@ -25,7 +28,11 @@ import app.scanfit.core.match.ReviewChecks
 import app.scanfit.core.match.SlotEvaluation
 import app.scanfit.core.match.Verdict
 import app.scanfit.core.model.DocSpec
+import app.scanfit.core.model.FileFormat
 import app.scanfit.core.model.PresetBundle
+import app.scanfit.core.pdf.PdfError
+import app.scanfit.core.pdf.PdfOutcome
+import app.scanfit.core.pdf.PdfStrategy
 import app.scanfit.core.presets.PresetsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
@@ -73,12 +80,23 @@ sealed interface FixState {
         val meetsRules: Boolean,
         val checks: ReviewChecks,
         val note: MatchNote,
+        /** Set when the copy is a PDF made for a PDF slot (ALGORITHMS 6.6). */
+        val pdf: PdfFix? = null,
     ) : FixState
 
     data class Failed(
         val error: FitError?,
+        /** Why no PDF could be made, for a PDF slot. */
+        val pdfError: PdfError? = null,
     ) : FixState
 }
+
+/** A PDF made by "Make it fit": its pages, whether the app wrote it, and its first page for display. */
+class PdfFix(
+    val pages: Int,
+    val written: Boolean,
+    val preview: Raster?,
+)
 
 data class CheckerUiState(
     val opening: Boolean = false,
@@ -191,7 +209,9 @@ constructor(
         val kind = state.kind ?: return
         val evaluation = MatchEngine.evaluate(target.slot, FileFacts.of(file.inspected, kind))
         val unverified = target.exam.isUnverified
-        val status = CheckerStatus.of(file.inspected.format, target.slot, evaluation.verdict, unverified)
+        val inspected = file.inspected
+        val status =
+            CheckerStatus.of(inspected.format, target.slot, evaluation.verdict, unverified, inspected.pdfEncrypted)
         _uiState.value =
             state.copy(
                 result = TargetResult(target, evaluation, ReviewChecks.of(evaluation), status),
@@ -219,8 +239,14 @@ constructor(
         job =
             viewModelScope.launch {
                 val bundle = bundle()
+                val format = _uiState.value.file?.inspected?.format
+                val imageSlot = FileFormat.JPG in slot.formats || FileFormat.JPEG in slot.formats
                 val fix =
                     withContext(work) {
+                        // A PDF slot, or a PDF for an image slot that also takes PDF: the PDF engine (ALGORITHMS 6.6).
+                        if (!imageSlot || format == DetectedFormat.PDF) {
+                            return@withContext pdfFix(source, slot, kind, bundle)
+                        }
                         val image = tools.decode(source, decodeCap(slot)) ?: return@withContext FixState.Failed(null)
                         when (val outcome = tools.fit(image, slot)) {
                             is PipelineOutcome.Failure -> FixState.Failed(outcome.error)
@@ -289,7 +315,35 @@ constructor(
         val fix = state.fix as? FixState.Ready ?: return null
         val target = state.result?.target ?: return null
         val kind = state.kind ?: return null
-        return ExportRequest(target.exam.id, target.exam.name, target.slot, kind, fix.bytes)
+        val pdf = fix.pdf?.let { PdfExport(it.pages, it.written) }
+        return ExportRequest(target.exam.id, target.exam.name, target.slot, kind, fix.bytes, pdf = pdf)
+    }
+
+    /** "Make it fit" for a PDF slot: the PDF engine, checked as the export will check it (ALGORITHMS 6.5). */
+    private suspend fun pdfFix(
+        source: ByteArray,
+        slot: DocSpec,
+        kind: DocKind,
+        bundle: PresetBundle?,
+    ): FixState = when (val outcome = tools.makePdf(source, slot)) {
+        is PdfOutcome.Failed -> FixState.Failed(null, outcome.error)
+
+        is PdfOutcome.Made -> {
+            val made = outcome.pdf
+            val written = made.strategy != PdfStrategy.UNCHANGED
+            val facts = FileFacts.of(Inspector.inspect(made.bytes), kind)
+            val evaluation = MatchEngine.evaluate(slot, facts)
+            FixState.Ready(
+                bytes = made.bytes,
+                kb = (made.bytes.size + KB / 2) / KB,
+                width = 0,
+                height = 0,
+                meetsRules = ExportVerifier.verifiesPdf(made.bytes, made.bytes, slot, PdfExport(made.pages, written)),
+                checks = ReviewChecks.of(evaluation),
+                note = bundle?.let { MatchNote.of(facts, it.exams, it.popular) } ?: MatchNote.EMPTY,
+                pdf = PdfFix(made.pages, written, made.preview),
+            )
+        }
     }
 
     private fun export(

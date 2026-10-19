@@ -42,11 +42,11 @@ object PdfLayout {
 
     val DPI_LADDER = listOf(200, 150, 120, 100)
 
-    private val margin = MARGIN_FRACTION * A4_WIDTH
-    private val mm = POINTS_PER_INCH / MM_PER_INCH
-    private val cardWidth = CARD_WIDTH_MM * mm
-    private val cardHeight = CARD_HEIGHT_MM * mm
-    private val cardGap = CARD_GAP_MM * mm
+    private const val MARGIN = MARGIN_FRACTION * A4_WIDTH
+    private const val MM = POINTS_PER_INCH / MM_PER_INCH
+    private const val CARD_WIDTH = CARD_WIDTH_MM * MM
+    private const val CARD_HEIGHT = CARD_HEIGHT_MM * MM
+    private const val CARD_GAP = CARD_GAP_MM * MM
 
     /** An image on its own A4 page: portrait unless the image is wider than tall, 5 % margins, centred. */
     fun imagePage(
@@ -54,8 +54,8 @@ object PdfLayout {
         h: Int,
     ): Pair<PdfSize, Placement> {
         val page = if (w <= h) PdfSize(A4_WIDTH, A4_HEIGHT) else PdfSize(A4_HEIGHT, A4_WIDTH)
-        val bw = page.width - 2 * margin
-        val bh = page.height - 2 * margin
+        val bw = page.width - 2 * MARGIN
+        val bh = page.height - 2 * MARGIN
         val s = minOf(bw / w, bh / h)
         val rw = w * s
         val rh = h * s
@@ -67,20 +67,20 @@ object PdfLayout {
         front: PixelSize,
         back: PixelSize,
     ): Pair<PdfSize, List<Placement>> {
-        val x = (A4_WIDTH - cardWidth) / 2
-        val frontY = (A4_HEIGHT - (2 * cardHeight + cardGap)) / 2
-        val backY = frontY + cardHeight + cardGap
+        val x = (A4_WIDTH - CARD_WIDTH) / 2
+        val frontY = (A4_HEIGHT - (2 * CARD_HEIGHT + CARD_GAP)) / 2
+        val backY = frontY + CARD_HEIGHT + CARD_GAP
         val placements =
             listOf(front to frontY, back to backY).map { (side, y) ->
-                val s = minOf(cardWidth / side.width, cardHeight / side.height)
+                val s = minOf(CARD_WIDTH / side.width, CARD_HEIGHT / side.height)
                 val rw = side.width * s
                 val rh = side.height * s
-                Placement(PdfRect(x + (cardWidth - rw) / 2, y + (cardHeight - rh) / 2, rw, rh), s)
+                Placement(PdfRect(x + (CARD_WIDTH - rw) / 2, y + (CARD_HEIGHT - rh) / 2, rw, rh), s)
             }
         return PdfSize(A4_WIDTH, A4_HEIGHT) to placements
     }
 
-    /** Pixels of a `w × h` image placed at [scale] points per pixel, rendered at [dpi]: never upscaled, by the long side. */
+    /** Pixels of a `w × h` image placed at [scale] points per pixel, rendered at [dpi]: never upscaled, long side. */
     fun pixels(
         w: Int,
         h: Int,

@@ -80,7 +80,7 @@ public struct Strings: Sendable {
     public var checkerKindSignature: String { tr("checker.kind_signature") }
     /// "Thumb impression"
     public var checkerKindThumb: String { tr("checker.kind_thumb") }
-    /// "This slot needs a PDF. PDF tools are coming soon."
+    /// "ScanFit can't make a PDF from this file. If it has a password, remove it first."
     public var checkerNeedsPdf: String { tr("checker.needs_pdf") }
     /// "ScanFit can't fix this file here. Make a new one from the exam's checklist."
     public var checkerNoFix: String { tr("checker.no_fix") }
@@ -544,8 +544,8 @@ public struct Strings: Sendable {
     public var pdfGrayscale: String { tr("pdf.grayscale") }
     /// "About half the size. Stamps lose their colour."
     public var pdfGrayscaleHint: String { tr("pdf.grayscale_hint") }
-    /// "{kb:int} KB · PDF"
-    public func pdfHistoryRow(kb: Int) -> String { fmt("pdf.history_row", [kb]) }
+    /// "{kb:int} KB · {pages:str} · PDF"
+    public func pdfHistoryRow(kb: Int, pages: String) -> String { fmt("pdf.history_row", [kb, pages]) }
     /// "Photo {number:int}"
     public func pdfImageLabel(number: Int) -> String { fmt("pdf.image_label", [number]) }
     /// "Choose a PDF and the size the form allows."

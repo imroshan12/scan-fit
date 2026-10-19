@@ -202,7 +202,7 @@ of the photo fixture ≤ 800 ms on a mid device (benchmark test).
       for that exam, Share never does; exam signatures need the handwriting tick. Entry from Tools and Home. VM tests: 7
       Android + 6 iOS. Checked by hand on the iPhone 11 Pro Max simulator.
     - _Deviations:_ one Fix (refit the whole copy to the chosen slot) instead of per-issue actions; no PDF fixes (PDF slots
-      say "PDF tools are coming soon"); the kind is chosen by the user, never guessed; the refit uses the plain fit pipeline
+      said "PDF tools are coming soon"; since 2026-10-20 "Make it fit" makes a PDF, ALGORITHMS §12 rule 4); the kind is chosen by the user, never guessed; the refit uses the plain fit pipeline
       (no ink cleanup — the ink flow does that); no `checker_run` analytics event yet.
 - [x] ~~Screenshot tests for every screen × light/dark × font 1.0/2.0 × EN/HI~~ — dropped (2026-10-03, product decision)
     - Built on both apps (Roborazzi, swift-snapshot-testing), then removed: baselines made every UI change slow. Screens are checked
@@ -215,7 +215,16 @@ file passes the upload echo page. Zero P0/P1 bugs open.
 
 ## Phase 3 — PDF, scan, guide sheet, localisation (W6–W7)
 
-- [ ] PDF: images → PDF (+ cleanup toggle), compress to KB (§6), merge, ID card on one page
+- [x] PDF: images → PDF (+ cleanup toggle), compress to KB (§6), merge, ID card on one page
+    - Built on both apps (2026-10-15/20): ALGORITHMS §6 + §9.10, `spec/tools/pdf.py`, 4 sample PDFs in `spec/fixtures/pdfs/`,
+      `pdf_layout/writer/fit/job/name_cases` + `page_cleanup_cases`. Android `:core:pdf` + `:feature:pdf`, iOS `PDF` + `PDFTools`.
+      Exam PDF rows open the PDF maker (records Saved); the Checker's "Make it fit" makes a PDF for PDF slots; PDF exports
+      join My Kit History.
+    - _Deviations:_ the app writes its own image PDF (no `PdfDocument`/PDFKit page copy) so size is exact and both apps match
+      byte for byte; a fixed quality grid instead of a binary search (one page raster in memory at a time), extended to
+      q20 at 100 DPI because iOS ImageIO compresses less; a Tools limit never pads; merge/compress rasterise pages (text
+      not selectable, user decision); grayscale + cleanup on by default (user decision). Pro limits come with Phase 4.
+      Android's real `PdfRenderer` is device-QA only (Robolectric cannot run it).
 - [ ] Scan entry: ML Kit Document Scanner / VisionKit, with the Android low-RAM fallback (CameraX + 4-corner crop)
 - [ ] Printable guide sheet PDF generator (true-scale boxes: signature 7:3, thumb square, declaration 2:1, triple signature, NEET fingers) + a "Print / Share" action
 - [ ] Settings: language, presets version + manual update, unverified toggle, privacy, help, "Report a problem" (mailto with exam id + app/preset version, **no file**)
