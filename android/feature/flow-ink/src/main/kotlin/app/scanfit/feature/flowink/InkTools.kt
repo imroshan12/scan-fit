@@ -6,6 +6,7 @@ import app.scanfit.core.imaging.AndroidJpegEncoder
 import app.scanfit.core.imaging.CropRect
 import app.scanfit.core.imaging.FitPipeline
 import app.scanfit.core.imaging.InkOptions
+import app.scanfit.core.imaging.KitOriginalImage
 import app.scanfit.core.imaging.Pipeline
 import app.scanfit.core.imaging.PipelineOutcome
 import app.scanfit.core.imaging.Raster
@@ -41,6 +42,9 @@ interface InkTools {
         pipeline: Pipeline,
         ink: InkOptions,
     ): PipelineOutcome
+
+    /** ALGORITHMS 13.1: the working picture as a My Kit original, or `null` when it cannot be encoded. */
+    fun encodeOriginal(source: Raster): ByteArray?
 }
 
 class AndroidInkTools
@@ -73,6 +77,8 @@ constructor(
         crop = CropRect(0, 0, cropped.width, cropped.height),
         ink = ink,
     )
+
+    override fun encodeOriginal(source: Raster): ByteArray? = KitOriginalImage.encode(source, AndroidJpegEncoder)
 }
 
 /** Image work runs here, never on the main thread (CLAUDE.md rule 4). */

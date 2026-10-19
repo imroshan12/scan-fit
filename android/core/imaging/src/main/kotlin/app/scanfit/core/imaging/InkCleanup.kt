@@ -188,6 +188,19 @@ object InkCleanup {
         return InkResult(square, gate(coverage), coverage)
     }
 
+    /**
+     * The thumb's tone (steps 1–4) on the luma of [src]: paper white, ink kept dark (ALGORITHMS 9.10 page cleanup
+     * reuses it for photographed pages).
+     */
+    internal fun paperTone(src: Raster): Pair<IntArray, IntArray> {
+        val w = src.width
+        val h = src.height
+        val luma = src.luma()
+        val l = IntArray(w * h) { luma[it].toInt() and BYTE }
+        val n1 = normalise(l, ImageOps.gaussianApprox(l, w, h, minOf(w, h) / SIGMA_DIVISOR))
+        return l to thumbTone(l, n1, w, h)
+    }
+
     /** Steps 1–4 of the thumb: candidates, paper-only background, normalisation and the tone curve. */
     private fun thumbTone(
         l: IntArray,

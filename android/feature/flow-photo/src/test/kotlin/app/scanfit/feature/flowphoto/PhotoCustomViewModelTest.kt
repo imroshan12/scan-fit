@@ -9,6 +9,7 @@ import app.scanfit.core.presets.PresetsSummary
 import app.scanfit.core.testing.FakeDraftStore
 import app.scanfit.core.testing.FakeExportDestinations
 import app.scanfit.core.testing.FakeFaceDetector
+import app.scanfit.core.testing.FakeKitStore
 import app.scanfit.core.testing.FakePersonSegmenter
 import app.scanfit.core.testing.FakePresetsRepository
 import app.scanfit.core.testing.FakeShareStager
@@ -52,9 +53,10 @@ class PhotoCustomViewModelTest {
         FakeFaceDetector(listOf(FaceBox(400.0, 500.0, 200.0, 240.0))),
         FakePersonSegmenter(),
         dispatcher,
-        DocumentExporter(destinations, prefs),
+        DocumentExporter(destinations, prefs, FakeKitStore()),
         drafts,
         share,
+        FakeKitStore(),
     )
 
     @Test

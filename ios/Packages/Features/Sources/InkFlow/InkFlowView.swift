@@ -142,6 +142,24 @@ public struct InkFlowView: View {
         switch model.state {
         case .crop:
             primary(strings.commonContinue, busy: false) { Task { await model.cropDone() } }
+        case let .review(review):
+            VStack(spacing: 0) {
+                reviewActions
+                // Save to My Kit keeps the picture, not the fitted file (ALGORITHMS 13.1); a restored review has none.
+                if !review.restored, model.exportState != .saving {
+                    SaveToKitButton(status: model.kitSave, strings: strings) { Task { await model.saveOriginal() } }
+                        .padding(.bottom, ScanFitSpacing.sm)
+                        .background(.bar)
+                }
+            }
+        default:
+            EmptyView()
+        }
+    }
+
+    @ViewBuilder
+    private var reviewActions: some View {
+        switch model.state {
         case .review:
             if model.exportState == .saved {
                 primary(strings.commonDone, busy: false) { onExit() }

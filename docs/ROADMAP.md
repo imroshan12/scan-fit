@@ -169,7 +169,15 @@ of the photo fixture ≤ 800 ms on a mid device (benchmark test).
               verification; stale/corrupt/expired/retired files cannot show Ready. Restored reviews are read-only and export the
               same bytes, retaining handwriting confirmation. Failure warns without disabling immediate export or losing the
               previous good draft. _Open:_ physical-device QA; cleaned originals and export history come with My Kit.
-- [ ] My Kit (store cleaned originals, "Use for exam…", export history) - [x] [A][I] Prepared-file browser (2026-10-06, user-reported empty Kit): lists verified retained photo/ink files by
+- [x] [S][A][I] My Kit (store cleaned originals, "Use for exam…", export history) (2026-10-15, ALGORITHMS §13): three
+      views (Prepared · Originals · History). Save to My Kit on new photo/ink reviews keeps the upright working picture
+      (≤ 2400 px, q92, metadata stripped), up to 30, until deleted. "Use for exam…" opens the Checker's list and starts
+      the slot's flow at the crop with the original. Every verified export (review, Save all, Checker, Custom) is listed,
+      newest 100, with a private copy for 30-day re-share; Clear history. `kit_size/history/id_cases` from `spec/tools/kit.py`.
+      _Deviation:_ a JSON index + blob files instead of Room/SwiftData (ARCHITECTURE §3); "cleaned" means oriented,
+      downsampled and metadata-free, not ink cleanup (each slot cleans its own crop). _Open:_ device QA; Pro-only
+      unlimited retention and "Make all files" from My Kit come with Phase 4.
+  - [x] [A][I] Prepared-file browser (2026-10-06, user-reported empty Kit): lists verified retained photo/ink files by
       active exam, including hidden unverified exams with their badge. Re-entry/foreground/store revisions refresh the
       list; files reopen the existing restored review and Done returns to Kit. Tests cover actual file relaunch,
       invalid/expired/current-preset removal, empty/error/retry, ordering and stale loads. _Open:_ reusable cleaned
@@ -226,6 +234,7 @@ closed test running with ≥ 12 testers.
 - [ ] Analytics events from the generated enum; Crashlytics with no PII keys
 - [ ] Preset OTA sync (WorkManager / BGTask + foreground), ETag, signature check, version monotonicity, "Spec updated" badges on exams whose files changed
 - [ ] Live photo coach (§7) with thresholds from Remote Config; practice-only copy
+- [ ] My Kit retention by plan (user decision 2026-10-15): free users keep originals 30 days, Pro until deleted; "Make all files" from My Kit (Pro, PRD F11)
 - [ ] "Did the portal accept it?" one-tap prompt 24 h after a save (local notification only if permission was already granted; otherwise an in-app card on next open)
 
 **Exit gate:** purchase + restore work on real devices (Play test cards/UPI test, StoreKit sandbox);

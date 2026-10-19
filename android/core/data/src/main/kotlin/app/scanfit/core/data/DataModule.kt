@@ -7,6 +7,8 @@ import app.scanfit.core.data.export.AndroidExportDestinations
 import app.scanfit.core.data.export.AndroidShareStager
 import app.scanfit.core.data.export.ExportDestinations
 import app.scanfit.core.data.export.ShareStager
+import app.scanfit.core.data.kit.FileKitStore
+import app.scanfit.core.data.kit.KitStore
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -35,5 +37,12 @@ internal abstract class DataModule {
         fun draftStore(
             @ApplicationContext context: Context,
         ): DraftStore = FileDraftStore(File(context.noBackupFilesDir.canonicalFile, "drafts"))
+
+        /** My Kit originals and export history (ALGORITHMS 13): no-backup storage, like the drafts. */
+        @Provides
+        @Singleton
+        fun kitStore(
+            @ApplicationContext context: Context,
+        ): KitStore = FileKitStore(File(context.noBackupFilesDir.canonicalFile, "kit"))
     }
 }

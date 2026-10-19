@@ -81,7 +81,17 @@ runs in `Task` with cancellation checked between steps (the user can back out mi
 Kit's prepared-file browser depends only on Core data/model/match (plus presets on Android), not on flow features.
 It enumerates active trusted slots through the existing draft verifier and retains only exam/slot/rounded-KB metadata
 in view state. Store revisions and entry/foreground trigger cancellable reloads. The app resolves FlowRoute links and
-owns separate Home/Kit navigation paths, so Done from a Kit review returns to Kit. No new file store or Kit DB yet.
+owns separate Home/Kit navigation paths, so Done from a Kit review returns to Kit.
+
+**My Kit store (ALGORITHMS 13, 2026-10-15).** Originals and export history live in one `KitStore` per platform
+(Android `:core:data` `kit.FileKitStore`, iOS `ScanData.FileKitStore` actor): `index.json` plus blobs in `originals/`
+and `exports/`, under no-backup storage. **Deviation from §5:** no Room or SwiftData. The data is two short lists (at most
+30 originals, 100 history entries), so one atomically replaced JSON index with the same staging, re-read and symlink
+rules as the drafts is simpler, needs no migration story and adds no dependency. Revisit if Kit grows queries. The
+flows take the store to save an original and to start from one (route argument `original=<id>`, iOS
+`FlowRoute.original`); exports record history after verification (Android once in `DocumentExporter`; iOS at the four
+save call sites, because `FilesExporter` is created per view model). `:feature:kit` / `Kit` holds the three views and
+the original's screen; the app composes "Use for exam…" with the flows.
 
 **Flow targets (ALGORITHMS 11).** The photo and ink flows make a file for a `FlowTarget`: one slot of a trusted exam preset,
 or a `CustomSize` (Android `core:model` `FlowTarget`/`CustomSize`; iOS `ScanModel`). `FlowTarget.resolve(bundle)` gives the

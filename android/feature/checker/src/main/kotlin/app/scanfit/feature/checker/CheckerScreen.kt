@@ -48,6 +48,7 @@ import app.scanfit.core.designsystem.R
 import app.scanfit.core.designsystem.components.NoticeCard
 import app.scanfit.core.designsystem.components.NoticeKind
 import app.scanfit.core.designsystem.components.ShareEffect
+import app.scanfit.core.designsystem.components.labelRes
 import app.scanfit.core.designsystem.theme.ScanFitSpacing
 import app.scanfit.core.designsystem.theme.ScanFitType
 import app.scanfit.core.match.CheckerTarget
@@ -222,7 +223,7 @@ private fun KindChoice(
                 FilterChip(
                     selected = kind == selected,
                     onClick = { onKind(kind) },
-                    label = { Text(stringResource(kindLabel(kind))) },
+                    label = { Text(stringResource(kind.labelRes())) },
                     leadingIcon = if (kind == selected) {
                         { Icon(Icons.Filled.Check, contentDescription = null) }
                     } else {
@@ -264,13 +265,4 @@ private fun FixBar(
             ) { Text(stringResource(R.string.common_share)) }
         }
     }
-}
-
-internal fun kindLabel(kind: DocKind): Int = when (kind) {
-    DocKind.PHOTO -> R.string.checker_kind_photo
-    DocKind.SIGNATURE -> R.string.checker_kind_signature
-    DocKind.THUMB -> R.string.checker_kind_thumb
-    DocKind.FINGERS -> R.string.checker_kind_fingers
-    DocKind.DECLARATION -> R.string.checker_kind_declaration
-    DocKind.PDF_DOCUMENT -> R.string.checker_kind_pdf
 }

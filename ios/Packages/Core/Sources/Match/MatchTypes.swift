@@ -4,7 +4,7 @@ import ScanModel
 
 /// What the file is for. It comes from the flow that produced the file, or from the user's pick in the
 /// Checker (ALGORITHMS 4).
-public enum DocKind: String, Sendable, Equatable, CaseIterable {
+public enum DocKind: String, Sendable, Equatable, CaseIterable, Codable {
     case photo, signature, thumb, declaration, fingers
     case pdfDocument = "pdf_document"
 

@@ -1263,9 +1263,12 @@
 		{"id": "png_converts_to_jpg", "_why": "a PNG decodes and is re-encoded", "format": "png", "verdict": "near_miss", "unverified": false, "slot_formats": ["jpg"], "expect": "fix"},
 		{"id": "heic_converts_to_jpg", "_why": "HEIC decodes on both platforms", "format": "heic", "verdict": "no", "unverified": false, "slot_formats": ["jpg"], "expect": "fix"},
 		{"id": "pdf_file_cannot_be_refitted", "_why": "PDF tools come with section 6", "format": "pdf", "verdict": "no", "unverified": false, "slot_formats": ["jpg"], "expect": "no_fix"},
-		{"id": "slot_wants_a_pdf", "_why": "an image for a PDF-only slot is not fixed here", "format": "jpeg", "verdict": "no", "unverified": false, "slot_formats": ["pdf"], "expect": "no_fix"},
+		{"id": "image_for_a_pdf_slot_becomes_a_pdf", "_why": "an image is made into a PDF for the slot (§6.6)", "format": "jpeg", "verdict": "no", "unverified": false, "slot_formats": ["pdf"], "expect": "fix"},
 		{"id": "unknown_file", "_why": "a file we cannot decode", "format": "unknown", "verdict": "no", "unverified": false, "slot_formats": ["jpg"], "expect": "no_fix"},
-		{"id": "unknown_spec", "_why": "no limits: nothing to fit to", "format": "jpeg", "verdict": "unknown", "unverified": false, "slot_formats": ["jpg"], "expect": "unknown"}
+		{"id": "unknown_spec", "_why": "no limits: nothing to fit to", "format": "jpeg", "verdict": "unknown", "unverified": false, "slot_formats": ["jpg"], "expect": "unknown"},
+		{"id": "too_big_pdf_is_compressed", "_why": "a PDF over the slot's limit is compressed (§6)", "format": "pdf", "verdict": "near_miss", "unverified": false, "slot_formats": ["pdf"], "expect": "fix"},
+		{"id": "encrypted_pdf_cannot_be_fixed", "_why": "remove the password first", "format": "pdf", "encrypted": true, "verdict": "no", "unverified": false, "slot_formats": ["pdf"], "expect": "no_fix"},
+		{"id": "unknown_file_for_a_pdf_slot", "_why": "nothing to render", "format": "unknown", "verdict": "no", "unverified": false, "slot_formats": ["pdf"], "expect": "no_fix"}
 	],
 	"match_note_cases": [
 		{
@@ -1879,5 +1882,92 @@
 			"text": "NEET-UG 2026",
 			"tokens": ["neet", "ug", "2026"]
 		}
+	],
+	"kit_size_cases": [
+		{"id": "landscape_12mp", "_why": "long side to 2400, aspect kept", "width": 4032, "height": 3024, "expect": {"width": 2400, "height": 1800}},
+		{"id": "portrait", "_why": "height is the long side", "width": 3000, "height": 4000, "expect": {"width": 1800, "height": 2400}},
+		{"id": "small_kept", "_why": "at most 2400 is never resized", "width": 1600, "height": 1200, "expect": {"width": 1600, "height": 1200}},
+		{"id": "exactly_2400_square", "_why": "the limit itself is kept", "width": 2400, "height": 2400, "expect": {"width": 2400, "height": 2400}},
+		{"id": "square_over", "_why": "a square shrinks on both sides", "width": 2401, "height": 2401, "expect": {"width": 2400, "height": 2400}},
+		{"id": "half_rounds_up", "_why": "1001 x 0.5 = 500.5 rounds half up", "width": 4800, "height": 1001, "expect": {"width": 2400, "height": 501}},
+		{"id": "thin_strip_min_one", "_why": "the short side never drops below 1 px", "width": 3, "height": 5000, "expect": {"width": 1, "height": 2400}},
+		{"id": "just_over_rounds_down", "_why": "1201 x 2400 / 2401 = 1200.4998", "width": 2401, "height": 1201, "expect": {"width": 2400, "height": 1200}}
+	],
+	"kit_history_cases": [
+		{"id": "newest_first", "_why": "recorded oldest first, listed newest first; all inside 30 days", "now_ms": 1760000000000, "max_entries": 100, "entries": [{"id": "a", "created_at_ms": 1759136000000}, {"id": "b", "created_at_ms": 1759827200000}, {"id": "c", "created_at_ms": 1759996400000}], "expect": {"kept": ["c", "b", "a"], "shareable": ["c", "b", "a"]}},
+		{"id": "thirty_day_window", "_why": "shareable while age < 30 days; exactly 30 days is too old", "now_ms": 1760000000000, "max_entries": 100, "entries": [{"id": "old", "created_at_ms": 1756544000000}, {"id": "edge", "created_at_ms": 1757408000000}, {"id": "inside", "created_at_ms": 1757408000001}], "expect": {"kept": ["inside", "edge", "old"], "shareable": ["inside"]}},
+		{"id": "future_and_now", "_why": "a future time (clock change) is kept but never shareable; age 0 is shareable", "now_ms": 1760000000000, "max_entries": 100, "entries": [{"id": "now", "created_at_ms": 1760000000000}, {"id": "future", "created_at_ms": 1760000000001}], "expect": {"kept": ["future", "now"], "shareable": ["now"]}},
+		{"id": "cap_keeps_newest", "_why": "only the newest max_entries survive", "now_ms": 1760000000000, "max_entries": 3, "entries": [{"id": "e1", "created_at_ms": 1759982000000}, {"id": "e2", "created_at_ms": 1759985600000}, {"id": "e3", "created_at_ms": 1759989200000}, {"id": "e4", "created_at_ms": 1759992800000}, {"id": "e5", "created_at_ms": 1759996400000}], "expect": {"kept": ["e5", "e4", "e3"], "shareable": ["e5", "e4", "e3"]}},
+		{"id": "equal_times", "_why": "equal times keep the later-recorded first", "now_ms": 1760000000000, "max_entries": 100, "entries": [{"id": "first", "created_at_ms": 1759996400000}, {"id": "second", "created_at_ms": 1759996400000}], "expect": {"kept": ["second", "first"], "shareable": ["second", "first"]}},
+		{"id": "out_of_order_recording", "_why": "order is by time, not by recording order", "now_ms": 1760000000000, "max_entries": 2, "entries": [{"id": "mid", "created_at_ms": 1759992800000}, {"id": "oldest", "created_at_ms": 1759989200000}, {"id": "newest", "created_at_ms": 1759996400000}], "expect": {"kept": ["newest", "mid"], "shareable": ["newest", "mid"]}},
+		{"id": "empty", "_why": "no history", "now_ms": 1760000000000, "max_entries": 100, "entries": [], "expect": {"kept": [], "shareable": []}}
+	],
+	"kit_id_cases": [
+		{"id": "3f2b8c1e-9a4d-4e6f-8b2a-1c3d5e7f9a0b", "_why": "lowercase UUID v4", "expect": true},
+		{"id": "3F2B8C1E-9A4D-4E6F-8B2A-1C3D5E7F9A0B", "_why": "uppercase is not what the app writes", "expect": false},
+		{"id": "3f2b8c1e-9a4d-1e6f-8b2a-1c3d5e7f9a0b", "_why": "version 1, not 4", "expect": false},
+		{"id": "3f2b8c1e-9a4d-4e6f-cb2a-1c3d5e7f9a0b", "_why": "variant c is not RFC 4122", "expect": false},
+		{"id": "../index", "_why": "a path, not an id", "expect": false},
+		{"id": "", "_why": "empty", "expect": false},
+		{"id": "3f2b8c1e-9a4d-4e6f-8b2a-1c3d5e7f9a0b\n", "_why": "a trailing newline is not part of an id", "expect": false},
+		{"id": "3f2b8c1e9a4d4e6f8b2a1c3d5e7f9a0b", "_why": "no dashes", "expect": false}
+	],
+	"pdf_layout_cases": [
+		{"id": "portrait_photo_of_a_page", "_why": "a tall image fills the A4 box's height; 200 DPI keeps fewer pixels than the source", "kind": "image", "w": 1200, "h": 1600, "expect": {"page": ["595", "842"], "rects": [["29.75", "64", "535.5", "714"]], "pixels": {"200": [[1200, 1600]], "150": [[1116, 1488]], "120": [[893, 1190]], "100": [[744, 992]]}}},
+		{"id": "landscape_image_gets_a_landscape_page", "_why": "a wide image turns the page", "kind": "image", "w": 3000, "h": 1800, "expect": {"page": ["842", "595"], "rects": [["29.75", "62.75", "782.5", "469.5"]], "pixels": {"200": [[2174, 1304]], "150": [[1630, 978]], "120": [[1304, 782]], "100": [[1087, 652]]}}},
+		{"id": "square_image", "_why": "w <= h counts as portrait", "kind": "image", "w": 1000, "h": 1000, "expect": {"page": ["595", "842"], "rects": [["29.75", "153.25", "535.5", "535.5"]], "pixels": {"200": [[1000, 1000]], "150": [[1000, 1000]], "120": [[892, 892]], "100": [[744, 744]]}}},
+		{"id": "small_image_is_never_upscaled", "_why": "k >= 1 keeps the source pixels at every DPI", "kind": "image", "w": 200, "h": 120, "expect": {"page": ["842", "595"], "rects": [["29.75", "62.75", "782.5", "469.5"]], "pixels": {"200": [[200, 120]], "150": [[200, 120]], "120": [[200, 120]], "100": [[200, 120]]}}},
+		{"id": "tiny_dimension_stays_at_least_one_pixel", "_why": "a 1 px tall strip", "kind": "image", "w": 2400, "h": 1, "expect": {"page": ["842", "595"], "rects": [["29.75", "297.34", "782.5", "0.33"]], "pixels": {"200": [[2174, 1]], "150": [[1630, 1]], "120": [[1304, 1]], "100": [[1087, 1]]}}},
+		{"id": "id_card_two_sides", "_why": "front above back at 85.6 x 54 mm, 15 mm apart, centred", "kind": "id_card", "front": [1712, 1080], "back": [1700, 1100], "expect": {"page": ["595", "842"], "rects": [["176.18", "246.67", "242.65", "153.07"], ["179.22", "442.26", "236.56", "153.07"]], "pixels": {"200": [[674, 425], [657, 425]], "150": [[506, 319], [493, 319]], "120": [[404, 255], [394, 255]], "100": [[337, 213], [329, 213]]}}},
+		{"id": "id_card_tall_side_is_letterboxed", "_why": "a portrait picture is contained in the card box", "kind": "id_card", "front": [800, 1200], "back": [1600, 1000], "expect": {"page": ["595", "842"], "rects": [["246.48", "246.67", "102.05", "153.07"], ["176.18", "442.97", "242.65", "151.65"]], "pixels": {"200": [[283, 425], [674, 421]], "150": [[213, 319], [506, 316]], "120": [[170, 255], [404, 253]], "100": [[142, 213], [337, 211]]}}},
+		{"id": "pdf_page_a4", "_why": "an A4 page renders at d/72", "kind": "pdf_page", "w_pt": 595, "h_pt": 842, "expect": {"page": ["595", "842"], "rects": [["0", "0", "595", "842"]], "pixels": {"200": [[1653, 2339]], "150": [[1240, 1754]], "120": [[992, 1403]], "100": [[826, 1169]]}}},
+		{"id": "pdf_page_letter", "_why": "US Letter keeps its own size", "kind": "pdf_page", "w_pt": 612, "h_pt": 792, "expect": {"page": ["612", "792"], "rects": [["0", "0", "612", "792"]], "pixels": {"200": [[1700, 2200]], "150": [[1275, 1650]], "120": [[1020, 1320]], "100": [[850, 1100]]}}},
+		{"id": "pdf_page_poster_is_capped", "_why": "a page larger than A4 renders at A4's pixel budget", "kind": "pdf_page", "w_pt": 1684, "h_pt": 2384, "expect": {"page": ["1684", "2384"], "rects": [["0", "0", "1684", "2384"]], "pixels": {"200": [[1652, 2339]], "150": [[1239, 1754]], "120": [[991, 1403]], "100": [[826, 1169]]}}},
+		{"id": "pdf_page_fractional_size", "_why": "fractional points are written with two decimals", "kind": "pdf_page", "w_pt": 595.28, "h_pt": 841.89, "expect": {"page": ["595.28", "841.89"], "rects": [["0", "0", "595.28", "841.89"]], "pixels": {"200": [[1654, 2339]], "150": [[1240, 1754]], "120": [[992, 1403]], "100": [[827, 1169]]}}}
+	],
+	"pdf_writer_cases": [
+		{"id": "one_image_page", "_why": "the smallest document: catalog, pages, page, content, image", "pages": [{"kind": "image", "images": [{"file": "images/orientation_1.jpg", "w": 200, "h": 120}]}], "expect": {"size": 4195, "sha256": "1b3de6c7e72c02a26637bbb38ca8b825b709c4adabe53257120e9bf06742d5c0", "pages": 1}},
+		{"id": "two_image_pages", "_why": "object numbering continues per page", "pages": [{"kind": "image", "images": [{"file": "images/icc_srgb_100x100.jpg", "w": 100, "h": 100}]}, {"kind": "image", "images": [{"file": "images/orientation_5.jpg", "w": 120, "h": 200}]}], "expect": {"size": 6206, "sha256": "e07612c890a504a15b0cfb4acb73a1c9c8d3589bc49ba4d08a474c9a53d75f8e", "pages": 2}},
+		{"id": "id_card_page", "_why": "two images on one page: /Im1 and /Im2", "pages": [{"kind": "id_card", "images": [{"file": "images/orientation_1.jpg", "w": 200, "h": 120}, {"file": "images/orientation_2.jpg", "w": 200, "h": 120}]}], "expect": {"size": 7958, "sha256": "80fe14cf01c841c13d1693e16cde8c800cb5738697457a4cb2f379c608133c1b", "pages": 1}},
+		{"id": "pdf_page_letter", "_why": "a rendered page keeps its size", "pages": [{"kind": "pdf_page", "w_pt": 612, "h_pt": 792, "images": [{"file": "images/photo_exif_gps_400x300.jpg", "w": 400, "h": 300}]}], "expect": {"size": 6062, "sha256": "2acfa0aa9feaac7184b07f96fedfe598b54b811821045e82b661ce6bf96e5243", "pages": 1}},
+		{"id": "padded_to_50_kb", "_why": "padding reaches the minimum exactly or one byte over", "pages": [{"kind": "image", "images": [{"file": "images/orientation_1.jpg", "w": 200, "h": 120}]}], "pad_to": 51200, "expect": {"size": 51200, "sha256": "b2fbd57ad8b18de03f0bc67147b13e06892a1ea61b68de72adc7fb9992ef506c", "pages": 1}},
+		{"id": "pad_target_below_size_is_ignored", "_why": "never shrink by padding", "pages": [{"kind": "image", "images": [{"file": "images/orientation_1.jpg", "w": 200, "h": 120}]}], "pad_to": 100, "expect": {"size": 4195, "sha256": "1b3de6c7e72c02a26637bbb38ca8b825b709c4adabe53257120e9bf06742d5c0", "pages": 1}}
+	],
+	"pdf_fit_cases": [
+		{"id": "fits_at_200_dpi_best_quality", "_why": "the highest DPI and quality under goal.hi", "size_kb": {"min": 50, "max": 300, "target": 200}, "sizes": {"200": [256000, 204800, 163840, 133120, 112640, 102400]}, "expect": {"dpi": 200, "quality": 85, "pad_to": null, "strategy": "quality"}},
+		{"id": "fits_at_200_dpi_lower_quality", "_why": "the first grid quality under 287.5 KB", "size_kb": {"min": 50, "max": 300, "target": 200}, "sizes": {"200": [614400, 460800, 337920, 286720, 245760, 225280]}, "expect": {"dpi": 200, "quality": 55, "pad_to": null, "strategy": "quality"}},
+		{"id": "drops_to_150_dpi", "_why": "200 DPI is too big even at quality 40", "size_kb": {"min": null, "max": 200, "target": null}, "sizes": {"200": [921600, 716800, 573440, 460800, 389120, 337920], "150": [491520, 378880, 296960, 225280, 184320, 163840]}, "expect": {"dpi": 150, "quality": 45, "pad_to": null, "strategy": "lower_dpi"}},
+		{"id": "cannot_reach", "_why": "100 DPI at quality 40 is still too big", "size_kb": {"min": null, "max": 100, "target": null}, "sizes": {"200": [921600, 921600, 921600, 921600, 921600, 921600], "150": [614400, 614400, 614400, 614400, 614400, 614400], "120": [409600, 409600, 409600, 409600, 409600, 409600], "100": [307200, 307200, 307200, 307200, 307200, 307200]}, "expect": {"error": "cannot_reach"}},
+		{"id": "small_result_is_padded_to_target", "_why": "below JEE's 50 KB minimum: pad to T' = 200 KB", "size_kb": {"min": 50, "max": 300, "target": 200}, "sizes": {"200": [30720, 25600, 22528, 20480, 18432, 17408]}, "expect": {"dpi": 200, "quality": 85, "pad_to": 204800, "strategy": "pad"}},
+		{"id": "pad_target_clamped_into_goal", "_why": "T defaults to the midpoint; clamped into the goal", "size_kb": {"min": 20, "max": 22, "target": null}, "sizes": {"200": [5120, 4096, 4096, 3072, 3072, 3072]}, "expect": {"dpi": 200, "quality": 85, "pad_to": 21504, "strategy": "pad"}},
+		{"id": "no_maximum_is_unknown", "_why": "a slot without max has nothing to fit to", "size_kb": {"min": null, "max": null, "target": null}, "sizes": {"200": [1024, 1024, 1024, 1024, 1024, 1024]}, "expect": {"error": "unknown_limit"}},
+		{"id": "exactly_goal_hi_fits", "_why": "<= is inclusive: 190 KB for max 200", "size_kb": {"min": null, "max": 200, "target": null}, "sizes": {"200": [194561, 194560, 153600, 122880, 102400, 92160]}, "expect": {"dpi": 200, "quality": 75, "pad_to": null, "strategy": "quality"}},
+		{"id": "no_minimum_never_pads", "_why": "a Tools limit is only a maximum: a tiny PDF stays tiny", "size_kb": {"min": null, "max": 200, "target": null}, "sizes": {"200": [4096, 3072, 3072, 2048, 2048, 2048]}, "expect": {"dpi": 200, "quality": 85, "pad_to": null, "strategy": "quality"}}
+	],
+	"pdf_job_cases": [
+		{"id": "compress_certificate_to_jee_window", "_why": "Phase 3 exit gate: a scanned certificate into JEE Main class 10 (50-300 KB)", "tool": "exam", "size_kb": {"min": 50, "max": 300, "target": 200}, "sources": [{"pdf": "pdfs/certificate_scan_1p.pdf"}], "options": {"grayscale": true, "cleanup": true}, "expect": {"pages": 1, "kb_min": 50, "kb_max": 300, "image_only": true}},
+		{"id": "compress_certificate_to_100_kb", "_why": "Phase 3 exit gate: a Tools limit well below the input", "tool": "compress", "size_kb": {"min": null, "max": 100, "target": null}, "sources": [{"pdf": "pdfs/certificate_scan_1p.pdf"}], "options": {"grayscale": true, "cleanup": true}, "expect": {"pages": 1, "kb_min": 0, "kb_max": 100, "image_only": true}},
+		{"id": "compress_marksheet_to_cat_window", "_why": "Phase 3 exit gate: two pages into CAT's 200 KB", "tool": "compress", "size_kb": {"min": null, "max": 200, "target": 140}, "sources": [{"pdf": "pdfs/marksheet_scan_2p.pdf"}], "options": {"grayscale": false, "cleanup": true}, "expect": {"pages": 2, "kb_min": 0, "kb_max": 200, "image_only": true}},
+		{"id": "text_pdf_padded_to_jee_minimum", "_why": "Phase 3 exit gate: a tiny text PDF is rendered and padded to reach 50 KB", "tool": "exam", "size_kb": {"min": 50, "max": 300, "target": 200}, "sources": [{"pdf": "pdfs/text_letter_1p.pdf"}], "options": {"grayscale": true, "cleanup": true}, "expect": {"pages": 1, "kb_min": 50, "kb_max": 300, "image_only": true, "strategy": "pad"}},
+		{"id": "already_fits_is_unchanged", "_why": "a PDF inside the window is returned byte for byte", "tool": "compress", "size_kb": {"min": null, "max": 500, "target": null}, "sources": [{"pdf": "pdfs/certificate_scan_1p.pdf"}], "options": {"grayscale": true, "cleanup": true}, "expect": {"pages": 1, "kb_min": 0, "kb_max": 500, "strategy": "unchanged", "same_bytes": true}},
+		{"id": "merge_two_pdfs", "_why": "pages in source order", "tool": "merge", "size_kb": {"min": null, "max": 300, "target": null}, "sources": [{"pdf": "pdfs/certificate_scan_1p.pdf"}, {"pdf": "pdfs/marksheet_scan_2p.pdf"}], "options": {"grayscale": true, "cleanup": true}, "expect": {"pages": 3, "kb_min": 0, "kb_max": 300, "image_only": true}},
+		{"id": "images_to_pdf_declaration", "_why": "a phone photo of a page, cleaned up, one A4 page", "tool": "images", "size_kb": {"min": null, "max": 200, "target": null}, "sources": [{"image": "images/declaration_paper.jpg"}, {"image": "images/signature_paper_shadow.jpg"}], "options": {"grayscale": true, "cleanup": true}, "expect": {"pages": 2, "kb_min": 0, "kb_max": 200, "image_only": true}},
+		{"id": "id_card_one_page", "_why": "two sides on one page", "tool": "id_card", "size_kb": {"min": null, "max": 200, "target": null}, "sources": [{"image": "images/photo_exif_gps_400x300.jpg"}, {"image": "images/orientation_1.jpg"}], "options": {"grayscale": false, "cleanup": false}, "expect": {"pages": 1, "kb_min": 0, "kb_max": 200, "image_only": true}},
+		{"id": "mixed_sources_for_an_exam_slot", "_why": "an image then a PDF: pages in source order", "tool": "exam", "size_kb": {"min": 50, "max": 300, "target": 200}, "sources": [{"image": "images/declaration_paper.jpg"}, {"pdf": "pdfs/text_letter_1p.pdf"}], "options": {"grayscale": true, "cleanup": true}, "expect": {"pages": 2, "kb_min": 50, "kb_max": 300, "image_only": true}},
+		{"id": "encrypted_pdf_is_refused", "_why": "remove the password first", "tool": "compress", "size_kb": {"min": null, "max": 200, "target": null}, "sources": [{"pdf": "pdfs/encrypted_1p.pdf"}], "options": {"grayscale": true, "cleanup": true}, "expect": {"error": "encrypted"}},
+		{"id": "no_sources", "_why": "nothing to make", "tool": "images", "size_kb": {"min": null, "max": 200, "target": null}, "sources": [], "options": {"grayscale": true, "cleanup": true}, "expect": {"error": "no_pages"}},
+		{"id": "cannot_reach_one_kb", "_why": "two dense pages cannot get under 1 KB", "tool": "compress", "size_kb": {"min": null, "max": 1, "target": null}, "sources": [{"pdf": "pdfs/marksheet_scan_2p.pdf"}], "options": {"grayscale": true, "cleanup": true}, "expect": {"error": "cannot_reach"}},
+		{"id": "slot_without_maximum", "_why": "unknown spec", "tool": "exam", "size_kb": {"min": null, "max": null, "target": null}, "sources": [{"pdf": "pdfs/text_letter_1p.pdf"}], "options": {"grayscale": true, "cleanup": true}, "expect": {"error": "unknown_limit"}}
+	],
+	"page_cleanup_cases": [
+		{"id": "shaded_page_grayscale", "_why": "paper with a shadow turns white; text stays black; a dark photo is not washed out; the stamp turns grey", "width": 400, "height": 560, "paper": [232, 168], "text": [[40, 80, 300, 8, 40], [40, 110, 260, 8, 40], [40, 140, 280, 8, 40], [40, 170, 220, 8, 40], [40, 200, 300, 8, 40]], "block": [260, 300, 100, 130, 90], "stamp": [110, 420, 45, [190, 40, 50]], "grayscale": true, "expect": {"paper_white_min_fraction": 0.85, "text_max_mean": 70, "block_max_mean": 150, "block_min_mean": 20, "stamp_gray": true}},
+		{"id": "shaded_page_colour", "_why": "colour: the same, and the stamp stays red", "width": 400, "height": 560, "paper": [232, 168], "text": [[40, 80, 300, 8, 40], [40, 110, 260, 8, 40], [40, 140, 280, 8, 40], [40, 170, 220, 8, 40], [40, 200, 300, 8, 40]], "block": [260, 300, 100, 130, 90], "stamp": [110, 420, 45, [190, 40, 50]], "grayscale": false, "expect": {"paper_white_min_fraction": 0.85, "text_max_mean": 70, "block_max_mean": 150, "block_min_mean": 20, "stamp_red_min": 40}}
+	],
+	"pdf_name_cases": [
+		{"id": "slot_filename_wins", "exam_name": "NEET UG", "doc_type": "class10_certificate", "filename": "Class10", "bytes": 186000, "expect": "Class10.pdf"},
+		{"id": "exam_slot", "exam_name": "JEE Main", "doc_type": "class10_certificate", "filename": null, "bytes": 186000, "expect": "class10_certificate_JEE-Main_182kb.pdf"},
+		{"id": "tool_document", "exam_name": "PDF", "doc_type": "document", "filename": null, "bytes": 102400, "expect": "document_PDF_100kb.pdf"},
+		{"id": "tool_id_card", "exam_name": "PDF", "doc_type": "id_card", "filename": null, "bytes": 98000, "expect": "id_card_PDF_96kb.pdf"},
+		{"id": "exam_short_name", "exam_name": "UPSC CSE (Civil Services)", "doc_type": "photo_id", "filename": null, "bytes": 512, "expect": "photo_id_UPSC-CSE_1kb.pdf"}
 	]
 }

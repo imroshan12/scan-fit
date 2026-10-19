@@ -1,1 +1,1 @@
-# core:pdf is intentionally empty until Phase 3: PDF engine (ALGORITHMS section 6).
+# core:pdf: the PDF engine (ALGORITHMS section 6): layout, writer, fit to a KB window, page rendering.

@@ -1,7 +1,8 @@
 # HANDOFF.md — where work stopped (read this first when picking the project up)
 
-Last updated: **2026-10-15**. Current phase: **Phase 2 — Core flows** (docs/ROADMAP.md). Latest commit:
-`84bc42a icon and project changes` (includes Share and Save all). **Uncommitted:** the Checker (§4 first entry).
+Last updated: **2026-10-15** (evening). Current phase: **Phase 2 — Core flows** (docs/ROADMAP.md). Latest commit:
+`6728819 Fix dismiss bug` (includes the Checker). **Uncommitted:** My Kit originals, "Use for exam…" and export history
+(§4 first entry).
 The user commits; a session never runs `git add/commit/push`.
 
 ## 1. State in one screen
@@ -18,13 +19,17 @@ The user commits; a session never runs `git add/commit/push`.
 | Custom size                                  | Built on both apps (2026-10-13): ALGORITHMS §11, a `FlowTarget` runs the same photo/ink flows for any px/cm/KB size. Form with recent sizes, from Tools and Home. JPG only. |
 | Thumb cleanup                                | Rewritten 2026-10-13 (user report: details cleared). Paper-only background, linear stretch, box-centred square; 3 `thumb_preservation_cases`. Device check with a real inked thumb open. |
 | Checker                                      | Built on both apps (2026-10-15): ALGORITHMS §12. Pick a file (gallery/Files, image or PDF) → its own problems → kind chips → exam list → per-slot verdict → "Make it fit" refits a verified copy; Save (records Saved) and Share. From Tools and Home. Hand-checked on the iPhone 11 Pro Max simulator. |
-| My Kit                                       | Kit browses retained drafts (2026-10-06); cleaned originals and export history not started. |
+| My Kit                                       | Built on both apps (2026-10-15): ALGORITHMS §13. Three views (Prepared · Originals · History). Save to My Kit on new photo/ink reviews; "Use for exam…" starts a slot's flow from an original; every verified export listed with 30-day re-share; Clear history. Hand-checked on the iPhone 11 Pro Max simulator (signature → Save to My Kit → Originals → Use for exam → IBPS save → History → Share); Android not walked by hand. |
 | Screenshot tests                             | Removed for good (user decision 2026-10-03). Don't add them back (CLAUDE.md Definition of done).                                                                                                                                                                                               |
 
-Gates last run (2026-10-15): Android `./gradlew spotlessCheck detekt testDebugUnitTest :core:match:test :core:model:test lint
-:app:assembleDebug` green (352 unit tests). iOS strict SwiftLint, full Core and Features SwiftPM suites, app tests on the
-iPhone 17 simulator and a build on the iPhone 11 Pro Max simulator; spec 61 tool tests, `gen_strings.py --check`, presets
-re-signed with the dev key and verified. Both platforms pass all 10 `checker_cases`.
+Gates last run (2026-10-15, evening, My Kit): Android `./gradlew spotlessCheck detekt testDebugUnitTest :core:match:test
+:core:model:test lint :app:assembleDebug` green (401 unit tests, lint 0 issues). iOS strict SwiftLint (0), Core (200) and
+Features (131) SwiftPM suites with no warnings, app tests on the iPhone 17 simulator, a warning-free build on the iPhone 11
+Pro Max simulator plus the hand walk in §1. Spec: `test_tools.py`, `build_presets.py`, `gen_strings.py --check`,
+`gen_tokens.py --check`. Both platforms pass all `kit_size_cases`, `kit_history_cases` and `kit_id_cases`. Coverage was not
+re-measured; the new engine code (`KitOriginalImage`) has direct tests on both platforms.
+Previous gates (2026-10-15, Checker): Android 352 unit tests; iOS strict SwiftLint, full suites, app tests on the iPhone 17
+simulator and a build on the iPhone 11 Pro Max simulator; spec 61 tool tests. Both platforms pass all 10 `checker_cases`.
 Previous gates (2026-10-13): Android 332 unit tests. iOS strict SwiftLint, full Core and Features SwiftPM suites, app tests on the iPhone 17
 simulator and a build on the iPhone 11 Pro Max simulator; spec 59 tool tests and `gen_strings.py --check`. Both platforms pass
 all 18 `custom_size_cases` and 3 `thumb_preservation_cases`. Coverage was not re-measured this session.
@@ -53,6 +58,12 @@ drafted with `TODO_HI:`. The spec suite still emits pre-existing unclosed-file `
   near miss only says what the other exam needs ("Needs ≥ 20 KB"). Fix belongs to the Checker / Custom resize. Revisit if the user
   wants "make a copy for SSC CGL" from a review. The preview names follow §9.7 order (EXACT first), so an IBPS signature lists
   NEET UG / JEE Main first (range-mode slots are EXACT; IBPS's own slot is ACCEPTED because the file is upscaled to reach 10 KB).
+- **My Kit (user, 2026-10-15):** originals are saved only by the explicit "Save to My Kit" button on a review (never
+  automatically), and kept until deleted for now. Later (Phase 4): free users 30 days, Pro until deleted. Export history
+  lists every verified save with a private copy kept 30 days for Share. My choices: max 30 originals (a full Kit asks the
+  user to delete one; nothing is evicted), newest 100 history entries; "cleaned original" = the flow's upright decoded
+  picture (≤ 2400 px, q92, metadata stripped), not the ink-cleaned crop, because each slot re-crops and cleans for its own
+  aspect. No Room/SwiftData: one JSON index + blob files (ARCHITECTURE §3).
 - UPSC ESE / CMS are low-confidence presets ("assumed common UPSC rules"). Offered to the user, not started: verify them against the
   official notices, and/or a search hint when a query only matches hidden exams.
 
@@ -127,6 +138,32 @@ drafted with `TODO_HI:`. The spec suite still emits pre-existing unclosed-file `
   device is still needed with the updated build. Files saved before the fix are not retroactively marked; save again to verify.
 
 ## 4. What changed (by area, for review)
+
+### My Kit: originals, "Use for exam…", export history (2026-10-15, evening)
+
+- **Spec:** ALGORITHMS §13 (13.1 originals: saving, keeping, storage, read check; 13.2 Use for exam…; 13.3 export history
+  and retention). New conformance `kit_size_cases` (8), `kit_history_cases` (7), `kit_id_cases` (8) computed by
+  `spec/tools/kit.py --write-cases`; `test_tools.py` checks them. 28 new `kit.*` strings (Hindi `TODO_HI:`).
+- **Storage (both):** `KitStore` / `FileKitStore` (Android `:core:data` `kit/`, iOS `ScanData`): `index.json` + `originals/<id>.jpg`
+  + `exports/<id>.jpg` under no-backup storage (`noBackupFilesDir/kit`, Application Support `kit`). Blob staged → re-read →
+  verified → renamed, then the index; loading drops bad entries, sweeps orphans/temp files, prunes history to 100 and deletes
+  copies older than 30 days. Ids are validated lowercase UUID v4 before any path. `KitOriginalImage` (Imaging) resizes to
+  ≤ 2400 and encodes q92 through the patcher.
+- **Flows (both):** "Save to My Kit" (`SaveToKitButton` in the design system) under Share on new photo/ink reviews; states
+  idle/saving/saved/full/failed, independent of the fit verdict; a new picture resets it. Flow routes take an optional
+  original id (Android `?original=<id>`, iOS `FlowRoute.original`): the flow skips the draft and the picker and opens the
+  original at the crop (photo still runs face detection). A missing original → source step with "could not open".
+- **History (both):** recorded only after a verified, published export: Android once in `DocumentExporter` (outside the
+  try, non-cancellable, so it can never clean up a published file); iOS after `.saved` in the photo, ink, Checker and
+  Save all view models.
+- **Kit UI (both):** segmented Prepared · Originals · History; original's screen with preview, Delete (confirmation) and a
+  "Use for exam…" sheet reusing the Checker's list (`CheckerTargetRow` and `DocKind` labels moved to the design system).
+  History rows share the copy via the existing share stager; Clear history with confirmation. Done from a flow started
+  from an original returns to the original's screen.
+- **Tests:** Android `FileKitStoreTest` (16), `KitConformanceTest` (4), export conformance now also checks history, photo (7)
+  and ink (4) Kit VM tests, Kit originals/history/original VM tests (15). iOS `KitStoreTests` (14), `PhotoKitTests` (5),
+  `InkKitTests` (3), Kit VM tests (9), plus history checks in Save all and Checker tests. Previews for every new state in
+  light, dark, largest font and Hindi on both. No screenshot tests.
 
 ### Checker (2026-10-15)
 
@@ -331,7 +368,11 @@ drafted with `TODO_HI:`. The spec suite still emits pre-existing unclosed-file `
    in a folder that already has the files; a partial failure (e.g. full storage) and Retry.
 9. **Checker device QA:** Android end to end on a phone (Files picker with a PDF, CreateDocument on Android 9, share); iOS
    with a HEIC from Photos and a file from iCloud Drive; Hindi at the largest font (chips wrap).
-10. Next features: My Kit cleaned originals/export history; PDF tools (the Checker's PDF slots point there). Verify UPSC ESE / CMS presets
+10. **My Kit device QA:** Save to My Kit from a photo and a signature review, relaunch, Originals lists them with thumbnails;
+   "Use for exam…" into another exam (photo face check runs; ink opens at the crop); Done returns to the original; Delete;
+   a full Kit (30). History: save, Save all, Checker save and Custom size each add a row; Share from history; Clear history.
+   Hindi at the largest font (segmented labels, history rows). iOS simulator walk done (§1); Android and real devices not yet.
+11. Next features: PDF tools (the Checker's PDF slots point there, Phase 2 exit gate needs the JEE class 10 PDF). Verify UPSC ESE / CMS presets
    only with official sources and user direction.
 
 ## 6. Testing tips that cost time to learn

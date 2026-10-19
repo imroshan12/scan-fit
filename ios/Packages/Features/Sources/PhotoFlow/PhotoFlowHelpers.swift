@@ -1,5 +1,7 @@
 import Foundation
 import Imaging
+import Inspect
+import Match
 import ScanData
 import ScanModel
 import ScanVision
@@ -54,12 +56,31 @@ public extension PhotoFlowViewModel {
         preferences: UserPreferences? = nil,
         exporter: any DocumentExporting = FilesExporter(),
         drafts: any DraftStore = NoDraftStore(),
+        kit: any KitStore = NoKitStore(),
         load: @escaping @Sendable () async -> PresetBundle?
     ) {
         self.init(
             target: .exam(examId: examId, docType: docType), tools: tools, faces: faces, segmenter: segmenter,
-            preferences: preferences, exporter: exporter, drafts: drafts, load: load
+            preferences: preferences, exporter: exporter, drafts: drafts, kit: kit, load: load
         )
+    }
+}
+
+public extension PhotoFlowViewModel {
+    /// Keeps the picture this review was made from in My Kit (ALGORITHMS 13.1). The review itself never changes.
+    func saveOriginal() async {
+        guard case let .review(review) = state, !review.restored, let source = lastCrop?.image,
+              kitSave != .saving, kitSave != .saved else { return }
+        let gen = sourceGeneration
+        kitSave = .saving
+        let tools = self.tools
+        let jpeg = await Self.background { tools.encodeOriginal(source) }.flatMap { $0 }
+        let result: KitSaveStatus = if let jpeg {
+            KitSaveStatus(await kit.saveOriginal(kind: .photo, jpeg: jpeg))
+        } else {
+            .failed
+        }
+        if gen == sourceGeneration { kitSave = result }
     }
 }
 
@@ -81,5 +102,34 @@ public extension PhotoFlowViewModel {
     /// The share sheet closed.
     func shareHandled() {
         if case .ready = share { share = .none }
+    }
+}
+
+extension PhotoFlowViewModel {
+    /// Re-inspects the fitted bytes and evaluates them against the slot, as the export will be (rule 3).
+    nonisolated static func ready(
+        _ bytes: [UInt8], _ spec: DocSpec, _ exams: [Exam], _ popular: [String]
+    ) -> ReviewReady {
+        let inspected = Inspector.inspect(bytes)
+        let facts = FileFacts(inspected, docKind: .photo)
+        let evaluation = MatchEngine.evaluate(spec, facts)
+        return ReviewReady(
+            bytes: bytes,
+            kb: (bytes.count + 512) / 1024,
+            width: inspected.width ?? 0,
+            height: inspected.height ?? 0,
+            meetsRules: evaluation.verdict == .exact || evaluation.verdict == .accepted,
+            note: MatchNote.of(facts, exams: exams, popularity: popular),
+            checks: .of(evaluation)
+        )
+    }
+}
+
+public extension PhotoFlowViewModel {
+    var canSave: Bool {
+        guard !draftValidationPending, exportState != .saving, case let .review(review) = state else { return false }
+        if renderPending { return true }
+        guard case let .ready(ready) = review.result else { return false }
+        return ready.meetsRules
     }
 }

@@ -11,6 +11,9 @@ import app.scanfit.core.data.export.ExportVerifier
 import app.scanfit.core.data.export.SaveResult
 import app.scanfit.core.data.export.SaveState
 import app.scanfit.core.data.export.ShareStager
+import app.scanfit.core.data.kit.KitIds
+import app.scanfit.core.data.kit.KitSave
+import app.scanfit.core.data.kit.KitStore
 import app.scanfit.core.imaging.AndroidImageDecoder
 import app.scanfit.core.imaging.CropAdjust
 import app.scanfit.core.imaging.CropCorner
@@ -162,6 +165,8 @@ sealed interface InkUiState {
         /** A staged file for the share sheet (ALGORITHMS 1.6.2): the screen opens it once, then `onShareHandled`. */
         val shareUri: String? = null,
         val shareFailed: Boolean = false,
+        /** Save to My Kit for the picture this review was made from (ALGORITHMS 13.1); hidden when [restored]. */
+        val kit: KitSave = KitSave.IDLE,
     ) : InkUiState {
         val canSave: Boolean
             get() =
@@ -185,9 +190,18 @@ constructor(
     @InkWork private val work: CoroutineDispatcher,
     private val drafts: DraftStore,
     private val share: ShareStager,
+    private val kit: KitStore,
 ) : ViewModel() {
     private val target: FlowTarget? =
         FlowTarget.of(savedState.get<String>(EXAM_ID), savedState.get<String>(DOC_TYPE), savedState.get<String>(CUSTOM))
+
+    /** "Use for exam…" from My Kit (ALGORITHMS 13.2): the flow starts from this original instead of the picker. */
+    private val originalId: String? = savedState.get<String>(ORIGINAL)?.takeIf(KitIds::isValid)
+    private var originalOpened = false
+
+    /** Counts the pictures the flow has opened, so a late Save to My Kit never lands on a newer picture. */
+    private var sourceGeneration = 0L
+    private var kitSave = KitSave.IDLE
 
     private val _uiState = MutableStateFlow<InkUiState>(InkUiState.Loading)
     val uiState: StateFlow<InkUiState> = _uiState.asStateFlow()
@@ -249,9 +263,14 @@ constructor(
                 return@launch
             }
             val slot = InkSlot(resolved.examId, resolved.examName, resolved.unverified, resolved.spec, resolved.custom)
-            val draft = if (slot.custom) null else drafts.read(slot.examId, slot.spec, slot.kind)
             exams = bundle?.exams.orEmpty()
             popular = bundle?.popular.orEmpty()
+            if (originalId != null && !originalOpened) {
+                originalOpened = true
+                if (_uiState.value === previous) open(slot, fromKit = true) { kit.original(originalId) }
+                return@launch
+            }
+            val draft = if (slot.custom) null else drafts.read(slot.examId, slot.spec, slot.kind)
             val next = if (draft == null || previous is InkUiState.PickSource) {
                 InkUiState.PickSource(slot)
             } else {
@@ -297,17 +316,26 @@ constructor(
     fun onImageSelected(uri: String) {
         val slot = slot ?: return
         if ((_uiState.value as? InkUiState.Review)?.save?.state == SaveState.SAVING) return
+        open(slot, fromKit = false) { tools.read(uri).also { tools.discardCaptures() } }
+    }
+
+    /** Decodes a new working picture (ALGORITHMS 1.1) for the crop; [fromKit] = it is already a Kit original. */
+    private fun open(
+        slot: InkSlot,
+        fromKit: Boolean,
+        read: suspend () -> ByteArray?,
+    ) {
         renderJob?.cancel()
         renderVersion++
         job?.cancel()
+        sourceGeneration++
+        kitSave = if (fromKit) KitSave.SAVED else KitSave.IDLE
         _uiState.value = InkUiState.Opening(slot)
         job =
             viewModelScope.launch {
                 val raster =
                     withContext(work) {
-                        val bytes = tools.read(uri)
-                        tools.discardCaptures()
-                        bytes?.let { tools.decode(it, decodeCap(slot.spec)) }
+                        read()?.let { tools.decode(it, decodeCap(slot.spec)) }
                     }
                 _uiState.value =
                     if (raster == null) {
@@ -316,6 +344,33 @@ constructor(
                         InkUiState.Crop(slot, raster, wholeImage(raster))
                     }
             }
+    }
+
+    /** Keeps the picture this review was made from in My Kit (ALGORITHMS 13.1). The review itself never changes. */
+    fun onSaveOriginal() {
+        val review = _uiState.value as? InkUiState.Review ?: return
+        val source = lastCrop?.image ?: return
+        if (review.restored || kitSave == KitSave.SAVING || kitSave == KitSave.SAVED) return
+        val generation = sourceGeneration
+        showKit(KitSave.SAVING)
+        viewModelScope.launch {
+            val jpeg = withContext(work) { encodeOriginal(source) }
+            val result = if (jpeg == null) KitSave.FAILED else KitSave.of(kit.saveOriginal(review.slot.kind, jpeg))
+            if (generation == sourceGeneration) showKit(result)
+        }
+    }
+
+    @Suppress("TooGenericExceptionCaught") // an encoder failure must not crash the review
+    private fun encodeOriginal(source: Raster): ByteArray? = try {
+        tools.encodeOriginal(source)
+    } catch (_: Exception) {
+        null
+    }
+
+    private fun showKit(state: KitSave) {
+        kitSave = state
+        val review = _uiState.value as? InkUiState.Review ?: return
+        _uiState.value = review.copy(kit = state)
     }
 
     /** The camera was closed without a photo, or the picker without a choice: just tidy up. */
@@ -496,14 +551,23 @@ constructor(
         val working = InkReviewResult.Working(slot.targetKb)
         // While the slider moves, the last result stays on screen until the debounce has passed.
         val shown = (_uiState.value as? InkUiState.Review)?.result?.takeIf { debounce } ?: working
-        _uiState.value = InkUiState.Review(slot, options, shown, confirmed, rendering = true, before = source)
+        _uiState.value =
+            InkUiState.Review(slot, options, shown, confirmed, rendering = true, before = source, kit = kitSave)
         renderJob =
             viewModelScope.launch {
                 if (debounce) {
                     delay(SLIDER_DEBOUNCE_MS)
                     if (version != renderVersion) return@launch
                     _uiState.value =
-                        InkUiState.Review(slot, options, working, confirmed, rendering = true, before = source)
+                        InkUiState.Review(
+                            slot,
+                            options,
+                            working,
+                            confirmed,
+                            rendering = true,
+                            before = source,
+                            kit = kitSave,
+                        )
                 }
                 val ink = InkOptions(crispBlack = options.crispBlack, inkFactor = options.inkFactor)
                 val result =
@@ -540,6 +604,7 @@ constructor(
                     current?.handwritingConfirmed ?: confirmed,
                     before = source,
                     retainFailed = !retained,
+                    kit = kitSave,
                 )
             }
     }
@@ -549,6 +614,9 @@ constructor(
         const val EXAM_ID = FlowTarget.EXAM_ID
         const val DOC_TYPE = FlowTarget.DOC_TYPE
         const val CUSTOM = FlowTarget.CUSTOM
+
+        /** Optional `?original={id}`: a My Kit original to start from (ALGORITHMS 13.2). */
+        const val ORIGINAL = KitIds.ROUTE_ARGUMENT
 
         private const val SLIDER_DEBOUNCE_MS = 300L
         private const val MIN_INK = 0.3

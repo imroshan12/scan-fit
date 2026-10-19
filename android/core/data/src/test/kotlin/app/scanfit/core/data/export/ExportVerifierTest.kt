@@ -3,6 +3,8 @@ package app.scanfit.core.data.export
 import app.scanfit.core.match.DocKind
 import app.scanfit.core.testing.SpecPresets
 import app.scanfit.core.testing.TestJpeg
+import app.scanfit.core.testing.TestPdf
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -33,6 +35,35 @@ class ExportVerifierTest {
         assertTrue(ExportVerifier.verifies(ok, ok, signature, DocKind.SIGNATURE))
         val photoSized = TestJpeg.make(200, 230, 16 * 1024)
         assertFalse(ExportVerifier.verifies(photoSized, photoSized, signature, DocKind.SIGNATURE))
+    }
+
+    @Test
+    fun aPdfIsCheckedForItsSlotPagesAndPassword() {
+        // JEE Main class 10 certificate: PDF, 50-300 KB.
+        val slot = SpecPresets.bundle.exams.first { it.id == "jee_main" }.documents.first { it.type.name == "CLASS10_CERTIFICATE" }
+        val made = TestPdf.make(2, 120 * 1024)
+        val pdf = PdfExport(pages = 2, written = true)
+        assertTrue(ExportVerifier.verifiesPdf(made, made.copyOf(), slot, pdf))
+        assertFalse("altered", ExportVerifier.verifiesPdf(made, made.copyOf().apply { this[200] = 'x'.code.toByte() }, slot, pdf))
+        assertFalse("page count", ExportVerifier.verifiesPdf(made, made, slot, pdf.copy(pages = 3)))
+        val small = TestPdf.make(2, 20 * 1024)
+        assertFalse("under the minimum", ExportVerifier.verifiesPdf(small, small, slot, pdf))
+        val locked = TestPdf.make(2, 120 * 1024, encrypted = true)
+        assertFalse("password", ExportVerifier.verifiesPdf(locked, locked, slot, pdf))
+        val text = TestPdf.make(2, 120 * 1024, font = true)
+        assertFalse("the app writes image pages only", ExportVerifier.verifiesPdf(text, text, slot, pdf))
+        assertTrue("an unchanged PDF may have text", ExportVerifier.verifiesPdf(text, text, slot, pdf.copy(written = false)))
+        assertFalse("a PDF is not a JPEG", ExportVerifier.verifies(made, made, slot, DocKind.PDF_DOCUMENT))
+    }
+
+    @Test
+    fun aRequestPicksTheCheckForItsFile() {
+        val slot = SpecPresets.bundle.exams.first { it.id == "jee_main" }.documents.first { it.type.name == "CLASS10_CERTIFICATE" }
+        val made = TestPdf.make(1, 90 * 1024)
+        val request = ExportRequest("jee_main", "JEE Main", slot, DocKind.PDF_DOCUMENT, made, pdf = PdfExport(1, written = true))
+        assertTrue(ExportVerifier.verifies(request, made))
+        assertEquals("application/pdf", request.mimeType)
+        assertEquals("class10_certificate_JEE-Main_90kb.pdf", request.fileName)
     }
 
     private fun jpeg(): ByteArray {

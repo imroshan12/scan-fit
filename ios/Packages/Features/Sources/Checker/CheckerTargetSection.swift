@@ -24,30 +24,14 @@ struct CheckerTargetSection: View {
             .autocorrectionDisabled()
             LazyVStack(alignment: .leading, spacing: 0) {
                 ForEach(model.targets, id: \.self) { target in
-                    Button { model.choose(target: target) } label: { row(target) }
+                    Button { model.choose(target: target) } label: {
+                        CheckerTargetRow(target: target, strings: strings)
+                    }
                         .buttonStyle(.plain)
                     Divider()
                 }
             }
         }
-    }
-
-    private func row(_ target: CheckerTarget) -> some View {
-        HStack(spacing: ScanFitSpacing.sm) {
-            VStack(alignment: .leading, spacing: ScanFitSpacing.xs) {
-                Text(target.exam.name).scanFitText(.body)
-                Text(strings.label(target.slot.type)).scanFitText(.caption)
-                    .foregroundStyle(ScanFitColor.onSurfaceVariant)
-                // Only the unverified state needs a badge in a list (CLAUDE.md rule 6).
-                if target.exam.confidence == .low { ConfidenceBadge(.low, strings: strings) }
-            }
-            Spacer(minLength: 0)
-            Image(systemName: "chevron.forward").accessibilityHidden(true)
-        }
-        .frame(minHeight: ScanFitSpacing.minTouchTarget)
-        .padding(.vertical, ScanFitSpacing.sm)
-        .contentShape(Rectangle())
-        .accessibilityElement(children: .combine)
     }
 
     /// The file against the chosen slot: chips, verdict and every problem, then what can be done.

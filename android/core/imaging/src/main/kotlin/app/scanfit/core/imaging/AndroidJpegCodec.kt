@@ -38,6 +38,9 @@ fun Raster.toBitmap(): Bitmap {
     return Bitmap.createBitmap(pixels, width, height, Bitmap.Config.ARGB_8888)
 }
 
+/** The bitmap's pixels as an 8-bit sRGB raster, alpha flattened onto white (ALGORITHMS 1.1 step 3). */
+fun Bitmap.toRaster(): Raster = AndroidImageDecoder.toRaster(this)
+
 /**
  * Production decoder (ALGORITHMS 1.1): subsamples on decode so a full-resolution bitmap is never created,
  * applies the EXIF orientation (BitmapFactory does not), converts to 8-bit sRGB and flattens alpha onto white.
@@ -105,7 +108,7 @@ object AndroidImageDecoder {
         }
     }
 
-    private fun toRaster(bitmap: Bitmap): Raster {
+    internal fun toRaster(bitmap: Bitmap): Raster {
         val w = bitmap.width
         val h = bitmap.height
         val argb = IntArray(w * h)

@@ -31,6 +31,8 @@ object ExportNaming {
         DocType.CATEGORY_CERTIFICATE -> "category_certificate"
         DocType.PWD_CERTIFICATE -> "pwd_certificate"
         DocType.SC_ST_CERTIFICATE -> "sc_st_certificate"
+        DocType.DOCUMENT -> "document"
+        DocType.ID_CARD -> "id_card"
     }
 
     fun fileName(
@@ -51,5 +53,15 @@ object ExportNaming {
         slot.filename?.let { return "$it.jpg" }
         val kb = roundHalfUp(bytes / BYTES_PER_KB)
         return "${idOf(slot.type)}_${examShort(examName)}_${width}x${height}_${kb}kb.jpg"
+    }
+
+    /** A PDF (ALGORITHMS 9.8 / 6.6): `<filename>.pdf`, otherwise `<docType>_<examShort>_<K>kb.pdf`. */
+    fun pdfFileName(
+        examName: String,
+        slot: DocSpec,
+        bytes: Int,
+    ): String {
+        slot.filename?.let { return "$it.pdf" }
+        return "${idOf(slot.type)}_${examShort(examName)}_${roundHalfUp(bytes / BYTES_PER_KB)}kb.pdf"
     }
 }

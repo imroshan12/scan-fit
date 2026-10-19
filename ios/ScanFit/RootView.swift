@@ -18,6 +18,8 @@ struct RootView: View {
     private let container: AppContainer
     @State private var homeModel: HomeViewModel
     @State private var kitModel: KitViewModel
+    @State private var kitOriginals: KitOriginalsViewModel
+    @State private var kitHistory: KitHistoryViewModel
     @State private var presets: PresetsSummary?
     /// The Home stack's path, so a flow can leave itself explicitly (see `PhotoFlowView.onExit`).
     @State private var homePath = NavigationPath()
@@ -36,6 +38,8 @@ struct RootView: View {
         _kitModel = State(initialValue: KitViewModel(drafts: container.drafts) {
             await container.trustedBundle()
         })
+        _kitOriginals = State(initialValue: KitOriginalsViewModel(kit: container.kit))
+        _kitHistory = State(initialValue: KitHistoryViewModel(kit: container.kit))
     }
 
     /// Document types the photo flow handles (ALGORITHMS 1.2: the kinds that are cropped, not padded).
@@ -54,7 +58,8 @@ struct RootView: View {
                     .navigationDestination(for: ExamRoute.self) { route in
                         ExamView(
                             model: ExamViewModel(
-                                examId: route.examId, preferences: container.preferences, drafts: container.drafts
+                                examId: route.examId, preferences: container.preferences, drafts: container.drafts,
+                                kit: container.kit
                             ) {
                                 await container.trustedBundle()
                             },
@@ -75,12 +80,26 @@ struct RootView: View {
             .tabItem { Label(strings.tabHome, systemImage: "house") }
             .tag(Tab.home)
             NavigationStack(path: $kitPath) {
-                KitView(model: kitModel, strings: strings, isActive: selectedTab == .kit)
-                    .navigationDestination(for: FlowRoute.self) { route in
-                        flow(route, strings: strings) {
-                            if !kitPath.isEmpty { kitPath.removeLast() }
-                        }
+                KitView(
+                    model: kitModel, originals: kitOriginals, history: kitHistory, strings: strings,
+                    isActive: selectedTab == .kit
+                )
+                .navigationDestination(for: FlowRoute.self) { route in
+                    flow(route, strings: strings) {
+                        if !kitPath.isEmpty { kitPath.removeLast() }
                     }
+                }
+                .navigationDestination(for: KitOriginalRoute.self) { route in
+                    // "Use for exam…" (ALGORITHMS 13.2) opens the slot's flow on this stack; Done comes back here.
+                    KitOriginalView(
+                        model: KitOriginalViewModel(id: route.id, kit: container.kit) {
+                            await container.trustedBundle()
+                        },
+                        strings: strings,
+                        onUse: { kitPath.append($0) },
+                        onLeave: { if !kitPath.isEmpty { kitPath.removeLast() } }
+                    )
+                }
             }
             .tabItem { Label(strings.tabKit, systemImage: "tray.full") }
             .tag(Tab.kit)
@@ -120,7 +139,9 @@ struct RootView: View {
     /// The pre-submit Checker (ALGORITHMS 12): a file the user already has, against the exam slot they choose.
     private func checker(strings: Strings) -> some View {
         CheckerView(
-            model: CheckerViewModel(preferences: container.preferences) { await container.trustedBundle() },
+            model: CheckerViewModel(preferences: container.preferences, kit: container.kit) {
+                await container.trustedBundle()
+            },
             strings: strings
         )
     }
@@ -131,7 +152,8 @@ struct RootView: View {
         if Self.photoFlowTypes.contains(route.docType) {
             PhotoFlowView(
                 model: PhotoFlowViewModel(
-                    target: route.target, preferences: container.preferences, drafts: container.drafts
+                    target: route.target, preferences: container.preferences, drafts: container.drafts,
+                    kit: container.kit, originalID: route.original
                 ) {
                     await container.trustedBundle()
                 },
@@ -141,7 +163,8 @@ struct RootView: View {
         } else {
             InkFlowView(
                 model: InkFlowViewModel(
-                    target: route.target, preferences: container.preferences, drafts: container.drafts
+                    target: route.target, preferences: container.preferences, drafts: container.drafts,
+                    kit: container.kit, originalID: route.original
                 ) {
                     await container.trustedBundle()
                 },

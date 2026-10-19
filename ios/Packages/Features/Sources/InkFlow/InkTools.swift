@@ -9,6 +9,14 @@ public protocol InkTools: Sendable {
     func decode(_ bytes: [UInt8], maxLongSide: Int) -> Raster?
     /// ALGORITHMS 3 / 9.5: cleanup by `pipeline` with `ink` options, pad to aspect, then fit (§9.4).
     func fit(_ cropped: Raster, spec: DocSpec, pipeline: Pipeline, ink: InkOptions) -> Result<PipelineResult, FitError>
+    /// ALGORITHMS 13.1: the working picture as a My Kit original, or nil when it cannot be encoded.
+    func encodeOriginal(_ source: Raster) -> [UInt8]?
+}
+
+public extension InkTools {
+    func encodeOriginal(_ source: Raster) -> [UInt8]? {
+        KitOriginalImage.encode(source, encoder: ImageIOJpegEncoder())
+    }
 }
 
 public struct LiveInkTools: InkTools {

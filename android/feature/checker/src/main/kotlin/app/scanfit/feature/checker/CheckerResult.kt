@@ -41,6 +41,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import app.scanfit.core.data.export.SaveState
 import app.scanfit.core.designsystem.R
+import app.scanfit.core.designsystem.components.CheckerTargetRow
 import app.scanfit.core.designsystem.components.ConfidenceBadge
 import app.scanfit.core.designsystem.components.MatchNoteCard
 import app.scanfit.core.designsystem.components.NoticeCard
@@ -84,43 +85,13 @@ internal fun TargetSection(
         )
         Column {
             state.targets.forEach { target ->
-                TargetRow(target, actions.onTarget)
+                CheckerTargetRow(target, actions.onTarget)
                 HorizontalDivider()
             }
         }
     } else {
         ResultCard(state, result, actions)
         FixSection(state, actions)
-    }
-}
-
-@Composable
-private fun TargetRow(
-    target: CheckerTarget,
-    onTarget: (CheckerTarget) -> Unit,
-) {
-    Row(
-        modifier =
-        Modifier
-            .fillMaxWidth()
-            .clickable { onTarget(target) }
-            .heightIn(min = ScanFitSpacing.minTouchTarget)
-            .padding(vertical = ScanFitSpacing.sm)
-            .semantics(mergeDescendants = true) {},
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(ScanFitSpacing.sm),
-    ) {
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(ScanFitSpacing.xs)) {
-            Text(target.exam.name, style = ScanFitType.body)
-            Text(
-                stringResource(target.slot.type.labelRes()),
-                style = ScanFitType.caption,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            // Only the unverified state needs a badge in a list (CLAUDE.md rule 6).
-            if (target.exam.confidence == Confidence.LOW) ConfidenceBadge(Confidence.LOW)
-        }
-        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
     }
 }
 

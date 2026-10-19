@@ -9,6 +9,7 @@ import app.scanfit.core.presets.PresetsLoadOutcome
 import app.scanfit.core.presets.PresetsSummary
 import app.scanfit.core.testing.FakeDraftStore
 import app.scanfit.core.testing.FakeExportDestinations
+import app.scanfit.core.testing.FakeKitStore
 import app.scanfit.core.testing.FakePresetsRepository
 import app.scanfit.core.testing.FakeUserPreferences
 import app.scanfit.core.testing.SpecPresets
@@ -53,7 +54,7 @@ class ExamSaveAllViewModelTest {
             presets,
             prefs,
             drafts,
-            DocumentExporter(destinations, prefs),
+            DocumentExporter(destinations, prefs, FakeKitStore()),
             dispatcher,
         )
         backgroundScope.launch(dispatcher) { m.uiState.collect {} }

@@ -9,6 +9,9 @@ import app.scanfit.core.data.export.ExportVerifier
 import app.scanfit.core.data.export.SaveResult
 import app.scanfit.core.data.export.SaveState
 import app.scanfit.core.data.export.ShareStager
+import app.scanfit.core.data.kit.KitIds
+import app.scanfit.core.data.kit.KitSave
+import app.scanfit.core.data.kit.KitStore
 import app.scanfit.core.imaging.AndroidImageDecoder
 import app.scanfit.core.imaging.AutoFraming
 import app.scanfit.core.imaging.BackgroundWhitening
@@ -149,6 +152,8 @@ sealed interface PhotoUiState {
         /** A staged file for the share sheet (ALGORITHMS 1.6.2): the screen opens it once, then `onShareHandled`. */
         val shareUri: String? = null,
         val shareFailed: Boolean = false,
+        /** Save to My Kit for the picture this review was made from (ALGORITHMS 13.1); hidden when [restored]. */
+        val kit: KitSave = KitSave.IDLE,
     ) : PhotoUiState
 }
 
@@ -166,9 +171,18 @@ constructor(
     exporter: DocumentExporter,
     private val drafts: DraftStore,
     share: ShareStager,
+    private val kit: KitStore,
 ) : ViewModel() {
     private val target: FlowTarget? =
         FlowTarget.of(savedState.get<String>(EXAM_ID), savedState.get<String>(DOC_TYPE), savedState.get<String>(CUSTOM))
+
+    /** "Use for exam…" from My Kit (ALGORITHMS 13.2): the flow starts from this original instead of the picker. */
+    private val originalId: String? = savedState.get<String>(ORIGINAL)?.takeIf(KitIds::isValid)
+    private var originalOpened = false
+
+    /** Counts the pictures the flow has opened, so a late Save to My Kit never lands on a newer picture. */
+    private var sourceGeneration = 0L
+    private var kitSave = KitSave.IDLE
 
     private val _uiState = MutableStateFlow<PhotoUiState>(PhotoUiState.Loading)
     val uiState: StateFlow<PhotoUiState> = _uiState.asStateFlow()
@@ -233,9 +247,14 @@ constructor(
             }
             val slot =
                 PhotoSlot(resolved.examId, resolved.examName, resolved.unverified, resolved.spec, resolved.custom)
-            val draft = if (slot.custom) null else drafts.read(slot.examId, slot.spec, DocKind.PHOTO)
             exams = bundle?.exams.orEmpty()
             popular = bundle?.popular.orEmpty()
+            if (originalId != null && !originalOpened) {
+                originalOpened = true
+                if (_uiState.value === previous) open(slot, fromKit = true) { kit.original(originalId) }
+                return@launch
+            }
+            val draft = if (slot.custom) null else drafts.read(slot.examId, slot.spec, DocKind.PHOTO)
             val next = if (draft == null || previous is PhotoUiState.PickSource) {
                 PhotoUiState.PickSource(slot)
             } else {
@@ -272,17 +291,26 @@ constructor(
     fun onImageSelected(uri: String) {
         if ((_uiState.value as? PhotoUiState.Review)?.save?.state == SaveState.SAVING) return
         val slot = slot ?: return
+        open(slot, fromKit = false) { tools.read(uri).also { tools.discardCaptures() } }
+    }
+
+    /** Decodes a new working picture (ALGORITHMS 1.1) and frames it; [fromKit] = it is already a Kit original. */
+    private fun open(
+        slot: PhotoSlot,
+        fromKit: Boolean,
+        read: suspend () -> ByteArray?,
+    ) {
         renderJob?.cancel()
         renderVersion++
         job?.cancel()
+        sourceGeneration++
+        kitSave = if (fromKit) KitSave.SAVED else KitSave.IDLE
         _uiState.value = PhotoUiState.FindingFace(slot)
         job =
             viewModelScope.launch {
                 val raster =
                     withContext(work) {
-                        val bytes = tools.read(uri)
-                        tools.discardCaptures()
-                        bytes?.let { tools.decode(it, decodeCap(slot.spec)) }
+                        read()?.let { tools.decode(it, decodeCap(slot.spec)) }
                     }
                 if (raster == null) {
                     _uiState.value = PhotoUiState.PickSource(slot, SourceProblem.OPEN_FAILED)
@@ -296,6 +324,26 @@ constructor(
                         else -> framed(slot, raster, found)
                     }
             }
+    }
+
+    /** Keeps the picture this review was made from in My Kit (ALGORITHMS 13.1). The review itself never changes. */
+    fun onSaveOriginal() {
+        val review = _uiState.value as? PhotoUiState.Review ?: return
+        val source = lastCrop?.image ?: return
+        if (review.restored || kitSave == KitSave.SAVING || kitSave == KitSave.SAVED) return
+        val generation = sourceGeneration
+        showKit(KitSave.SAVING)
+        viewModelScope.launch {
+            val jpeg = withContext(work) { attempt { tools.encodeOriginal(source) } }
+            val result = if (jpeg == null) KitSave.FAILED else KitSave.of(kit.saveOriginal(DocKind.PHOTO, jpeg))
+            if (generation == sourceGeneration) showKit(result)
+        }
+    }
+
+    private fun showKit(state: KitSave) {
+        kitSave = state
+        val review = _uiState.value as? PhotoUiState.Review ?: return
+        _uiState.value = review.copy(kit = state)
     }
 
     /** The camera was closed without a photo, or the picker without a choice: just tidy up. */
@@ -422,13 +470,14 @@ constructor(
         val working = ReviewResult.Working(slot.targetKb)
         // While typing, the last result stays on screen until the debounce has passed (no flashing per key).
         val shown = (_uiState.value as? PhotoUiState.Review)?.result?.takeIf { debounce } ?: working
-        _uiState.value = PhotoUiState.Review(slot, options, shown, rendering = true, before = source)
+        _uiState.value = PhotoUiState.Review(slot, options, shown, rendering = true, before = source, kit = kitSave)
         renderJob =
             viewModelScope.launch {
                 if (debounce) {
                     delay(TYPING_DEBOUNCE_MS)
                     if (version != renderVersion) return@launch
-                    _uiState.value = PhotoUiState.Review(slot, options, working, rendering = true, before = source)
+                    _uiState.value =
+                        PhotoUiState.Review(slot, options, working, rendering = true, before = source, kit = kitSave)
                 }
                 var applied = options
                 var image = source
@@ -462,7 +511,8 @@ constructor(
                     true
                 }
                 if (version != renderVersion) return@launch
-                _uiState.value = PhotoUiState.Review(slot, applied, result, before = source, retainFailed = !retained)
+                _uiState.value =
+                    PhotoUiState.Review(slot, applied, result, before = source, retainFailed = !retained, kit = kitSave)
             }
     }
 
@@ -496,6 +546,9 @@ constructor(
         const val EXAM_ID = FlowTarget.EXAM_ID
         const val DOC_TYPE = FlowTarget.DOC_TYPE
         const val CUSTOM = FlowTarget.CUSTOM
+
+        /** Optional `?original={id}`: a My Kit original to start from (ALGORITHMS 13.2). */
+        const val ORIGINAL = KitIds.ROUTE_ARGUMENT
 
         private const val TYPING_DEBOUNCE_MS = 400L
         private const val MAX_NAME = 60

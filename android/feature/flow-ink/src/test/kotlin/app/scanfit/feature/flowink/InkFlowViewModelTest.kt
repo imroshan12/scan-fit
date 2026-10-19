@@ -17,6 +17,7 @@ import app.scanfit.core.presets.PresetsLoadOutcome
 import app.scanfit.core.presets.PresetsSummary
 import app.scanfit.core.testing.FakeDraftStore
 import app.scanfit.core.testing.FakeExportDestinations
+import app.scanfit.core.testing.FakeKitStore
 import app.scanfit.core.testing.FakePresetsRepository
 import app.scanfit.core.testing.FakeShareStager
 import app.scanfit.core.testing.FakeUserPreferences
@@ -64,10 +65,11 @@ class InkFlowViewModelTest {
         FakePresetsRepository(PresetsLoadOutcome.Ready(PresetsSummary(55, 2)), SpecPresets.bundle),
         tools,
         prefs,
-        DocumentExporter(destination, prefs),
+        DocumentExporter(destination, prefs, FakeKitStore()),
         dispatcher,
         FakeDraftStore(),
         share,
+        FakeKitStore(),
     )
 
     private val InkFlowViewModel.state get() = uiState.value

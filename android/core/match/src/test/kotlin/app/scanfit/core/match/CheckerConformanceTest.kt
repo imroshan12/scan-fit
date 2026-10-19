@@ -31,6 +31,7 @@ class CheckerConformanceTest {
                     slot,
                     Verdict.valueOf(c.getValue("verdict").jsonPrimitive.content.uppercase()),
                     c.getValue("unverified").jsonPrimitive.boolean,
+                    c["encrypted"]?.jsonPrimitive?.boolean ?: false,
                 )
             assertEquals(id, c.getValue("expect").jsonPrimitive.content.uppercase(), status.name)
         }

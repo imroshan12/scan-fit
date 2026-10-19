@@ -51,6 +51,8 @@ import app.scanfit.core.data.export.SaveState
 import app.scanfit.core.designsystem.R
 import app.scanfit.core.designsystem.components.NoticeCard
 import app.scanfit.core.designsystem.components.NoticeKind
+import app.scanfit.core.designsystem.components.SaveToKitButton
+import app.scanfit.core.designsystem.components.SaveToKitStatus
 import app.scanfit.core.designsystem.components.ShareEffect
 import app.scanfit.core.designsystem.components.labelRes
 import app.scanfit.core.designsystem.components.specSummary
@@ -144,6 +146,7 @@ fun InkFlowRoute(
             onDone = onDone,
             onReplace = viewModel::onReplace,
             onShare = viewModel::onShare,
+            onSaveOriginal = viewModel::onSaveOriginal,
         ),
         modifier = modifier,
     )
@@ -168,6 +171,7 @@ internal class InkActions(
     val onDone: () -> Unit = {},
     val onReplace: () -> Unit = {},
     val onShare: () -> Unit = {},
+    val onSaveOriginal: () -> Unit = {},
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -274,6 +278,10 @@ private fun BottomAction(
                     enabled = enabled,
                     modifier = Modifier.fillMaxWidth().heightIn(min = ScanFitSpacing.minTouchTarget),
                 ) { Text(stringResource(R.string.common_share)) }
+            }
+            // Save to My Kit keeps the picture, not the fitted file (ALGORITHMS 13.1); a restored review has none.
+            if (state is InkUiState.Review && !state.restored && state.save.state != SaveState.SAVING) {
+                SaveToKitButton(SaveToKitStatus.valueOf(state.kit.name), actions.onSaveOriginal)
             }
         }
     }

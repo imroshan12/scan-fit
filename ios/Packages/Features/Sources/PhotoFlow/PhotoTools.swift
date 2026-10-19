@@ -12,6 +12,14 @@ public protocol PhotoTools: Sendable {
     /// ALGORITHMS 9.4: the cropped (and whitened, striped) photo fitted to the slot.
     func fit(_ prepared: Raster, spec: DocSpec) -> Result<PipelineResult, FitError>
     func today() -> Date
+    /// ALGORITHMS 13.1: the working picture as a My Kit original, or nil when it cannot be encoded.
+    func encodeOriginal(_ source: Raster) -> [UInt8]?
+}
+
+public extension PhotoTools {
+    func encodeOriginal(_ source: Raster) -> [UInt8]? {
+        KitOriginalImage.encode(source, encoder: ImageIOJpegEncoder())
+    }
 }
 
 public struct LivePhotoTools: PhotoTools {

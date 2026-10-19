@@ -17,6 +17,7 @@ import app.scanfit.core.model.DocType
 import app.scanfit.core.presets.PresetsLoadOutcome
 import app.scanfit.core.presets.PresetsSummary
 import app.scanfit.core.testing.FakeExportDestinations
+import app.scanfit.core.testing.FakeKitStore
 import app.scanfit.core.testing.FakePresetsRepository
 import app.scanfit.core.testing.FakeShareStager
 import app.scanfit.core.testing.FakeUserPreferences
@@ -89,7 +90,7 @@ class CheckerViewModelTest {
         FakePresetsRepository(PresetsLoadOutcome.Ready(PresetsSummary(55, 2)), SpecPresets.bundle),
         tools,
         prefs,
-        DocumentExporter(destinations, prefs),
+        DocumentExporter(destinations, prefs, FakeKitStore()),
         share,
         dispatcher,
     )

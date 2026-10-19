@@ -24,6 +24,9 @@ def status(case):
         return "likely_ok" if case["unverified"] else "ok"
     if case["format"] in DECODABLE and any(f in ("jpg", "jpeg") for f in case["slot_formats"]):
         return "fix"
+    pdf_source = case["format"] in DECODABLE or (case["format"] == "pdf" and not case.get("encrypted", False))
+    if "pdf" in case["slot_formats"] and pdf_source:
+        return "fix"
     return "no_fix"
 
 

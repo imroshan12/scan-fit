@@ -25,12 +25,21 @@ enum class CheckerStatus {
             slot: DocSpec,
             verdict: Verdict,
             unverified: Boolean,
+            /** The Inspector's `encrypted` flag of a PDF: no PDF can be made from it (ALGORITHMS 6.1). */
+            encrypted: Boolean = false,
         ): CheckerStatus = when {
             verdict == Verdict.UNKNOWN -> UNKNOWN
             verdict == Verdict.EXACT || verdict == Verdict.ACCEPTED -> if (unverified) LIKELY_OK else OK
             format in DECODABLE && (FileFormat.JPG in slot.formats || FileFormat.JPEG in slot.formats) -> FIX
+            FileFormat.PDF in slot.formats && pdfSource(format, encrypted) -> FIX
             else -> NO_FIX
         }
+
+        /** A file the PDF engine can make a PDF from: a decodable picture or a PDF without a password. */
+        fun pdfSource(
+            format: DetectedFormat,
+            encrypted: Boolean,
+        ): Boolean = format in DECODABLE || (format == DetectedFormat.PDF && !encrypted)
     }
 }
 

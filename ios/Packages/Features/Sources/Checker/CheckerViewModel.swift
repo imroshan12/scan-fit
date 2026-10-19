@@ -61,6 +61,8 @@ public final class CheckerViewModel {
     public let preferences: UserPreferences?
 
     @ObservationIgnored private let tools: any CheckerTools
+    /// Export history (ALGORITHMS 13.3): one entry per verified fixed copy.
+    @ObservationIgnored private let kit: any KitStore
     @ObservationIgnored private let load: @Sendable () async -> PresetBundle?
     /// The picked file's bytes, kept out of the observed state; only "Make it fit" decodes them.
     @ObservationIgnored private var bytes: [UInt8]?
@@ -70,9 +72,11 @@ public final class CheckerViewModel {
 
     public init(
         tools: any CheckerTools = LiveCheckerTools(), preferences: UserPreferences?,
-        exporter: any DocumentExporting = FilesExporter(), load: @escaping @Sendable () async -> PresetBundle?
+        exporter: any DocumentExporting = FilesExporter(), kit: any KitStore = NoKitStore(),
+        load: @escaping @Sendable () async -> PresetBundle?
     ) {
         self.tools = tools
+        self.kit = kit
         self.preferences = preferences
         self.exporter = exporter
         self.load = load
@@ -181,6 +185,7 @@ public final class CheckerViewModel {
         exportState = await exporter.save(request)
         if exportState == .saved, let target = result?.target {
             preferences?.recordSaved(target.exam.id, target.slot.type)
+            await kit.recordExport(request, examId: target.exam.id, examName: target.exam.name)
         }
     }
 

@@ -33,6 +33,7 @@ private final class BatchExporter: DocumentExporting {
 struct ExamSaveAllTests {
     private let drafts = FakeDraftStore()
     private let exporter = BatchExporter()
+    private let kit = FakeKitStore()
 
     private func model(confirmed: Bool) async throws -> (ExamViewModel, UserPreferences) {
         let defaults = try #require(UserDefaults(suiteName: "scanfit.exam.saveall.\(UUID().uuidString)"))
@@ -41,7 +42,9 @@ struct ExamSaveAllTests {
         await drafts.seed(TestJpeg.make(width: 200, height: 230, size: 34 * 1024), examID: "ibps_po", type: .photo)
         await drafts.seed(TestJpeg.make(width: 140, height: 60, size: 16 * 1024), examID: "ibps_po", type: .signature)
         let bundle = try SpecPresets.bundle()
-        let model = ExamViewModel(examId: "ibps_po", preferences: prefs, drafts: drafts, exporter: exporter) { bundle }
+        let model = ExamViewModel(
+            examId: "ibps_po", preferences: prefs, drafts: drafts, exporter: exporter, kit: kit
+        ) { bundle }
         await model.onAppear()
         return (model, prefs)
     }
@@ -65,6 +68,8 @@ struct ExamSaveAllTests {
         await model.saveAll()
         #expect(model.saveAllStatus == .done(saved: 1, total: 2, folder: "IBPS-PO"))
         #expect(!prefs.isSaved("ibps_po", .photo) && prefs.isSaved("ibps_po", .signature))
+        // Export history (ALGORITHMS 13.3) lists only the verified file.
+        #expect(await kit.exports.map(\.docType) == [.signature])
         exporter.failing = []
         await model.saveAll()
         #expect(exporter.batches.last?.map(\.spec.type) == [.photo])

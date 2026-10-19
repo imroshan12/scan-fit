@@ -12,6 +12,7 @@ import app.scanfit.core.presets.PresetsSummary
 import app.scanfit.core.testing.FakeDraftStore
 import app.scanfit.core.testing.FakeExportDestinations
 import app.scanfit.core.testing.FakeFaceDetector
+import app.scanfit.core.testing.FakeKitStore
 import app.scanfit.core.testing.FakePersonSegmenter
 import app.scanfit.core.testing.FakePresetsRepository
 import app.scanfit.core.testing.FakeShareStager
@@ -63,9 +64,10 @@ class PhotoFlowViewModelTest {
         detector,
         segmenter,
         dispatcher,
-        DocumentExporter(FakeExportDestinations(), FakeUserPreferences()),
+        DocumentExporter(FakeExportDestinations(), FakeUserPreferences(), FakeKitStore()),
         FakeDraftStore(),
         share,
+        FakeKitStore(),
     )
 
     private val PhotoFlowViewModel.state get() = uiState.value

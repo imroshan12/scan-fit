@@ -12,6 +12,8 @@ struct AppContainer: Sendable {
     let presets: PresetsRepository
     let preferences: UserPreferences
     let drafts: any DraftStore
+    /// My Kit originals and export history (ALGORITHMS 13), backup-excluded like the drafts.
+    let kit: any KitStore
     /// The embedded presets are verified once, at launch, off the main actor. Every reader awaits the
     /// same task, so Home, Settings and the exam screen agree and nothing verifies twice.
     let presetsOutcome: Task<PresetsLoadOutcome, Never>
@@ -26,6 +28,9 @@ struct AppContainer: Sendable {
             preferences: UserPreferences(),
             drafts: FileDraftStore(
                 root: URL.applicationSupportDirectory.resolvingSymlinksInPath().appendingPathComponent("drafts")
+            ),
+            kit: FileKitStore(
+                root: URL.applicationSupportDirectory.resolvingSymlinksInPath().appendingPathComponent("kit")
             ),
             presetsOutcome: Task { await repository.loadEmbedded(files) }
         )

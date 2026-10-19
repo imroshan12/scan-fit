@@ -105,7 +105,7 @@ never deleted on picker cancellation. Save failures keep the review available fo
 Only after successful verification and publication, persist the exam/document's Saved checklist status
 locally. A later failed or cancelled save does not clear a previously verified Saved status. This status
 records a successful export, not a guarantee that the user has kept the file. Sharing and Save all are §1.6.2; export
-history remains a follow-up; private retained drafts are defined in §1.6.1. Conformance: `export_cases`.
+history is §13.3; private retained drafts are defined in §1.6.1. Conformance: `export_cases`.
 
 ### 1.6.1 Retained drafts and Ready checklist rows
 
@@ -154,7 +154,7 @@ Revalidate on tab entry/foreground/store changes; cancel obsolete loads. Enumera
 draft reads, not untrusted filesystem metadata. Kit does not retain JPEGs in its UI model or decode full inputs.
 These are prepared exam files, not reusable cleaned originals or export history. Existing missing/expired files and
 files produced before draft retention was implemented cannot be recovered from a historical Saved marker. Originals,
-cross-exam reuse and history remain separate My Kit follow-ups. Viewing Kit never records Saved or extends retention.
+cross-exam reuse and history are §13 (Prepared is the first of Kit's three views). Viewing Kit never records Saved or extends retention.
 
 ### 1.6.2 Share and Save all
 
@@ -331,19 +331,97 @@ Issue enum: `EXTENSION_MISMATCH, CMYK_COLOR, PROGRESSIVE_JPEG, HAS_GPS_EXIF, ROT
 HEIC_NOT_ACCEPTED, PDF_ENCRYPTED, TOO_SMALL_KB, TOO_LARGE_KB, WRONG_DIMENSIONS, WRONG_ASPECT,
 LOW_DPI_METADATA, GRAYSCALE_NOT_ALLOWED`. Each has an EN/HI message and an optional fix action.
 
-## 6. PDF engine
+## 6. PDF engine (PRD F13)
 
-**Compress to ≤ X KB**: for each page, rasterize at a DPI ladder `[200, 150, 120, 100]`. At each
-DPI, binary-search JPEG q in `[40, 85]` for the whole-document size ≤ `X − 3%`. Pick the highest DPI
-that fits. A "Grayscale" toggle (default on for certificates) roughly halves the size. Below 100 DPI
-→ FAIL(CANNOT_REACH) with a suggestion: split pages, or crop margins.
-Note in the UI: text becomes image (not selectable). That's fine for portal uploads.
+One engine makes every PDF the app writes: **images → PDF**, **compress a PDF to a KB limit**, **merge PDFs**, **ID card on
+one page**, and the **PDF maker** of an exam's PDF slot (e.g. JEE Main "Class 10 certificate", 50–300 KB). The output is
+always an *image PDF* the app writes itself (§6.4): each page is one or two baseline JPEGs drawn on a page. Text in the
+input becomes part of an image (not selectable). That is fine for portal uploads, and it is what lets both apps hit a KB
+window without a PDF library (decision 2026-10-15; TECH_FEASIBILITY §2). Nothing about the input or output is logged.
 
-**Images → PDF**: A4 portrait (595×842 pt), image fitted with 5% margins, and each image first run
-through §3 document cleanup (optional toggle). **ID card mode**: front and back of a card on one A4
-page, each 85.6×54 mm at true scale, stacked with a 15 mm gap.
-**Merge**: page-level copy. Android `PdfRenderer` → `PdfDocument`; iOS `PDFDocument.insert`.
-Encrypted input → show "Remove the password first" (v1).
+### 6.1 Jobs, sources and options
+
+A **job** is an ordered list of sources, a size window and options. Sources: an **image** (JPEG, PNG, WebP, HEIC; read with
+the usual 64 MiB bound, decoded by §1.1 with a long-side cap of 2400 px, or 1600 px when cleanup is on (§9.5 input size),
+EXIF-oriented), with an optional free crop (§9.5 free crop, on the decoded raster) and quarter turns; or a **PDF** (each of
+its pages, in order). What the tool lets the user add:
+
+| Tool           | Sources                                   | Pages                                          |
+| -------------- | ----------------------------------------- | ---------------------------------------------- |
+| `images`       | 1+ images                                 | one image page per image                       |
+| `compress`     | exactly 1 PDF                             | one PDF page per input page                    |
+| `merge`        | 2+ PDFs                                   | every page of every PDF, in order              |
+| `id_card`      | exactly 2 images: front, back             | one ID-card page                               |
+| `exam` (slot)  | 1+ images or PDFs, mixed, in any order    | image pages and PDF pages in source order      |
+
+At most **20 output pages** (`TOO_MANY_PAGES`). A PDF whose Inspector `encrypted` flag is set (§9.2) is refused before
+rendering (`ENCRYPTED`, "This PDF has a password. Remove the password first."). A PDF the platform renderer cannot open,
+or an image that does not decode, is `UNREADABLE` and names nothing about the file.
+
+**Window.** An exam slot gives `size_kb` (§9.4 window, goal and `T'`); a slot without `max` is `UNKNOWN_LIMIT`. Tools ask
+for **Max KB** (required, whole KB `1–5120`, quick picks `100 · 200 · 300 · 500`, default `200`), with no minimum:
+`{min: null, max, target: null}`.
+
+**Options.** `grayscale` (default **on**) and `cleanup` (default **on**; applies to image sources only; shown only when the
+job has an image). Both are the user's decision 2026-10-15: certificates look like a clean grey scan by default and come
+out about half the size; seals and stamps lose their colour unless the user turns grayscale off.
+
+**Unchanged.** A job whose only source is one PDF that is not encrypted and whose size already lies in the window
+(`min ≤ KB ≤ max`) returns that file's bytes unchanged (strategy `unchanged`), and the result says
+"This PDF already fits. Nothing was changed." No option applies to it.
+
+### 6.2 Preparing image pages
+
+Per image source, once per job: decode (§6.1) → quarter turns → crop → `cleanup` (§9.10 *Page cleanup*) if on, else
+`grayscale` alone turns every pixel into its luma `L` (§9.1) as R = G = B = L. The prepared raster is reused for every DPI
+of §6.3. PDF pages are rendered at each DPI on a white background; `grayscale` turns them into luma the same way (cleanup
+never applies to them: a PDF page is already a clean page).
+
+### 6.3 Fitting to the window (compress to ≤ X KB)
+
+For the DPI ladder `[200, 150, 120, 100]`, highest first: render every page at that DPI (§9.10 layout), encode every page
+image as a baseline JPEG at each quality of the grid `[85, 75, 65, 55, 45, 40]`, and measure the written PDF (§6.4) for
+each quality. The **first DPI** whose quality-40 PDF is `≤ goal.hi` is used, at the **highest quality** of the grid whose
+PDF is `≤ goal.hi`. If even 100 DPI at quality 40 is too big → `CANNOT_REACH`: "Can't get this under X KB. Try fewer
+pages or crop the margins." When the chosen PDF is below `goal.lo` (a small file for a slot with a minimum, e.g. JEE's
+50 KB), it is **padded** (§6.4) to `round(T'·1024)` bytes — the pages are unchanged; see §1.4 for why minimums are
+padded. Exact numbers and the selection rule: §9.10 (conformance `pdf_fit_cases`).
+A fixed grid instead of a binary search means each page is rendered once per DPI and only one page raster is in memory at a
+time; the bytes of the chosen DPI and quality are produced by a final pass (render + encode, deterministic).
+Strategy (analytics enum): `quality` (200 DPI, no pad), `lower_dpi`, `pad`, `unchanged`.
+
+### 6.4 The PDF the app writes
+
+PDF 1.4, no metadata (no `/Info`, title, author, producer or dates), no fonts, no compression of the object structure, one
+`/DeviceRGB` `/DCTDecode` image XObject per placed image, each JPEG passed through the §1.5 patcher (DPI = the render DPI)
+so it carries no EXIF, XMP or ICC. Grey pages are encoded as RGB JPEGs whose three channels are equal (identical on both
+platforms; the chroma costs almost nothing). Exact bytes: §9.10 *Writer* (conformance `pdf_writer_cases`, byte-identical
+on both platforms and in the reference). **Padding** appends one unreferenced stream object of spaces before the
+cross-reference table, so every reader ignores it.
+
+### 6.5 Verify after write
+
+§1.6 applies with these checks on the re-read bytes: identical to the result bytes; Inspector format `pdf`, not
+encrypted, and (for a PDF the app wrote) `pages` equal to the job's page count and `imageOnly`; size in the window; for an
+exam slot the slot verdict (§9.7, kind `pdf_document`) is EXACT or ACCEPTED. A Tools PDF is checked against its synthetic
+slot (§6.6). Saving records Saved for an exam slot and appends a history entry (§13.3). Android saves to
+`Downloads/ScanFit/<Exam>/` (MIME `application/pdf`; Tools: `Downloads/ScanFit/PDF/`), iOS through the Files picker.
+
+### 6.6 Screens, names and the Checker
+
+**Tools → PDF** lists the four tools; an exam's PDF row opens the same **PDF maker** for that slot (decision 2026-10-15).
+Tools use a synthetic slot: exam id `pdf`, exam name `PDF` (not translated: it names the file and the folder),
+`type` `id_card` for the ID card and `document` for the other tools (two schema document types added for this; no preset
+uses them yet), `formats = [pdf]`, `dimensions.mode = none`, the window above. Names (§9.8): an exam
+slot with `filename` → `<filename>.pdf`; otherwise `<docType>_<examShort>_<K>kb.pdf` (`class10_certificate_JEE-Main_182kb.pdf`,
+`id_card_PDF_96kb.pdf`). The **Checker** offers "Make it fit" for a PDF slot when the file is a decodable image or a PDF
+that is not encrypted (§12): the file becomes a one-source `exam` job for that slot with the default options.
+
+**Images → PDF** places each image on its own A4 page, 5 % margins, portrait or landscape by the image (§9.10).
+**ID card**: front above back on one A4 portrait page, each at true scale 85.6 × 54 mm, 15 mm apart, centred (§9.10);
+the user crops each side to the card. **Merge** and **compress** keep each page's own size (pages larger than A4 are
+rendered at A4's pixel budget).
+Paid limits (PRD: compress of more than 3 pages is Pro) come with the paywall in Phase 4; nothing is limited yet.
 
 ## 7. Live photo coach (practice only, nothing is uploaded)
 
@@ -578,6 +656,7 @@ A quick-fix line (`match.quick_fix`) shows when `quick_fixes` is not empty. Unve
 `examShort` = the exam name cut at the first `/` or ` (`, every run of non-alphanumeric characters replaced by one `-`, trimmed of `-`
 (`IBPS PO / MT` → `IBPS-PO`). File name: `filename ?? docType`-based: if the slot has `filename`, exactly `<filename>.jpg`; otherwise
 `<docType>_<examShort>_<W>x<H>_<K>kb.jpg` with `K = round(bytes / 1024)`.
+**PDF** (§6.6): `<filename>.pdf` when the slot has `filename`, otherwise `<docType>_<examShort>_<K>kb.pdf` (no dimensions).
 
 ### 9.9 Conformance case keys (`fixtures/cases.json`)
 
@@ -590,13 +669,70 @@ A fit case names either `preset` + `doc`, or an inline `spec` (a full document o
 (inclusive), `aspect` ± `aspect_tol`, `background_mean_min` (median luma of the whole image ≥ value), `ink_pixels_min_pct` (% of pixels with luma < 128 ≥ value),
 `exif: "none"` (no APP1), `dpi` (JFIF units 1 and both densities equal), `export_filename` (§9.8), `decodes` (re-decodes without error),
 `max_ms_midrange` (measured by the benchmark, not asserted in unit tests). Other sections: `inspect_cases`, `decode_cases`, `patch_cases`,
-`geometry_cases`, `crop_cases`, `match_cases`, `match_note_cases`, `save_all_cases`, `checker_cases`, `search_cases` (their keys are documented inline in the file).
+`geometry_cases`, `crop_cases`, `match_cases`, `match_note_cases`, `save_all_cases`, `checker_cases`, `kit_size_cases`, `kit_history_cases`, `kit_id_cases`, `search_cases`, and the PDF sections
+of §9.10 (their keys are documented inline in the file).
 `thumb_preservation_cases` draw a grey print parametrically: paper luma `round(left + (right − left)·x/(W−1))`; inside the
 `print` ellipse `(cx, cy, rx, ry)` a pixel is a ridge when `⌊2d/period⌋` is even, `d` = distance to the centre with `y` scaled
 by `rx/ry`, coloured `ridge` luma, or `rim` luma beyond normalised radius `rim[0]`; the optional `core` ellipse is solid.
 Expectations: the output box of pixels `< visible_below` matches the source ink box (`< paper − ink_delta`) within
 `box_tolerance` (nothing clipped); the core shrunk to 70 % has mean `≤ core_max_mean`; no pixel `< border_clear_above` lies
 in the outer `border` pixels; at least `white_min_fraction` of the output is `≥ 250`; `ink_min` pixels are `< ink_below`.
+
+### 9.10 PDF engine numbers (§6)
+
+Units are PDF points (1/72 in), origin top-left, y down, as `double`s; the formulas below are evaluated in the order
+written so all three implementations get the same bits. `A4 = 595 × 842`, `M = 0.05 · 595` (29.75), `mm = 72 / 25.4`.
+`round` is §9.1 (half up). Pixel sizes use `k` = output pixels per source pixel.
+
+- **Image page** (prepared raster `w × h`): page `PW × PH = 595 × 842` if `w ≤ h`, else `842 × 595`. `bw = PW − 2·M`,
+  `bh = PH − 2·M`, `s = min(bw / w, bh / h)`, `rw = w · s`, `rh = h · s`, `rx = (PW − rw) / 2`, `ry = (PH − rh) / 2`.
+- **ID card page**: `595 × 842`; card box `CW = 85.6 · mm`, `CH = 54 · mm`, gap `G = 15 · mm`; box `x = (595 − CW) / 2`,
+  front `y = (842 − (2 · CH + G)) / 2`, back `y = front y + CH + G`. Each image is contained in its box and centred:
+  `s = min(CW / w, CH / h)`, `rw = w · s`, `rh = h · s`, `rx = box x + (CW − rw) / 2`, `ry = box y + (CH − rh) / 2`.
+- **Pixels of a placed image** at DPI `d`: `k = s · d / 72`. `k ≥ 1` → `w × h` (never upscaled). Otherwise by the long side:
+  `w ≥ h` → `pw = max(1, round(w · k))`, `ph = max(1, round(h · pw / w))`; else `ph = max(1, round(h · k))`,
+  `pw = max(1, round(w · ph / h))`.
+- **PDF page** (size `pw_pt × ph_pt` as the platform renderer reports the displayed page): the output page has the same size and one image
+  covering it (`rx = ry = 0`). `k = (d / 72) · min(1, 842 / max(pw_pt, ph_pt))`; pixels `max(1, round(pw_pt · k)) × max(1, round(ph_pt · k))`.
+  Rendered on white, scaled to exactly those pixels.
+- **Page cleanup** (image sources, `cleanup` on), on the prepared raster (long side ≤ 1600): `G` = §9.5 thumb steps 1–4 on
+  its luma `L` (candidates, paper-only background, normalisation, tone). `grayscale` on → `R = G = B = G`; off → each channel
+  `c' = min(255, (c · G + L / 2) / max(L, 1))` (integer division): the paper turns white and ink, photos and seals keep
+  their colour and stay dark. Conformance: `page_cleanup_cases`, parametric pages drawn in this order: paper grey
+  `round(left + (right − left)·x/(W−1))`, `text` bars `[x, y, w, h, luma]`, the `block` `[x, y, w, h, luma]`, the `stamp`
+  disc `[cx, cy, r, [R, G, B]]` (`dx² + dy² ≤ r²`). Measured on the output: text = the bars' pixels (mean luma
+  `≤ text_max_mean`); block = the block shrunk by 4 px (mean luma within `[block_min_mean, block_max_mean]`); stamp =
+  the disc of radius `r − 4` (`stamp_gray`: every pixel's `max − min` channel `≤ 2`; `stamp_red_min`: mean `R − G` at
+  least that); paper = pixels more than 6 px outside every bar, the block and the stamp's bounding square (at least
+  `paper_white_min_fraction` of them with luma `≥ 250`).
+- **Numbers in the PDF** `num(v)`: `c = floor(v · 100 + 0.5)`; the integer part `c / 100`, then nothing if `c % 100 = 0`,
+  `.D` if `c % 10 = 0` (`D = c % 100 / 10`), else `.DD` (two digits). `29.75`, `30.5`, `595`.
+- **Writer** (bytes, ASCII except the second header line): `%PDF-1.4\n%` `E2 E3 CF D3` `\n`, then objects numbered from 1, each
+  `<n> 0 obj\n<body>\nendobj\n`: 1 `<< /Type /Catalog /Pages 2 0 R >>`; 2 `<< /Type /Pages /Kids [<p₁> 0 R <p₂> 0 R …] /Count <N> >>`;
+  then per page in order the page object, its content stream, then its images (Im1, Im2 in placement order):
+  page `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 <num PW> <num PH>] /Resources << /XObject << /Im1 <i₁> 0 R /Im2 <i₂> 0 R >> >> /Contents <c> 0 R >>`;
+  content data = per image `q <num rw> 0 0 <num rh> <num rx> <num (PH − ry − rh)> cm /Im<j> Do Q\n`, body
+  `<< /Length <len> >>\nstream\n<data>\nendstream`; image body `<< /Type /XObject /Subtype /Image /Width <pw> /Height <ph>
+  /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length <len> >>\nstream\n<jpeg>\nendstream` (one line,
+  single spaces); optional padding object last: `<< /Length <P> >>\nstream\n<P spaces>\nendstream`. Then at offset `X`:
+  `xref\n0 <n+1>\n0000000000 65535 f \n`, one `<offset, 10 digits> 00000 n \n` per object, and
+  `trailer\n<< /Size <n+1> /Root 1 0 R >>\nstartxref\n<X>\n%%EOF\n`. Conformance `pdf_writer_cases`: fixture JPEGs placed by
+  the layouts above → exact `size` and `sha256` (reference `spec/tools/pdf.py`).
+- **Pad** to `S` bytes: none if the PDF is already `≥ S` bytes; otherwise the smallest `P ≥ 0` whose padded PDF is `≥ S`
+  bytes (exactly `S`, or `S + 1` where the length's digit count grows).
+- **Fit** (`pdf_fit_cases`): window, `goal` and `T'` as §9.4 (null `max` → `UNKNOWN_LIMIT`). `size(d, q)` = written PDF
+  bytes with every page at DPI `d` and quality `q`. For `d` in `[200, 150, 120, 100]`: if `size(d, 40) ≤ goal.hi · 1024`,
+  choose the first `q` of `[85, 75, 65, 55, 45, 40]` with `size(d, q) ≤ goal.hi · 1024` and stop. None → `CANNOT_REACH`.
+  If the window has a minimum (`min > 0`) and `size(d, q) < goal.lo · 1024` → pad to `round(T' · 1024)`; with no
+  minimum a small PDF is never padded (unlike §9.4: a Tools limit is only a maximum). Strategy: `pad` when padded, else `quality` at 200 DPI and
+  `lower_dpi` below. An implementation may stop measuring a DPI as soon as the quality-40 JPEGs alone exceed `goal.hi`.
+- **Job checks**, in order: no sources (or an ID card without exactly two pictures) → `NO_PAGES`; an encrypted PDF →
+  `ENCRYPTED`; a PDF the renderer cannot open or with no pages → `UNREADABLE`; more than 20 pages → `TOO_MANY_PAGES`; the
+  window (`UNKNOWN_LIMIT`); the unchanged rule (§6.1); then the pictures are prepared (one that does not decode →
+  `UNREADABLE`) and the fit (`CANNOT_REACH`).
+  Conformance `pdf_job_cases` runs real sources (fixture images and the PDFs in `fixtures/pdfs/`) through each platform's
+  renderer and encoder and checks the written bytes: Inspector `pdf`, `pages`, `imageOnly`, not encrypted, KB in
+  `[kb_min, kb_max]`, the strategy, or the error.
 
 ## 10. Exam search and browse (Home, PRD F1)
 
@@ -683,10 +819,87 @@ two matching slots appears twice, e.g. NEET left and right hand fingers), in pop
 2. verdict EXACT or ACCEPTED → `ok`, or `likely_ok` when the exam is unverified (rule 6: never "valid");
 3. otherwise, if the file is an image the app can decode (`jpeg`, `png`, `webp`, `heic`) and the slot accepts `jpg`/`jpeg`
    → `fix`: offer "Make it fit for <exam>";
-4. otherwise → `no_fix` (a PDF, an undecodable file, or a slot that wants a PDF; PDF tools come with §6).
+4. otherwise, if the slot accepts `pdf` and the file is a decodable image or a `pdf` that is not encrypted → `fix`: "Make
+   it fit" makes a PDF for the slot (§6.6: a one-source `exam` job, grayscale and cleanup on);
+5. otherwise → `no_fix` (an encrypted PDF, an undecodable file, or a PDF for an image slot).
 
-**Make it fit** decodes the file (§1.1, oriented upright, EXIF dropped), then runs the plain §1 pipeline for the slot: photo
+**Make it fit** for a PDF slot runs §6 and shows the PDF result (first page, KB, pages, verdict) with Save and Share.
+For an image slot it decodes the file (§1.1, oriented upright, EXIF dropped), then runs the plain §1 pipeline for the slot: photo
 kinds crop centred to the slot aspect, other kinds pad with white; no cleanup, face check or strip. The result shows like a
 review (image, chips, slot verdict, match note) with Save and Share (§1.6, §1.6.2). Save uses the slot's kind and §9.8 name
 and records Saved for that exam slot like any verified export; an exam signature still needs the one-time handwriting
 tick. The original file is never modified.
+
+## 13. My Kit: originals, reuse and export history (PRD F11)
+
+My Kit has three views behind a native segmented control: **Prepared** (the retained drafts, §1.6.1), **Originals** and
+**History**, in that order, Prepared first. Each view has its own loading, empty and retryable error state and reloads on
+tab entry, app foreground and store changes (obsolete loads are cancelled). Nothing here leaves the device (rule 2).
+
+### 13.1 Originals
+
+**Saving.** A new photo or ink review shows a secondary `kit.save_original` ("Save to My Kit") under Share. A restored
+review (§1.6.1, no source kept) and the Checker do not. It does not depend on the fit verdict: the original is not the
+fitted file. Custom size reviews have it too. The stored picture is the flow's **working source**: the upright raster
+the crop step used (§1.1 decode, after the user's 90° turns), not the crop and without effects. If its long side is over
+`2400` px it is resized: long side → 2400, other side → `max(1, round_half_up(other · 2400 / long))` (`kit_size_cases`).
+It is encoded as a baseline JPEG at quality 92 and passed through the §1.5 patcher (RGB, JFIF, no EXIF/GPS/XMP). Its
+kind is the slot's `DocKind` (`DocKind.of(type)`; never `PDF_DOCUMENT`). After a verified save the button reads
+`kit.saved_original` and stays disabled until the flow gets a new source. A full Kit (`30` originals) writes nothing and
+says `kit.full`; a storage failure says `kit.save_failed` and keeps the button for a retry. Saving never changes the review.
+
+**Keeping.** Originals stay until the user deletes them (decision 2026-10-15; Phase 4 may limit free users to 30 days).
+Delete is on the original's screen, behind a confirmation (`kit.delete_title`, `kit.delete_body`: files already made are
+not affected).
+
+**Storage.** One app-private root excluded from backup (Android `noBackupFilesDir/kit`, iOS Application Support `kit`
+with `isExcludedFromBackup`): `index.json` (`version: 1`, metadata only: originals `id, kind, created_at_ms, width,
+height, size`; history entries, §13.3), and the bytes in `originals/<id>.jpg` and `exports/<id>.jpg`. Ids are generated by
+the app as lowercase UUID v4 text and must match `^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$`
+before any path is built from them (`kit_id_cases`); routes carry ids, never paths or bytes. A write stages the bytes in a
+temporary file, re-reads and verifies them, renames them into place, then replaces the index the same way, all under one
+lock. Loading drops index entries with a bad id, unknown kind or document type, or impossible numbers, and removes
+temporary files and blobs that no entry names (process death between the two renames). Symlinks are rejected. A corrupt
+or unsupported index is replaced by an empty one, and its blobs are removed as orphans.
+
+**Reading** an original (thumbnail, detail, reuse) re-inspects its bytes (§5): JPEG, SOF0, RGB with 3 components, no
+EXIF/GPS/XMP, at most 16 MiB, dimensions equal to the entry's and long side at most 2400. Failure removes the entry and
+says `kit.original_missing`. The list is grouped by kind in the order Photo, Signature, Thumb, Fingers, Declaration,
+newest first in each group; a row shows a thumbnail (decoded off the main thread at no more than twice its display
+size), the kind and the date saved. The view model never holds full-size originals.
+
+### 13.2 Use for exam…
+
+The original's screen offers `kit.use_for_exam`: the Checker's list (§12) of (active exam, slot) pairs for the original's
+kind, popularity then name, with search and the unverified badge. Choosing one opens that slot's photo or ink flow with
+the original as its source. The flow skips the retained-draft restore and the picker, reads the original (§13.1 checks),
+decodes it by §1.1 with the slot's own cap and continues exactly as after a pick: photo face detection and framing, ink
+crop. An unreadable original returns to the source step with the open-failed message. Back from the crop step goes to the
+source step, where the user may pick another picture. Everything after that is the normal flow (retained draft, Save,
+Saved, Share). Save to My Kit shows as already saved for the original's own source. Done returns to the
+original's screen in My Kit, so the same original can be used for the next exam.
+
+### 13.3 Export history
+
+Every verified, published export (§1.6: review Save, Save all, Checker save, Custom size, PDF tools and PDF slots §6.5)
+appends one entry after the written file passes verification: `id, created_at_ms, exam_id, exam_name, doc_type, kind,
+file_name (§9.8), size, width, height`, plus `format` (`jpg`, the default when absent, or `pdf`) and, for a PDF, `pages`
+(≥ 1; `width` and `height` are 0). Custom size entries carry `exam_id` `custom`, PDF tools `pdf`. A private copy of the
+exact verified bytes is written to `exports/<id>.jpg` (`exports/<id>.pdf` for a PDF) so the file can be shared again; a
+PDF copy's read check is: format `pdf`, not encrypted, the entry's size (the list row reads `182 KB · 3 pages · PDF`). Recording is best effort: it never changes the export result, the
+Saved marker or the UI of the save, and a failure is not logged with names.
+
+**Retention** (`ExportHistory.prune(entries, now, max_entries)`, `kit_history_cases`): entries are ordered newest first
+(`created_at_ms` descending; equal times keep the later-recorded first); the first `max_entries` are kept (`100` in the
+apps); an entry's copy is **shareable** when `0 <= now − created_at_ms < 30 days` (`2,592,000,000` ms), the same window
+as drafts. Dropped entries and copies that are no longer shareable are deleted on load (best effort); the entry itself
+stays until it falls out of the newest 100.
+
+**List.** Newest first: document label, exam name, `34 KB · 200×230` and the date. A shareable entry has Share: the copy
+is re-read and must match the entry's size and dimensions and pass the read check of §13.1, then it is staged and shared
+under its recorded file name exactly as §1.6.2 (byte equality before the sheet; never records Saved). A copy that is gone
+or older than 30 days shows `kit.history_expired` instead. `kit.history_clear` (with a confirmation) deletes every entry
+and copy; the checklist's Saved markers are not history and stay.
+
+Conformance: `kit_size_cases` (`width`, `height` → stored size), `kit_history_cases` (`entries` in recorded order, `now_ms`,
+`max_entries` → `kept` ids in order and `shareable` ids), `kit_id_cases` (`id` → `valid`). Reference: `spec/tools/kit.py`.

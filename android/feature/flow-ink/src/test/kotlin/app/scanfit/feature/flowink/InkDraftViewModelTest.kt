@@ -8,6 +8,7 @@ import app.scanfit.core.presets.PresetsLoadOutcome
 import app.scanfit.core.presets.PresetsSummary
 import app.scanfit.core.testing.FakeDraftStore
 import app.scanfit.core.testing.FakeExportDestinations
+import app.scanfit.core.testing.FakeKitStore
 import app.scanfit.core.testing.FakePresetsRepository
 import app.scanfit.core.testing.FakeShareStager
 import app.scanfit.core.testing.FakeUserPreferences
@@ -51,10 +52,11 @@ class InkDraftViewModelTest {
         presets,
         tools,
         preferences,
-        DocumentExporter(destination, preferences),
+        DocumentExporter(destination, preferences, FakeKitStore()),
         dispatcher,
         drafts,
         share,
+        FakeKitStore(),
     )
 
     private val InkFlowViewModel.review get() = uiState.value as InkUiState.Review

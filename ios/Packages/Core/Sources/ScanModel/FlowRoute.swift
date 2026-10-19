@@ -45,13 +45,17 @@ public struct FlowSlot: Sendable, Equatable {
 /// (ARCHITECTURE §3).
 public struct FlowRoute: Hashable, Sendable {
     public let target: FlowTarget
+    /// "Use for exam…" (ALGORITHMS 13.2): the id of a My Kit original the flow starts from, never a path or bytes.
+    public let original: String?
 
-    public init(examId: String, docType: DocType) {
+    public init(examId: String, docType: DocType, original: String? = nil) {
         target = .exam(examId: examId, docType: docType)
+        self.original = original
     }
 
     public init(custom: CustomSize) {
         target = .custom(custom)
+        original = nil
     }
 
     public var docType: DocType { target.docType }

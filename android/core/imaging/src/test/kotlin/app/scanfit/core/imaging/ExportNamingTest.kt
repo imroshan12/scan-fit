@@ -3,7 +3,11 @@ package app.scanfit.core.imaging
 import app.scanfit.core.model.DocType
 import app.scanfit.core.model.Exam
 import app.scanfit.core.model.PresetBundle
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.int
+import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
 
@@ -33,6 +37,22 @@ class ExportNamingTest {
         val jee = exam("jee_main")
         val photo = jee.documents.first { it.type == DocType.PHOTO }
         assertEquals("Photograph.jpg", ExportNaming.fileName(jee, photo, 1, 1, 1))
+    }
+
+    @Test
+    fun pdfNamesFollowTheCases() {
+        val cases = Cases.section("pdf_name_cases")
+        assertTrue(cases.size >= 4)
+        val ids = DocType.serializer().descriptor
+        for (c in cases) {
+            val wire = c.getValue("doc_type").jsonPrimitive.content
+            val type = DocType.entries.first { ids.getElementName(it.ordinal) == wire }
+            val filename = c["filename"]?.takeUnless { it is JsonNull }?.jsonPrimitive?.content
+            val slot = Presets.inline(type = wire, dims = """{"mode":"none"}""").copy(filename = filename)
+            check(slot.type == type)
+            val name = ExportNaming.pdfFileName(c.getValue("exam_name").jsonPrimitive.content, slot, c.getValue("bytes").jsonPrimitive.int)
+            assertEquals(c.getValue("id").jsonPrimitive.content, c.getValue("expect").jsonPrimitive.content, name)
+        }
     }
 
     @Test

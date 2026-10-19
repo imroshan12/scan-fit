@@ -37,7 +37,7 @@ constructor(
         val folder = ExportNaming.examShort(request.examName).ifEmpty { request.examId }
         val values = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, request.fileName)
-            put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+            put(MediaStore.MediaColumns.MIME_TYPE, request.mimeType)
             put(MediaStore.MediaColumns.RELATIVE_PATH, "${Environment.DIRECTORY_DOWNLOADS}/ScanFit/$folder/")
             put(MediaStore.MediaColumns.IS_PENDING, 1)
         }

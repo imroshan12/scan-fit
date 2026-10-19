@@ -56,6 +56,7 @@ final class RecordingExporter: DocumentExporting {
 struct CheckerViewModelTests {
     private let tools = FakeCheckerTools()
     private let exporter = RecordingExporter()
+    private let kit = FakeKitStore()
     private let good = TestJpeg.make(width: 140, height: 60, size: 16 * 1024)
     private let big = TestJpeg.make(width: 140, height: 60, size: 30 * 1024)
 
@@ -70,7 +71,9 @@ struct CheckerViewModelTests {
 
     private func model(_ prefs: UserPreferences? = nil) throws -> CheckerViewModel {
         let bundle = try SpecPresets.bundle()
-        return CheckerViewModel(tools: tools, preferences: prefs ?? preferences(), exporter: exporter) { bundle }
+        return CheckerViewModel(tools: tools, preferences: prefs ?? preferences(), exporter: exporter, kit: kit) {
+            bundle
+        }
     }
 
     private func ibps(_ m: CheckerViewModel) throws -> CheckerTarget {
@@ -129,6 +132,8 @@ struct CheckerViewModelTests {
         #expect(m.exportState == .saved)
         #expect(prefs.isSaved("ibps_po", .signature))
         #expect(exporter.requests.last?.filename == "signature_IBPS-PO_140x60_16kb.jpg")
+        // Export history (ALGORITHMS 13.3): the fixed copy is listed under its exam and export name.
+        #expect(await kit.exports.map(\.fileName) == ["signature_IBPS-PO_140x60_16kb.jpg"])
         #expect(original == big, "the original is not changed")
     }
 

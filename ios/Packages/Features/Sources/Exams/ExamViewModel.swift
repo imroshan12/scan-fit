@@ -30,11 +30,13 @@ public final class ExamViewModel {
     public let exporter: any DocumentExporting
     @ObservationIgnored private let load: @Sendable () async -> PresetBundle?
     @ObservationIgnored private let drafts: any DraftStore
+    /// Export history (ALGORITHMS 13.3): one entry per verified file.
+    @ObservationIgnored private let kit: any KitStore
     @ObservationIgnored private var generation = 0
 
     public init(
         examId: String, preferences: UserPreferences, drafts: any DraftStore = NoDraftStore(),
-        exporter: any DocumentExporting = FilesExporter(),
+        exporter: any DocumentExporting = FilesExporter(), kit: any KitStore = NoKitStore(),
         load: @escaping @Sendable () async -> PresetBundle?
     ) {
         self.examId = examId
@@ -42,6 +44,7 @@ public final class ExamViewModel {
         self.load = load
         self.drafts = drafts
         self.exporter = exporter
+        self.kit = kit
     }
 
     /// The Ready rows Save all writes, and the signatures it holds back for the handwriting tick.
@@ -87,8 +90,9 @@ public final class ExamViewModel {
             return
         }
         var saved = 0
-        for ((type, _), result) in zip(requests, outcome.states) where result == .saved {
+        for ((type, request), result) in zip(requests, outcome.states) where result == .saved {
             preferences.recordSaved(exam.id, type)
+            await kit.recordExport(request, examId: exam.id, examName: exam.name)
             saved += 1
         }
         saveAllStatus = .done(saved: saved, total: requests.count + missing, folder: outcome.folder)

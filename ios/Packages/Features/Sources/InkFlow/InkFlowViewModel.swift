@@ -23,13 +23,21 @@ public final class InkFlowViewModel {
 
     @ObservationIgnored private let preferences: UserPreferences?
     @ObservationIgnored private let drafts: any DraftStore
-    @ObservationIgnored private let tools: any InkTools
+    /// Save to My Kit for the picture this review was made from (ALGORITHMS 13.1); hidden for restored reviews.
+    public internal(set) var kitSave: KitSaveStatus = .idle
+    @ObservationIgnored let kit: any KitStore
+    /// "Use for exam…" from My Kit (ALGORITHMS 13.2): the flow starts from this original instead of the picker.
+    @ObservationIgnored private let originalID: String?
+    @ObservationIgnored private var originalOpened = false
+    /// Counts the pictures the flow has opened, so a late Save to My Kit never lands on a newer picture.
+    @ObservationIgnored var sourceGeneration = 0
+    @ObservationIgnored let tools: any InkTools
     @ObservationIgnored private let load: @Sendable () async -> PresetBundle?
     /// Every exam and the popularity order, for the review's match note.
     @ObservationIgnored private var exams: [Exam] = []
     @ObservationIgnored private var popular: [String] = []
     @ObservationIgnored private var generation = 0
-    @ObservationIgnored private var lastCrop: InkCropState?
+    @ObservationIgnored private(set) var lastCrop: InkCropState?
     @ObservationIgnored private var cropped: Raster?
     /// The running review render; tests await it.
     @ObservationIgnored private(set) var renderTask: Task<Void, Never>?
@@ -44,11 +52,12 @@ public final class InkFlowViewModel {
         preferences: UserPreferences? = nil,
         exporter: any DocumentExporting = FilesExporter(),
         drafts: any DraftStore = NoDraftStore(),
+        kit: any KitStore = NoKitStore(),
         load: @escaping @Sendable () async -> PresetBundle?
     ) {
         self.init(
             target: .exam(examId: examId, docType: docType), tools: tools, preferences: preferences,
-            exporter: exporter, drafts: drafts, load: load
+            exporter: exporter, drafts: drafts, kit: kit, load: load
         )
     }
 
@@ -58,9 +67,13 @@ public final class InkFlowViewModel {
         preferences: UserPreferences? = nil,
         exporter: any DocumentExporting = FilesExporter(),
         drafts: any DraftStore = NoDraftStore(),
+        kit: any KitStore = NoKitStore(),
+        originalID: String? = nil,
         load: @escaping @Sendable () async -> PresetBundle?
     ) {
         self.target = target
+        self.kit = kit
+        self.originalID = originalID.flatMap { KitIds.isValid($0) ? $0 : nil }
         self.tools = tools
         self.preferences = preferences
         self.exporter = exporter
@@ -78,7 +91,14 @@ public final class InkFlowViewModel {
 
     /// The picked or captured file's bytes; nil when it could not be read.
     public func imageSelected(_ bytes: [UInt8]?) async {
+        await open(bytes, fromKit: false)
+    }
+
+    /// Decodes a new working picture (ALGORITHMS 1.1) for the crop; `fromKit` = it is already a Kit original.
+    private func open(_ bytes: [UInt8]?, fromKit: Bool) async {
         guard let slot = state.slot, exportState != .saving else { return }
+        sourceGeneration += 1
+        kitSave = fromKit ? .saved : .idle
         draftValidationPending = false
         renderTask?.cancel()
         generation += 1
@@ -173,12 +193,13 @@ public final class InkFlowViewModel {
             examName: review.slot.examName, slot: review.slot.spec,
             width: ready.width, height: ready.height, bytes: ready.bytes.count
         )
-        exportState = await exporter.save(ExportRequest(
+        let request = ExportRequest(
             bytes: ready.bytes, filename: filename, spec: review.slot.spec, kind: review.slot.kind
-        ))
-        if exportState == .saved, !review.slot.custom {
-            preferences?.recordSaved(review.slot.examId, review.slot.spec.type)
-        }
+        )
+        exportState = await exporter.save(request)
+        guard exportState == .saved else { return }
+        if !review.slot.custom { preferences?.recordSaved(review.slot.examId, review.slot.spec.type) }
+        await kit.recordExport(request, examId: review.slot.examId, examName: review.slot.examName)
     }
 
     /// Back inside the flow: Review -> Crop -> PickSource. false = leave the flow.
@@ -297,23 +318,6 @@ public final class InkFlowViewModel {
     }
 
     /// Re-inspects the fitted bytes and evaluates them as the slot's kind, as the export will be (rule 3).
-    private nonisolated static func ready(
-        _ bytes: [UInt8], _ spec: DocSpec, _ kind: DocKind, _ quality: InkQuality, _ exams: [Exam], _ popular: [String]
-    ) -> InkReady {
-        let inspected = Inspector.inspect(bytes)
-        let facts = FileFacts(inspected, docKind: kind)
-        let evaluation = MatchEngine.evaluate(spec, facts)
-        return InkReady(
-            bytes: bytes,
-            kb: (bytes.count + 512) / 1024,
-            width: inspected.width ?? 0,
-            height: inspected.height ?? 0,
-            meetsRules: evaluation.verdict == .exact || evaluation.verdict == .accepted,
-            quality: quality,
-            note: MatchNote.of(facts, exams: exams, popularity: popular),
-            checks: .of(evaluation)
-        )
-    }
 }
 
 public extension InkFlowViewModel {
@@ -367,6 +371,12 @@ private extension InkFlowViewModel {
         }
         let spec = resolved.spec, slot = InkSlot(resolved)
         guard slot.kind != .photo, slot.kind != .pdfDocument else { state = .notFound; return }
+        if let originalID, !originalOpened {
+            originalOpened = true
+            state = .pickSource(slot, openFailed: false)
+            await open(await kit.original(id: originalID), fromKit: true)
+            return
+        }
         let draft = slot.custom ? nil : await drafts.load(examID: slot.examId, spec: spec, kind: slot.kind)
         guard !Task.isCancelled, gen == generation else { return }
         let exams = exams, popular = popular

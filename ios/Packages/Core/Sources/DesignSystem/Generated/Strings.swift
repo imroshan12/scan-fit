@@ -182,8 +182,12 @@ public struct Strings: Sendable {
     public var docCategoryCertificate: String { tr("doc.category_certificate") }
     /// "Class 10 certificate"
     public var docClass10Certificate: String { tr("doc.class10_certificate") }
+    /// "PDF document"
+    public var docDocument: String { tr("doc.document") }
     /// "Handwritten declaration"
     public var docHandwrittenDeclaration: String { tr("doc.handwritten_declaration") }
+    /// "ID card"
+    public var docIdCard: String { tr("doc.id_card") }
     /// "ID proof"
     public var docIdProof: String { tr("doc.id_proof") }
     /// "Left hand fingers and thumb"
@@ -392,12 +396,66 @@ public struct Strings: Sendable {
     public var issueWrongAspect: String { tr("issue.wrong_aspect") }
     /// "Size is {w:int}×{h:int}; this slot needs {target_w:int}×{target_h:int}."
     public func issueWrongDimensions(w: Int, h: Int, targetW: Int, targetH: Int) -> String { fmt("issue.wrong_dimensions", [w, h, targetW, targetH]) }
+    /// "Delete"
+    public var kitDelete: String { tr("kit.delete") }
+    /// "Files you already made from it are not affected."
+    public var kitDeleteBody: String { tr("kit.delete_body") }
+    /// "Delete this original?"
+    public var kitDeleteTitle: String { tr("kit.delete_title") }
     /// "No prepared files yet."
     public var kitEmptyBody: String { tr("kit.empty_body") }
     /// "Your kit is empty"
     public var kitEmptyTitle: String { tr("kit.empty_title") }
+    /// "My Kit holds 30 originals. Delete one to save this picture."
+    public var kitFull: String { tr("kit.full") }
+    /// "Clear history"
+    public var kitHistoryClear: String { tr("kit.history_clear") }
+    /// "Files stay where you saved them. Only this list and the copies kept for sharing are deleted."
+    public var kitHistoryClearBody: String { tr("kit.history_clear_body") }
+    /// "Clear history?"
+    public var kitHistoryClearTitle: String { tr("kit.history_clear_title") }
+    /// "Custom size"
+    public var kitHistoryCustom: String { tr("kit.history_custom") }
+    /// "Files you save appear here. You can share them again for 30 days."
+    public var kitHistoryEmptyBody: String { tr("kit.history_empty_body") }
+    /// "No saved files yet"
+    public var kitHistoryEmptyTitle: String { tr("kit.history_empty_title") }
+    /// "No longer kept (30 days)"
+    public var kitHistoryExpired: String { tr("kit.history_expired") }
+    /// "Could not load your history. Please try again."
+    public var kitHistoryLoadFailed: String { tr("kit.history_load_failed") }
     /// "Could not load your prepared files. Please try again."
     public var kitLoadFailed: String { tr("kit.load_failed") }
+    /// "This original could not be opened, so it was removed from My Kit."
+    public var kitOriginalMissing: String { tr("kit.original_missing") }
+    /// "{width:int} × {height:int} px"
+    public func kitOriginalSize(width: Int, height: Int) -> String { fmt("kit.original_size", [width, height]) }
+    /// "On a review, tap Save to My Kit to keep the picture and use it for other exams."
+    public var kitOriginalsEmptyBody: String { tr("kit.originals_empty_body") }
+    /// "No originals yet"
+    public var kitOriginalsEmptyTitle: String { tr("kit.originals_empty_title") }
+    /// "Could not load your originals. Please try again."
+    public var kitOriginalsLoadFailed: String { tr("kit.originals_load_failed") }
+    /// "Could not save to My Kit. Please try again."
+    public var kitSaveFailed: String { tr("kit.save_failed") }
+    /// "Save to My Kit"
+    public var kitSaveOriginal: String { tr("kit.save_original") }
+    /// "Saved {date:str}"
+    public func kitSavedOn(date: String) -> String { fmt("kit.saved_on", [date]) }
+    /// "Saved to My Kit"
+    public var kitSavedOriginal: String { tr("kit.saved_original") }
+    /// "Saving to My Kit…"
+    public var kitSavingOriginal: String { tr("kit.saving_original") }
+    /// "History"
+    public var kitTabHistory: String { tr("kit.tab_history") }
+    /// "Originals"
+    public var kitTabOriginals: String { tr("kit.tab_originals") }
+    /// "Prepared"
+    public var kitTabPrepared: String { tr("kit.tab_prepared") }
+    /// "Use for exam…"
+    public var kitUseForExam: String { tr("kit.use_for_exam") }
+    /// "Which exam is it for?"
+    public var kitUseTitle: String { tr("kit.use_title") }
     /// "English"
     public var languageEn: String { tr("language.en") }
     /// "हिन्दी"
@@ -440,6 +498,112 @@ public struct Strings: Sendable {
     public var matchVerdictAccepted: String { tr("match.verdict_accepted") }
     /// "Exact size"
     public var matchVerdictExact: String { tr("match.verdict_exact") }
+    /// "Take a photo"
+    public var pdfAddCamera: String { tr("pdf.add_camera") }
+    /// "Add from Files"
+    public var pdfAddFiles: String { tr("pdf.add_files") }
+    /// "Add from gallery"
+    public var pdfAddGallery: String { tr("pdf.add_gallery") }
+    /// "Add a PDF"
+    public var pdfAddPdf: String { tr("pdf.add_pdf") }
+    /// "Back"
+    public var pdfBack: String { tr("pdf.back") }
+    /// "Choose a PDF"
+    public var pdfChoosePdf: String { tr("pdf.choose_pdf") }
+    /// "Choose a picture"
+    public var pdfChoosePicture: String { tr("pdf.choose_picture") }
+    /// "Clean up photos"
+    public var pdfCleanup: String { tr("pdf.cleanup") }
+    /// "White paper and darker text."
+    public var pdfCleanupHint: String { tr("pdf.cleanup_hint") }
+    /// "Crop"
+    public var pdfCrop: String { tr("pdf.crop") }
+    /// "Crop"
+    public var pdfCropTitle: String { tr("pdf.crop_title") }
+    /// "Nothing added yet."
+    public var pdfEmpty: String { tr("pdf.empty") }
+    /// "Can't get this under {max:int} KB. Try fewer pages or crop the margins."
+    public func pdfErrorCannotReach(max: Int) -> String { fmt("pdf.error_cannot_reach", [max]) }
+    /// "This PDF has a password. Remove the password first."
+    public var pdfErrorEncrypted: String { tr("pdf.error_encrypted") }
+    /// "Couldn't make the PDF. Please try again."
+    public var pdfErrorFailed: String { tr("pdf.error_failed") }
+    /// "Too many pages. Use at most 20."
+    public var pdfErrorTooMany: String { tr("pdf.error_too_many") }
+    /// "This exam's PDF size isn't verified yet. Check the notice."
+    public var pdfErrorUnknownLimit: String { tr("pdf.error_unknown_limit") }
+    /// "Couldn't open one of the files. Try another one."
+    public var pdfErrorUnreadable: String { tr("pdf.error_unreadable") }
+    /// "Files"
+    public var pdfFilesHeading: String { tr("pdf.files_heading") }
+    /// "Fits {max:int} KB"
+    public func pdfFits(max: Int) -> String { fmt("pdf.fits", [max]) }
+    /// "Front"
+    public var pdfFront: String { tr("pdf.front") }
+    /// "Black and white"
+    public var pdfGrayscale: String { tr("pdf.grayscale") }
+    /// "About half the size. Stamps lose their colour."
+    public var pdfGrayscaleHint: String { tr("pdf.grayscale_hint") }
+    /// "{kb:int} KB · PDF"
+    public func pdfHistoryRow(kb: Int) -> String { fmt("pdf.history_row", [kb]) }
+    /// "Photo {number:int}"
+    public func pdfImageLabel(number: Int) -> String { fmt("pdf.image_label", [number]) }
+    /// "Choose a PDF and the size the form allows."
+    public var pdfIntroCompress: String { tr("pdf.intro_compress") }
+    /// "Add photos of the pages or a PDF you already have. ScanFit makes one PDF that fits."
+    public var pdfIntroExam: String { tr("pdf.intro_exam") }
+    /// "Add the front and the back of the card, then crop each side to the card's edges."
+    public var pdfIntroIdCard: String { tr("pdf.intro_id_card") }
+    /// "Add photos of each page. Each one becomes an A4 page."
+    public var pdfIntroImages: String { tr("pdf.intro_images") }
+    /// "Add the PDFs in the order you want them."
+    public var pdfIntroMerge: String { tr("pdf.intro_merge") }
+    /// "Make PDF"
+    public var pdfMake: String { tr("pdf.make") }
+    /// "Fitting page {page:int} of {total:int}…"
+    public func pdfMaking(page: Int, total: Int) -> String { fmt("pdf.making", [page, total]) }
+    /// "Maximum size (KB)"
+    public var pdfMaxKb: String { tr("pdf.max_kb") }
+    /// "Enter a size from 1 to 5120 KB."
+    public var pdfMaxKbError: String { tr("pdf.max_kb_error") }
+    /// "Use the limit from the form."
+    public var pdfMaxKbHint: String { tr("pdf.max_kb_hint") }
+    /// "Move down"
+    public var pdfMoveDown: String { tr("pdf.move_down") }
+    /// "Move up"
+    public var pdfMoveUp: String { tr("pdf.move_up") }
+    /// "Add both sides of the card."
+    public var pdfNeedBothSides: String { tr("pdf.need_both_sides") }
+    /// "Add at least two PDFs to merge."
+    public var pdfNeedTwo: String { tr("pdf.need_two") }
+    /// "Options"
+    public var pdfOptions: String { tr("pdf.options") }
+    /// "The PDF was small, so it was made bigger to reach the minimum. The pages are unchanged."
+    public var pdfPadded: String { tr("pdf.padded") }
+    /// "{count:int} pages"
+    public func pdfPages(count: Int) -> String { fmt("pdf.pages", [count]) }
+    /// "Pages"
+    public var pdfPagesHeading: String { tr("pdf.pages_heading") }
+    /// "Preparing the pages…"
+    public var pdfPreparing: String { tr("pdf.preparing") }
+    /// "First page of the PDF"
+    public var pdfPreview: String { tr("pdf.preview") }
+    /// "Remove"
+    public var pdfRemove: String { tr("pdf.remove") }
+    /// "Replace"
+    public var pdfReplace: String { tr("pdf.replace") }
+    /// "{dpi:int} DPI"
+    public func pdfResultDpi(dpi: Int) -> String { fmt("pdf.result_dpi", [dpi]) }
+    /// "Your PDF"
+    public var pdfResultHeading: String { tr("pdf.result_heading") }
+    /// "{kb:int} KB"
+    public func pdfResultKb(kb: Int) -> String { fmt("pdf.result_kb", [kb]) }
+    /// "Rotate"
+    public var pdfRotate: String { tr("pdf.rotate") }
+    /// "Text in this PDF is now part of an image. Portals accept this."
+    public var pdfTextAsImage: String { tr("pdf.text_as_image") }
+    /// "This PDF already fits. Nothing was changed."
+    public var pdfUnchanged: String { tr("pdf.unchanged") }
     /// "Choose from gallery"
     public var photoChoose: String { tr("photo.choose") }
     /// "Choose another photo"
@@ -544,6 +708,22 @@ public struct Strings: Sendable {
     public var toolsGuideSheet: String { tr("tools.guide_sheet") }
     /// "PDF tools"
     public var toolsPdf: String { tr("tools.pdf") }
+    /// "Compress a PDF"
+    public var toolsPdfCompress: String { tr("tools.pdf_compress") }
+    /// "Get a PDF under the size the form asks for"
+    public var toolsPdfCompressBody: String { tr("tools.pdf_compress_body") }
+    /// "ID card on one page"
+    public var toolsPdfIdCard: String { tr("tools.pdf_id_card") }
+    /// "Front and back at true size"
+    public var toolsPdfIdCardBody: String { tr("tools.pdf_id_card_body") }
+    /// "Images to PDF"
+    public var toolsPdfImages: String { tr("tools.pdf_images") }
+    /// "Photos of pages, one A4 page each"
+    public var toolsPdfImagesBody: String { tr("tools.pdf_images_body") }
+    /// "Merge PDFs"
+    public var toolsPdfMerge: String { tr("tools.pdf_merge") }
+    /// "Several PDFs into one file"
+    public var toolsPdfMergeBody: String { tr("tools.pdf_merge_body") }
     /// "Scan"
     public var toolsScan: String { tr("tools.scan") }
 }

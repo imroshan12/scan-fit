@@ -23,6 +23,7 @@ import app.scanfit.core.designsystem.theme.ScanFitRadius
 import app.scanfit.core.designsystem.theme.ScanFitSpacing
 import app.scanfit.core.designsystem.theme.ScanFitTheme
 import app.scanfit.core.designsystem.theme.ScanFitType
+import app.scanfit.core.match.DocKind
 import app.scanfit.core.model.Confidence
 import app.scanfit.core.model.DimensionMode
 import app.scanfit.core.model.DocSpec
@@ -44,6 +45,17 @@ fun ExamCategory.labelRes(): Int = when (this) {
     ExamCategory.ENTRANCE -> R.string.category_entrance
 }
 
+/** The kind a file is checked as (Checker chips, My Kit originals). */
+@StringRes
+fun DocKind.labelRes(): Int = when (this) {
+    DocKind.PHOTO -> R.string.checker_kind_photo
+    DocKind.SIGNATURE -> R.string.checker_kind_signature
+    DocKind.THUMB -> R.string.checker_kind_thumb
+    DocKind.FINGERS -> R.string.checker_kind_fingers
+    DocKind.DECLARATION -> R.string.checker_kind_declaration
+    DocKind.PDF_DOCUMENT -> R.string.checker_kind_pdf
+}
+
 @StringRes
 fun DocType.labelRes(): Int = when (this) {
     DocType.PHOTO -> R.string.doc_photo
@@ -61,6 +73,8 @@ fun DocType.labelRes(): Int = when (this) {
     DocType.CATEGORY_CERTIFICATE -> R.string.doc_category_certificate
     DocType.PWD_CERTIFICATE -> R.string.doc_pwd_certificate
     DocType.SC_ST_CERTIFICATE -> R.string.doc_sc_st_certificate
+    DocType.DOCUMENT -> R.string.doc_document
+    DocType.ID_CARD -> R.string.doc_id_card
 }
 
 /**

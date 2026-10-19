@@ -26,6 +26,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import app.scanfit.core.data.kit.KitIds
 import app.scanfit.core.designsystem.R
 import app.scanfit.core.designsystem.theme.ScanFitTheme
 import app.scanfit.core.model.DocType
@@ -40,6 +41,8 @@ import app.scanfit.feature.flowink.InkFlowViewModel
 import app.scanfit.feature.flowphoto.PhotoFlowRoute
 import app.scanfit.feature.flowphoto.PhotoFlowViewModel
 import app.scanfit.feature.home.HomeRoute
+import app.scanfit.feature.kit.KitOriginalRoute
+import app.scanfit.feature.kit.KitOriginalViewModel
 import app.scanfit.feature.kit.KitRoute
 import app.scanfit.feature.settings.SettingsRoute
 
@@ -64,8 +67,10 @@ fun ScanFitApp() {
         val navController = rememberNavController()
         val backStack by navController.currentBackStackEntryAsState()
         val destination = backStack?.destination
+        // My Kit owns its own screens and the flows it opens (a prepared file or "Use for exam…").
         val flowFromKit = destination?.route?.startsWith("$EXAM_ROUTE/") == true &&
-            navController.previousBackStackEntry?.destination?.route == Tab.KIT.route
+            navController.previousBackStackEntry?.destination?.route?.startsWith(Tab.KIT.route) == true
+        val inKit = destination?.route?.startsWith("$KIT_ORIGINAL_ROUTE/") == true
         val inCustom = destination?.route?.let { it.startsWith(CUSTOM_ROUTE) || it == CHECKER_ROUTE } == true
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
@@ -75,7 +80,7 @@ fun ScanFitApp() {
                         NavigationBarItem(
                             selected =
                             destination?.hierarchy?.any { it.route == tab.route } == true ||
-                                (tab == Tab.KIT && flowFromKit) ||
+                                (tab == Tab.KIT && (flowFromKit || inKit)) ||
                                 (tab == Tab.TOOLS && inCustom) ||
                                 (
                                     tab == Tab.HOME && !flowFromKit &&
@@ -146,7 +151,9 @@ fun ScanFitApp() {
                     )
                 }
                 composable(
-                    "$EXAM_ROUTE/{${PhotoFlowViewModel.EXAM_ID}}/$PHOTO_ROUTE/{${PhotoFlowViewModel.DOC_TYPE}}",
+                    "$EXAM_ROUTE/{${PhotoFlowViewModel.EXAM_ID}}/$PHOTO_ROUTE/{${PhotoFlowViewModel.DOC_TYPE}}" +
+                        "?${PhotoFlowViewModel.ORIGINAL}={${PhotoFlowViewModel.ORIGINAL}}",
+                    arguments = listOf(optionalArgument(PhotoFlowViewModel.ORIGINAL)),
                 ) {
                     PhotoFlowRoute(
                         onBack = { navController.popBackStack() },
@@ -154,7 +161,9 @@ fun ScanFitApp() {
                     )
                 }
                 composable(
-                    "$EXAM_ROUTE/{${InkFlowViewModel.EXAM_ID}}/$INK_ROUTE/{${InkFlowViewModel.DOC_TYPE}}",
+                    "$EXAM_ROUTE/{${InkFlowViewModel.EXAM_ID}}/$INK_ROUTE/{${InkFlowViewModel.DOC_TYPE}}" +
+                        "?${InkFlowViewModel.ORIGINAL}={${InkFlowViewModel.ORIGINAL}}",
+                    arguments = listOf(optionalArgument(InkFlowViewModel.ORIGINAL)),
                 ) {
                     InkFlowRoute(
                         onBack = { navController.popBackStack() },
@@ -162,12 +171,29 @@ fun ScanFitApp() {
                     )
                 }
                 composable(Tab.KIT.route) {
-                    KitRoute(onOpen = { examId, type ->
-                        val flow = if (type in PHOTO_FLOW_TYPES) PHOTO_ROUTE else INK_ROUTE
-                        navController.navigate("$EXAM_ROUTE/$examId/$flow/${type.name.lowercase()}") {
-                            launchSingleTop = true
-                        }
-                    })
+                    KitRoute(
+                        onOpen = { examId, type ->
+                            val flow = if (type in PHOTO_FLOW_TYPES) PHOTO_ROUTE else INK_ROUTE
+                            navController.navigate("$EXAM_ROUTE/$examId/$flow/${type.name.lowercase()}") {
+                                launchSingleTop = true
+                            }
+                        },
+                        onOpenOriginal = { id ->
+                            navController.navigate("$KIT_ORIGINAL_ROUTE/$id") { launchSingleTop = true }
+                        },
+                    )
+                }
+                composable("$KIT_ORIGINAL_ROUTE/{${KitOriginalViewModel.ORIGINAL_ID}}") { entry ->
+                    val id = entry.arguments?.getString(KitOriginalViewModel.ORIGINAL_ID).orEmpty()
+                    KitOriginalRoute(
+                        onBack = { navController.popBackStack() },
+                        // "Use for exam…" (ALGORITHMS 13.2): the slot's flow starts from the original; Done comes back.
+                        onUse = { examId, type ->
+                            val flow = if (type in PHOTO_FLOW_TYPES) PHOTO_ROUTE else INK_ROUTE
+                            val slot = "$EXAM_ROUTE/$examId/$flow/${type.name.lowercase()}"
+                            navController.navigate("$slot?${KitIds.ROUTE_ARGUMENT}=$id") { launchSingleTop = true }
+                        },
+                    )
                 }
                 composable(Tab.TOOLS.route) {
                     ToolsScreen(
@@ -190,10 +216,15 @@ private const val CHECKER_ROUTE = "checker"
 /** `custom`: the Custom size form; `custom/<photo|ink>?custom=<text>`: a flow for that size (ALGORITHMS 11). */
 private const val CUSTOM_ROUTE = "custom"
 
-private fun customArgument() = navArgument(FlowTarget.CUSTOM) {
+private fun customArgument() = optionalArgument(FlowTarget.CUSTOM)
+
+private fun optionalArgument(name: String) = navArgument(name) {
     type = NavType.StringType
     nullable = true
 }
+
+/** `kit/original/<id>`: one My Kit original, with "Use for exam…" (ALGORITHMS 13.2). */
+private const val KIT_ORIGINAL_ROUTE = "kit/original"
 
 /** `exam/<id>/photo/<docType>`: the photo flow for one of the exam's photo slots. */
 private const val PHOTO_ROUTE = "photo"

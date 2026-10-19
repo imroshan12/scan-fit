@@ -2,6 +2,7 @@ package app.scanfit.core.data.export
 
 import app.scanfit.core.match.DocKind
 import app.scanfit.core.testing.FakeExportDestinations
+import app.scanfit.core.testing.FakeKitStore
 import app.scanfit.core.testing.FakeUserPreferences
 import app.scanfit.core.testing.SpecPresets
 import app.scanfit.core.testing.TestJpeg
@@ -44,11 +45,14 @@ class ExportConformanceTest(
 
             else -> error("$id: unknown export operation $operation")
         }
-        val result = DocumentExporter(destination, prefs).export(ExportRequest(exam.id, exam.name, spec, DocKind.PHOTO, bytes))
+        val kit = FakeKitStore()
+        val result = DocumentExporter(destination, prefs, kit).export(ExportRequest(exam.id, exam.name, spec, DocKind.PHOTO, bytes))
         val expect = case.getValue("expect").jsonObject
         assertEquals(id, expect.getValue("state").jsonPrimitive.content, result.state.name.lowercase())
         assertEquals(id, expect.getValue("delete").jsonPrimitive.boolean, "delete" in destination.events)
         assertEquals(id, expect.getValue("record").jsonPrimitive.boolean, prefs.savedDocuments.first().isNotEmpty())
+        // Export history (ALGORITHMS 13.3) follows the Saved record: only a verified, published file is listed.
+        assertEquals(id, expect.getValue("record").jsonPrimitive.boolean, kit.exports.isNotEmpty())
         if (operation == "success") assertEquals(listOf("create", "write", "read", "publish"), destination.events)
         if (operation == "cancel") assertTrue(destination.events.isEmpty())
     }

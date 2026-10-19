@@ -3,6 +3,7 @@ package app.scanfit.feature.flowphoto
 import app.scanfit.core.imaging.FitError
 import app.scanfit.core.imaging.FitResult
 import app.scanfit.core.imaging.FitStrategy
+import app.scanfit.core.imaging.KitOriginalImage
 import app.scanfit.core.imaging.PipelineOutcome
 import app.scanfit.core.imaging.PipelineResult
 import app.scanfit.core.imaging.Raster
@@ -52,6 +53,18 @@ class FakePhotoTools : PhotoTools {
     }
 
     override fun today(): LocalDate = LocalDate.of(2026, 10, 3)
+
+    /** What Save to My Kit was asked to keep; `failOriginal` makes encoding fail. */
+    var originalInput: Raster? = null
+        private set
+    var failOriginal = false
+
+    override fun encodeOriginal(source: Raster): ByteArray? {
+        originalInput = source
+        if (failOriginal) return null
+        val (w, h) = KitOriginalImage.storedSize(source.width, source.height)
+        return TestJpeg.make(w, h, 4096)
+    }
 
     companion object {
         fun success(

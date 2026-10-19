@@ -15,7 +15,9 @@ import gen_strings  # noqa: E402
 import gen_tokens  # noqa: E402
 import checker  # noqa: E402
 import custom_size  # noqa: E402
+import kit  # noqa: E402
 import match_note  # noqa: E402
+import pdf  # noqa: E402
 import photo_crop  # noqa: E402
 import save_all  # noqa: E402
 import release_preflight  # noqa: E402
@@ -284,6 +286,48 @@ class CasesFile(unittest.TestCase):
         self.assertGreaterEqual(len(cases), 5)
         for c in cases:
             self.assertEqual(save_all.plan(c), c["expect"], c["id"])
+
+    def test_kit_expectations_match_the_reference(self):
+        """kit_*_cases are computed by kit.py: a hand edit that drifts from ALGORITHMS 13 fails here."""
+        for section, rule in kit.SECTIONS.items():
+            cases = self.cases[section]
+            self.assertGreaterEqual(len(cases), 5, section)
+            for c in cases:
+                self.assertEqual(rule(c), c["expect"], f"{section}/{c['id']}")
+
+    def test_pdf_expectations_match_the_reference(self):
+        """pdf_*_cases are computed by pdf.py: a hand edit that drifts from ALGORITHMS 9.10 fails here."""
+        for section, rule in pdf.SECTIONS.items():
+            cases = self.cases[section]
+            self.assertGreaterEqual(len(cases), 5, section)
+            for c in cases:
+                self.assertEqual(rule(c), c["expect"], f"{section}/{c['id']}")
+
+    def test_pdf_writer_output_is_a_page_counted_image_pdf(self):
+        """The Inspector rules (ALGORITHMS 9.2) must see the writer's pages, no fonts and no encryption."""
+        import re
+        for c in self.cases["pdf_writer_cases"]:
+            data = pdf.write(pdf.writer_pages(c))
+            self.assertTrue(data.startswith(b"%PDF-1.4\n"), c["id"])
+            self.assertEqual(len(re.findall(rb"/Type\s*/Page(?!s)", data)), len(c["pages"]), c["id"])
+            self.assertNotIn(b"/Font", data, c["id"])
+            self.assertNotIn(b"/Encrypt", data, c["id"])
+            self.assertTrue(data.endswith(b"%%EOF\n"), c["id"])
+
+    def test_pdf_padding_hits_the_target(self):
+        pages = pdf.writer_pages(self.cases["pdf_writer_cases"][0])
+        for target in (5000, 9999, 10000, 10001, 51200, 204800):
+            size = len(pdf.write_padded(pages, target))
+            self.assertIn(size, (target, target + 1), target)
+
+    def test_pdf_job_sources_exist_and_have_expectations(self):
+        for c in self.cases["pdf_job_cases"]:
+            for source in c["sources"]:
+                (kind, path), = source.items()
+                self.assertIn(kind, ("image", "pdf"), c["id"])
+                self.assertTrue(os.path.exists(os.path.join(SPEC, "fixtures", path)), f"{c['id']}: {path}")
+            self.assertIn(c["tool"], ("images", "compress", "merge", "id_card", "exam"), c["id"])
+            self.assertTrue("error" in c["expect"] or {"pages", "kb_min", "kb_max"} <= set(c["expect"]), c["id"])
 
     def test_thumb_cases_draw_a_whole_print_inside_the_image(self):
         """thumb_preservation_cases are parametric: the print must fit in the image or the no-clip check is meaningless."""

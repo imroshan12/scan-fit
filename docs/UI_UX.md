@@ -99,11 +99,21 @@ do not certify an unverified preset; the separate "Likely OK · Unverified" verd
    for signatures, then a bottom bar with Save (Downloads / Files) and Share. After a verified save the button reads Done and
    returns to the exam list.
 
-**My Kit (current Phase 2 slice).** Prepared files are listed in native exam sections, with a confidence badge,
-document label and rounded KB. A row opens that exam's retained read-only review; Done returns to Kit. Available
-low-confidence exams remain listed even if hidden from Home. Loading is distinct from empty; unavailable trusted
-presets show a retryable error. Refresh on entry, foreground and retained-file changes. The original/cleaned-source
-library, cross-exam reuse and export history are follow-ups; current prepared files use the 30-day retention policy.
+**My Kit** (ALGORITHMS §13, built 2026-10-15). A native segmented control under the title switches three views,
+Prepared first; each has its own loading, empty and retryable error state and refreshes on entry, foreground and store
+changes.
+- *Prepared:* retained drafts in native exam sections, with a confidence badge, document label and rounded KB. A row
+  opens that exam's retained read-only review; Done returns to Kit. Low-confidence exams stay listed even if hidden from
+  Home. These files keep the 30-day retention policy.
+- *Originals:* pictures the user kept with **Save to My Kit** (a text button under Share on new photo/ink reviews; not on
+  restored reviews or the Checker), grouped by kind (Photo, Signature, Thumb, Fingers, Declaration), newest first, each
+  with a 56 dp/pt thumbnail, the date saved and its size. Up to 30, kept until deleted (Phase 4 may give free users 30
+  days). A row opens the original's screen: preview, date and size, a pinned **Use for exam…** button that opens a
+  sheet with the Checker's exam list and search, and Delete (toolbar, with a confirmation). Choosing an exam opens that
+  slot's flow straight at the crop step with the original; Done comes back to the original's screen.
+- *History:* every verified save, newest first: document, exam (or "Custom size"), `34 KB · 200×230 · JPG` and the
+  date. Share re-sends the private copy for 30 days, then the row says "No longer kept (30 days)". Clear history (toolbar,
+  with a confirmation) deletes the list and copies, never the user's saved files or the checklist's Saved marks.
 
 **Custom size** (built 2026-10-13, ALGORITHMS 11). Reached from Tools and from Home ("Not listed? Use Custom size.",
 under the lists and under "no matches"). One scrolling form: "What are you making?" (Photo · Signature · Thumb impression ·

@@ -12,6 +12,31 @@ import app.scanfit.core.model.DocSpec
 
 /** The written-file check of ALGORITHMS 1.6, evaluated as the slot's match [DocKind] (§9.5). */
 object ExportVerifier {
+    /** The check for [request]'s kind of file: a JPEG (§1.6) or a PDF (§6.5). */
+    fun verifies(
+        request: ExportRequest,
+        written: ByteArray,
+    ): Boolean = request.pdf?.let { verifiesPdf(request.bytes, written, request.spec, it) }
+        ?: verifies(request.bytes, written, request.spec, request.kind)
+
+    /**
+     * ALGORITHMS 6.5: identical bytes, a PDF without a password, the page count and image-only pages for a PDF the app
+     * wrote, and the slot verdict (kind PDF document, size in the window) EXACT or ACCEPTED.
+     */
+    fun verifiesPdf(
+        made: ByteArray,
+        written: ByteArray,
+        spec: DocSpec,
+        pdf: PdfExport,
+    ): Boolean {
+        if (!made.contentEquals(written)) return false
+        val file = Inspector.inspect(written)
+        if (file.format != DetectedFormat.PDF || file.pdfEncrypted || pdf.pages < 1) return false
+        if (pdf.written && (file.pdfPages != pdf.pages || !file.pdfImageOnly)) return false
+        val verdict = MatchEngine.evaluate(spec, FileFacts.of(file, DocKind.PDF_DOCUMENT)).verdict
+        return verdict in setOf(Verdict.EXACT, Verdict.ACCEPTED)
+    }
+
     fun verifies(
         review: ByteArray,
         written: ByteArray,

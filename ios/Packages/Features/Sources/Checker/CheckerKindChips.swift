@@ -15,7 +15,7 @@ struct CheckerKindChips: View {
                 let isSelected = kind == selected
                 Button { onKind(kind) } label: {
                     Label {
-                        Text(label(kind)).scanFitText(.label)
+                        Text(strings.label(kind)).scanFitText(.label)
                     } icon: {
                         if isSelected { Image(systemName: "checkmark").accessibilityHidden(true) }
                     }
@@ -32,17 +32,6 @@ struct CheckerKindChips: View {
     }
 
     static let kinds: [DocKind] = [.photo, .signature, .thumb, .fingers, .declaration, .pdfDocument]
-
-    private func label(_ kind: DocKind) -> String {
-        switch kind {
-        case .photo: strings.checkerKindPhoto
-        case .signature: strings.checkerKindSignature
-        case .thumb: strings.checkerKindThumb
-        case .fingers: strings.checkerKindFingers
-        case .declaration: strings.checkerKindDeclaration
-        case .pdfDocument: strings.checkerKindPdf
-        }
-    }
 }
 
 /// Lays children left to right and starts a new row when the next one does not fit.

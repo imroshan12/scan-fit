@@ -11,6 +11,7 @@ import app.scanfit.core.presets.PresetsSummary
 import app.scanfit.core.testing.FakeDraftStore
 import app.scanfit.core.testing.FakeExportDestinations
 import app.scanfit.core.testing.FakeFaceDetector
+import app.scanfit.core.testing.FakeKitStore
 import app.scanfit.core.testing.FakePersonSegmenter
 import app.scanfit.core.testing.FakePresetsRepository
 import app.scanfit.core.testing.FakeShareStager
@@ -60,9 +61,10 @@ class PhotoDraftViewModelTest {
         faces,
         segmenter,
         dispatcher,
-        DocumentExporter(destination, preferences),
+        DocumentExporter(destination, preferences, FakeKitStore()),
         drafts,
         share,
+        FakeKitStore(),
     )
 
     private val PhotoFlowViewModel.review get() = uiState.value as PhotoUiState.Review

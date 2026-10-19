@@ -6,6 +6,7 @@ import app.scanfit.core.imaging.FitStrategy
 import app.scanfit.core.imaging.InkOptions
 import app.scanfit.core.imaging.InkQuality
 import app.scanfit.core.imaging.InkResult
+import app.scanfit.core.imaging.KitOriginalImage
 import app.scanfit.core.imaging.Pipeline
 import app.scanfit.core.imaging.PipelineOutcome
 import app.scanfit.core.imaging.PipelineResult
@@ -57,4 +58,16 @@ class FakeInkTools : InkTools {
     )
 
     fun failure(error: FitError): PipelineOutcome = PipelineOutcome.Failure(error)
+
+    /** What Save to My Kit was asked to keep; `failOriginal` makes encoding fail. */
+    var originalInput: Raster? = null
+        private set
+    var failOriginal = false
+
+    override fun encodeOriginal(source: Raster): ByteArray? {
+        originalInput = source
+        if (failOriginal) return null
+        val (w, h) = KitOriginalImage.storedSize(source.width, source.height)
+        return TestJpeg.make(w, h, 4096)
+    }
 }

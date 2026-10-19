@@ -118,6 +118,14 @@ enum class DocType {
 
     @SerialName("sc_st_certificate")
     SC_ST_CERTIFICATE,
+
+    /** A PDF from the PDF tools (ALGORITHMS 6.6); no preset uses it yet. */
+    @SerialName("document")
+    DOCUMENT,
+
+    /** The ID card tool's PDF (ALGORITHMS 6.6); no preset uses it yet. */
+    @SerialName("id_card")
+    ID_CARD,
 }
 
 @Serializable

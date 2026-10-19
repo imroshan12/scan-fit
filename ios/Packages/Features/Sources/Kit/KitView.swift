@@ -1,11 +1,29 @@
 import DesignSystem
+import ScanData
 import ScanModel
 import SwiftUI
 
+/// My Kit's three views (ALGORITHMS 13), Prepared first.
+public enum KitTab: Hashable, CaseIterable, Sendable { case prepared, originals, history }
+
+/// Navigation value for one My Kit original (ALGORITHMS 13.2), pushed from the Originals view.
+public struct KitOriginalRoute: Hashable, Sendable {
+    public let id: String
+
+    public init(id: String) {
+        self.id = id
+    }
+}
+
 public struct KitView: View {
     @Bindable private var model: KitViewModel
+    @Bindable private var originals: KitOriginalsViewModel
+    @Bindable private var history: KitHistoryViewModel
     @Environment(\.scenePhase) private var scenePhase
     @State private var retry = 0
+    /// Survives switching app tabs; a relaunch starts on Prepared.
+    @State private var tab = KitTab.prepared
+    @State private var confirmClear = false
     private let strings: Strings
     private let isActive: Bool
 
@@ -14,27 +32,82 @@ public struct KitView: View {
         let retry: Int
     }
 
-    public init(model: KitViewModel, strings: Strings = Strings(), isActive: Bool = true) {
+    public init(
+        model: KitViewModel,
+        originals: KitOriginalsViewModel = KitOriginalsViewModel(kit: NoKitStore()),
+        history: KitHistoryViewModel = KitHistoryViewModel(kit: NoKitStore()),
+        strings: Strings = Strings(),
+        isActive: Bool = true,
+        tab: KitTab = .prepared
+    ) {
         self.model = model
+        self.originals = originals
+        self.history = history
         self.strings = strings
         self.isActive = isActive
+        _tab = State(initialValue: tab)
     }
 
     public var body: some View {
-        content
+        VStack(spacing: 0) {
+            Picker(strings.tabKit, selection: $tab) {
+                Text(strings.kitTabPrepared).tag(KitTab.prepared)
+                Text(strings.kitTabOriginals).tag(KitTab.originals)
+                Text(strings.kitTabHistory).tag(KitTab.history)
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal, ScanFitSpacing.screenMargin)
+            .padding(.vertical, ScanFitSpacing.sm)
+            Group {
+                switch tab {
+                case .prepared: content
+                case .originals: KitOriginalsList(model: originals, strings: strings)
+                case .history: KitHistoryList(model: history, strings: strings)
+                }
+            }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(ScanFitColor.background)
-            .navigationTitle(strings.tabKit)
+        }
+        .background(ScanFitColor.background)
+        .navigationTitle(strings.tabKit)
         #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+        #endif
+            .toolbar {
+                if tab == .history, case .ready = history.state {
+                    Button(strings.kitHistoryClear) { confirmClear = true }
+                }
+            }
+            .confirmationDialog(strings.kitHistoryClearTitle, isPresented: $confirmClear, titleVisibility: .visible) {
+                Button(strings.kitHistoryClear, role: .destructive) { Task { await history.clear() } }
+                Button(strings.commonCancel, role: .cancel) {}
+            } message: {
+                Text(strings.kitHistoryClearBody)
+            }
+        #if os(iOS)
+            .sheet(item: Binding(get: { history.share.file }, set: { if $0 == nil { history.shareHandled() } })) {
+                ShareSheet(url: $0.url) { history.shareHandled() }
+            }
         #endif
             .task(id: RefreshID(active: isActive, retry: retry)) {
                 guard isActive else { return }
                 await model.refresh()
                 await model.observeDrafts()
             }
+            .task(id: RefreshID(active: isActive, retry: retry)) {
+                guard isActive else { return }
+                await originals.refresh()
+                await originals.observe()
+            }
+            .task(id: RefreshID(active: isActive, retry: retry)) {
+                guard isActive else { return }
+                await history.refresh()
+                await history.observe()
+            }
             .task(id: scenePhase) {
-                if isActive, scenePhase == .active { await model.refresh() }
+                guard isActive, scenePhase == .active else { return }
+                await model.refresh()
+                await originals.refresh()
+                await history.refresh()
             }
     }
 

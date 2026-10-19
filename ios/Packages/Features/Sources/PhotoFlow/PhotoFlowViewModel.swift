@@ -22,8 +22,16 @@ public final class PhotoFlowViewModel {
     public let exporter: any DocumentExporting
     @ObservationIgnored private let preferences: UserPreferences?
     @ObservationIgnored private let drafts: any DraftStore
+    /// Save to My Kit for the picture this review was made from (ALGORITHMS 13.1); hidden for restored reviews.
+    public internal(set) var kitSave: KitSaveStatus = .idle
+    @ObservationIgnored let kit: any KitStore
+    /// "Use for exam…" from My Kit (ALGORITHMS 13.2): the flow starts from this original instead of the picker.
+    @ObservationIgnored private let originalID: String?
+    @ObservationIgnored private var originalOpened = false
+    /// Counts the pictures the flow has opened, so a late Save to My Kit never lands on a newer picture.
+    @ObservationIgnored var sourceGeneration = 0
 
-    @ObservationIgnored private let tools: any PhotoTools
+    @ObservationIgnored let tools: any PhotoTools
     @ObservationIgnored private let faces: any FaceDetector
     @ObservationIgnored private let segmenter: any PersonSegmenter
     @ObservationIgnored private let load: @Sendable () async -> PresetBundle?
@@ -31,7 +39,7 @@ public final class PhotoFlowViewModel {
     @ObservationIgnored private var exams: [Exam] = []
     @ObservationIgnored private var popular: [String] = []
     @ObservationIgnored private var generation = 0
-    @ObservationIgnored private var lastCrop: CropState?
+    @ObservationIgnored private(set) var lastCrop: CropState?
     @ObservationIgnored private var cropped: Raster?
     @ObservationIgnored private var mask: [UInt8]?
     @ObservationIgnored private var maskTried = false
@@ -49,9 +57,13 @@ public final class PhotoFlowViewModel {
         preferences: UserPreferences? = nil,
         exporter: any DocumentExporting = FilesExporter(),
         drafts: any DraftStore = NoDraftStore(),
+        kit: any KitStore = NoKitStore(),
+        originalID: String? = nil,
         load: @escaping @Sendable () async -> PresetBundle?
     ) {
         self.target = target
+        self.kit = kit
+        self.originalID = originalID.flatMap { KitIds.isValid($0) ? $0 : nil }
         self.tools = tools
         self.faces = faces
         self.segmenter = segmenter
@@ -71,7 +83,14 @@ public final class PhotoFlowViewModel {
 
     /// The picked or captured file's bytes; nil when it could not be read.
     public func imageSelected(_ bytes: [UInt8]?) async {
+        await open(bytes, fromKit: false)
+    }
+
+    /// Decodes a new working picture (ALGORITHMS 1.1) and frames it; `fromKit` = it is already a Kit original.
+    private func open(_ bytes: [UInt8]?, fromKit: Bool) async {
         guard exportState != .saving, let slot = state.slot else { return }
+        sourceGeneration += 1
+        kitSave = fromKit ? .saved : .idle
         draftValidationPending = false
         renderTask?.cancel()
         generation += 1
@@ -272,13 +291,6 @@ public final class PhotoFlowViewModel {
         ))
     }
 
-    public var canSave: Bool {
-        guard !draftValidationPending, exportState != .saving, case let .review(review) = state else { return false }
-        if renderPending { return true }
-        guard case let .ready(ready) = review.result else { return false }
-        return ready.meetsRules
-    }
-
     public func save() async {
         guard canSave else { return }
         exportState = .saving
@@ -291,12 +303,11 @@ public final class PhotoFlowViewModel {
             examName: review.slot.examName, slot: review.slot.spec,
             width: ready.width, height: ready.height, bytes: ready.bytes.count
         )
-        exportState = await exporter.save(ExportRequest(
-            bytes: ready.bytes, filename: filename, spec: review.slot.spec, kind: .photo
-        ))
-        if exportState == .saved, !review.slot.custom {
-            preferences?.recordSaved(review.slot.examId, review.slot.spec.type)
-        }
+        let request = ExportRequest(bytes: ready.bytes, filename: filename, spec: review.slot.spec, kind: .photo)
+        exportState = await exporter.save(request)
+        guard exportState == .saved else { return }
+        if !review.slot.custom { preferences?.recordSaved(review.slot.examId, review.slot.spec.type) }
+        await kit.recordExport(request, examId: review.slot.examId, examName: review.slot.examName)
     }
 
     private func personMask(_ source: Raster) async -> [UInt8]? {
@@ -331,6 +342,12 @@ private extension PhotoFlowViewModel {
             return
         }
         let spec = resolved.spec, slot = PhotoSlot(resolved)
+        if let originalID, !originalOpened {
+            originalOpened = true
+            state = .pickSource(slot, nil)
+            await open(await kit.original(id: originalID), fromKit: true)
+            return
+        }
         let draft = slot.custom ? nil : await drafts.load(examID: slot.examId, spec: spec, kind: .photo)
         guard !Task.isCancelled, gen == generation else { return }
         let exams = exams, popular = popular
@@ -345,24 +362,6 @@ private extension PhotoFlowViewModel {
         } else {
             state = .pickSource(slot, nil)
         }
-    }
-
-    /// Re-inspects the fitted bytes and evaluates them against the slot, as the export will be (rule 3).
-    nonisolated static func ready(
-        _ bytes: [UInt8], _ spec: DocSpec, _ exams: [Exam], _ popular: [String]
-    ) -> ReviewReady {
-        let inspected = Inspector.inspect(bytes)
-        let facts = FileFacts(inspected, docKind: .photo)
-        let evaluation = MatchEngine.evaluate(spec, facts)
-        return ReviewReady(
-            bytes: bytes,
-            kb: (bytes.count + 512) / 1024,
-            width: inspected.width ?? 0,
-            height: inspected.height ?? 0,
-            meetsRules: evaluation.verdict == .exact || evaluation.verdict == .accepted,
-            note: MatchNote.of(facts, exams: exams, popularity: popular),
-            checks: .of(evaluation)
-        )
     }
 }
 
