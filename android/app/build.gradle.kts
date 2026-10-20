@@ -12,6 +12,14 @@ android {
         // ios/project.yml) before the first upload.
         applicationId = "com.roshtech.scanfit"
         // versionName/versionCode come from gradle.properties / -P flags (ReleaseConfig.kt in build-logic).
+        // Free saves this build ships with (ALGORITHMS 14.2): CI test builds pass -Pscanfit.freeSavesTotal=200; local
+        // and final builds keep the default. Parsed at runtime by QuotaConfig.fromBuildValue (bad values mean 20).
+        val freeSaves = providers.gradleProperty("scanfit.freeSavesTotal").orElse("20").get()
+        buildConfigField("String", "FREE_SAVES_TOTAL", "\"${freeSaves.replace("\\", "").replace("\"", "")}\"")
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 
     androidResources {

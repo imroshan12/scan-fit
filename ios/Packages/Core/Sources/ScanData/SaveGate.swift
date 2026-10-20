@@ -47,8 +47,22 @@ public final class SaveGate {
     @ObservationIgnored public let paywall: PaywallRequests
     @ObservationIgnored private let total: @MainActor () -> Int
 
-    /// The configured `free_saves_total` (Remote Config later, ARCHITECTURE §9).
-    public static let defaultFreeSavesTotal = 20
+    /// The configured `free_saves_total` (the build's value now, Remote Config later, ARCHITECTURE §9).
+    public nonisolated static let defaultFreeSavesTotal = 20
+
+    /// The total a build carries (ALGORITHMS 14.2 "Where t comes from"): Info.plist `MRDFreeSavesTotal`, 200 in CI test
+    /// builds. A missing, non-numeric or < 1 value means `defaultFreeSavesTotal`.
+    public nonisolated static func buildTotal(_ raw: Any?) -> Int {
+        let text: String? = switch raw {
+        case let number as Int: String(number)
+        case let string as String: string
+        default: nil
+        }
+        guard let value = text.flatMap({ Int($0.trimmingCharacters(in: .whitespaces)) }), value >= 1 else {
+            return defaultFreeSavesTotal
+        }
+        return value
+    }
 
     public init(
         store: any QuotaStore,

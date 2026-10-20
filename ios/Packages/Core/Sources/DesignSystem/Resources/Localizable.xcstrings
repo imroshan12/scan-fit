@@ -1701,23 +1701,6 @@
         }
       }
     },
-    "error.preset_bad_signature": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Spec update rejected: it failed the safety check. Using the last good version."
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "स्पेक अपडेट अस्वीकार किया गया: वह सुरक्षा जाँच में विफल रहा। पिछला सही संस्करण इस्तेमाल हो रहा है।"
-          }
-        }
-      }
-    },
     "exam.before_upload": {
       "extractionState": "manual",
       "localizations": {

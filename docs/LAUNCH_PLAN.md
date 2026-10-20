@@ -48,10 +48,9 @@ Owner: **You** = only you can do it (accounts, money, legal, devices, people). *
 - [ ] **You** Play Console: create the app, set up the **payments profile** (merchant account, bank, tax). App Store Connect:
       create the app record, sign the **Paid Apps agreement**, add bank and tax info, enrol in the **App Store Small Business
       Program** (15% commission instead of 30%). These take days to verify, so start now.
-- [x] **You** Generate the production presets key and the Android upload keystore (RELEASE_CHECKLIST §1); store both in a
-      password manager. _Done (preflight 2026-10-20: prod key, upload key and iOS team are set; CI's release jobs
-      sign the presets with the `PRESETS_SIGNING_KEY` secret and upload to TestFlight). Locally only if you build
-      releases on your Mac (OWNER_STEPS A5)._
+- [x] **You** Generate the Android upload keystore (RELEASE_CHECKLIST §1) and keep it in a password manager. _Done
+      (preflight 2026-10-20: upload key and iOS team are set; CI's release jobs upload to TestFlight). Presets signing was
+      removed on 2026-10-20 (user decision): delete the unused `PRESETS_SIGNING_KEY` secret (OWNER_STEPS A5)._
 - [ ] **You** Create the Firebase project (Android + iOS apps) and the RevenueCat project.
 - [ ] **You** Put the website online: GitHub Pages (user decision 2026-10-20) at `https://imroshan12.github.io/scan-fit/`. Repo Settings › Pages ›
       Source: **GitHub Actions**, then push; `.github/workflows/pages.yml` deploys `web/`. Your details are already
@@ -108,9 +107,11 @@ Owner: **You** = only you can do it (accounts, money, legal, devices, people). *
       **Play-installed** build (not just a debug build), a real UPI purchase, a refund, the 21st save, reinstall → the
       count is kept, the same account on a second phone (count and Pro follow), Delete account, and a first launch offline.
 - [ ] **You** Store listings in English and Hindi: the text, Data safety answers and form answers are drafted in
-      `docs/STORE_LISTING.md` (2026-10-20); you fill the placeholders, get the Hindi reviewed, and make the 8
-      screenshots, feature graphic and 512 px icon listed there. Note: the **closed test needs a listing and Data safety
+      `docs/STORE_LISTING.md` (2026-10-20); you get the Hindi reviewed and take the phone screenshots. The 512 px icon
+      and the feature graphic are made (`store/`, 2026-10-20). Note: the **closed test needs a listing and Data safety
       too**, so paste the text and STORE_LISTING §5A ("no data collected" for builds without Firebase) in week 0–1.
+- [x] **Claude** Test builds carry 200 free saves (final tags 20) so testers are never stuck on the stand-in billing
+      (ALGORITHMS 14.2, 2026-10-20).
 - [ ] **Claude** Device matrix and accessibility pass on what testers report (TESTING §4); fix every P0/P1.
 
 ### Week 3 — Mon 9 Nov → Sun 15 Nov: production access, forms, polish

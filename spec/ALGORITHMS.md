@@ -947,6 +947,12 @@ A new install starts at `used 0, allowance 0, hashes []`, and `total` is applied
   so raising it gives everyone more saves at once, and lowering it never takes back saves a user has already been shown;
   it only applies to new installs.
 - `remaining = max(0, allowance − used)`.
+- **Where `t` comes from** (2026-10-20): the build carries a default — `20` in debug and final release builds, `200` in
+  pre-release builds (CI pushes to `main`, `-rc`/`-beta` tags) so closed testers are not blocked while billing is a
+  stand-in. Android: Gradle property `scanfit.freeSavesTotal` → `BuildConfig.FREE_SAVES_TOTAL`; iOS: build setting
+  `FREE_SAVES_TOTAL` → Info.plist `MRDFreeSavesTotal` (`archive.sh --free-saves N`). A missing, non-numeric or < 1 value
+  means `20`. Remote Config `free_saves_total` overrides the build value later. Because lowering never takes back, a tester
+  who updates from a test build to the store build keeps the larger allowance (accepted: testers get Pro anyway).
 - `decide(files, pro)`: `new` = the distinct identities of `files`, in order, that are not in `hashes`. **Allowed** when
   `pro`, or `new` is empty, or `|new| ≤ remaining`; otherwise **blocked**. Deciding changes nothing.
 - `record(file, pro)`: a known identity moves to the newest end and nothing is counted. An unknown identity is appended

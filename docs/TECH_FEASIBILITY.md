@@ -29,7 +29,7 @@ possible, so design around it. "Spike" = time-boxed proof in Phase 0/1 before bu
 | In-app purchases | Play Billing (via RevenueCat) — UPI supported in India | StoreKit 2 (via RevenueCat) | 🟢 | Keep the RevenueCat SDK current; Play enforces minimum Billing Library versions over time |
 | Ads | — | — | — | **None in v1.0** (user decision 2026-10-20, PRD §6). Google Mobile Ads + UMP stay off the allow-list until ads are decided again |
 | Remote Config / Analytics / Crashes | Firebase (BoM) | Firebase (SPM) | 🟢 | |
-| Presets signature verification | **Tink** (`tink-android`) Ed25519 | CryptoKit `Curve25519.Signing.PublicKey.isValidSignature` | 🟢 | Same key, same bytes; test vector in fixtures |
+| Presets format checks | kotlinx.serialization | `JSONDecoder` | 🟢 | No signature since 2026-10-20 (user decision); shared cases in `spec/fixtures/presets_load/` |
 | Background sync | WorkManager periodic (24h, network constraint) | `BGAppRefreshTask` (best effort) + on-foreground fetch | 🟢 | iOS background timing isn't guaranteed; that's fine |
 | Hindi UI | per-app language (`AppCompatDelegate.setApplicationLocales` / `LocaleManager`) | String Catalogs + in-app language via Settings deep link | 🟢 | |
 | Push (v1.2 exam alerts) | FCM topics | FCM → APNs | 🟢 | Needs notification permission (Android 13+) — ask in context only |
@@ -40,15 +40,15 @@ possible, so design around it. "Spike" = time-boxed proof in Phase 0/1 before bu
 camera-camera2/lifecycle/view, exifinterface), Compose BOM + Material 3, Hilt, Kotlinx
 serialization + coroutines, Coil 3 (thumbnails only), ML Kit (face-detection bundled,
 segmentation-selfie, play-services-mlkit-document-scanner, text-recognition + devanagari in
-v1.1), Tink, RevenueCat purchases, Firebase BoM (analytics, crashlytics, config, auth, firestore or database,
+v1.1), RevenueCat purchases, Firebase BoM (analytics, crashlytics, config, auth, firestore or database,
 appcheck-playintegrity), androidx.credentials + googleid (Sign in with Google). No ads SDK in v1.0. **Test:** JUnit5 or JUnit4, Turbine, MockK (sparingly; prefer fakes),
 Robolectric, Compose UI test, Macrobenchmark + Baseline Profile.
 **iOS:** Swift packages from Apple frameworks only, plus RevenueCat, Firebase (Analytics, Crashlytics, RemoteConfig,
 Auth, Firestore or Database, AppCheck) and GoogleSignIn-iOS; Sign in with Apple via AuthenticationServices. No ads SDK in
 v1.0. Check the app size budget (ARCHITECTURE §11) when adding Firestore: its iOS SDK is large. **Test:** Swift Testing, XCTest/XCUITest.
 **Added in Phase 0:** androidx.navigation-compose and androidx.appcompat (per-app language below API 33), androidx.hilt
-(navigation-compose), compose material-icons-core (not `-extended`: size), `javax.inject` via Hilt, Tink `tink-android`
-(Ed25519 on minSdk 26). **Tooling:** XcodeGen (generates the Xcode project; not shipped in the app), detekt **2.0.0-alpha** (`dev.detekt`;
+(navigation-compose), compose material-icons-core (not `-extended`: size), `javax.inject` via Hilt (Tink
+`tink-android` was added for presets signatures and removed on 2026-10-20 with them). **Tooling:** XcodeGen (generates the Xcode project; not shipped in the app), detekt **2.0.0-alpha** (`dev.detekt`;
 the stable 1.23 line targets an older Kotlin: revisit when 2.0 is stable).
 **Added in Phase 2:** `androidx.datastore:datastore-preferences` 1.2.1 (pinned exams, "Show unverified"; 1.3 is still alpha);
 `com.google.mlkit:face-detection` 16.1.7 and `segmentation-selfie` 16.0.0-beta6 (bundled, on-device; native libs 16 KB aligned).

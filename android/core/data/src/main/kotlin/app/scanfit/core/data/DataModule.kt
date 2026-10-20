@@ -10,7 +10,6 @@ import app.scanfit.core.data.export.ShareStager
 import app.scanfit.core.data.kit.FileKitStore
 import app.scanfit.core.data.kit.KitStore
 import app.scanfit.core.data.quota.FileQuotaStore
-import app.scanfit.core.data.quota.QuotaConfig
 import app.scanfit.core.data.quota.QuotaStore
 import dagger.Binds
 import dagger.Module
@@ -54,8 +53,5 @@ internal abstract class DataModule {
         fun quotaStore(
             @ApplicationContext context: Context,
         ): QuotaStore = FileQuotaStore(File(context.noBackupFilesDir.canonicalFile, "quota"))
-
-        @Provides
-        fun quotaConfig(): QuotaConfig = QuotaConfig { QuotaConfig.DEFAULT_FREE_SAVES_TOTAL }
     }
 }

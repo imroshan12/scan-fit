@@ -31,7 +31,13 @@ The user commits; a session never runs `git add/commit/push`.
 | Store listing                                | Drafted 2026-10-20 in `docs/STORE_LISTING.md`: names within limits, Play EN + HI (machine draft) descriptions, App Store text and keywords, Data safety / App Privacy answers for rc builds (nothing collected) and for v1.0 (sign-in, RevenueCat, Firebase), other Play forms, graphics and screenshot list. |
 | Screenshot tests                             | Removed for good (user decision 2026-10-03). Don't add them back (CLAUDE.md Definition of done).                                                                                                                                                                                               |
 
-Gates last run (2026-10-20, paywall QA follow-up): Android `spotlessCheck detekt :feature:paywall:testDebugUnitTest
+Gates last run (2026-10-20, presets signing removed): Android `spotlessCheck detekt testDebugUnitTest :core:match:test
+:core:model:test lint :app:assembleDebug` green, `:app:assembleRelease` green with only `assets/presets/presets.json`
+in the APK (the embed task now empties its folder first). iOS strict SwiftLint (0), Core SwiftPM (218) and Features
+SwiftPM (170) with no warnings, app tests and DesignSystemTests on the iPhone 17 simulator (TEST SUCCEEDED), unsigned
+`archive.sh --no-sign` green with only `presets.json` in the app. Spec: tool tests (67), `make_presets_load_cases.py
+--check`, `gen_strings/gen_tokens/gen_analytics --check`; `release_preflight.py`: nothing blocks (3 warnings).
+Previous gates (2026-10-20, paywall QA follow-up): Android `spotlessCheck detekt :feature:paywall:testDebugUnitTest
 :feature:paywall:lintDebug :app:assembleDebug` green (9 paywall tests; no Android device attached, native Android UI
 still open). iOS strict SwiftLint clean, full Features SwiftPM (170), normal app tests (4) and `ScanFitSmoke` native UI
 tests (4) green on iPhone 11 Pro Max / **iOS 26.5**, not iOS 17. Smoke: free-save display, no-purchase Restore, dismissal,
@@ -83,6 +89,12 @@ Device/provider QA remains open. New `review.*`, `draft.*` and `kit.*` Hindi mes
 drafted with `TODO_HI:`. The spec suite still emits pre-existing unclosed-file `ResourceWarning`s in `exam_search.py`.
 
 ## 2. Decisions made with the user (not obvious from the code)
+
+- **No presets signing (user, 2026-10-20):** "I don't need this seeding condition, we can simply check the format. This thing
+  over-complicating the things." Both apps now only run format checks on presets (spec/README.md "Loading presets": JSON header,
+  `schema_version` ≤ 2, newer `presets_version`, full decode). Accepted risk, told to the user: whoever controls the repo or the
+  site could publish wrong rules (so: GitHub 2FA). The `PRESETS_SIGNING_KEY` secret and `presets-production` environment are
+  unused; the user deletes them (OWNER_STEPS A5).
 
 - **Launch identity (user, 2026-10-20):** app id `com.roshtech.scanfit` is final on both stores; the seller is the user
   as an individual (Sarvesh Roshan; Play developer name the same); support email `pro.sarvesh.roshan@gmail.com`; the
@@ -219,6 +231,42 @@ drafted with `TODO_HI:`. The spec suite still emits pre-existing unclosed-file `
   device is still needed with the updated build. Files saved before the fix are not retroactively marked; save again to verify.
 
 ## 4. What changed (by area, for review)
+
+### Test builds get 200 free saves; store graphics (2026-10-20, late)
+
+- **Spec:** ALGORITHMS 14.2 "Where `t` comes from": the build carries the default total (20; CI test builds 200), Remote
+  Config overrides later; new `free_saves_build_value_cases` (8) in cases.json with `quota.build_total` as reference.
+- **Android:** `:app` gets `BuildConfig.FREE_SAVES_TOTAL` from `-Pscanfit.freeSavesTotal` (default 20; `buildConfig = true`);
+  `AppModule.quotaConfig()` replaces DataModule's provider; `QuotaConfig.fromBuildValue` + conformance test.
+- **iOS:** build setting `FREE_SAVES_TOTAL` (20) → Info.plist `MRDFreeSavesTotal`; `SaveGate.buildTotal(_:)` +
+  `SaveQuotaTests.buildValues`; `AppContainer.live` passes it to the gate; `archive.sh --free-saves N` (prints it).
+- **CI:** android/ios release jobs output `free_saves` (200 for `-main`/`-rc`/`-beta`, 20 for final tags) and pass it on.
+- **Store:** `store/feature-graphic.html` → `store/play-feature-graphic-1024x500.png` and `store/play-icon-512.png` via
+  `store/render.sh` (Quick Look renders the HTML, Pillow crops; headless Brave could not open a display here).
+- **Checked:** Android spotless/detekt/`:core:data` tests/lint/assembleDebug; `-Pscanfit.freeSavesTotal=200` reaches
+  BuildConfig; iOS ScanData tests (61), app tests on the iPhone 17 simulator, `archive.sh --no-sign --free-saves 200`
+  ("free saves 200" in the archive); spec tool tests (68).
+
+### Presets signing removed (2026-10-20, night)
+
+- **Spec:** spec/README.md "Loading presets" (the four format checks; why there is no signature). `spec/signing/`,
+  `spec/fixtures/signing/`, `make_signing_vector.py`, `rehearsal_key.sh` deleted; new `make_presets_load_cases.py`
+  (deterministic, `--check`, `check()` = Python reference) → `spec/fixtures/presets_load/` (9 cases incl. empty file and
+  non-object). `build_presets.py` only validates + bundles (removes a leftover `.sig`); `build_all.sh` has no key (`--release`
+  is only the Hindi gate); `release_preflight.py` checks `spec/dist/presets.json` passes the header checks instead of keys;
+  `cryptography` dropped from requirements. Analytics `sync_failure_reason` loses `bad_signature`; string
+  `error.preset_bad_signature` removed (unused).
+- **Android:** `PresetVerifier.kt`, `VerifiedDigestStore.kt` (+ tests) and Tink removed; `PresetLoadError.kt`;
+  `PresetBundleLoader.load(bundle, currentVersion)`; `PresetFiles(bundle)`; `AppModule` without the digest store (background
+  thread kept, renamed `presets-load`); `EmbedPresetsTask` copies `presets.json` after a shape check; `PresetLoadCasesTest`.
+- **iOS:** `PresetLoadError.swift` (CryptoKit verifier gone), loader/repository as Android; `embed_presets.sh` copies
+  `presets.json` after a shape check; `verify_presets.swift` + `test_verify_presets.sh` deleted; `archive.sh` checks the
+  archive has `presets.json`; `PresetLoadCasesTests`; app `EmbeddedPresetsTests` use a damaged (truncated) copy.
+- **CI:** no `PRESETS_SIGNING_KEY` anywhere; android/ios rehearsals build the release configuration without a throwaway key;
+  ios drops the verifier step; spec drops `publish-presets`; `pages.yml` builds the bundle and publishes
+  `presets/v2/presets.json` with the site (also on `spec/presets/**` changes).
+- **Docs:** ARCHITECTURE §6/§10, BUILD_AND_RELEASE (sections 1, 3–7, 9–12), RELEASE_CHECKLIST, TECH_FEASIBILITY, ROADMAP
+  (history notes, Phase 4 OTA + exit gate), OWNER_STEPS A5, LAUNCH_PLAN, web/presets/v2/README, spikes note.
 
 ### CI fixes after the launch-prep push (2026-10-20, night)
 
@@ -642,6 +690,5 @@ drafted with `TODO_HI:`. The spec suite still emits pre-existing unclosed-file `
   `toUri()` and plurals for "N kilobytes"-style strings (a plural may only have one int placeholder; pass others as `str`).
 - Android lint rejects three-dot ellipses: use `\u2026` in shared JSON strings. Run SwiftLint from `ios/` to load its configuration
   and exclude generated build files. VS Code's test discovery does not expose the native suites; use Gradle/SwiftPM/Xcode.
-- `build_presets.py` without signing rewrites the bundle and can leave a stale signature. For local debug validation, run
-  `.venv/bin/python spec/tools/build_presets.py --sign-dev` then `--verify spec/signing/dev_public_key.b64` before preset tests
-  (or `PYTHON="$PWD/.venv/bin/python" spec/tools/build_all.sh`). Never use release signing for a local debug check.
+- Presets are not signed (since 2026-10-20): `spec/tools/build_all.sh` (or `build_presets.py`) is all a preset change needs
+  before the app tests; `make_presets_load_cases.py --check` keeps the shared format-check cases honest.

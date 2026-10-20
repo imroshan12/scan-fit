@@ -100,7 +100,6 @@ public enum AnalyticsEvent: Sendable, Equatable {
 
     public enum SyncFailureReason: String, Sendable, CaseIterable {
         case network = "network"
-        case badSignature = "bad_signature"
         case staleVersion = "stale_version"
         case badSchema = "bad_schema"
         case parse = "parse"

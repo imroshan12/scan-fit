@@ -4,21 +4,15 @@ import ScanModel
 import TestSupport
 import Testing
 
-/// The Phase 0 exit gate for iOS: the embedded presets load and verify, and anything else is refused.
+/// The Phase 0 exit gate for iOS: the embedded presets pass the format checks and load, and a damaged file is refused.
 @Suite("Embedded presets")
 struct EmbeddedPresetsTests {
-    private func devKeyText() throws -> String {
-        try SpecFiles.text("signing/dev_public_key.b64")
-    }
-
     /// spec/dist is produced by spec/tools/build_all.sh (CI runs it before the tests).
     private func distFiles() throws -> PresetFiles {
-        let bundle = try SpecFiles.data("dist/presets.json")
-        let sig = try SpecFiles.text("dist/presets.json.sig")
-        return PresetFiles(bundle: bundle, signatureText: sig, publicKeyBase64: try devKeyText())
+        PresetFiles(bundle: try SpecFiles.data("dist/presets.json"))
     }
 
-    @Test("the real bundle in spec/dist verifies against the dev key and decodes")
+    @Test("the real bundle in spec/dist loads")
     func realBundleLoads() async throws {
         let files = try distFiles()
         let repo = PresetsRepository()
@@ -35,24 +29,13 @@ struct EmbeddedPresetsTests {
         #expect(uniqueIds.count == bundle.exams.count, "exam ids are unique")
     }
 
-    @Test("a bundle signed by another key is rejected and nothing is installed")
-    func forgedBundleIsRejected() async throws {
+    @Test("a damaged copy of the real bundle is rejected and nothing is installed")
+    func damagedBundleIsRejected() async throws {
         let files = try distFiles()
-        let other = try SpecFiles.text("fixtures/signing/other_public_key.b64")
-        let forged = PresetFiles(bundle: files.bundle, signatureText: files.signatureText, publicKeyBase64: other)
+        let damaged = PresetFiles(bundle: files.bundle.prefix(files.bundle.count / 3))
         let repo = PresetsRepository()
-        #expect(await repo.loadEmbedded(forged) == .failed(.badSignature))
+        #expect(await repo.loadEmbedded(damaged) == .failed(.parse))
         #expect(await repo.bundle == nil)
-    }
-
-    @Test("a one-byte change to the real bundle is rejected")
-    func tamperedBundleIsRejected() async throws {
-        let files = try distFiles()
-        var bytes = files.bundle
-        bytes[bytes.count / 3] ^= 0x20
-        let tampered = PresetFiles(bundle: bytes, signatureText: files.signatureText, publicKeyBase64: files.publicKeyBase64)
-        let repo = PresetsRepository()
-        #expect(await repo.loadEmbedded(tampered) == .failed(.badSignature))
     }
 
     @Test("a build with no embedded snapshot reports it instead of crashing")

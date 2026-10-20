@@ -51,8 +51,8 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun aBadSignatureIsAPlainFailedStateNeverACrashOrAHalfTrustedBundle() = runTest {
-        val state = model(presets = FakePresetsRepository(PresetsLoadOutcome.Failed(PresetLoadError.BAD_SIGNATURE))).settled()
+    fun aPresetsFileThatFailsTheFormatChecksIsAPlainFailedStateNeverACrash() = runTest {
+        val state = model(presets = FakePresetsRepository(PresetsLoadOutcome.Failed(PresetLoadError.PARSE))).settled()
         assertEquals(PresetsStatus.Failed, state.presets)
         assertTrue(state.popular.isEmpty() && state.results.isEmpty())
     }

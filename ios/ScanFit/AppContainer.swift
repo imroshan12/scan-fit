@@ -30,6 +30,7 @@ struct AppContainer: Sendable {
         let repository = PresetsRepository()
         let files = PresetFiles.embedded(in: bundle)
         let support = URL.applicationSupportDirectory.resolvingSymlinksInPath()
+        let freeSaves = SaveGate.buildTotal(bundle.object(forInfoDictionaryKey: "MRDFreeSavesTotal"))
         #if DEBUG
         // Debug builds sell fake products that grant Pro for the session, so the paywall can be walked by hand.
         let billing = LocalBilling(fakeProducts: LocalBilling.debugProducts)
@@ -43,7 +44,10 @@ struct AppContainer: Sendable {
             drafts: FileDraftStore(root: support.appendingPathComponent("drafts")),
             kit: FileKitStore(root: support.appendingPathComponent("kit")),
             billing: billing,
-            gate: SaveGate(store: FileQuotaStore(root: support.appendingPathComponent("quota")), billing: billing),
+            gate: SaveGate(
+                store: FileQuotaStore(root: support.appendingPathComponent("quota")), billing: billing,
+                total: { [freeSaves] in freeSaves }
+            ),
             presetsOutcome: Task { await repository.loadEmbedded(files) }
         )
     }

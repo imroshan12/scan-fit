@@ -3,15 +3,15 @@ import Presets
 import Testing
 @testable import ScanFit
 
-/// Phase 0 exit gate, on the real app bundle: the presets that the build phase embedded verify and load.
+/// Phase 0 exit gate, on the real app bundle: the presets that the build phase embedded pass the format checks and load.
 @Suite("Embedded presets in the app bundle")
 struct EmbeddedPresetsTests {
-    @Test("the app bundle contains the snapshot, signature and key")
-    func filesArePresent() {
+    @Test("the app bundle contains the snapshot")
+    func fileIsPresent() {
         #expect(PresetFiles.embedded(in: .main) != nil, "run spec/tools/build_all.sh, then rebuild")
     }
 
-    @Test("the embedded snapshot verifies and loads")
+    @Test("the embedded snapshot loads")
     func loads() async {
         let repository = PresetsRepository()
         let outcome = await repository.loadEmbedded(PresetFiles.embedded(in: .main))
@@ -22,17 +22,15 @@ struct EmbeddedPresetsTests {
         #expect(summary.examCount >= 55)
     }
 
-    @Test("a tampered copy of the embedded snapshot is rejected")
-    func tamperedIsRejected() async throws {
+    @Test("a damaged copy of the embedded snapshot is rejected")
+    func damagedIsRejected() async throws {
         let files = try #require(PresetFiles.embedded(in: .main))
-        var bytes = files.bundle
-        bytes[bytes.count / 2] ^= 0x01
-        let tampered = PresetFiles(bundle: bytes, signatureText: files.signatureText, publicKeyBase64: files.publicKeyBase64)
-        let outcome = await PresetsRepository().loadEmbedded(tampered)
-        #expect(outcome == .failed(.badSignature))
+        let damaged = PresetFiles(bundle: files.bundle.prefix(files.bundle.count / 2))
+        let outcome = await PresetsRepository().loadEmbedded(damaged)
+        #expect(outcome == .failed(.parse))
     }
 
-    @Test("the container verifies once and shares the outcome, and exposes the trusted bundle")
+    @Test("the container loads once and shares the outcome, and exposes the loaded bundle")
     @MainActor
     func containerSharesOutcome() async {
         let container = AppContainer.live()
@@ -42,6 +40,6 @@ struct EmbeddedPresetsTests {
         if case .ready = first {} else { Issue.record("expected .ready, got \(first)") }
         let bundle = await container.trustedBundle()
         #expect(bundle?.exams.count == 55)
-        #expect(bundle?.popular?.isEmpty == false, "the signed bundle carries the popular list")
+        #expect(bundle?.popular?.isEmpty == false, "the bundle carries the popular list")
     }
 }

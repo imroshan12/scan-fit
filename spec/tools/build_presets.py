@@ -1,20 +1,16 @@
 #!/usr/bin/env python3
 """
-Validate every exam preset, bundle them, and (optionally) sign the bundle.
+Validate every exam preset and bundle them.
 
 Usage:
   python spec/tools/build_presets.py                 # validate + bundle to spec/dist/
-  PRESETS_SIGNING_KEY=<base64 ed25519 seed> python spec/tools/build_presets.py --sign
-  python spec/tools/build_presets.py --sign-dev      # sign with the public DEV key (local builds only, never release)
-  python spec/tools/build_presets.py --verify spec/signing/dev_public_key.b64   # check dist/ against a public key
-  python spec/tools/build_presets.py --genkey        # prints a new keypair (store the private key in CI secrets)
 
 Outputs (spec/dist/):
-  presets.json      bundle consumed by both apps (also copied into each app as the offline snapshot)
-  presets.json.sig  base64 Ed25519 signature over the exact bytes of presets.json
+  presets.json      bundle consumed by both apps (also copied into each app as the offline snapshot, and published
+                    on the website for the OTA sync). Not signed: the apps check its format (spec/README.md).
 Exit code != 0 on any validation failure. CI must run this on every PR touching spec/.
 """
-import argparse, base64, glob, json, os, sys
+import glob, json, os, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _common import require
@@ -92,28 +88,9 @@ def semantic_checks(exam, path):
 
 
 def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--sign", action="store_true")
-    ap.add_argument("--sign-dev", action="store_true", help="sign with the public DEV key (never ship)")
-    ap.add_argument("--verify", metavar="PUBKEY_B64_FILE", help="verify dist/presets.json(.sig) and exit")
-    ap.add_argument("--genkey", action="store_true")
-    args = ap.parse_args()
-    require("cryptography") if (args.verify or args.genkey) else require("cryptography", "jsonschema")
-
-    if args.verify:
-        verify_dist(args.verify)
-        return
-
-    if args.genkey:
-        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-        from cryptography.hazmat.primitives import serialization as ser
-        k = Ed25519PrivateKey.generate()
-        priv = k.private_bytes(ser.Encoding.Raw, ser.PrivateFormat.Raw, ser.NoEncryption())
-        pub = k.public_key().public_bytes(ser.Encoding.Raw, ser.PublicFormat.Raw)
-        print("PRIVATE (CI secret PRESETS_SIGNING_KEY):", base64.b64encode(priv).decode())
-        print("PUBLIC  (embed in both apps):          ", base64.b64encode(pub).decode())
-        return
-
+    if len(sys.argv) > 1:
+        fail([f"unknown arguments {sys.argv[1:]}: presets are no longer signed, so --sign/--verify/--genkey are gone"])
+    require("jsonschema")
     import jsonschema
     schema = json.load(open(SCHEMA))
     validator = jsonschema.Draft202012Validator(schema, format_checker=jsonschema.FormatChecker())
@@ -154,39 +131,11 @@ def main():
     raw = json.dumps(bundle, ensure_ascii=False, separators=(",", ":"), sort_keys=True).encode()
     with open(os.path.join(DIST, "presets.json"), "wb") as f:
         f.write(raw)
+    # A leftover signature from before 2026-10-20 would only confuse: nothing reads it any more.
+    stale_sig = os.path.join(DIST, "presets.json.sig")
+    if os.path.exists(stale_sig):
+        os.remove(stale_sig)
     print(f"✓ {len(exams)} exams valid · presets_version {version} · {len(raw)/1024:.1f} KB")
-
-    if args.sign or args.sign_dev:
-        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-        if args.sign_dev:
-            from make_signing_vector import DEV_SEED
-            seed = DEV_SEED
-            print("! signed with the public DEV key: for local builds only, release builds reject it", file=sys.stderr)
-        else:
-            if not os.environ.get("PRESETS_SIGNING_KEY"):
-                fail(["--sign needs the PRESETS_SIGNING_KEY environment variable (base64 Ed25519 seed)"])
-            seed = base64.b64decode(os.environ["PRESETS_SIGNING_KEY"])
-        sig = Ed25519PrivateKey.from_private_bytes(seed).sign(raw)
-        with open(os.path.join(DIST, "presets.json.sig"), "w") as f:
-            f.write(base64.b64encode(sig).decode())
-        print("✓ signed")
-
-
-def verify_dist(pubkey_file):
-    """Exit 0 only if dist/presets.json.sig is a valid Ed25519 signature over dist/presets.json."""
-    from cryptography.exceptions import InvalidSignature
-    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
-    try:
-        pub = Ed25519PublicKey.from_public_bytes(base64.b64decode(open(pubkey_file).read().strip()))
-        raw = open(os.path.join(DIST, "presets.json"), "rb").read()
-        sig = base64.b64decode(open(os.path.join(DIST, "presets.json.sig")).read().strip(), validate=True)
-        pub.verify(sig, raw)
-    except FileNotFoundError as e:
-        fail([f"{e.filename} not found: run spec/tools/build_all.sh first"])
-    except (InvalidSignature, ValueError) as e:
-        fail([f"dist/presets.json does not verify against {pubkey_file} ({type(e).__name__}). "
-              "Re-sign with the matching private key."])
-    print(f"✓ dist/presets.json verifies against {os.path.relpath(pubkey_file, ROOT)}")
 
 
 if __name__ == "__main__":

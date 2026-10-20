@@ -5,6 +5,5 @@ plugins {
 
 dependencies {
     api(project(":core:model"))
-    implementation(libs.tink.android)
     implementation(libs.kotlinx.coroutines.android)
 }

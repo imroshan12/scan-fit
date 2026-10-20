@@ -1988,5 +1988,15 @@
 		{"id": "race_past_zero", "_why": "recording never refuses; remaining clamps at 0", "start": {"used": 19, "allowance": 20}, "steps": [{"op": "record", "file": "a", "pro": false}, {"op": "record", "file": "b", "pro": false}, {"op": "state", "pro": false, "expect": {"used": 21, "allowance": 20, "remaining": 0, "shows_left": true}}, {"op": "decide", "files": ["c"], "pro": false, "expect": {"allowed": false, "new": 1}}]},
 		{"id": "hash_cap", "_why": "the oldest identities drop beyond max_hashes; a re-used one moves to the newest end", "max_hashes": 3, "start": {"used": 0, "allowance": 20}, "steps": [{"op": "record", "file": "a", "pro": false}, {"op": "record", "file": "b", "pro": false}, {"op": "record", "file": "c", "pro": false}, {"op": "record", "file": "a", "pro": false}, {"op": "record", "file": "d", "pro": false}, {"op": "decide", "files": ["b"], "pro": false, "expect": {"allowed": true, "new": 1}}, {"op": "decide", "files": ["a"], "pro": false, "expect": {"allowed": true, "new": 0}}, {"op": "state", "pro": false, "expect": {"used": 4, "allowance": 20, "remaining": 16, "shows_left": false}}]},
 		{"id": "shows_left_threshold", "_why": "the review shows the count at 5 or fewer, never for Pro", "start": {"used": 14, "allowance": 20}, "steps": [{"op": "state", "pro": false, "expect": {"used": 14, "allowance": 20, "remaining": 6, "shows_left": false}}, {"op": "record", "file": "a", "pro": false}, {"op": "state", "pro": false, "expect": {"used": 15, "allowance": 20, "remaining": 5, "shows_left": true}}, {"op": "state", "pro": true, "expect": {"used": 15, "allowance": 20, "remaining": 5, "shows_left": false}}]}
+	],
+	"free_saves_build_value_cases": [
+		{"id": "default_when_missing", "_why": "no build value: the default 20", "raw": null, "expect": 20},
+		{"id": "final_release", "_why": "final builds pass nothing or 20", "raw": "20", "expect": 20},
+		{"id": "test_build", "_why": "CI pre-release builds pass 200", "raw": "200", "expect": 200},
+		{"id": "spaces_trimmed", "_why": "surrounding whitespace is ignored", "raw": " 200 ", "expect": 200},
+		{"id": "zero_is_default", "_why": "a total below 1 would block every save", "raw": "0", "expect": 20},
+		{"id": "negative_is_default", "_why": "negative is never a total", "raw": "-5", "expect": 20},
+		{"id": "not_a_number_is_default", "_why": "garbage falls back, never crashes", "raw": "lots", "expect": 20},
+		{"id": "empty_is_default", "_why": "an unset build setting expands to an empty string", "raw": "", "expect": 20}
 	]
 }

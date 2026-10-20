@@ -1,6 +1,7 @@
 package app.scanfit.core.data.quota
 
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.booleanOrNull
@@ -24,6 +25,18 @@ class SaveQuotaConformanceTest {
     private fun JsonObject.int(key: String) = getValue(key).jsonPrimitive.int
 
     private fun JsonObject.pro() = get("pro")?.jsonPrimitive?.booleanOrNull ?: false
+
+    @Test
+    fun buildValuesMatchTheCases() {
+        val spec = File(checkNotNull(System.getProperty("scanfit.spec.dir")))
+        val buildCases = Json.parseToJsonElement(File(spec, "fixtures/cases.json").readText()).jsonObject
+            .getValue("free_saves_build_value_cases").jsonArray.map { it.jsonObject }
+        assertTrue(buildCases.size >= 8)
+        for (c in buildCases) {
+            val raw = c["raw"]?.takeUnless { it is JsonNull }?.jsonPrimitive?.content
+            assertEquals(c.getValue("id").jsonPrimitive.content, c.int("expect"), QuotaConfig.fromBuildValue(raw))
+        }
+    }
 
     @Test
     fun everyCaseHolds() {

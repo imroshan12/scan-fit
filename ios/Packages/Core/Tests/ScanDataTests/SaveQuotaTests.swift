@@ -8,6 +8,17 @@ import TestSupport
 @MainActor
 @Suite("Free saves", .timeLimit(.minutes(1)))
 struct SaveQuotaTests {
+    @Test("the build's free-saves value is read like the shared cases say")
+    func buildValues() throws {
+        let cases = try CasesFile.section("free_saves_build_value_cases")
+        #expect(cases.count >= 8)
+        for c in cases {
+            #expect(SaveGate.buildTotal(c["raw"] as? String) == c.int("expect"), "\(c.string("id") ?? "?")")
+        }
+        #expect(SaveGate.buildTotal(200) == 200, "a numeric plist value")
+        #expect(SaveGate.buildTotal(0) == SaveGate.defaultFreeSavesTotal)
+    }
+
     @Test("every save quota case holds")
     func conformance() throws {
         let cases = try CasesFile.section("save_quota_cases")

@@ -47,6 +47,7 @@ targets:
                 ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
                 SWIFT_EMIT_LOC_STRINGS: YES
                 STRING_CATALOG_GENERATE_SYMBOLS: NO # strings are typed by spec/tools/gen_strings.py instead
+                FREE_SAVES_TOTAL: 20 # ALGORITHMS 14.2: CI test builds pass 200 (archive.sh --free-saves)
         info:
             path: ScanFit/Info.plist
             properties:
@@ -54,6 +55,7 @@ targets:
                 CFBundleName: Mr Doc
                 CFBundleShortVersionString: $(MARKETING_VERSION) # XcodeGen would otherwise write a literal 1.0
                 CFBundleVersion: $(CURRENT_PROJECT_VERSION) # must rise on every TestFlight upload
+                MRDFreeSavesTotal: $(FREE_SAVES_TOTAL) # read by SaveGate.buildTotal (ALGORITHMS 14.2)
                 CFBundleLocalizations: [en, hi]
                 UILaunchScreen: {}
                 UISupportedInterfaceOrientations:
@@ -63,7 +65,7 @@ targets:
                     - UIInterfaceOrientationPortraitUpsideDown
                     - UIInterfaceOrientationLandscapeLeft
                     - UIInterfaceOrientationLandscapeRight
-                ITSAppUsesNonExemptEncryption: false # only Ed25519 signature verification + HTTPS
+                ITSAppUsesNonExemptEncryption: false # only HTTPS (the system's)
                 # English fallback; the shown text is localised from ScanFit/InfoPlist.xcstrings (spec infoplist.*).
                 NSCameraUsageDescription: Mr Doc uses the camera to take your photo for exam forms. The photo stays on your phone.
         dependencies:
@@ -98,7 +100,7 @@ targets:
             - package: Core
               product: Billing
         postBuildScripts:
-            - name: Embed signed presets
+            - name: Embed presets
               script: '"${SRCROOT}/Scripts/embed_presets.sh"'
               basedOnDependencyAnalysis: false
 

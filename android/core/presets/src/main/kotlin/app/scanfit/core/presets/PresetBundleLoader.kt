@@ -14,32 +14,15 @@ sealed interface PresetLoadResult {
 }
 
 /**
- * The load order shared by both platforms (spec/tools/make_signing_vector.py documents it):
- * 1. signature  2. header parse  3. schema gate  4. version monotonic  5. full decode.
- * Every failure keeps the currently installed bundle; the caller never sees a half-trusted bundle.
+ * The format checks shared by both platforms (spec/README.md "Loading presets", cases in
+ * spec/fixtures/presets_load/cases.json): 1. header parse  2. schema gate  3. version only goes up  4. full decode.
+ * Every failure keeps the currently installed bundle; the caller never sees a half-read bundle.
  */
 object PresetBundleLoader {
     fun load(
         bundle: ByteArray,
-        signatureText: String,
-        publicKey: PresetPublicKey,
         currentVersion: Int,
-    ): PresetLoadResult = load(bundle, signatureText, publicKey, currentVersion, signatureAlreadyVerified = false)
-
-    /**
-     * [signatureAlreadyVerified] is internal on purpose: only [DefaultPresetsRepository] may set it, and only for
-     * a digest that earlier passed full verification (see [VerifiedDigestStore]).
-     */
-    internal fun load(
-        bundle: ByteArray,
-        signatureText: String,
-        publicKey: PresetPublicKey,
-        currentVersion: Int,
-        signatureAlreadyVerified: Boolean,
     ): PresetLoadResult {
-        if (!signatureAlreadyVerified && !PresetVerifier.isValid(bundle, signatureText, publicKey)) {
-            return fail(PresetLoadError.BAD_SIGNATURE)
-        }
         val text = bundle.decodeToString()
         val header =
             try {

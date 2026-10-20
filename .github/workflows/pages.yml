@@ -7,7 +7,7 @@ name: pages
 on:
   push:
     branches: [main]
-    paths: ['web/**', '.github/workflows/pages.yml']
+    paths: ['web/**', 'spec/presets/**', '.github/workflows/pages.yml']
   workflow_dispatch:
 
 permissions:
@@ -27,6 +27,16 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      # The apps' OTA sync reads /presets/v2/presets.json (not signed: the apps check its format, spec/README.md).
+      - name: Presets bundle for the site
+        run: |
+          pip install -r spec/tools/requirements.txt
+          python3 spec/tools/build_presets.py
+          mkdir -p web/presets/v2
+          cp spec/dist/presets.json web/presets/v2/presets.json
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

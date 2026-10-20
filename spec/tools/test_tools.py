@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
-"""Tests for the spec generators' validators and the signing vector. Run: python3 -m unittest spec/tools/test_tools.py -v
+"""Tests for the spec generators' validators and the presets load cases. Run: python3 -m unittest spec/tools/test_tools.py -v
 (stdlib unittest; needs `pip install -r spec/tools/requirements.txt`)."""
-import base64
 import copy
 import glob
 import json
@@ -13,6 +12,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import gen_analytics  # noqa: E402
 import gen_strings  # noqa: E402
 import gen_tokens  # noqa: E402
+import make_presets_load_cases  # noqa: E402
 import checker  # noqa: E402
 import custom_size  # noqa: E402
 import kit  # noqa: E402
@@ -23,9 +23,6 @@ import quota  # noqa: E402
 import save_all  # noqa: E402
 import release_preflight  # noqa: E402
 from _common import SPEC, require  # noqa: E402
-
-from cryptography.exceptions import InvalidSignature  # noqa: E402
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey  # noqa: E402
 
 
 def load(*parts):
@@ -145,41 +142,35 @@ class Analytics(unittest.TestCase):
                 self.assertIn(d["type"], ("enum", "int", "bool", "exam_id"), f"{ev}.{p}")
 
 
-class SigningVector(unittest.TestCase):
-    """Independent cross-check of vector.json using the cryptography library."""
-    D = os.path.join(SPEC, "fixtures", "signing")
+class PresetsLoadCases(unittest.TestCase):
+    """spec/fixtures/presets_load/cases.json: the format checks both apps run on every presets file."""
+    D = os.path.join(SPEC, "fixtures", "presets_load")
 
     def read(self, name):
         with open(os.path.join(self.D, name), "rb") as f:
             return f.read()
 
-    def verifies(self, case):
-        try:
-            pub = Ed25519PublicKey.from_public_bytes(base64.b64decode(self.read(case["public_key"]).strip()))
-            sig = base64.b64decode(self.read(case["signature"]).strip(), validate=True)
-            pub.verify(sig, self.read(case["bundle"]))
-            return True
-        except (InvalidSignature, ValueError):
-            return False
+    def test_the_reference_loader_agrees_with_every_case(self):
+        cases = load("fixtures", "presets_load", "cases.json")
+        self.assertGreaterEqual(len(cases["load_cases"]), 8)
+        for case in cases["load_cases"]:
+            got = make_presets_load_cases.check(self.read(case["bundle"]), case["current_version"])
+            self.assertEqual(got, case["expect"], case["id"])
 
-    def test_every_verify_case_matches_its_expectation(self):
-        vector = load("fixtures", "signing", "vector.json")
-        self.assertGreaterEqual(len(vector["verify_cases"]), 8)
-        for case in vector["verify_cases"]:
-            self.assertEqual(self.verifies(case), case["valid"], case["id"])
+    def test_cases_cover_ok_and_every_failure_reason(self):
+        cases = load("fixtures", "presets_load", "cases.json")
+        expected = {c["expect"] for c in cases["load_cases"]}
+        self.assertEqual(expected, {"ok", *cases["supported_failure_reasons"]})
 
-    def test_valid_and_tampered_cases_both_exist(self):
-        verdicts = {c["valid"] for c in load("fixtures", "signing", "vector.json")["verify_cases"]}
-        self.assertEqual(verdicts, {True, False})
+    def test_the_real_bundle_passes_the_checks(self):
+        path = os.path.join(SPEC, "dist", "presets.json")
+        if not os.path.exists(path):
+            self.skipTest("spec/dist not built (spec/tools/build_all.sh)")
+        with open(path, "rb") as f:
+            self.assertEqual(make_presets_load_cases.check(f.read(), 0), "ok")
 
-    def test_load_cases_cover_every_failure_reason(self):
-        vector = load("fixtures", "signing", "vector.json")
-        expected = {c["expect"] for c in vector["load_cases"]} - {"ok"}
-        self.assertEqual(expected, set(vector["supported_failure_reasons"]))
-
-    def test_dev_key_in_spec_signing_matches_the_vector(self):
-        with open(os.path.join(SPEC, "signing", "dev_public_key.b64"), "rb") as f:
-            self.assertEqual(f.read(), self.read("dev_public_key.b64"))
+    def test_the_fixture_files_are_up_to_date(self):
+        self.assertEqual([], make_presets_load_cases.drift())
 
 
 class CasesFile(unittest.TestCase):
@@ -296,6 +287,12 @@ class CasesFile(unittest.TestCase):
             for c in cases:
                 self.assertEqual(rule(c), c["expect"], f"{section}/{c['id']}")
 
+    def test_free_saves_build_values_match_the_reference(self):
+        cases = self.cases["free_saves_build_value_cases"]
+        self.assertGreaterEqual(len(cases), 8)
+        for c in cases:
+            self.assertEqual(quota.build_total(c["raw"]), c["expect"], c["id"])
+
     def test_save_quota_expectations_match_the_reference(self):
         """save_quota_cases are computed by quota.py: a hand edit that drifts from ALGORITHMS 14 fails here."""
         cases = self.cases["save_quota_cases"]
@@ -400,18 +397,10 @@ class ReleasePreflight(unittest.TestCase):
         with open(path, "w", encoding="utf-8") as f:
             f.write(text)
 
-    def keypair(self):
-        from cryptography.hazmat.primitives import serialization as ser
-        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-        k = Ed25519PrivateKey.generate()
-        return k, base64.b64encode(k.public_key().public_bytes(ser.Encoding.Raw, ser.PublicFormat.Raw)).decode()
+    GOOD_PRESETS = '{"schema_version":2,"presets_version":1,"exams":[{"id":"x"}]}'
 
     def complete_repo(self):
-        key, pub = self.keypair()
-        self.put("spec/signing/dev_public_key.b64", "ZGV2ZGV2ZGV2ZGV2ZGV2ZGV2ZGV2ZGV2ZGV2ZGV2ZGU=\n")
-        self.put("spec/signing/prod_public_key.b64", pub + "\n")
-        self.put("spec/dist/presets.json", '{"presets_version":1}')
-        self.put("spec/dist/presets.json.sig", base64.b64encode(key.sign(b'{"presets_version":1}')).decode())
+        self.put("spec/dist/presets.json", self.GOOD_PRESETS)
         self.put("android/gradle.properties", "scanfit.versionName=1.2.0\n")
         self.put("ios/project.yml", '    MARKETING_VERSION: "1.2.0"   # shared\n    APP_BUNDLE_ID: com.example.scanfit\n')
         self.put("android/app/build.gradle.kts", 'applicationId = "com.example.scanfit"\n')
@@ -437,25 +426,15 @@ class ReleasePreflight(unittest.TestCase):
     def test_an_empty_repo_reports_every_missing_piece(self):
         r = self.run_pre()
         text = " | ".join(r.blockers)
-        for needle in ("prod_public_key.b64 is missing", "keystore", "signing team", "scanfit.versionName"):
+        for needle in ("spec/dist/presets.json", "keystore", "signing team", "scanfit.versionName"):
             self.assertIn(needle, text)
 
-    def test_the_dev_key_is_never_accepted_as_the_production_key(self):
-        self.complete_repo()
-        with open(os.path.join(self.root, "spec/signing/dev_public_key.b64")) as f:
-            self.put("spec/signing/prod_public_key.b64", f.read())
-        self.assertTrue(any("DEV key" in b for b in self.run_pre().blockers))
-
-    def test_presets_signed_with_another_key_block(self):
-        self.complete_repo()
-        other, _ = self.keypair()
-        self.put("spec/dist/presets.json.sig", base64.b64encode(other.sign(b'{"presets_version":1}')).decode())
-        self.assertTrue(any("not signed with the production key" in b for b in self.run_pre().blockers))
-
-    def test_a_malformed_public_key_blocks(self):
-        self.complete_repo()
-        self.put("spec/signing/prod_public_key.b64", "not base64 at all!!")
-        self.assertTrue(any("not a base64 32-byte" in b for b in self.run_pre().blockers))
+    def test_a_presets_file_that_fails_the_format_checks_blocks(self):
+        for bad in ("not json", '{"schema_version":3,"presets_version":1,"exams":[{}]}',
+                    '{"schema_version":2,"presets_version":0,"exams":[{}]}', '{"schema_version":2,"presets_version":1}'):
+            self.complete_repo()
+            self.put("spec/dist/presets.json", bad)
+            self.assertTrue(any("format checks" in b for b in self.run_pre().blockers), bad)
 
     def test_keystore_placeholders_block(self):
         self.complete_repo()

@@ -33,12 +33,21 @@ constructor() {
     }
 }
 
-/** The configured `free_saves_total` (Remote Config later, ARCHITECTURE §9). */
+/** The configured `free_saves_total` (the build's value now, Remote Config later, ARCHITECTURE §9). */
 fun interface QuotaConfig {
     fun freeSavesTotal(): Int
 
     companion object {
         const val DEFAULT_FREE_SAVES_TOTAL = 20
+
+        /**
+         * The total a build carries (ALGORITHMS 14.2 "Where t comes from"): 200 in CI test builds, else 20. A missing,
+         * non-numeric or < 1 value means [DEFAULT_FREE_SAVES_TOTAL].
+         */
+        fun fromBuildValue(raw: String?): Int {
+            val value = raw?.trim()?.toIntOrNull()
+            return if (value != null && value >= 1) value else DEFAULT_FREE_SAVES_TOTAL
+        }
     }
 }
 

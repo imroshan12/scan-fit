@@ -1,3 +1,2 @@
 jsonschema>=4.21
-cryptography>=42
 pillow>=10.2

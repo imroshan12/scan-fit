@@ -104,7 +104,6 @@
     <string name="error_fit_cannot_reach">Couldn\'t get under %1$d KB. Try fewer pages or crop the margins.</string>
     <string name="error_fit_too_detailed">Too detailed to fit in %1$d KB. Try a plainer background or crop closer.</string>
     <string name="error_generic">Something went wrong. Please try again.</string>
-    <string name="error_preset_bad_signature">Spec update rejected: it failed the safety check. Using the last good version.</string>
     <string name="exam_before_upload">Before you upload</string>
     <string name="exam_confidence_high">Verified</string>
     <string name="exam_confidence_low">Unverified — check notice</string>

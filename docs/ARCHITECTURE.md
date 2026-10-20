@@ -42,7 +42,7 @@ No shared runtime code. Parity comes from generated resources and a conformance 
 :feature:coach  :feature:checker  :feature:custom  :feature:pdf  :feature:kit  :feature:paywall  :feature:settings
 :core:designsystem  (generated theme, components, motion specs; depends on :core:match for MatchNoteCard)
 :core:model         (pure Kotlin: Exam, DocSpec, FitResult, MatchResult, InspectedFile…)
-:core:presets       (bundle parsing, Ed25519 verify via Tink, sync worker, repository)
+:core:presets       (bundle parsing + format checks, sync worker, repository)
 :core:imaging       (decoder, geometry, FitEngine, JpegPatcher, InkCleanup, PhotoPipeline) ← pure where possible
 :core:match         (MatchEngine — pure Kotlin, JVM-unit-testable)
 :core:inspect       (Inspector — pure Kotlin byte parsing)
@@ -54,8 +54,8 @@ No shared runtime code. Parity comes from generated resources and a conformance 
 ```
 
 Toolchain (Oct 2026): AGP 9.4.1 (needs Gradle ≥ 9.6), Gradle 9.6.1, Kotlin 2.4, `compileSdk` 37 / `targetSdk` 36 / `minSdk` 26.
-Because minSdk 26 predates the platform Ed25519 provider (API 33), `:core:presets` verifies with Tink and caches the digest of a
-verified snapshot (`docs/spikes/ed25519-verify-cost.md`).
+Presets are not signed since 2026-10-20 (user decision): `:core:presets` only runs the format checks in spec/README.md
+"Loading presets", so Tink and its verified-digest cache are gone (the old cost spike: `docs/spikes/ed25519-verify-cost.md`).
 Rules: `feature:*` depends on `core:*` only; features never depend on each other (navigation via
 routes in `:app`). `core:model`, `core:match`, `core:inspect` are **pure Kotlin/JVM**, with no Android imports.
 
@@ -64,7 +64,7 @@ routes in `:app`). `core:model`, `core:match`, `core:inspect` are **pure Kotlin/
 ```
 App target (ScanFitApp, RootView, AppContainer, deep links)
 Features/  Home, Exams, PhotoFlow, InkFlow, Coach, Checker, Custom, PDFTools, Kit, Paywall, Settings
-Core/      DesignSystem (generated), Model, Presets (CryptoKit Ed25519), Imaging (ImageIO/CoreImage/vImage),
+Core/      DesignSystem (generated), Model, Presets (format checks), Imaging (ImageIO/CoreImage/vImage),
            Match, Inspect, PDF (engine + CoreGraphics renderer), Vision, Data, Billing, Ads, Analytics, Config
 ```
 
@@ -141,11 +141,11 @@ user-visible destination is stored. Full lifecycle: ALGORITHMS §1.6.1.
 
 ## 6. Presets delivery
 
-1. Every build embeds `presets.json` + `.sig` from `spec/dist` (Gradle task / Xcode build phase copies it).
-2. On launch (at most once per 24h) and daily in the background: `GET https://<cdn>/presets/v2/presets.json`
-   with `If-None-Match`. On 200: fetch the `.sig`, verify **Ed25519** against the embedded public
-   key, check `presets_version > current`, then atomically swap. Any failure keeps the current bundle
-   and logs `preset_sync_failed(reason)`.
+1. Every build embeds `presets.json` from `spec/dist` (Gradle task / Xcode build phase copies it).
+2. On launch (at most once per 24h) and daily in the background: `GET https://imroshan12.github.io/scan-fit/presets/v2/presets.json`
+   (published by `pages.yml`) with `If-None-Match`, HTTPS only. On 200: run the format checks (spec/README.md "Loading
+   presets": header, `schema_version` gate, `presets_version > current`, full decode), then atomically swap. Any failure
+   keeps the current bundle and logs `preset_sync_failed(reason)`. No signature (user decision 2026-10-20).
 3. Remote Config `min_presets_version` forces a sync before opening a flow (hotfix path).
 4. Scalability: the bundle is ~70 KB for 55 exams. At 500 exams, split into `index.json` +
    `exams/<id>.json`, fetched lazily. The schema already supports it (`schema_version` gate).
@@ -221,14 +221,15 @@ beyond buckets, text, or images. Crashlytics: no custom keys holding paths.
 Remote Config keys (defaults ship in the app): `min_presets_version`, `min_fill_strategy`,
 `allow_grayscale_docs`, `coach_thresholds`, `free_saves_total` (default 20, applies to future saves only),
 `paywall_variant`, `popular_exam_order`,
-`kill_switch_<feature>`. The `popular_exam_order` default is not an in-app constant: it is `popular` in the signed presets
+`kill_switch_<feature>`. The `popular_exam_order` default is not an in-app constant: it is `popular` in the presets
 bundle (`spec/presets/popular.json`), so it updates with presets; Remote Config only overrides it.
 
 ## 10. Security and privacy
 
 - All processing is on-device. The only network calls are presets, Remote Config, analytics,
-  ads and billing.
-- Presets are signed (Ed25519): a compromised CDN can't push wrong specs.
+  sign-in and billing (no ads, PRD §6).
+- Presets are not signed (user decision 2026-10-20): they come over HTTPS from our own site and pass format checks. The
+  accepted risk: whoever controls the repo or the site could publish wrong rules, so protect the GitHub account (2FA).
 - `android:allowBackup` scoped via `dataExtractionRules` to exclude `files/kit` and `files/exports`
   (user documents stay out of cloud backup unless the user opts in via the v1.1 backup feature).
   iOS: set `isExcludedFromBackup` on those folders.

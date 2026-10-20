@@ -28,7 +28,6 @@ ios/ScanFit/Info.plist
 __pycache__/
 *.pyc
 web/presets/v2/presets.json
-web/presets/v2/presets.json.sig
 # release secrets (never commit; templates are *.example)
 android/keystore.properties
 *.jks

@@ -104,7 +104,6 @@
     <string name="error_fit_cannot_reach">%1$d KB से कम नहीं हो पाई। कम पन्ने चुनें या किनारे क्रॉप करें।</string>
     <string name="error_fit_too_detailed">%1$d KB में फ़िट होने के लिए बहुत ज़्यादा डिटेल है। सादा बैकग्राउंड रखें या पास से क्रॉप करें।</string>
     <string name="error_generic">कुछ गड़बड़ हो गई। कृपया फिर कोशिश करें।</string>
-    <string name="error_preset_bad_signature">स्पेक अपडेट अस्वीकार किया गया: वह सुरक्षा जाँच में विफल रहा। पिछला सही संस्करण इस्तेमाल हो रहा है।</string>
     <string name="exam_before_upload">अपलोड करने से पहले</string>
     <string name="exam_confidence_high">सत्यापित</string>
     <string name="exam_confidence_low">असत्यापित — नोटिस देखें</string>

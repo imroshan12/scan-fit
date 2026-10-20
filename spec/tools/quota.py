@@ -85,6 +85,18 @@ def run(case):
     return out
 
 
+DEFAULT_TOTAL = 20
+
+
+def build_total(raw):
+    """The free-saves total a build carries (ALGORITHMS 14.2 "Where t comes from"): a positive integer, else 20."""
+    try:
+        value = int(str(raw).strip())
+    except (TypeError, ValueError):
+        return DEFAULT_TOTAL
+    return value if value >= 1 else DEFAULT_TOTAL
+
+
 def expectations(case):
     return [step.get("expect") for step in case["steps"]]
 

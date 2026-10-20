@@ -188,7 +188,6 @@
 	"error.fit_too_detailed": "Too detailed to fit in {max_kb:int} KB. Try a plainer background or crop closer.",
 	"error.fit_cannot_reach": "Couldn't get under {max_kb:int} KB. Try fewer pages or crop the margins.",
 	"error.export_verify_failed": "The saved file didn't pass our check, so we removed it. Please save again.",
-	"error.preset_bad_signature": "Spec update rejected: it failed the safety check. Using the last good version.",
 	"error.face_none": "No face found. Retake the photo with your face clearly visible.",
 	"error.face_multiple": "More than one face found. Crop to one person.",
 

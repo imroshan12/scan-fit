@@ -51,7 +51,7 @@ class SettingsViewModelTest {
 
     @Test
     fun aRejectedBundleShowsNoVersion() = runTest {
-        val presets = FakePresetsRepository(PresetsLoadOutcome.Failed(PresetLoadError.BAD_SIGNATURE))
+        val presets = FakePresetsRepository(PresetsLoadOutcome.Failed(PresetLoadError.PARSE))
         model(presets).uiState.test { assertNull(expectMostRecentItem().presetsVersion) }
     }
 

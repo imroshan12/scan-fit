@@ -42,9 +42,9 @@ struct HomeViewModelTests {
         #expect(model.presets == .ready(summary))
     }
 
-    @Test("a bad signature is a plain failed state, never a crash or a half-trusted bundle")
-    func rejectsBadSignature() async {
-        let model = HomeViewModel(preferences: preferences()) { .init(outcome: .failed(.badSignature), bundle: nil) }
+    @Test("a presets file that fails the format checks is a plain failed state, never a crash or a half-read bundle")
+    func rejectsBadFile() async {
+        let model = HomeViewModel(preferences: preferences()) { .init(outcome: .failed(.parse), bundle: nil) }
         await model.onAppear()
         #expect(model.presets == .failed)
         model.query = "ssc"

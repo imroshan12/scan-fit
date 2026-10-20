@@ -13,7 +13,7 @@
     "paywall_trigger": ["free_limit", "pro_feature", "settings"],
     "product": ["pro_yearly", "pro_lifetime"],
     "sync_result": ["updated", "not_modified", "failed"],
-    "sync_failure_reason": ["network", "bad_signature", "stale_version", "bad_schema", "parse"]
+    "sync_failure_reason": ["network", "stale_version", "bad_schema", "parse"]
   },
 
   "events": {

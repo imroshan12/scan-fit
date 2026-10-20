@@ -31,11 +31,9 @@ sealed interface PresetsLoadOutcome {
     data object MissingEmbedded : PresetsLoadOutcome
 }
 
-/** The files that make up a signed snapshot. */
+/** The presets snapshot: the exact bytes of `presets.json`. */
 class PresetFiles(
     val bundle: ByteArray,
-    val signatureText: String,
-    val publicKeyBase64: String,
 )
 
 /** Where the embedded snapshot comes from: assets in the app, fixtures in tests. */
@@ -48,23 +46,18 @@ class AssetEmbeddedPresetSource(
     private val context: Context,
 ) : EmbeddedPresetSource {
     override fun read(): PresetFiles? = try {
-        fun text(name: String) = context.assets.open("presets/$name").use { it.readBytes() }
-        PresetFiles(
-            bundle = text("presets.json"),
-            signatureText = text("presets.json.sig").decodeToString(),
-            publicKeyBase64 = text("presets_public_key.b64").decodeToString(),
-        )
+        PresetFiles(bundle = context.assets.open("presets/presets.json").use { it.readBytes() })
     } catch (_: IOException) {
         null
     }
 }
 
-/** Holds the trusted presets. UIs observe [outcome]: `null` while the snapshot is still being verified. */
+/** Holds the loaded presets. UIs observe [outcome]: `null` while the snapshot is still being read. */
 interface PresetsRepository {
     val outcome: StateFlow<PresetsLoadOutcome?>
     val bundle: StateFlow<PresetBundle?>
 
-    /** Verifies and installs the embedded snapshot. A forged or corrupt snapshot is rejected, never trusted. */
+    /** Checks the embedded snapshot's format and installs it. A corrupt or unsupported snapshot is rejected. */
     suspend fun loadEmbedded(): PresetsLoadOutcome
 }
 
@@ -75,7 +68,6 @@ interface PresetsRepository {
 class DefaultPresetsRepository(
     private val source: EmbeddedPresetSource,
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
-    private val verifiedDigests: VerifiedDigestStore = VerifiedDigestStore.None,
 ) : PresetsRepository {
     private val lock = Mutex()
     private val _outcome = MutableStateFlow<PresetsLoadOutcome?>(null)
@@ -95,16 +87,9 @@ class DefaultPresetsRepository(
 
     private fun attempt(): PresetsLoadOutcome {
         val files = source.read() ?: return PresetsLoadOutcome.MissingEmbedded
-        val key =
-            PresetPublicKey.fromBase64(files.publicKeyBase64)
-                ?: return PresetsLoadOutcome.Failed(PresetLoadError.BAD_SIGNATURE)
         val installed = _bundle.value?.presetsVersion ?: 0
-        val digest = VerifiedDigestStore.digestOf(files.bundle, files.signatureText, files.publicKeyBase64)
-        val alreadyVerified = verifiedDigests.contains(digest)
-        val loaded = PresetBundleLoader.load(files.bundle, files.signatureText, key, installed, alreadyVerified)
-        return when (val result = loaded) {
+        return when (val result = PresetBundleLoader.load(files.bundle, installed)) {
             is PresetLoadResult.Success -> {
-                if (!alreadyVerified) verifiedDigests.add(digest)
                 _bundle.value = result.bundle
                 PresetsLoadOutcome.Ready(PresetsSummary(result.bundle.exams.size, result.bundle.presetsVersion))
             }

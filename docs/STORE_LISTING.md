@@ -163,8 +163,8 @@ lawyer for the under-18 users.
 
 | Asset | Spec | Notes |
 |---|---|---|
-| Play app icon | 512 × 512 PNG, 32-bit, ≤ 1 MB | From the launcher icon (corner brackets on #3F4DB8); `web/icon.svg` is the same mark |
-| Play feature graphic | 1024 × 500 JPG or 24-bit PNG (no transparency) | "Photos and PDFs, ready for any form." + the tool tiles; no emblems |
+| Play app icon | 512 × 512 PNG, 32-bit, ≤ 1 MB | **Made:** `store/play-icon-512.png` (from the iOS 1024 icon, the launcher mark) |
+| Play feature graphic | 1024 × 500 JPG or 24-bit PNG (no transparency) | **Made:** `store/play-feature-graphic-1024x500.png` from `store/feature-graphic.html` ("Photos and PDFs, ready for any form." + tool tiles; no emblems). Re-render with `store/render.sh` |
 | Play phone screenshots | 2–8, 9:16, each side 320–3840 px | Use the 8 below; English set + Hindi set |
 | App Store iPhone screenshots | 6.9" (1320 × 2868) | Required |
 | App Store iPad screenshots | 13" (2064 × 2752) | Required because the app runs on iPad (`TARGETED_DEVICE_FAMILY` 1,2) |

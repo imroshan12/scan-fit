@@ -43,7 +43,7 @@ struct AnalyticsEventTests {
         let events: [AnalyticsEvent] = [
             .examOpened(examId: id), .flowStarted(docType: .photo),
             .exportSaved(docType: .leftThumb, verified: true), .paywallShown(variant: .a, trigger: .freeLimit),
-            .purchase(product: .proYearly), .presetSync(result: .updated), .presetSyncFailed(reason: .badSignature),
+            .purchase(product: .proYearly), .presetSync(result: .updated), .presetSyncFailed(reason: .badSchema),
             .portalFeedback(accepted: false), .coachAllGreen(secondsBucket: .lt15),
         ]
         for event in events {

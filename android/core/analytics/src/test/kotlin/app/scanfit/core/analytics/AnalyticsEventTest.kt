@@ -66,7 +66,7 @@ class AnalyticsEventTest {
                 AnalyticsEvent.PaywallShown(AnalyticsEvent.PaywallVariant.A, AnalyticsEvent.PaywallTrigger.FREE_LIMIT),
                 AnalyticsEvent.Purchase(AnalyticsEvent.Product.PRO_YEARLY),
                 AnalyticsEvent.PresetSync(AnalyticsEvent.SyncResult.UPDATED),
-                AnalyticsEvent.PresetSyncFailed(AnalyticsEvent.SyncFailureReason.BAD_SIGNATURE),
+                AnalyticsEvent.PresetSyncFailed(AnalyticsEvent.SyncFailureReason.BAD_SCHEMA),
                 AnalyticsEvent.PortalFeedback(accepted = false),
                 AnalyticsEvent.CoachAllGreen(AnalyticsEvent.SecondsBucket.LT_15),
             )

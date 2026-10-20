@@ -99,7 +99,6 @@ sealed interface AnalyticsEvent {
 
     enum class SyncFailureReason(val wire: String) {
         NETWORK("network"),
-        BAD_SIGNATURE("bad_signature"),
         STALE_VERSION("stale_version"),
         BAD_SCHEMA("bad_schema"),
         PARSE("parse");

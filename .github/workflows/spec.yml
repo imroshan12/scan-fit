@@ -1,6 +1,6 @@
 name: spec
-# Validates the shared contract, regenerates nothing silently (drift = failure), and on main publishes the
-# signed presets bundle to web/. Path-filtered: only runs when the contract or the site changes.
+# Validates the shared contract and regenerates nothing silently (drift = failure). The site, including the presets
+# bundle, is published by pages.yml. Path-filtered: only runs when the contract or the site changes.
 on:
   pull_request:
     paths: ['spec/**', 'web/**', '.github/workflows/spec.yml']
@@ -27,17 +27,15 @@ jobs:
           cache: pip
           cache-dependency-path: spec/tools/requirements.txt
       - run: pip install -r spec/tools/requirements.txt
-      - name: Validate and bundle presets (dev-signed, for checks only)
-        run: |
-          python3 spec/tools/build_presets.py --sign-dev
-          python3 spec/tools/build_presets.py --verify spec/signing/dev_public_key.b64
+      - name: Validate and bundle presets
+        run: python3 spec/tools/build_presets.py
       - name: Generated files are up to date (no drift)
         run: |
-          python3 spec/tools/make_signing_vector.py --check
+          python3 spec/tools/make_presets_load_cases.py --check
           python3 spec/tools/gen_strings.py --check
           python3 spec/tools/gen_tokens.py --check
           python3 spec/tools/gen_analytics.py --check
-      - name: Generator and signing-vector tests
+      - name: Generator and presets-load-case tests
         run: python3 -m unittest spec/tools/test_tools.py -v
       # Not a byte-diff: PNG/JPEG bytes depend on the Pillow/zlib version (verified: two fixtures differ across
       # versions). Fixtures are committed; the echo-page tests below assert their *properties* (CMYK, progressive, ...).
@@ -48,37 +46,3 @@ jobs:
           node-version: '22'
       - name: Echo-page inspector tests
         run: node --test web/upload-test/inspect.test.mjs
-
-  # Manual only (Actions > spec > Run workflow) since the site moved to GitHub Pages (2026-10-20): it builds and signs
-  # the presets with the production key and uploads them as an artifact, but nothing reads them from the site until the
-  # presets OTA sync ships (ROADMAP Phase 4). Then pages.yml deploys the signed presets with the site. On every push it
-  # only left an approval waiting in the presets-production environment.
-  publish-presets:
-    needs: validate
-    if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    environment: presets-production      # protect with required reviewers in repo settings
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
-      - run: pip install -r spec/tools/requirements.txt
-      - name: Build, sign with the production key, verify
-        env:
-          PRESETS_SIGNING_KEY: ${{ secrets.PRESETS_SIGNING_KEY }}
-        run: |
-          test -f spec/signing/prod_public_key.b64 || { echo "::error::spec/signing/prod_public_key.b64 is missing (spec/signing/README.md)"; exit 1; }
-          # The CDN gets presets only, never UI strings, so machine-drafted Hindi must not block publishing them
-          # (the Hindi gate belongs to the app release jobs).
-          spec/tools/build_all.sh --release --allow-todo-hi
-      - name: Stage for the CDN
-        run: |
-          mkdir -p web/presets/v2
-          cp spec/dist/presets.json spec/dist/presets.json.sig web/presets/v2/
-      - uses: actions/upload-artifact@v4
-        with:
-          name: site
-          path: web
-      # No deploy here: the site is GitHub Pages (pages.yml). When the presets OTA ships, pages.yml gets this signing
-      # step so the deployed site carries web/presets/v2/presets.json(.sig).

@@ -55,14 +55,14 @@ version; it only goes up). Both apps embed this bundle, so they work offline on 
 **What the apps do with it.** The *fit engine* resizes and re-compresses an image until it satisfies a preset's rules. The *match
 engine* answers "does this existing file satisfy exam X?". The home screen lists and searches the exams.
 
-**Why the bundle is signed.** A signature proves the bundle was produced by us and not altered. It matters for two reasons:
-1. It catches build mistakes: a stale or wrong bundle cannot be shipped by accident.
-2. A later phase lets the app download newer presets from a server, so rules can be fixed without a new app release. If that server
-   were ever compromised, the app must not trust whatever it receives. It only accepts a bundle whose signature verifies with the
-   public key built into the app.
+**Why the bundle is not signed (any more).** Until 2026-10-20 the bundle carried an Ed25519 signature. The user dropped it: the
+key handling (a private seed, a CI secret, dev and prod keys) cost more than it protected, since the bundle comes from our own site
+over HTTPS. Instead both apps run **format checks** on every copy, embedded or downloaded (spec/README.md "Loading presets"): valid
+JSON, a supported `schema_version`, a `presets_version` that only goes up, and a full decode. A broken, older or unsupported file is
+refused and the app keeps its current rules. The accepted risk: whoever controls the repo or the site could publish wrong rules.
 
 Nothing else in this document is specific to exams. Everything about signing keys, store uploads and CI is the standard way to ship
-a mobile app. The *signed presets* idea is the only unusual part (section 11 treats it as optional).
+a mobile app.
 
 ---
 
@@ -72,13 +72,10 @@ a mobile app. The *signed presets* idea is the only unusual part (section 11 tre
 |---|---|
 | **Preset** | One exam's upload rules as a JSON file. |
 | **Bundle** | All presets merged into `spec/dist/presets.json`. |
-| **Signature (`.sig`)** | A short proof, made with a secret key, that the bundle has not changed. |
-| **Private key / seed** | The secret half of the signing key pair. Whoever holds it can sign. Never committed. |
-| **Public key** | The shareable half. It can only *check* a signature. It is committed and built into the apps. |
-| **Dev key / prod key** | Two pairs. The dev private part is public on purpose and only for local work. The prod pair is the real one. |
+| **Format checks** | What the apps verify before using a bundle: valid JSON, supported `schema_version`, a newer `presets_version`, a full decode. |
 | **Spec** | The `spec/` folder: the shared contract (presets, algorithms, strings, design tokens, test fixtures) that both apps follow. |
 | **Generated file** | Code produced by a script from the spec (strings, theme, analytics). Committed, and CI fails if it drifts. |
-| **Debug / Release** | The two build configurations. Debug is for development, Release is what ships. They use different keys. |
+| **Debug / Release** | The two build configurations. Debug is for development, Release is what ships. |
 | **Upload key** (Android) | The key that proves to Google Play that an upload came from us. |
 | **AAB / APK** | Android app formats. Play requires an AAB. An APK is installable directly. |
 | **R8 / mapping.txt** | Android's code shrinker, and the file that translates shrunken crash traces back to real names. |
@@ -100,14 +97,13 @@ spec/      The shared contract that BOTH apps follow
   presets/exams/<category>/<id>.json   the 55 presets (humans edit these)
   presets/VERSION                      integer, bump it with every preset change
   schema/                              JSON Schema every preset must satisfy
-  signing/                             dev_public_key.b64, prod_public_key.b64 (public keys only)
-  fixtures/                            test images + cases.json: the tests both apps must pass
+  fixtures/                            test images + cases.json (+ presets_load/): the tests both apps must pass
   strings/  tokens/                    UI text (English, Hindi) and design tokens
-  tools/                               Python scripts that build, sign, check and generate (section 4)
-  dist/                                GENERATED bundle + signature. Git-ignored
+  tools/                               Python scripts that build, check and generate (section 4)
+  dist/                                GENERATED bundle. Git-ignored
 docs/      Product, architecture, roadmap, testing, release
 web/       Static site and the future presets CDN folder
-.github/workflows/   spec.yml, android.yml, ios.yml
+.github/workflows/   spec.yml, android.yml, ios.yml, pages.yml
 ```
 
 What is committed and what is not:
@@ -117,8 +113,7 @@ What is committed and what is not:
 | Source of truth | presets, schema, strings, tokens, app code | yes |
 | Generated, committed | `strings.xml`, `Localizable.xcstrings`, `Strings.swift`, theme files, analytics events | yes (CI fails if stale) |
 | Generated, not committed | `spec/dist/`, `ios/ScanFit.xcodeproj`, `ios/ScanFit/Info.plist`, all `build/` folders | no |
-| Public keys | `spec/signing/*_public_key.b64` | yes |
-| **Secrets** | presets private seed, Android keystore, `keystore.properties`, Apple `.p8` key, `Local.xcconfig` | **never** (git-ignored) |
+| **Secrets** | Android keystore, `keystore.properties`, Apple `.p8` key, `Local.xcconfig` | **never** (git-ignored) |
 
 ---
 
@@ -133,46 +128,39 @@ What is committed and what is not:
             |    1. validate each file against spec/schema
             |    2. extra rules (target inside the min-max window, sources exist, dates sane...)
             |    3. merge into one bundle, add version + categories + popular list
-            |    4. sign the exact bytes with an Ed25519 private key
             v
- spec/dist/presets.json + presets.json.sig            (generated, git-ignored)
+ spec/dist/presets.json                               (generated, git-ignored)
             |
-            |-- Android: Gradle task EmbedPresetsTask  --> verifies the signature, then copies into the app's assets
-            '-- iOS:     build phase embed_presets.sh  --> verifies the signature, then copies into the app bundle
-                                                          (both also copy the matching PUBLIC key into the app)
+            |-- Android: Gradle task EmbedPresetsTask  --> a quick shape check, then copies into the app's assets
+            |-- iOS:     build phase embed_presets.sh  --> a quick shape check, then copies into the app bundle
+            '-- Website: pages.yml                     --> publishes it at /presets/v2/presets.json for the OTA sync
             v
- App launch: the loader checks the signature again with that public key, then reads the exams.
+ App launch: the loader runs the format checks (header, schema gate, newer version, full decode), then reads the exams.
 ```
 
 Two ideas to hold on to:
 1. **Python only produces the bundle.** It runs when presets change, never inside an app build. Gradle and Xcode do not run Python.
-2. **The signature is checked three times:** in the script that builds the bundle, by Gradle/Xcode before embedding, and by the app
-   at launch. A mistake has to get past all three.
+2. **The bundle is checked three times:** schema and rules in the script that builds it, a shape check by Gradle/Xcode before
+   embedding, and the format checks in the app at launch. A mistake has to get past all three.
 
-`spec/tools/build_all.sh` runs the whole producer side in one command. By default it signs with the **dev** key (local work).
-`--release` signs with the **real** seed (from `PRESETS_SIGNING_KEY`) and also fails if any Hindi string is still machine-drafted;
-`--allow-todo-hi` lifts that check for pre-release builds.
+`spec/tools/build_all.sh` runs the whole producer side in one command. `--release` also fails if any Hindi string is still
+machine-drafted; `--allow-todo-hi` lifts that check for pre-release builds. There is no key to pass.
 
 ### 4.2 Debug versus Release
 
 | | Debug | Release |
 |---|---|---|
 | Purpose | development, tests, simulators | what goes to the stores |
-| Presets are signed with | the **dev** key | the **prod** key |
-| Public key built into the app | `dev_public_key.b64` | `prod_public_key.b64` |
-| Builds refuse... | nothing special | the dev key, even if copied into the prod slot |
+| Presets | the same `spec/dist/presets.json` | the same `spec/dist/presets.json` |
 | Code shrinking | off | on (Android R8) |
-
-So `spec/dist` must be signed to match the configuration you build. This is why local release builds need the real seed, and why you
-reset to the dev bundle afterwards (section 6).
 
 ### 4.3 Android build
 
 - Gradle with convention plugins in `android/build-logic/` (shared rules), modules `core:*` (engines, model, presets...),
   `feature:*` (screens) and `app` (assembly). Versions: AGP 9.4.1, Gradle 9.6.1, Kotlin 2.4.20, compileSdk 37, minSdk 26,
   targetSdk 36. Android Studio **Quail 4 (2026.1.4) or newer** is needed to sync the project.
-- The embed plugin (`scanfit.android.embed-presets`) adds one task per variant. `EmbedPresetsTask` verifies the signature with the
-  JDK's own Ed25519 support (no Python), refuses the dev key in a release variant, then writes the bundle into the app's assets.
+- The embed plugin (`scanfit.android.embed-presets`) adds one task per variant. `EmbedPresetsTask` refuses a missing or obviously
+  broken `presets.json`, then writes it into the app's assets.
 - `ReleaseConfig.kt` adds release signing and versioning (section 5 and 7).
 - Release builds run R8 (shrinks and obfuscates), then produce an **AAB** (for Play) and an **APK** (for direct install).
 
@@ -184,41 +172,38 @@ reset to the dev bundle afterwards (section 6).
 - `ios/Config/Debug.xcconfig` and `Release.xcconfig` set per-configuration build settings. Each optionally includes `Local.xcconfig`
   (git-ignored) where *you* put your Apple Team ID.
 - Version and build number are build settings (`MARKETING_VERSION`, `CURRENT_PROJECT_VERSION`) that flow into `Info.plist`.
-- The build phase **Embed signed presets** runs `Scripts/embed_presets.sh`, which picks the dev or prod public key by configuration
-  and calls `Scripts/verify_presets.swift` (Apple's CryptoKit) to verify the bundle, then copies everything into the app.
+- The build phase **Embed presets** runs `Scripts/embed_presets.sh`, which refuses a missing or obviously broken `presets.json` and
+  copies it into the app.
 - `Scripts/archive.sh` wraps the release steps: generate project, archive, check the archive, export, optionally upload.
 
 ---
 
 ## 5. Keys, secrets and signatures
 
-There are **three separate signatures** in a release. Mixing them up is the most common source of confusion.
+There are **two separate signatures** in a release (the presets signature was removed on 2026-10-20).
 
 | # | Signature | What it proves | Secret part | Who checks it |
 |---|---|---|---|---|
-| 1 | **Presets signature** | The rules bundle is ours and unmodified | presets seed (`PRESETS_SIGNING_KEY`) | our own app, with the built-in public key |
-| 2 | **Android upload signature** | An upload to Play came from us | upload keystore `.jks` + passwords | Google Play |
-| 3 | **iOS code signature** | Apple has certified this build and this developer | distribution certificate + provisioning profile, held by Apple ("cloud signing") | Apple, at upload and install time |
+| 1 | **Android upload signature** | An upload to Play came from us | upload keystore `.jks` + passwords | Google Play |
+| 2 | **iOS code signature** | Apple has certified this build and this developer | distribution certificate + provisioning profile, held by Apple ("cloud signing") | Apple, at upload and install time |
 
 ### Inventory of every key and secret
 
 | Item | Where it lives | If it is lost |
 |---|---|---|
-| Presets **dev** key | in the repo, on purpose (derived from a public string). Local use only | nothing to lose; never ship it |
-| Presets **prod seed** | your password manager + GitHub secret `PRESETS_SIGNING_KEY` | rotate: generate a new pair, replace the secret and `prod_public_key.b64`, ship a new build. Old builds keep their old key |
-| Presets **prod public key** | `spec/signing/prod_public_key.b64` (committed) | it is public; the file is in git |
 | Android **upload keystore** | `~/keys/*.jks` outside the repo + GitHub secrets (4) | Google can reset the upload key because Play App Signing holds the real app key |
 | Android **app signing key** | held by Google (Play App Signing) | not your responsibility |
 | Apple **Team ID** | `ios/Config/Local.xcconfig` + secret `APPLE_TEAM_ID` | public information |
 | Apple **API key** (`.p8`, Key ID, Issuer ID) | password manager + 3 GitHub secrets; needs the **Admin** role | revoke and generate a new one |
 
-GitHub secrets used by the workflows: `PRESETS_SIGNING_KEY`, `ANDROID_UPLOAD_KEYSTORE_BASE64`, `ANDROID_UPLOAD_STORE_PASSWORD`,
+GitHub secrets used by the workflows: `ANDROID_UPLOAD_KEYSTORE_BASE64`, `ANDROID_UPLOAD_STORE_PASSWORD`,
 `ANDROID_UPLOAD_KEY_ALIAS`, `ANDROID_UPLOAD_KEY_PASSWORD`, `APPLE_TEAM_ID`, `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8_BASE64`.
 
+The old `PRESETS_SIGNING_KEY` secret is unused since 2026-10-20 and can be deleted.
+
 Rules the build enforces so a mistake cannot ship:
-- A release build refuses to embed the dev key, even if someone copies it into the prod slot.
 - A release bundle (`bundleRelease`) refuses to build unsigned. It never falls back to the debug key.
-- A bundle that does not verify against the key about to be embedded stops the build.
+- A missing or obviously broken `presets.json` stops the build.
 
 ---
 
@@ -268,24 +253,10 @@ Open `android/` in Android Studio, or use the command line from `android/`:
 3. Run `spec/tools/build_all.sh`. It validates every file and rebuilds the bundle.
 4. Run both apps' tests (`spec/README.md` has the full procedure).
 
-### 6.5 The dev/prod switch (the one awkward thing)
-
-`spec/dist` is signed with **one** key at a time, and the build configuration must match it (section 4.2):
-
-- Debug builds need the **dev**-signed bundle: `spec/tools/build_all.sh`.
-- A local Release/Archive build needs the **prod**-signed bundle: paste the seed silently, then sign.
-
-```bash
-read -rs "PRESETS_SIGNING_KEY?Paste the seed, then press Enter: " && export PRESETS_SIGNING_KEY
-PYTHON=.venv/bin/python spec/tools/build_all.sh --release --allow-todo-hi
-```
-
-Afterwards run `spec/tools/build_all.sh` again to return to the dev bundle. Real releases do not need this: CI signs with the secret.
-
 ### 6.6 Optional: a signed release build on your own machine
 
-- **Android:** copy `android/keystore.properties.example` to `keystore.properties` and fill it in (git-ignored), sign the bundle with the
-  prod seed as above, then `cd android && ./gradlew :app:bundleRelease -Pscanfit.versionName=1.0.0 -Pscanfit.versionCode=1`.
+- **Android:** copy `android/keystore.properties.example` to `keystore.properties` and fill it in (git-ignored), run `spec/tools/build_all.sh`,
+  then `cd android && ./gradlew :app:bundleRelease -Pscanfit.versionName=1.0.0 -Pscanfit.versionCode=1`.
 - **iOS:** `cd ios && DEVELOPMENT_TEAM=<id> Scripts/archive.sh --version 1.0.0 --build 1` (add `--upload` to send to TestFlight).
   `--no-sign` compiles and verifies the archive without any Apple account.
 
@@ -299,7 +270,8 @@ CI means GitHub starts a fresh computer, checks out the code and runs the steps 
 
 | Workflow | Starts on | Jobs |
 |---|---|---|
-| `spec.yml` | changes under `spec/` or `web/` | `validate`, then `publish-presets` (on `main` only) |
+| `spec.yml` | changes under `spec/` or `web/` | `validate` |
+| `pages.yml` | pushes to `main` changing `web/` or `spec/presets/`, or by hand | `deploy`: the website + `presets/v2/presets.json` to GitHub Pages |
 | `android.yml` | **every push to `main`**, tags `android-v*`, PRs touching `android/` or `spec/` | `build` (always), `release` (main pushes and tags) |
 | `ios.yml` | **every push to `main`**, tags `ios-v*`, PRs touching `ios/` or `spec/` | `build` (always), `release` (main pushes and tags) |
 
@@ -308,18 +280,16 @@ newest waiting push after it. Pull requests still cancel their older runs.
 
 ### 7.1 `build` jobs: run on every push and pull request
 
-**Android `build`** (Linux): create the dev-signed presets bundle; format check (Spotless), static analysis (detekt), unit and
+**Android `build`** (Linux): create the presets bundle; format check (Spotless), static analysis (detekt), unit and
 conformance tests, lint; the 90 % coverage gate for the engine modules; assemble the debug APK; then the **release rehearsal**.
 
-**iOS `build`** (macOS): create the dev-signed bundle; print the Swift/Xcode versions; test the signature verifier against the shared
-signing vector; SwiftLint (strict); Core tests with coverage (the string-catalog tests are skipped here, see section 9); an annotation
+**iOS `build`** (macOS): create the presets bundle; print the Swift/Xcode versions; SwiftLint (strict); Core tests with coverage (the string-catalog tests are skipped here, see section 9); an annotation
 listing any failing tests; the coverage gate; Features tests; app tests plus the string-catalog tests on an **iPhone 11 Pro Max**
 simulator (the low-end profile; iOS 17 when the runner has it, else the newest runtime); then the **release rehearsal**.
 
 **The release rehearsal** is the key safety net. Release-only problems (R8 breaking the app, release lint, the Release archive, the
-embed checks) would otherwise appear only on release day. So every push builds the release configuration, *unsigned*, using a throwaway
-presets key made by `spec/tools/rehearsal_key.sh`. That script refuses to run anywhere except GitHub Actions, because it overwrites
-`prod_public_key.b64`. No secret is used.
+embed checks) would otherwise appear only on release day. So every push builds the release configuration, *unsigned*. No secret
+is used.
 
 ### 7.2 `release` jobs: every push to `main`, and tags
 
@@ -345,7 +315,7 @@ A tag looks like `android-v1.2.3`, `android-v1.2.3-rc1`, `ios-v1.2.3` or `ios-v1
 **Android `release` steps:**
 1. Read version and channel from the tag.
 2. Decode the upload keystore from `ANDROID_UPLOAD_KEYSTORE_BASE64` into a temporary file (secrets are text, not files).
-3. Build the presets bundle signed with the real seed (`build_all.sh --release`).
+3. Build the presets bundle and strings (`build_all.sh --release`, which refuses unreviewed Hindi on a final tag).
 4. Preflight: fail if any release input is missing (`release_preflight.py --platform android`).
 5. Gradle builds the AAB and APK with R8 and signs them with the upload key, passing the version through `-Pscanfit.*` flags.
 6. Verify the AAB is signed (`jarsigner`).
@@ -354,22 +324,20 @@ A tag looks like `android-v1.2.3`, `android-v1.2.3-rc1`, `ios-v1.2.3` or `ios-v1
 
 **iOS `release` steps:**
 1. Read the version and channel from the tag.
-2. Build the presets bundle signed with the real seed.
+2. Build the presets bundle and strings, as above.
 3. Preflight (`--platform ios`).
 4. Decode the App Store Connect API key from `ASC_KEY_P8_BASE64`. The step accepts base64 or raw text and checks it is a real private
    key before Xcode sees it.
 5. Run `ios/Scripts/archive.sh --version V --build N --upload`, which: generates the Xcode project; archives the Release build (the
-   embed phase verifies the bundle); checks the archive (dev key not embedded, debug symbols present); writes `ExportOptions.plist`;
+   embed phase checks the bundle); checks the archive (presets embedded, debug symbols present); writes `ExportOptions.plist`;
    exports with `-allowProvisioningUpdates` and the API key, so Apple creates the distribution certificate and App Store profile
    itself (**cloud signing**, which is why the key needs the Admin role); and uploads straight to TestFlight.
 6. Delete the key file, and keep the debug symbols as an artifact.
 
 ### 7.3 `spec.yml`
 
-`validate` checks the spec: bundle and dev-sign, generated files up to date (drift check), tool tests, fixture generator, and the
-upload-test page tests. `publish-presets` runs on `main` after approval, signs with the real seed, verifies against the committed
-public key and stages the files for the future CDN folder. It is also the cheapest proof that the GitHub secret and the committed
-public key still match.
+`validate` checks the spec: bundle the presets, generated files and presets load cases up to date (drift check), tool tests, fixture
+generator, and the upload-test page tests. The website and the presets file for the OTA sync are published by `pages.yml`.
 
 ### 7.4 Safety nets built into the pipeline
 
@@ -377,11 +345,10 @@ public key still match.
 |---|---|
 | Release rehearsal on every push | release-only breakage found on release day |
 | Preflight (`release_preflight.py`) | starting a release with a missing key, id, version mismatch or machine Hindi |
-| Dev key refused in Release | shipping a bundle anyone could have forged |
 | `bundleRelease` refuses an unsigned build | uploading something Google would reject |
-| Shared signing vector, run on both platforms | the two verifiers drifting apart |
+| Shared presets load cases, run on both platforms | the two loaders' format checks drifting apart |
 | Failing-test annotation | needing to open a long log to see which test failed |
-| Approval gates on `*-release` and `presets-production` | accidental releases |
+| Approval gates on `*-release` | accidental releases |
 
 ---
 
@@ -413,11 +380,8 @@ One-time store setup (accounts, app records, App Store Connect API key, Play App
 
 | Message or symptom | Cause | Fix |
 |---|---|---|
-| `spec/dist/presets.json does not verify against prod_public_key.b64` | `spec/dist` is signed with a different key than this build embeds | Rebuild it: `build_all.sh --release` with the real seed, or let CI do it |
-| Debug build says it does not verify against the dev key | `spec/dist` is still prod-signed from a release build | `spec/tools/build_all.sh` (dev) |
-| `prod_public_key.b64 is the public DEV key` | the dev key was copied into the prod slot | restore the real key from git |
-| `Release builds need a python3 with cryptography` | an old `embed_presets.sh`; the current one has no Python | check the file mentions `verify_presets.swift`; an editor may have overwritten it |
-| `ModuleNotFoundError: cryptography` or `externally-managed-environment` | system Python lacks packages, and pip refuses to install into it | use the `.venv` from section 6.1 |
+| `spec/dist/presets.json not found` / `is not a presets bundle` | the bundle was never built, or a tool wrote something else there | `spec/tools/build_all.sh` |
+| `ModuleNotFoundError: jsonschema` or `externally-managed-environment` | system Python lacks packages, and pip refuses to install into it | use the `.venv` from section 6.1 |
 | `keyPathInvalid` (iOS release) | `ASC_KEY_P8_BASE64` is not a valid `.p8` | `base64 -i AuthKey_<ID>.p8`, set the secret again |
 | `Cloud signing permission error` / `No profiles for '<bundle id>'` | the App Store Connect API key is not **Admin** | create an Admin key, update the three `ASC_*` secrets |
 | Upload fails with no app record | the app does not exist in App Store Connect yet | create it with the same bundle id |
@@ -434,12 +398,10 @@ One-time store setup (accounts, app records, App Store Connect API key, Play App
 
 - **One spec, two apps.** Behaviour is defined in `spec/` and tested by shared fixtures; the apps do not copy each other's code.
   Parity comes from the contract and the shared test vectors.
-- **Data is signed, and checked at every hop.** A wrong bundle has to get past the build script, the Gradle/Xcode step and the app.
-- **Fail loudly, never fall back.** No release build can silently use the debug signing key or the dev presets key.
-- **Dev and prod are separate on purpose.** The dev key is public so anyone can run the project; the real key exists only in a password
-  manager and GitHub.
+- **Data is checked at every hop.** A wrong bundle has to get past the build script, the Gradle/Xcode step and the app's format checks.
+- **Fail loudly, never fall back.** No release build can silently use the debug signing key.
 - **Versions come from the tag.** Nobody edits a version number by hand and forgets.
-- **Rehearse the release on every push.** The release path is exercised continuously with throwaway credentials.
+- **Rehearse the release on every push.** The release path is exercised continuously, unsigned.
 - **Python stays out of app builds.** Builds depend only on Xcode and Gradle, so an IDE or a new laptop needs no extra tooling.
 - **Humans approve releases.** Tags start the work; environment gates make a person confirm it.
 
@@ -571,19 +533,13 @@ xcodebuild -exportArchive -archivePath build/App.xcarchive -exportPath build/exp
 - Google: create the app in Play Console; keep **Play App Signing** on (your keystore is then only the *upload* key and Google can
   reset it); upload the first AAB by hand.
 
-### 11.4 Optional: a signed data bundle
+### 11.4 Shipping a data bundle
 
-Use it only if shipped data must be authentic (rules, prices, config) or will later be downloaded. Otherwise ship a plain JSON asset.
-
-1. Generate an Ed25519 key pair. Commit the **public** key, put the **private** one in a password manager and a CI secret.
-2. Sign the exact bytes of the file: `signature = Ed25519.sign(private, bytes)`, stored as base64 next to it.
-3. Verify at **build time** (Android: `Signature.getInstance("Ed25519")` in a Gradle task; iOS: CryptoKit
-   `Curve25519.Signing.PublicKey.isValidSignature`) and again **at app launch** with the key compiled into the app.
-4. Keep a **dev** pair and a **prod** pair. The release build refuses the dev public key.
-5. Add a monotonic data version so an old bundle cannot replace a newer one.
-6. Write a shared test vector (valid, tampered, wrong key, malformed signature, empty) and run it on both platforms; see
-   `spec/fixtures/signing/` and `ios/Scripts/test_verify_presets.sh`.
-7. Plan for losing the private key: it can only be rotated by shipping a new app build with the new public key.
+Ship the data as a plain JSON asset and check its **format** wherever it is loaded: a header with a format version and a data version,
+a supported format version, a data version that only goes up, and a full decode. Keep shared cases for those checks and run them on
+both platforms (here `spec/fixtures/presets_load/`). Signing the data (an Ed25519 key pair, a CI secret, build-time and launch-time
+verification) adds protection against a hijacked server, at the cost of key handling; this project used it until 2026-10-20 and then
+dropped it as more than it needed.
 
 ### 11.5 Pitfalls we hit, so you can skip them
 
@@ -596,8 +552,8 @@ Use it only if shipped data must be authentic (rules, prices, config) or will la
 5. **Cloud signing needs an Admin API key.**
 6. **Store files in secrets as base64, and validate them** before use, so a wrong paste gives a readable error.
 7. **A tag points at one commit.** Fix and push, then cut a new tag; do not expect a re-run to pick up new code.
-8. **Guard helper scripts that overwrite real files** (like the throwaway-key script) with something only CI sets (`GITHUB_ACTIONS`),
-   never a variable you could type by hand.
+8. **Guard helper scripts that overwrite real files** with something only CI sets (`GITHUB_ACTIONS`), never a variable you could type
+   by hand.
 9. **An editor with a stale tab can overwrite a file** changed on disk. Close the tab or revert it before committing.
 10. **GitHub starts no workflows when more than three tags are pushed together.**
 11. **Play needs a version code that always rises.** Use the CI run number.
@@ -612,21 +568,17 @@ Use it only if shipped data must be authentic (rules, prices, config) or will la
 |---|---|
 | `spec/presets/exams/**.json`, `spec/presets/VERSION` | the presets and their data version |
 | `spec/schema/exam.schema.json` | what a valid preset looks like |
-| `spec/tools/build_presets.py` | validate, bundle, sign, verify, generate keys |
+| `spec/tools/build_presets.py` | validate and bundle the presets |
 | `spec/tools/build_all.sh` | run the whole producer side (dev or `--release`) |
 | `spec/tools/release_preflight.py` | read-only list of what blocks a release |
-| `spec/tools/rehearsal_key.sh` | CI-only throwaway key for per-push release rehearsal |
-| `spec/signing/*_public_key.b64` | public keys built into the apps |
-| `spec/fixtures/signing/` | the shared signing test vector |
+| `spec/tools/make_presets_load_cases.py`, `spec/fixtures/presets_load/` | the shared presets format-check cases |
 | `android/build-logic/convention/.../ReleaseConfig.kt` | Android release signing and versions |
-| `android/build-logic/convention/.../EmbedPresetsTask.kt` | verify and embed the bundle (Android) |
+| `android/build-logic/convention/.../EmbedPresetsTask.kt` | check and embed the bundle (Android) |
 | `android/gradle.properties`, `android/keystore.properties.example` | default version; credentials template |
 | `ios/project.yml` | the Xcode project definition |
 | `ios/Config/*.xcconfig`, `Local.xcconfig.example` | per-configuration settings; your Team ID |
-| `ios/Scripts/embed_presets.sh` | Xcode build phase: choose key, verify, embed |
-| `ios/Scripts/verify_presets.swift` | Ed25519 signature check (CryptoKit) |
+| `ios/Scripts/embed_presets.sh` | Xcode build phase: check and embed the bundle |
 | `ios/Scripts/archive.sh` | archive, check, export, upload |
-| `ios/Scripts/test_verify_presets.sh` | verifier against the signing vector |
-| `.github/workflows/{spec,android,ios}.yml` | the pipelines |
+| `.github/workflows/{spec,android,ios,pages}.yml` | the pipelines and the website deploy |
 | `docs/RELEASE_CHECKLIST.md` | the exact one-time and per-release to-do list |
 | `docs/ARCHITECTURE.md` | app architecture, modules, data and security design |

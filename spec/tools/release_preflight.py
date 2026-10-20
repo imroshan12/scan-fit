@@ -9,8 +9,6 @@ Exit 1 when a blocker is listed. Warnings (placeholder ids, TODO_HI strings on a
 It never prints a secret: only whether each credential is present.
 """
 import argparse
-import base64
-import binascii
 import json
 import os
 import re
@@ -72,46 +70,24 @@ def parse_properties(text):
     return out
 
 
-def public_key_bytes(text):
-    try:
-        raw = base64.b64decode((text or "").strip(), validate=True)
-    except (binascii.Error, ValueError):
-        return None
-    return raw if len(raw) == 32 else None
-
-
-def check_presets_key(root, r):
-    prod = read(root, "spec", "signing", "prod_public_key.b64")
-    dev = read(root, "spec", "signing", "dev_public_key.b64")
-    if prod is None:
-        r.block("spec/signing/prod_public_key.b64 is missing: run `python3 spec/tools/build_presets.py --genkey` inside the venv (spec/signing/README.md)")
-        return
-    key = public_key_bytes(prod)
-    if key is None:
-        r.block("spec/signing/prod_public_key.b64 is not a base64 32-byte Ed25519 public key (one line, base64)")
-    elif prod.strip() == (dev or "").strip():
-        r.block("spec/signing/prod_public_key.b64 is the public DEV key: anyone can sign presets with it")
-    else:
-        r.ok("production presets key present and different from the dev key")
-        check_dist_signature(root, key, r)
-
-
-def check_dist_signature(root, key, r):
-    presets, sig = read(root, "spec", "dist", "presets.json"), read(root, "spec", "dist", "presets.json.sig")
-    if presets is None or sig is None:
-        r.block("spec/dist/presets.json(.sig) not built: run `PRESETS_SIGNING_KEY=<seed> spec/tools/build_all.sh --release`")
+def check_presets_dist(root, r):
+    """The snapshot both apps embed: present and passing the apps' header checks (spec/README.md "Loading presets")."""
+    text = read(root, "spec", "dist", "presets.json")
+    if text is None:
+        r.block("spec/dist/presets.json not built: run spec/tools/build_all.sh")
         return
     try:
-        from cryptography.exceptions import InvalidSignature
-        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
-    except ImportError:
-        r.warn("cannot verify spec/dist against the production key (pip install -r spec/tools/requirements.txt)")
+        bundle = json.loads(text)
+    except ValueError:
+        bundle = None
+    ints = isinstance(bundle, dict) and all(
+        isinstance(bundle.get(k), int) and not isinstance(bundle.get(k), bool) for k in ("schema_version", "presets_version"))
+    if not (ints and bundle["schema_version"] <= 2 and bundle["presets_version"] >= 1
+            and isinstance(bundle.get("exams"), list) and bundle["exams"]):
+        r.block("spec/dist/presets.json fails the format checks (JSON object, schema_version <= 2, presets_version >= 1, "
+                "exams): rebuild it with spec/tools/build_all.sh")
         return
-    try:
-        Ed25519PublicKey.from_public_bytes(key).verify(base64.b64decode(sig.strip(), validate=True), presets.encode("utf-8"))
-        r.ok("spec/dist/presets.json is signed with the production key")
-    except (InvalidSignature, ValueError, binascii.Error):
-        r.block("spec/dist/presets.json is not signed with the production key: re-run build_all.sh --release with PRESETS_SIGNING_KEY")
+    r.ok(f"spec/dist/presets.json passes the format checks (presets_version {bundle['presets_version']})")
 
 
 def check_versions(root, r):
@@ -201,7 +177,7 @@ def check_launch_wiring(root, final, r):
 def run(root, platform="all", final=False, env=None):
     env = os.environ if env is None else env
     r = Report()
-    check_presets_key(root, r)
+    check_presets_dist(root, r)
     check_versions(root, r)
     if platform in ("all", "android"):
         check_android(root, env, r)

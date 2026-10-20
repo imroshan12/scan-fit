@@ -5,7 +5,7 @@ matches a LAUNCH_PLAN week. Steps marked ⏳ involve someone else's review or ve
 Steps marked 🤖 are where you hand something to Claude.
 
 Store consoles change their menus often. If a menu name below differs slightly, search the console for the words in
-bold. Never paste passwords, private keys, the presets seed, keystore files or service-account JSON into a chat with
+bold. Never paste passwords, private keys, keystore files or service-account JSON into a chat with
 Claude or into the repo: they go into the consoles, your password manager, or the git-ignored files named below.
 
 ---
@@ -64,28 +64,11 @@ is done it fails with "Get Pages site failed … verify that the repository has 
    move to Cloudflare Pages. GitHub Pages ignores `web/_headers` (only small security headers are lost).
 5. Later, with a domain: Settings › Pages › **Custom domain**, then tell Claude so the app links follow.
 
-### A5. The presets "seed" (your private signing key): nothing to do unless you build releases on your Mac
-The exam rules inside the app are signed so a tampered file is refused. The **seed** is the private half of that
-signing key: a 44-character text that `python3 spec/tools/build_presets.py --genkey` printed once as
-`PRIVATE (CI secret PRESETS_SIGNING_KEY): …` when `spec/signing/prod_public_key.b64` was created (2 Oct). It was meant to
-go into GitHub › Settings › Secrets and variables › Actions as `PRESETS_SIGNING_KEY` and into your password manager.
-
-- **It is in GitHub already**: on 20 Oct the CI job "Build, sign with the production key, verify" passed, so the secret
-  exists and matches the public key. CI signs every release build with it, so you never need to type it.
-- GitHub never shows a secret again. Look in your password manager / notes for the `PRIVATE` line.
-- **If you have it**, local release builds work with:
-  ```bash
-  source .venv/bin/activate
-  PRESETS_SIGNING_KEY='<the 44-character PRIVATE value>' spec/tools/build_all.sh --release --allow-todo-hi
-  ```
-- **If you don't have a copy anywhere**, make a new key now. It costs nothing before launch (no app with the old key is
-  in users' hands), while later it would need an app update:
-  ```bash
-  source .venv/bin/activate
-  python3 spec/tools/build_presets.py --genkey
-  ```
-  Save the PRIVATE value in your password manager, paste it into the GitHub secret `PRESETS_SIGNING_KEY` (Update),
-  write the PUBLIC value (one line) into `spec/signing/prod_public_key.b64`, then commit and push.
+### A5. Presets signing: removed, nothing to do (2026-10-20)
+You asked to drop the presets signature, so there is no seed or presets key any more: the apps only check the presets file's format.
+One clean-up on GitHub: **Settings › Secrets and variables › Actions** › delete `PRESETS_SIGNING_KEY`, and **Settings ›
+Environments** › delete `presets-production` (both unused now). Protect the repo instead: turn on **two-factor authentication**
+for your GitHub account, because whoever controls the repo or the website could publish wrong exam rules.
 
 ### A6. Google Play Console: account and app ⏳
 1. Open **play.google.com/console**. If the dashboard asks you to **verify your identity**, a **contact phone/email**, or to
@@ -133,16 +116,18 @@ Install a debug build (Android Studio › Run, or Xcode › Run on your iPhone) 
 5. Home cards and My Kit previews (History file preview, thumbnails).
 6. Upload a saved file to `https://<your site>/upload-test/` in the phone browser: the size and pixels must match.
 
-### A10. Ask Claude to make test builds generous 🤖
-Release test builds use the stand-in billing, which can't sell Pro, so a tester who uses all 20 free saves is stuck. Ask
-Claude: "Make -rc builds allow 200 free saves until RevenueCat is in." (A small change; final builds keep 20.)
+### A10. Test builds get 200 free saves — done (2026-10-20)
+Release test builds use the stand-in billing, which can't sell Pro, so CI now builds every test build (pushes to `main`,
+`-rc`/`-beta` tags) with **200 free saves**; a final tag (`android-v1.0.0`, `ios-v1.0.0`) ships the store value, 20.
+Nothing to do. Testers who later update to the store build keep their larger allowance (they get Pro anyway).
 
 ### A11. Store listing and graphics (needed before the closed test)
 The closed test needs a complete store listing.
 1. Text: copy from `docs/STORE_LISTING.md` §2 (English). Hindi (§3) can wait for the review.
-2. Graphics: 512×512 icon, 1024×500 feature graphic, at least 2 phone screenshots (9:16). 🤖 Claude can make the icon and
-   feature graphic and the iPhone screenshots from the simulator; Android screenshots need your phone (screenshot the
-   screens listed in STORE_LISTING §7, with sample documents only, never real IDs or signatures).
+2. Graphics: **done** — `store/play-icon-512.png` and `store/play-feature-graphic-1024x500.png` (made by
+   `store/render.sh` from `store/feature-graphic.html`). Still yours: **at least 2 phone screenshots (9:16)** from your
+   Android phone, of the screens in STORE_LISTING §7, with sample documents only (never real IDs or signatures). iPhone
+   screenshots are only needed for the App Store submission (week 4); ask Claude for them then.
 
 ### A12. First test build: CI already makes it (Fri 23 – Sat 24 Oct)
 Every push to `main` runs the **release** jobs after the tests (both succeeded on 19 Oct):
@@ -153,7 +138,7 @@ Every push to `main` runs the **release** jobs after the tests (both succeeded o
   Store Connect › TestFlight about 15 minutes after the run, once processing finishes.
 - Before tagging a real release: bump `scanfit.versionName` in `android/gradle.properties` and `MARKETING_VERSION` in
   `ios/project.yml` together (e.g. `0.9.0`), or tag `android-v0.9.0-rc1` / `ios-v0.9.0-rc1` (RELEASE_CHECKLIST §3).
-- Local builds instead (needs the seed from A5): `cd android && ./gradlew :app:bundleRelease
+- Local builds instead: run `spec/tools/build_all.sh` once, then `cd android && ./gradlew :app:bundleRelease
   -Pscanfit.versionName=0.9.0 -Pscanfit.versionCode=<higher than any upload>`; iOS `cd ios &&
   Scripts/archive.sh --version 0.9.0 --build <n> --upload` with `ASC_KEY_PATH`, `ASC_KEY_ID`, `ASC_ISSUER_ID` set.
 
@@ -335,7 +320,7 @@ Send both to Claude (B5, B6).
 ### E1. Final presets and release check
 ```bash
 source .venv/bin/activate
-PRESETS_SIGNING_KEY='<seed>' spec/tools/build_all.sh --release      # no --allow-todo-hi: Hindi must be reviewed
+spec/tools/build_all.sh --release      # no --allow-todo-hi: Hindi must be reviewed
 python3 spec/tools/release_preflight.py --final                      # must show no BLOCKER
 ```
 If Hindi isn't reviewed in time, tell Claude to turn the Hindi locale off for 1.0 (LAUNCH_PLAN §2 fallback) instead of
@@ -391,9 +376,9 @@ Don't roll out yet. Optionally set up **pre-registration**.
 |---|---|---|
 | A2–A4 | Name-check findings (Q1–Q5 are answered) | |
 | A9 | Phone test results with platform, OS and photo source | Real documents or IDs |
-| A10, A11 | "Make rc builds generous", "make the icon, feature graphic and iPhone screenshots" | |
+| A11, E3 | Android phone screenshots go straight to Play; ask Claude for the iPhone/iPad screenshots in week 4 | Real IDs or signatures in screenshots |
 | B1 | "Firebase files are in place" | The files' contents |
 | B2 | The two public RevenueCat keys (`goog_…`, `appl_…`) | The service-account JSON, `.p8` keys |
 | B5, B6 | The reviewed `hi.json`, the lawyer's answers | |
 | C3, G1 | Bugs with platform and OS | |
-| F | Store links, any App Review rejection text | Passwords, the presets seed, keystore passwords |
+| F | Store links, any App Review rejection text | Passwords, keystore passwords, `.p8` keys |

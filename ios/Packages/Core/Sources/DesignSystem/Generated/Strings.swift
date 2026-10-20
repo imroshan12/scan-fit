@@ -230,8 +230,6 @@ public struct Strings: Sendable {
     public func errorFitTooDetailed(maxKb: Int) -> String { fmt("error.fit_too_detailed", [maxKb]) }
     /// "Something went wrong. Please try again."
     public var errorGeneric: String { tr("error.generic") }
-    /// "Spec update rejected: it failed the safety check. Using the last good version."
-    public var errorPresetBadSignature: String { tr("error.preset_bad_signature") }
     /// "Before you upload"
     public var examBeforeUpload: String { tr("exam.before_upload") }
     /// "Verified"

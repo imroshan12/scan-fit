@@ -9,9 +9,20 @@ Everything both apps must agree on lives here. Neither app has hard-coded knowle
   then writes `dist/presets.json`.
 - `presets/VERSION` is a monotonically increasing integer. **Bump it with every preset change.**
   Apps refuse bundles with a lower version than the one they already have.
-- CI (`spec.yml`) signs the bundle with Ed25519 (`PRESETS_SIGNING_KEY` secret) and publishes
-  `presets.json` and `presets.json.sig` to the CDN (`web/`). Both apps embed the public key and a
-  build-time snapshot for offline first launch.
+- `pages.yml` publishes `presets.json` on the website (`/presets/v2/`) for the apps' OTA sync. Both apps also embed a
+  build-time snapshot for offline first launch. The bundle is **not signed** (user decision 2026-10-20): it comes from
+  our own site over HTTPS, and both apps run the format checks below on every copy, embedded or downloaded.
+
+### Loading presets (both apps, `PresetBundleLoader`)
+1. **Header:** a JSON object with integer `schema_version` and `presets_version`, else `parse`.
+2. **Schema gate:** `schema_version` ≤ 2 (the supported version), else `bad_schema`.
+3. **Only newer:** `presets_version` > the installed version (0 when none is installed), else `stale_version`.
+4. **Full decode:** the whole bundle decodes into the model, else `parse`.
+Any failure keeps the current presets; the reason is the `sync_failure_reason` analytics value. The cases are
+`fixtures/presets_load/cases.json`, made by `tools/make_presets_load_cases.py` (deterministic, `--check` in CI; its
+`check()` is the Python reference). Before 2026-10-20 an Ed25519 signature was checked first; it was removed as
+more key handling than the risk justified (the trade-off: someone who took over the repo or the site could publish
+wrong rules).
 
 ### Seed status (2026-09-30)
 55 exams: 15 high, 24 medium, 16 low confidence. Known conflicts are written in each file's
@@ -36,7 +47,7 @@ Settings: "Show unverified exams" is on by default) until someone verifies it ag
 - `presets/categories.json`: search words per category (`बैंक` → banking). Keys must be exactly the schema's categories.
 - `presets/popular.json`: exam ids, most applied-for first. Drives Home "Popular now", search ties and match-note order.
   Remote Config `popular_exam_order` may override it from Phase 4.
-All three ship in the signed bundle, so a better alias reaches users with a presets update. The Hindi aliases were drafted, not
+All three ship in the presets bundle, so a better alias reaches users with a presets update. The Hindi aliases were drafted, not
 reviewed: include them in the Phase 3 native-speaker review. After changing any of them, refresh the conformance expectations:
 `python3 spec/tools/exam_search.py --write-cases` (CI fails until you do; `python3 spec/tools/exam_search.py "query"` to try one).
 
@@ -45,9 +56,9 @@ reviewed: include them in the Phase 3 native-speaker review. After changing any 
 # Python is only needed to PRODUCE spec/dist and the generated files; Gradle and Xcode builds run no Python.
 python3 -m venv .venv && source .venv/bin/activate   # once; macOS Python is externally managed, so pip needs a venv
 pip install -r spec/tools/requirements.txt
-spec/tools/build_all.sh              # presets (signed with the public DEV key), strings, tokens, analytics
-PRESETS_SIGNING_KEY=<seed> spec/tools/build_all.sh --release   # CI/release: real key, TODO_HI is an error (add --allow-todo-hi for pre-releases)
-python3 -m unittest spec/tools/test_tools.py                   # validator + signing-vector tests
+spec/tools/build_all.sh              # presets, strings, tokens, analytics
+spec/tools/build_all.sh --release    # a final release: TODO_HI is an error (add --allow-todo-hi for pre-releases)
+python3 -m unittest discover -s spec/tools -p "test_*.py"   # validator + presets-load-case tests
 ```
 `spec/dist/` is git-ignored and must exist before either app builds (both embed it). Generated app files
 (`strings.xml`, `Localizable.xcstrings`, `Strings.swift`, `ScanFitTheme.kt`, `Theme.swift`, `AnalyticsEvent.*`) **are committed**;
@@ -59,17 +70,12 @@ a plural is `{"one": …, "other": …}` whose first placeholder is `{count:int}
 string: it is stripped from the app, flagged `needs_review` on iOS, and warned by the generator (`--strict` fails). Add a
 language by adding `strings/<xx>.json` and listing it in the apps' Info.plist / `localeFilters`.
 
-### Signing keys and the test vector
-See `signing/README.md`. `fixtures/signing/vector.json` is run by both apps' unit tests; regenerate it with
-`tools/make_signing_vector.py` (deterministic, `--check` in CI).
-
 ## Other contents
 | Path | What |
 |---|---|
 | `ALGORITHMS.md` | Behaviour contract (fit engine, cleanup, match engine, inspector, PDF, live coach) |
 | `fixtures/` | Test images and `cases.json` run by both apps; `tools/make_fixtures.py` regenerates the synthetic ones (bytes vary with the Pillow version, so assert properties, not hashes) |
-| `fixtures/signing/` | Ed25519 test vector: valid, tampered, wrong key, malformed signatures, schema gate, version monotonicity |
+| `fixtures/presets_load/` | Presets format-check cases (header, schema gate, version only goes up, full decode), run by both apps |
 | `strings/` | `en.json`, `hi.json` → `tools/gen_strings.py` |
 | `tokens/` | `tokens.json` → `tools/gen_tokens.py` (fails on contrast violations) |
 | `analytics/` | `events.json` → `tools/gen_analytics.py` (closed event set, no free-text parameters) |
-| `signing/` | Public keys the apps embed (DEV now; PROD created before release) |

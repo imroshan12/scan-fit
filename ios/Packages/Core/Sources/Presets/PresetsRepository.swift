@@ -19,29 +19,20 @@ public enum PresetsLoadOutcome: Sendable, Equatable {
     case missingEmbedded
 }
 
-/// Where the embedded snapshot comes from. The app target reads files that its build phase copied
+/// Where the embedded snapshot comes from. The app target reads the file that its build phase copied
 /// into the main bundle (`Scripts/embed_presets.sh`); tests inject fixtures.
 public struct PresetFiles: Sendable {
     public let bundle: Data
-    public let signatureText: String
-    public let publicKeyBase64: String
 
-    public init(bundle: Data, signatureText: String, publicKeyBase64: String) {
+    public init(bundle: Data) {
         self.bundle = bundle
-        self.signatureText = signatureText
-        self.publicKeyBase64 = publicKeyBase64
     }
 
-    /// Reads `presets.json`, `presets.json.sig` and `presets_public_key.b64` from a bundle's resources.
+    /// Reads `presets.json` from a bundle's resources.
     public static func embedded(in bundle: Bundle = .main) -> PresetFiles? {
-        func read(_ name: String, _ ext: String) -> Data? {
-            bundle.url(forResource: name, withExtension: ext).flatMap { try? Data(contentsOf: $0) }
-        }
-        guard let json = read("presets", "json"),
-              let sig = read("presets.json", "sig").flatMap({ String(data: $0, encoding: .utf8) }),
-              let key = read("presets_public_key", "b64").flatMap({ String(data: $0, encoding: .utf8) })
-        else { return nil }
-        return PresetFiles(bundle: json, signatureText: sig, publicKeyBase64: key)
+        guard let url = bundle.url(forResource: "presets", withExtension: "json"),
+              let json = try? Data(contentsOf: url) else { return nil }
+        return PresetFiles(bundle: json)
     }
 }
 
@@ -54,17 +45,11 @@ public actor PresetsRepository {
 
     public var bundle: PresetBundle? { current }
 
-    /// Verifies and installs the embedded snapshot. A forged or corrupt snapshot is rejected, never trusted.
+    /// Checks the embedded snapshot's format and installs it. A corrupt or unsupported snapshot is rejected.
     @discardableResult
     public func loadEmbedded(_ files: PresetFiles?) -> PresetsLoadOutcome {
         guard let files else { return .missingEmbedded }
-        guard let key = PresetPublicKey(base64: files.publicKeyBase64) else { return .failed(.badSignature) }
-        let result = PresetBundleLoader.load(
-            bundle: files.bundle,
-            signatureText: files.signatureText,
-            publicKey: key,
-            currentVersion: current?.presetsVersion ?? 0
-        )
+        let result = PresetBundleLoader.load(bundle: files.bundle, currentVersion: current?.presetsVersion ?? 0)
         switch result {
         case let .success(bundle):
             current = bundle

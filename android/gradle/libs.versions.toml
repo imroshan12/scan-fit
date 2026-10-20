@@ -14,7 +14,6 @@ navigation = "2.10.2"
 datastore = "1.2.1"
 coroutines = "1.11.0"
 serialization = "1.11.0"
-tink = "1.23.0"
 javax-inject = "1"
 junit = "4.13.2"
 turbine = "1.2.1"
@@ -52,8 +51,6 @@ hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hil
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
-# Crypto: Ed25519 for presets (works from minSdk 26; the JDK/Android providers only add Ed25519 in API 33)
-tink-android = { module = "com.google.crypto.tink:tink-android", version.ref = "tink" }
 # Tests
 junit = { module = "junit:junit", version.ref = "junit" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }

@@ -10,4 +10,4 @@ Time-boxed proofs from TECH_FEASIBILITY section 3. Record **measured** results o
 | 4 | Low-RAM path (4 GB, 48 MP decode, doc-scanner availability) | Not started. Needs a physical low-end device |
 | 5 | Conformance in CI (Robolectric native graphics vs device) | **Half done:** JVM works, real Skia encode confirmed. Device size comparison still open. See [05-robolectric-native-graphics.md](05-robolectric-native-graphics.md) |
 | 6 | Vision Hindi OCR | Not started (v1.1 prerequisite) |
-| – | Ed25519 verification cost on low-RAM Android (unplanned) | **Done**: [ed25519-verify-cost.md](ed25519-verify-cost.md) |
+| – | Ed25519 verification cost on low-RAM Android (unplanned) | **Done**: [ed25519-verify-cost.md](ed25519-verify-cost.md). Historical: presets signing was removed on 2026-10-20 |

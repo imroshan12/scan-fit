@@ -1,5 +1,8 @@
 # Finding: Ed25519 verification cost on low-RAM Android
 
+> **Historical (2026-10-20):** presets are no longer signed (user decision), so Tink and the verified-digest cache this
+> finding led to were removed. Kept for the measurements.
+
 **Why it matters.** The signed presets bundle is verified on load (ROADMAP Phase 0). minSdk is 26, but the platform
 `Signature.getInstance("Ed25519")` only exists from API 33, so the app uses Tink's pure-Java Ed25519 (ARCHITECTURE section 6).
 The exam list (Phase 2) will wait on this call.

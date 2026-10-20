@@ -23,13 +23,13 @@ coach move to v1.1. Monetisation is 20 free saves then Pro, no ads (PRD §6). We
     - _Done:_ `gen_tokens.py` → `ScanFitTheme.kt`, `Theme.swift`. It fails the build below 4.5:1 (text) / 3:1 (graphics) in light and dark. _Deviation:_ Roboto Flex is not bundled yet (APK size budget); Compose uses system Roboto.
 - [x] [S] `spec/analytics/events.json` + generator → `AnalyticsEvent.kt` / `AnalyticsEvent.swift`
     - _Done:_ `gen_analytics.py` → nested `AnalyticsEvent` types with no free-text parameter; Firebase name limits enforced; ints are clamped.
-- [x] [S] Ed25519 test vector in `spec/fixtures/signing/` (public key, sample bundle, valid + tampered signature)
+- [x] [S] Ed25519 test vector in `spec/fixtures/signing/` (public key, sample bundle, valid + tampered signature). _Superseded 2026-10-20: presets are no longer signed (user decision); the loader cases live on as `spec/fixtures/presets_load/` (format checks only)._
     - _Done:_ `make_signing_vector.py` (deterministic): 8 verify cases + 8 loader-order cases (`bad_signature | parse | bad_schema | stale_version`). Both platforms run it, plus an independent Python cross-check. A mutation check confirmed the Android tests fail on a corrupted fixture. The dev key is derived from a public string: see `spec/signing/README.md` for creating the production key.
 - [x] [A] Project: `build-logic` convention plugins, version catalog, modules per ARCHITECTURE §2 (empty), Hilt, Compose, edge-to-edge, predictive back, per-app language, R8, `dataExtractionRules`
     - _Done:_ AGP 9.4.1 / Gradle 9.6.1 / Kotlin 2.4.20, 25 modules, Hilt, Compose, edge-to-edge, predictive back, per-app language (in-app picker via AppCompat), R8 (release APK 1.5 MB), `dataExtractionRules`, warnings-as-errors, spotless + detekt (2.0 alpha). _Deviations:_ `compileSdk` 37 (current AndroidX needs it; `targetSdk` stays 36); placeholder `applicationId` `app.scanfit`; Roborazzi screenshot tests deferred to Phase 2 (the Phase 0 shell is throwaway UI), later dropped.
 - [x] [I] Project: app target + local packages per ARCHITECTURE §3, AppContainer, TabView shell, String Catalog, privacy manifest skeleton, SwiftLint/SwiftFormat
     - _Done:_ XcodeGen (`ios/project.yml`), two local packages `Core` + `Features` (modules `Model`/`Data`/`Vision` are prefixed `Scan…` to avoid Apple name clashes), `AppContainer`, TabView shell, String Catalog, privacy manifest skeleton, Swift 6 strict concurrency. _Not run:_ SwiftLint/SwiftFormat are configured but not installed on the dev machine.
-- [x] [A][I] Embed `presets.json` + `.sig` at build time; verify the signature on load (test vector must pass, tampered must fail)
+- [x] [A][I] Embed `presets.json` + `.sig` at build time; verify the signature on load (test vector must pass, tampered must fail). _Changed 2026-10-20: only `presets.json` is embedded; the apps run format checks, Tink and the digest cache are gone._
     - _Done:_ Android: `EmbedPresetsTask` verifies with the JDK and refuses to embed a snapshot that does not match the key. iOS: `Scripts/embed_presets.sh` does the same. Debug embeds the dev key, release requires `prod_public_key.b64` (refused if missing). _Found and fixed:_ Tink's Ed25519 cost 0.7-1.4 s per cold start on a 2 GB emulator, so Android caches a verified digest (`docs/spikes/ed25519-verify-cost.md`).
 - [ ] [Ops] GitHub Actions: `spec.yml`, `android.yml`, `ios.yml` (path-filtered), caches, required checks on `main`
     - _Not done:_ `spec.yml`, `android.yml`, `ios.yml` are written and parse, but have **never run**: this folder is not a git repo and has no remote. Expect first-run fixes. `swiftformat` is deliberately not a CI step.
@@ -256,14 +256,14 @@ closed test running with ≥ 12 testers.
       _Done 2026-10-20 on both apps, local only:_ ALGORITHMS §14 + 11 `save_quota_cases` (reference `spec/tools/quota.py`); `SaveQuotaRules`, `FileQuotaStore` (no-backup), `SaveGate` gating review Save/Share, Checker, PDF tools/slots, Custom size and Save all (whole batch decided first); History re-share and Save to My Kit free. Open: the account sync (`merge`) with sign-in, `free_saves_total` from Remote Config, `free_saves_spent` analytics.
 - [ ] Remote Config defaults + fetch; all keys in ARCHITECTURE §9 wired
 - [ ] Analytics events from the generated enum; Crashlytics with no PII keys
-- [ ] Preset OTA sync (WorkManager / BGTask + foreground), ETag, signature check, version monotonicity, "Spec updated" badges on exams whose files changed
+- [ ] Preset OTA sync (WorkManager / BGTask + foreground) from `https://imroshan12.github.io/scan-fit/presets/v2/presets.json`, ETag, format checks (no signature since 2026-10-20), version monotonicity, "Spec updated" badges on exams whose files changed
 - [ ] Live photo coach (§7) with thresholds from Remote Config; practice-only copy. _Moved to v1.1 (lean v1.0, 2026-10-20)._
 - [ ] My Kit retention by plan (user decision 2026-10-15): free users keep originals 30 days, Pro until deleted; "Make all files" from My Kit (Pro, PRD F11)
 - [ ] "Did the portal accept it?" one-tap prompt 24 h after a save (local notification only if permission was already granted; otherwise an in-app card on next open)
 
 **Exit gate:** purchase + restore work on real devices (Play test cards/UPI test, StoreKit sandbox);
 the 21st save opens the paywall and a purchase unblocks it; a preset change published to the CDN appears in the app within
-one foreground cycle, and a tampered bundle is rejected.
+one foreground cycle, and a broken, older or unsupported bundle is rejected (format checks; presets are not signed).
 
 ## Phase 5 — Hardening + store readiness (W9–W10)
 
