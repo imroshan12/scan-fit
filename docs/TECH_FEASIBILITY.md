@@ -27,7 +27,7 @@ possible, so design around it. "Spike" = time-boxed proof in Phase 0/1 before bu
 | Photo picking without permissions | Photo Picker (`PickVisualMedia`, backported via Play services) | `PhotosPicker` (out of process, no permission) | 🟢 | |
 | Save to user-visible storage | MediaStore Downloads (API 29+), SAF below | `fileExporter` to Files | 🟢 | See §3 Export spike |
 | In-app purchases | Play Billing (via RevenueCat) — UPI supported in India | StoreKit 2 (via RevenueCat) | 🟢 | Keep the RevenueCat SDK current; Play enforces minimum Billing Library versions over time |
-| Ads | Google Mobile Ads SDK + UMP | Google Mobile Ads SDK + UMP, SKAdNetwork IDs in Info.plist | 🟢 | Non-personalised only in v1 |
+| Ads | — | — | — | **None in v1.0** (user decision 2026-10-20, PRD §6). Google Mobile Ads + UMP stay off the allow-list until ads are decided again |
 | Remote Config / Analytics / Crashes | Firebase (BoM) | Firebase (SPM) | 🟢 | |
 | Presets signature verification | **Tink** (`tink-android`) Ed25519 | CryptoKit `Curve25519.Signing.PublicKey.isValidSignature` | 🟢 | Same key, same bytes; test vector in fixtures |
 | Background sync | WorkManager periodic (24h, network constraint) | `BGAppRefreshTask` (best effort) + on-foreground fetch | 🟢 | iOS background timing isn't guaranteed; that's fine |
@@ -40,11 +40,12 @@ possible, so design around it. "Spike" = time-boxed proof in Phase 0/1 before bu
 camera-camera2/lifecycle/view, exifinterface), Compose BOM + Material 3, Hilt, Kotlinx
 serialization + coroutines, Coil 3 (thumbnails only), ML Kit (face-detection bundled,
 segmentation-selfie, play-services-mlkit-document-scanner, text-recognition + devanagari in
-v1.1), Tink, RevenueCat purchases, play-services-ads + UMP, Firebase BoM (analytics,
-crashlytics, config). **Test:** JUnit5 or JUnit4, Turbine, MockK (sparingly; prefer fakes),
+v1.1), Tink, RevenueCat purchases, Firebase BoM (analytics, crashlytics, config, auth, firestore or database,
+appcheck-playintegrity), androidx.credentials + googleid (Sign in with Google). No ads SDK in v1.0. **Test:** JUnit5 or JUnit4, Turbine, MockK (sparingly; prefer fakes),
 Robolectric, Compose UI test, Macrobenchmark + Baseline Profile.
-**iOS:** Swift packages from Apple frameworks only, plus RevenueCat, Google Mobile Ads + UMP,
-Firebase (Analytics, Crashlytics, RemoteConfig). **Test:** Swift Testing, XCTest/XCUITest.
+**iOS:** Swift packages from Apple frameworks only, plus RevenueCat, Firebase (Analytics, Crashlytics, RemoteConfig,
+Auth, Firestore or Database, AppCheck) and GoogleSignIn-iOS; Sign in with Apple via AuthenticationServices. No ads SDK in
+v1.0. Check the app size budget (ARCHITECTURE §11) when adding Firestore: its iOS SDK is large. **Test:** Swift Testing, XCTest/XCUITest.
 **Added in Phase 0:** androidx.navigation-compose and androidx.appcompat (per-app language below API 33), androidx.hilt
 (navigation-compose), compose material-icons-core (not `-extended`: size), `javax.inject` via Hilt, Tink `tink-android`
 (Ed25519 on minSdk 26). **Tooling:** XcodeGen (generates the Xcode project; not shipped in the app), detekt **2.0.0-alpha** (`dev.detekt`;

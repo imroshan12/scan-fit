@@ -14,6 +14,7 @@ import app.scanfit.core.testing.FakeShareStager
 import app.scanfit.core.testing.FakeUserPreferences
 import app.scanfit.core.testing.SpecPresets
 import app.scanfit.core.testing.TestJpeg
+import app.scanfit.core.testing.TestSaveGate
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -52,7 +53,7 @@ class InkDraftViewModelTest {
         presets,
         tools,
         preferences,
-        DocumentExporter(destination, preferences, FakeKitStore()),
+        DocumentExporter(destination, preferences, FakeKitStore(), TestSaveGate().gate),
         dispatcher,
         drafts,
         share,

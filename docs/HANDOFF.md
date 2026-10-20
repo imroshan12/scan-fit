@@ -1,8 +1,10 @@
 # HANDOFF.md — where work stopped (read this first when picking the project up)
 
-Last updated: **2026-10-20**. Current phase: **Phase 3 — PDF, scan, guide sheet** (Phase 2 device QA still open, docs/ROADMAP.md).
-Latest commit: `ee51218 pdf feature update`. **Uncommitted:** the editor-first Home and My Kit previews on both apps (§4
-first entry).
+Last updated: **2026-10-20**. Current phase: **Phase 3 → launch prep**. Target: **Mr Doc v1.0 on both stores in the first
+week of December 2026**, week by week in `docs/LAUNCH_PLAN.md` (Phase 2 device QA still open, docs/ROADMAP.md).
+Latest commit: `1209812 UI design update` (Home + Kit previews). **Uncommitted:** the launch-plan docs, the Mr Doc
+rename, free saves + paywall + Settings on both apps, the website (`web/`) and `docs/STORE_LISTING.md` (§4 first two
+entries).
 The user commits; a session never runs `git add/commit/push`.
 
 ## 1. State in one screen
@@ -22,9 +24,31 @@ The user commits; a session never runs `git add/commit/push`.
 | My Kit                                       | Built on both apps (2026-10-15): ALGORITHMS §13. Three views (Prepared · Originals · History). Save to My Kit on new photo/ink reviews; "Use for exam…" starts a slot's flow from an original; every verified export listed with 30-day re-share; Clear history. Hand-checked on the iPhone 11 Pro Max simulator (signature → Save to My Kit → Originals → Use for exam → IBPS save → History → Share); Android not walked by hand. |
 | My Kit previews                              | Built on both apps (2026-10-20, ALGORITHMS §13.3 Previews): thumbnails on Prepared and History rows (PDF = first page), tap a History file → full preview (image or up to 20 PDF pages) with Share, and Save to My Kit shows the picture first (Save / Cancel). VM tests only; Kit not walked by hand (the simulator Kit was empty). |
 | PDF tools                                    | Built on both apps (2026-10-15/20): ALGORITHMS §6 + §9.10. Tools → Images to PDF · Compress · Merge · ID card; an exam's PDF row opens the same PDF maker (records Saved); Checker "Make it fit" makes a PDF for PDF slots; PDF exports join My Kit History. Grayscale + cleanup on by default, Tools need a Max KB (user decisions). Not run by hand on a simulator or device yet. |
+| Mr Doc rename                                | Done 2026-10-20 except the store ids (waiting on the user): every "ScanFit" string, iOS display/bundle name via spec keys, Home wordmark, `web/`, Android `Downloads/Mr Doc/<Exam>/`. Checked on the iPhone 17 simulator (home-screen name + Home wordmark). |
+| Free saves + paywall                         | Built on both apps 2026-10-20 (ALGORITHMS §14): local `SaveGate` on every Save/Share/Save all, paywall over the app, "N free saves left" on reviews. Billing is the stand-in `LocalBilling` (debug: fake ₹99/₹199 that grant Pro for the session; release: store unavailable). No RevenueCat, no account sync yet. Delayed-billing lifecycle tests on both apps; iOS native simulator smoke passes (fake purchase/Restore/Retry/Hindi). Android UI and real billing QA open. |
+| Settings                                     | Full Settings on both apps 2026-10-20: Pro/free saves/Get Pro/Restore, language, unverified, specs version, privacy (analytics opt-out stored, not yet used), policy/terms/help links (placeholders), Report a problem (mailto), disclaimer, version. iOS Pro/free-save/Restore simulator smoke passes; remaining rows and Android still need a hand walk. |
+| Website                                      | Drafted 2026-10-20 in `web/`: landing (editor first, tools, pricing, FAQ), privacy policy, terms, help, delete-account (Play requirement), shared `site.css` with token colours, light/dark. Checked in the browser pane at 375 px and 1280 px, light and dark, no horizontal scroll, all internal links 200. User details filled in 2026-10-20; only `REVIEW:` comments for a lawyer remain. Deploys to GitHub Pages via `.github/workflows/pages.yml` once Pages is switched on. |
+| Store listing                                | Drafted 2026-10-20 in `docs/STORE_LISTING.md`: names within limits, Play EN + HI (machine draft) descriptions, App Store text and keywords, Data safety / App Privacy answers for rc builds (nothing collected) and for v1.0 (sign-in, RevenueCat, Firebase), other Play forms, graphics and screenshot list. |
 | Screenshot tests                             | Removed for good (user decision 2026-10-03). Don't add them back (CLAUDE.md Definition of done).                                                                                                                                                                                               |
 
-Gates last run (2026-10-20, Home + Kit previews): Android `./gradlew spotlessCheck detekt testDebugUnitTest
+Gates last run (2026-10-20, paywall QA follow-up): Android `spotlessCheck detekt :feature:paywall:testDebugUnitTest
+:feature:paywall:lintDebug :app:assembleDebug` green (9 paywall tests; no Android device attached, native Android UI
+still open). iOS strict SwiftLint clean, full Features SwiftPM (170), normal app tests (4) and `ScanFitSmoke` native UI
+tests (4) green on iPhone 11 Pro Max / **iOS 26.5**, not iOS 17. Smoke: free-save display, no-purchase Restore, dismissal,
+exhausted seeded quota → fake Lifetime purchase → Thanks → Pro, unavailable-store Retry/Restore, Hindi at the largest
+accessibility font (products stacked, legal links reachable). No screenshot baselines. Three delayed-billing
+`paywall_lifecycle_cases` pass on both platforms; test tools (68) and strings/tokens checks green. The smoke container is
+Debug-simulator-only, with isolated prefs, in-memory quota and no draft/Kit stores; it never touches real documents or
+quota. Real exports/providers, real billing, Android native UI, VoiceOver/TalkBack and minimum-OS QA remain open.
+Previous gates (2026-10-20, rename + free saves + paywall + Settings): Android `./gradlew spotlessCheck detekt
+testDebugUnitTest :core:match:test :core:model:test lint :app:assembleDebug` green (473 unit tests, 446 before;
+lint clean on every module). iOS strict SwiftLint (0), Core SwiftPM all suites incl. DesignSystemTests on
+Swift 6.4 (fixed a stale `home.title` expectation left by the Home redesign), Features SwiftPM (167) with no warnings,
+xcodegen + app tests on the iPhone 17 simulator (TEST SUCCEEDED). Spec: `test_tools.py` (68), `gen_strings.py --check`,
+`gen_tokens.py --check`. Both platforms pass all 11 `save_quota_cases`. `release_preflight.py` now also warns (blocks with
+`--final`) on placeholder `AppLinks` and the stand-in `LocalBilling`; its presets-signature blocker is the local dev dist.
+Not done: a hand walk of Settings/paywall on either platform, Android visual check, any device.
+Previous gates (2026-10-20, Home + Kit previews): Android `./gradlew spotlessCheck detekt testDebugUnitTest
 :core:match:test :core:model:test lint :app:assembleDebug` green (446 unit tests, lint clean). iOS strict SwiftLint (0),
 Core SwiftPM (209) and Features SwiftPM (153) with no warnings, app tests on the iPhone 17 simulator (TEST SUCCEEDED).
 Spec: `test_tools.py` (66, via `unittest discover`), `build_presets.py`, `gen_strings.py --check`, `gen_tokens.py --check` (lowest text
@@ -59,6 +83,33 @@ Device/provider QA remains open. New `review.*`, `draft.*` and `kit.*` Hindi mes
 drafted with `TODO_HI:`. The spec suite still emits pre-existing unclosed-file `ResourceWarning`s in `exam_search.py`.
 
 ## 2. Decisions made with the user (not obvious from the code)
+
+- **Launch identity (user, 2026-10-20):** app id `com.roshtech.scanfit` is final on both stores; the seller is the user
+  as an individual (Sarvesh Roshan; Play developer name the same); support email `pro.sarvesh.roshan@gmail.com`; the
+  website is GitHub Pages (`https://imroshan12.github.io/scan-fit/`, the repo is public; `.github/workflows/pages.yml`);
+  courts: Gurugram (Gurgaon), Haryana. Filled into `web/`, both apps' `AppLinks`, STORE_LISTING, OWNER_STEPS.
+
+- **Launch and money (user, 2026-10-20, question cards):** store name **Mr Doc** (code keeps `scanfit`); lean v1.0 in
+  the first week of December (Scan, guide sheet, live coach → v1.1); **20 free saves in total** (the user's own answer:
+  "Maximum of 20 saves, not daily cap"), then Pro at ₹99/year or ₹199 lifetime; **no ads**; RevenueCat + Firebase
+  (Crashlytics, Analytics, Remote Config). Google Play account is **personal** (12-tester, 14-day closed test is
+  mandatory); Apple Developer is registered. My calls, written in PRD §6: what counts as a save (a new verified file
+  leaving the app, once per file; re-share, Save to My Kit and failed saves are free), no store free trial (the 20 saves
+  are the trial). **Accounts (user, later the same day):** sign-in on first launch (I recommended at the first save and
+  warned about Apple 5.1.1(v); the user chose first launch), Google on both + Apple on iPhone, Firebase Auth + database
+  holding only the save count; Pro follows the account via RevenueCat `logIn(uid)`. My calls: offline first launch lets
+  the user in; the gate's position is one setting (fallback: first save); file hashes stay on the phone. Ask a lawyer
+  about DPDP (LAUNCH_PLAN §5).
+
+- **Rename + free saves session (user, 2026-10-20, question cards):** scope = rename + everything of week 1 that needs no
+  keys (counting spec, local quota, paywall over a stand-in billing, Settings); the Android folder becomes
+  `Downloads/Mr Doc/<Exam>/`. My calls (ALGORITHMS §14): a file's identity is the SHA-256 of its exact bytes; Share counts
+  once the sheet opens (the app cannot see whether the user finished); Save all is decided as one batch (too few free
+  saves → paywall, nothing saved, rather than a partial save); a lowered `free_saves_total` never takes back what a user
+  was shown, a raised one applies at once; Pro saves are remembered but not counted; the quota record is in no-backup
+  storage (file hashes never leave the phone, not even in a backup; the account copy restores the count); after a
+  purchase the user taps Save again (no auto-resume); the paywall cards buy on tap (PRD "side by side", UI_UX updated from
+  "segmented"). Website links were placeholders on `mrdoc.example`; since 2026-10-20 they point at GitHub Pages.
 
 - **Editor first (user, 2026-10-20, question cards):** the app is marketed as a normal photo/PDF editor with exams built in.
   Home = a grid of large tool cards with a title and one-line description; exams are one card ("Exam forms", the old Home
@@ -168,6 +219,60 @@ drafted with `TODO_HI:`. The spec suite still emits pre-existing unclosed-file `
   device is still needed with the updated build. Files saved before the fix are not retroactively marked; save again to verify.
 
 ## 4. What changed (by area, for review)
+
+### Website and store listing (2026-10-20, evening)
+
+- `web/index.html` rewritten (was a placeholder); new `web/privacy/`, `web/terms/`, `web/help/`, `web/delete-account/`,
+  `web/site.css` (colours copied from `spec/tokens/tokens.json`; keep in step), `web/icon.svg` (the launcher mark) and
+  `web/apple-touch-icon.png` (copy of the iOS 180 px icon). `web/_headers`: nosniff / no framing / referrer policy on the
+  public pages; presets and upload-test rules unchanged. No scripts, no trackers.
+- `release_preflight.py`: `WEB_PAGES` / `WEB_PLACEHOLDERS`, warns (blocks with `--final`) while a page still has a
+  placeholder or a `REVIEW:` note; test added (`test_tools.py` 69 via `unittest discover`).
+- `docs/STORE_LISTING.md` (new). `.claude/launch.json` (new): a `web` preview server (`python3 -m http.server 8765
+  --directory web`) for the browser pane.
+- My calls: the privacy policy describes v1.0 (sign-in, RevenueCat, Firebase) even though today's build has none of them
+  (a policy may say more than a build does, never less); Data safety must match the uploaded build, so STORE_LISTING has
+  both answer sets. Store badges are plain "coming soon" text, not the official badge artwork. A deleted account that
+  signs in again starts with 20 fresh saves, like a second Google account (accepted; noted on the delete page).
+
+### Mr Doc rename, free saves, paywall and Settings (2026-10-20)
+
+- **QA follow-up:** delayed-billing regressions reproduced on both apps, then fixed. Both paywall VMs now version the
+  presentation/product load and preserve an in-flight purchase/restore's busy state across close/reopen; stale results
+  cannot replace a new offer's products/message. Retry is ignored while busy; buying a product outside the offer is
+  rejected. ALGORITHMS §14.3 + 3 `paywall_lifecycle_cases`; Android `PaywallLifecycleTest` (3) and iOS
+  `PaywallLifecycleTests` (3). iOS `AppContainer+UITesting.swift` is gated by `DEBUG && targetEnvironment(simulator)`
+  plus `--ui-testing`; `ScanFitUITests/PaywallSmokeTests.swift` (4) uses the separate `ScanFitSmoke` XcodeGen scheme.
+  Stable accessibility identifiers on Settings/Paywall; no new runtime dependency or screenshot tests.
+  First Hindi smoke run selected legal links by the wrong accessibility type (SwiftUI reports them as buttons);
+  corrected to identifier-based queries and verified all 4 tests. Failed-run sysdiagnose took 600 seconds locally,
+  so the documented smoke command disables verbose diagnostic collection.
+- **Spec:** ALGORITHMS §14 (free saves: what counts, rules, screens, storage) + `save_quota_cases` (11) with reference
+  `spec/tools/quota.py` and a drift test; §1.6/§6.6/§11 folder text → `Mr Doc`. Strings: every "ScanFit" → "Mr Doc";
+  new `infoplist.display_name` / `infoplist.bundle_name` (spec now owns `CFBundleDisplayName`/`CFBundleName`, which Xcode
+  had been extracting into `InfoPlist.xcstrings` by itself); `quota.*`, `paywall.*`, `legal.privacy_policy`,
+  `legal.terms`, `settings.*` (Hindi `TODO_HI:`). `release_preflight.py` `check_launch_wiring` (+ test).
+- **Android:** `:core:billing` (`Billing`, `ProProduct`, `ProductsState`, `LocalBilling`); `:core:config` `AppLinks`;
+  `:core:data/quota` (`SaveQuotaRules`, `FileQuotaStore` in `noBackupFilesDir/quota`, `SaveGate`, `PaywallRequests`,
+  `QuotaConfig`); `DocumentExporter(…, gate)` records after verification and exposes `gate`; photo/ink/Checker/PDF VMs
+  check before Save/Share and record shares; `ExamViewModel.onSaveAll` reads all drafts, decides the batch, then saves.
+  `ExportNaming.APP_FOLDER`. Design system `FreeSavesNote` + `LocalFreeSavesLeft`. `:feature:paywall`
+  (`PaywallViewModel`, `PaywallHost`/`PaywallScreen`, previews). `ScanFitApp` hosts the paywall and provides the count
+  (`AppNavigation` split out). Settings rewritten (`SettingsRows.kt`); `UserPreferences.analyticsEnabled`. AppModule
+  provides `LocalBilling` (fake products when the app is debuggable). `:core:testing` `FakeBilling`, `FakeQuotaStore`,
+  `TestSaveGate`.
+- **iOS:** `Billing` module (protocol + `@Observable LocalBilling`); `Config` `AppLinks`; ScanData `SaveQuota.swift`
+  (rules, `FileQuotaStore` actor, `MemoryQuotaStore`) and `SaveGate.swift` (`SaveGate`, `PaywallRequests`, CryptoKit
+  SHA-256). VMs take `gate: SaveGate? = nil`; photo/ink `save()` moved next to `share()` (`PhotoFlowHelpers.swift`,
+  `InkFlowShare.swift`) to stay under the 400-line lint limit. DesignSystem `FreeSavesNote` + `\.freeSavesLeft`. Paywall
+  feature (`PaywallViewModel`, `PaywallView`), `SettingsViewModel` + new `SettingsView`; `AppContainer` gets `billing` +
+  `gate` (`#if DEBUG` fake products); `RootView` loads the gate, sets the environment and presents the paywall as a
+  full-screen cover; project.yml adds Paywall + Billing. `UserPreferences.analyticsEnabled`. TestSupport `FakeBilling`,
+  `testSaveGate`.
+- **Tests:** Android `SaveQuotaConformanceTest`, `SaveGateTest` (7), `LocalBillingTest` (3), `PaywallViewModelTest` (6),
+  `SettingsViewModelTest` (7), photo save gate (3), Save all gate (2), analytics pref; iOS `SaveQuotaTests` (8),
+  `LocalBillingTests` (3), `PaywallViewModelTests` (5), `SettingsViewModelTests` (5), photo export gate (2), Save all
+  gate (2).
 
 ### Editor-first Home and My Kit previews (2026-10-20)
 
@@ -437,7 +542,24 @@ drafted with `TODO_HI:`. The spec suite still emits pre-existing unclosed-file `
 
 ## 5. Next steps (in order)
 
-1. Confirm the Done fix with the user's device details (§3).
+0. **Launch plan first:** follow `docs/LAUNCH_PLAN.md` week by week. Week 0 (by Sun 25 Oct): commit, check the name,
+   pick the permanent ids, merchant/agreements setup, keys, Firebase + RevenueCat projects, recruit 15+ testers, rename
+   to Mr Doc, first `-rc1` builds. **Closed test must start by Tue 27 Oct.** The device checks below feed it.
+
+1. **Waiting on the user** (LAUNCH_PLAN week 0; the click-by-click version is `docs/OWNER_STEPS.md`, written
+   2026-10-20 at the user's request): switch on GitHub Pages (Settings › Pages › Source: GitHub Actions; ids, seller,
+   email, city and links are done), sign the presets with the production seed (`build_all.sh --release
+   --allow-todo-hi`), the RevenueCat project + API keys and the Firebase
+   project (`google-services.json`, `GoogleService-Info.plist`). With keys: RevenueCat behind `Billing` (`logIn(uid)`,
+   offline entitlement), Firebase Auth + the `users/{uid}` count (`SaveGate` `merge`), Remote Config `free_saves_total`,
+   Analytics honouring `analyticsEnabled` (`free_saves_spent`, drop `rewarded_completed`), Crashlytics.
+   **Free saves / paywall / Settings QA (new):** on a debug build, save 20 files (or lower `QuotaConfig` locally), check
+   "N free saves left" from 5, the 21st Save/Share/Save all opens the paywall and the review stays; buy a fake product →
+   thanks → Save works; Settings rows and links; Hindi at the largest font (paywall cards stack). Android visual check.
+   _Now covered on the iPhone 11 Pro Max / iOS 26.5 simulator:_ Settings/paywall smoke (4 native UI tests, TESTING §2),
+   including fake purchase/Restore/unavailable-store Retry and Hindi large text. The count is seeded, not 20 physical
+   exports. Still do the real export/provider journey above, Android native UI, screen readers and minimum-OS checks.
+   Confirm the Done fix with the user's device details (§3).
 2. **Device export smoke:** save a real photo on Android API 29+ and API 26–28, and iOS Files/iCloud; cancel and retry; Done
    returns to the exam with Saved, including after app relaunch. Upload the output via `web/upload-test/` to verify byte fidelity.
    iOS lets the user choose the destination folder; `ScanFit/<Exam>/` cannot be forced by the system Files picker.

@@ -9,6 +9,7 @@ import app.scanfit.core.data.export.DocumentExporter
 import app.scanfit.core.data.export.ExportRequest
 import app.scanfit.core.data.export.SaveAllPlan
 import app.scanfit.core.data.export.SaveState
+import app.scanfit.core.data.quota.PaywallTrigger
 import app.scanfit.core.match.DocKind
 import app.scanfit.core.model.DocType
 import app.scanfit.core.model.Exam
@@ -41,7 +42,7 @@ sealed interface SaveAllStatus {
     data class Done(
         val saved: Int,
         val total: Int,
-        /** "Downloads/ScanFit/IBPS-PO", for "4 files saved to …". */
+        /** "Downloads/Mr Doc/IBPS-PO", for "4 files saved to …". */
         val folder: String,
     ) : SaveAllStatus {
         val complete: Boolean get() = saved == total
@@ -185,10 +186,14 @@ class ExamViewModel internal constructor(
         val exam = ready.exam
         saveJob =
             viewModelScope.launch {
+                // ALGORITHMS 14.1: the whole batch is decided before the first file; spent free saves save nothing.
+                val requests = withContext(io) { plan.map { draftRequest(exam, it) } }
+                if (!exporter.gate.allows(requests.mapNotNull { it?.bytes }, PaywallTrigger.SAVE_ALL)) return@launch
                 var saved = 0
-                plan.forEachIndexed { index, type ->
+                requests.forEachIndexed { index, request ->
                     saveAll.value = SaveAllStatus.Saving(index, plan.size)
-                    if (saveOne(exam, type)) saved++
+                    val result = request?.let { withContext(io) { exporter.export(it) } }
+                    if (result?.state == SaveState.SAVED) saved++
                 }
                 val folder = exporter.destinations.folderLabel(exam.id, exam.name)
                 saveAll.value = SaveAllStatus.Done(saved, plan.size, folder)
@@ -200,18 +205,15 @@ class ExamViewModel internal constructor(
         if (saveAll.value is SaveAllStatus.Done) saveAll.value = SaveAllStatus.Idle
     }
 
-    private suspend fun saveOne(
+    /** The draft may have expired since the checklist loaded: then this row fails (`null`), the others go on. */
+    private suspend fun draftRequest(
         exam: Exam,
         type: DocType,
-    ): Boolean {
-        val spec = exam.documents.firstOrNull { it.type == type } ?: return false
+    ): ExportRequest? {
+        val spec = exam.documents.firstOrNull { it.type == type } ?: return null
         val kind = DocKind.of(type)
-        return withContext(io) {
-            // The draft may have expired since the checklist loaded: then this row fails, the others go on.
-            val draft = drafts.read(exam.id, spec, kind) ?: return@withContext false
-            val request = ExportRequest(exam.id, exam.name, spec, kind, draft.bytes)
-            exporter.export(request).state == SaveState.SAVED
-        }
+        val draft = drafts.read(exam.id, spec, kind) ?: return null
+        return ExportRequest(exam.id, exam.name, spec, kind, draft.bytes)
     }
 
     companion object {

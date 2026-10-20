@@ -17,6 +17,7 @@
 ## 2. Information architecture
 
 ```
+First launch ─ Welcome + sign-in (Continue with Google · Continue with Apple on iPhone) ─ then Home   (2026-10-20)
 Tabs:  Home  ·  My Kit  ·  Settings          (the Tools tab was folded into Home, 2026-10-20)
 Home ─ tool cards: Exam forms · Resize photo · Signature · Compress PDF · Images to PDF · Merge PDFs · ID card ·
        Check a file · Thumb impression · Handwritten page ─ My exams strip (pinned) ─ Coming soon (Scan, guide sheet, coach)
@@ -25,7 +26,8 @@ Home ─ tool cards: Exam forms · Resize photo · Signature · Compress PDF · 
                             ─ "Captured live on portal" row → Live coach
                             ─ Save all
 My Kit ─ Photo · Signature · Thumb · Declaration originals ─ "Use for exam…" ─ Export history
-Settings ─ Language ─ Pro ─ Presets version + "Check for updates" ─ Show unverified exams ─ Privacy ─ Help/Report a problem
+Settings ─ Account (email · Sign out · Delete account) ─ Pro (status · free saves left · Restore) ─ Language ─
+           Presets version + "Check for updates" ─ Show unverified exams ─ Privacy (analytics opt-out) ─ Help/Report a problem
 ```
 
 ## 3. Key screens (states: loading · empty · content · error · offline)
@@ -75,7 +77,7 @@ the review bytes under the export name and never marks the row Saved. A staging 
 
 **Save all** (exam checklist bottom bar, 2026-10-13): "Save all (N)" counts the Ready rows. An exam signature still
 waiting for the handwriting tick is held, with a one-line note under the button. iOS opens one Files picker for every
-file (one folder); Android 10+ writes to `Downloads/ScanFit/<Exam>/` with no prompt and shows progress "Saving… 2/4";
+file (one folder); Android 10+ writes to `Downloads/Mr Doc/<Exam>/` with no prompt and shows progress "Saving… 2/4";
 Android 8–9 has no Save all (one picker per file would be worse than saving each row). The result replaces the button:
 all saved → "4 files saved to …" with Open folder (Android: the system Downloads view) and Close; some failed →
 "Saved 3 of 4. Try again for the rest." with Retry (re-plans, so saved rows are not written again) and Close.
@@ -159,10 +161,22 @@ slot; its review says "Meets your size", lists the catalogue exams that also acc
 and never touches the exam checklist. Deferred: format choice (always JPG), aspect lock, a live size estimate before
 capture.
 
-**Paywall.** One screen: 3 benefit rows with icons, a yearly/lifetime segmented choice
-(lifetime labelled "Pay once"), price in local currency from the store, "Restore purchases",
-plain-language terms. Never shown mid-flow; triggered at the free export limit (with the
-rewarded-ad option side by side), on Pro features, or from Settings.
+**Welcome + sign-in** (first launch, user decision 2026-10-20; PRD §6). One calm screen: the Mr Doc mark, one line on what
+the app does, "Continue with Google" (both apps) and "Continue with Apple" (iPhone, required by Apple next to Google), a
+privacy line ("Your photos and files never leave your phone. Your account keeps only your email and how many free saves
+you've used."), privacy and terms links, and the non-affiliation disclaimer in small text. Offline: "You're offline. Mr Doc
+works without internet; we'll ask you to sign in when you're back online." and Continue. Errors and a cancelled sign-in
+stay on this screen with a retry. Where the gate sits (first launch or first save) is one setting, so it can move.
+
+**Paywall** (ALGORITHMS §14.3). One full screen with a close button: title, 3 benefit rows with check icons, both
+products side by side as cards ("Yearly · ₹99 a year", "Lifetime · ₹199 once"; stacked at large text), the store's own
+localised price, "Yearly renews each year. Cancel anytime in Play Store / App Store settings", "Restore purchases",
+privacy and terms links. Tapping a card starts the store purchase. States: loading, store unavailable (Retry), buying
+(cards disabled), pending payment, failed, thanks (Done). Shown over the current screen only when a Save, Share or Save
+all is blocked (the review and its draft stay as they were) or from Settings; never at launch. Reviews show "3 free
+saves left" under Share once 5 or fewer remain. No ads anywhere.
+Closing while the store is working does not cancel the purchase. If reopened before the result, purchase and Restore
+remain disabled; a late result updates Pro but never replaces the new offer with the previous presentation's message.
 
 ## 4. Design system (generated from `spec/tokens/tokens.json`)
 
@@ -188,7 +202,7 @@ rewarded-ad option side by side), on Pro features, or from Settings.
   16 KB"). Never a bare spinner over 1 s.
 - Haptics: success (verified save), warning (near miss), selection ticks on the KB slider at
   window edges. Android `HapticFeedbackConstants.CONFIRM/REJECT`; iOS `.sensoryFeedback`.
-- Success moment: after "Save all", a green check burst + "4 files saved to Downloads/ScanFit/IBPS PO"
+- Success moment: after "Save all", a green check burst + "4 files saved to Downloads/Mr Doc/IBPS PO"
   with an "Open folder" action.
 
 ## 6. Accessibility

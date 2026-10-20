@@ -2,6 +2,7 @@ package app.scanfit.core.data.export
 
 import app.scanfit.core.data.UserPreferences
 import app.scanfit.core.data.kit.KitStore
+import app.scanfit.core.data.quota.SaveGate
 import app.scanfit.core.imaging.ExportNaming
 import app.scanfit.core.inspect.Inspector
 import app.scanfit.core.match.DocKind
@@ -72,13 +73,14 @@ interface ExportDestinations {
     fun folderLabel(
         examId: String,
         examName: String,
-    ): String = "Downloads/ScanFit/" + ExportNaming.examShort(examName).ifEmpty { examId }
+    ): String = "Downloads/${ExportNaming.APP_FOLDER}/" + ExportNaming.examShort(examName).ifEmpty { examId }
 }
 
 /**
  * Writes, re-reads, verifies and only then publishes a file (ALGORITHMS 1.6, CLAUDE.md rule 3). Shared by every flow
  * that saves a fitted file; the Saved checklist status is recorded only after verification and publication, and so is
- * the export history entry (ALGORITHMS 13.3, best effort: it never changes the result).
+ * the export history entry (ALGORITHMS 13.3, best effort: it never changes the result) and the free-saves count
+ * (ALGORITHMS 14). Flows ask [gate] before a Save or Share and record a Share there themselves.
  */
 class DocumentExporter
 @Inject
@@ -86,6 +88,7 @@ constructor(
     val destinations: ExportDestinations,
     private val preferences: UserPreferences,
     private val kit: KitStore,
+    val gate: SaveGate,
 ) {
     @Suppress("TooGenericExceptionCaught")
     suspend fun export(
@@ -112,7 +115,12 @@ constructor(
             SaveResult(SaveState.SAVE_FAILED, cleanup(destination))
         }
         // Outside the try: the file is published, so nothing here may clean it up, and cancelling must not skip it.
-        if (result.state == SaveState.SAVED) withContext(NonCancellable) { kit.recordExport(request) }
+        if (result.state == SaveState.SAVED) {
+            withContext(NonCancellable) {
+                gate.record(request.bytes)
+                kit.recordExport(request)
+            }
+        }
         return result
     }
 

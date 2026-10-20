@@ -49,6 +49,7 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.scanfit.core.data.export.SaveState
 import app.scanfit.core.designsystem.R
+import app.scanfit.core.designsystem.components.FreeSavesNote
 import app.scanfit.core.designsystem.components.NoticeCard
 import app.scanfit.core.designsystem.components.NoticeKind
 import app.scanfit.core.designsystem.components.SaveToKitButton
@@ -282,6 +283,8 @@ private fun BottomAction(
                     enabled = enabled,
                     modifier = Modifier.fillMaxWidth().heightIn(min = ScanFitSpacing.minTouchTarget),
                 ) { Text(stringResource(R.string.common_share)) }
+                // ALGORITHMS 14.3: "N free saves left" once 5 or fewer remain.
+                if (state.save.state != SaveState.SAVED) FreeSavesNote()
             }
             // Save to My Kit keeps the picture, not the fitted file (ALGORITHMS 13.1); a restored review has none.
             if (state is InkUiState.Review && !state.restored && state.save.state != SaveState.SAVING) {

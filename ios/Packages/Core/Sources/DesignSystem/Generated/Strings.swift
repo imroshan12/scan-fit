@@ -30,7 +30,7 @@ public struct Strings: Sendable {
         String(format: tr(key), locale: locale, arguments: args)
     }
 
-    /// "ScanFit"
+    /// "Mr Doc"
     public var appName: String { tr("app.name") }
     /// "Banking"
     public var categoryBanking: String { tr("category.banking") }
@@ -66,7 +66,7 @@ public struct Strings: Sendable {
     public var checkerFixedHeading: String { tr("checker.fixed_heading") }
     /// "Making it fit…"
     public var checkerFixing: String { tr("checker.fixing") }
-    /// "Pick the file you plan to upload. ScanFit checks it against the exam's rules and changes nothing unless you ask."
+    /// "Pick the file you plan to upload. Mr Doc checks it against the exam's rules and changes nothing unless you ask."
     public var checkerIntro: String { tr("checker.intro") }
     /// "Handwritten declaration"
     public var checkerKindDeclaration: String { tr("checker.kind_declaration") }
@@ -80,9 +80,9 @@ public struct Strings: Sendable {
     public var checkerKindSignature: String { tr("checker.kind_signature") }
     /// "Thumb impression"
     public var checkerKindThumb: String { tr("checker.kind_thumb") }
-    /// "ScanFit can't make a PDF from this file. If it has a password, remove it first."
+    /// "Mr Doc can't make a PDF from this file. If it has a password, remove it first."
     public var checkerNeedsPdf: String { tr("checker.needs_pdf") }
-    /// "ScanFit can't fix this file here. Make a new one from the exam's checklist."
+    /// "Mr Doc can't fix this file here. Make a new one from the exam's checklist."
     public var checkerNoFix: String { tr("checker.no_fix") }
     /// "No problems with the file itself."
     public var checkerNoIssues: String { tr("checker.no_issues") }
@@ -150,7 +150,7 @@ public struct Strings: Sendable {
     public var customHeight: String { tr("custom.height") }
     /// "= {width:int} × {height:int} px"
     public func customInPixels(width: Int, height: Int) -> String { fmt("custom.in_pixels", [width, height]) }
-    /// "For a form that isn't in ScanFit. Copy the limits from its notice."
+    /// "For a form that isn't in Mr Doc. Copy the limits from its notice."
     public var customIntro: String { tr("custom.intro") }
     /// "File size"
     public var customKbHeading: String { tr("custom.kb_heading") }
@@ -470,7 +470,7 @@ public struct Strings: Sendable {
     public var kitSaveFailed: String { tr("kit.save_failed") }
     /// "Save to My Kit"
     public var kitSaveOriginal: String { tr("kit.save_original") }
-    /// "ScanFit keeps the whole picture, not the cropped file, so you can use it again for other exams."
+    /// "Mr Doc keeps the whole picture, not the cropped file, so you can use it again for other exams."
     public var kitSavePreviewBody: String { tr("kit.save_preview_body") }
     /// "Save this picture to My Kit?"
     public var kitSavePreviewTitle: String { tr("kit.save_preview_title") }
@@ -498,10 +498,14 @@ public struct Strings: Sendable {
     public var languageSystem: String { tr("language.system") }
     /// "I understand"
     public var legalAccept: String { tr("legal.accept") }
-    /// "ScanFit is an independent tool. It is not affiliated with any exam body or government. Specs come from official notifications (linked in the app), but always check the current notice before you submit."
+    /// "Mr Doc is an independent tool. It is not affiliated with any exam body or government. Specs come from official notifications (linked in the app), but always check the current notice before you submit."
     public var legalDisclaimer: String { tr("legal.disclaimer") }
     /// "Before you start"
     public var legalDisclaimerTitle: String { tr("legal.disclaimer_title") }
+    /// "Privacy policy"
+    public var legalPrivacyPolicy: String { tr("legal.privacy_policy") }
+    /// "Terms of use"
+    public var legalTerms: String { tr("legal.terms") }
     /// "Accepted by {count:int} exams"
     public func matchAccepted(count: Int) -> String { fmt("match.accepted", [count]) }
     /// "{exam:str} {doc:str} needs ≤ {max_kb:int} KB"
@@ -518,7 +522,7 @@ public struct Strings: Sendable {
     public var matchNeedBaseline: String { tr("match.need_baseline") }
     /// "Needs a JPG file"
     public var matchNeedJpeg: String { tr("match.need_jpeg") }
-    /// "Doesn't match any exam in ScanFit — that's fine for other forms"
+    /// "Doesn't match any exam in Mr Doc — that's fine for other forms"
     public var matchNone: String { tr("match.none") }
     /// "+{count:int} more"
     public func matchPreviewMore(count: Int) -> String { fmt("match.preview_more", [count]) }
@@ -532,6 +536,40 @@ public struct Strings: Sendable {
     public var matchVerdictAccepted: String { tr("match.verdict_accepted") }
     /// "Exact size"
     public var matchVerdictExact: String { tr("match.verdict_exact") }
+    /// "No ads, ever"
+    public var paywallBenefitNoAds: String { tr("paywall.benefit_no_ads") }
+    /// "Your files still never leave your phone"
+    public var paywallBenefitPrivate: String { tr("paywall.benefit_private") }
+    /// "Save and share as many files as you like"
+    public var paywallBenefitUnlimited: String { tr("paywall.benefit_unlimited") }
+    /// "You've used your free saves. Editing, checking files and My Kit stay free."
+    public var paywallBody: String { tr("paywall.body") }
+    /// "Yearly renews each year. Cancel anytime in App Store settings."
+    public var paywallCancelAppStore: String { tr("paywall.cancel_app_store") }
+    /// "Yearly renews each year. Cancel anytime in Play Store settings."
+    public var paywallCancelPlay: String { tr("paywall.cancel_play") }
+    /// "The purchase didn't finish. Please try again."
+    public var paywallFailed: String { tr("paywall.failed") }
+    /// "Lifetime"
+    public var paywallLifetime: String { tr("paywall.lifetime") }
+    /// "{price:str} once"
+    public func paywallLifetimePrice(price: String) -> String { fmt("paywall.lifetime_price", [price]) }
+    /// "Your payment is pending. Pro turns on as soon as it goes through."
+    public var paywallPending: String { tr("paywall.pending") }
+    /// "Restore purchases"
+    public var paywallRestore: String { tr("paywall.restore") }
+    /// "No Pro purchase was found for this account."
+    public var paywallRestoreNone: String { tr("paywall.restore_none") }
+    /// "Pro is on. Thank you!"
+    public var paywallThanks: String { tr("paywall.thanks") }
+    /// "Keep saving with Pro"
+    public var paywallTitle: String { tr("paywall.title") }
+    /// "Can't reach the store right now. Check your connection and try again."
+    public var paywallUnavailable: String { tr("paywall.unavailable") }
+    /// "Yearly"
+    public var paywallYearly: String { tr("paywall.yearly") }
+    /// "{price:str} a year"
+    public func paywallYearlyPrice(price: String) -> String { fmt("paywall.yearly_price", [price]) }
     /// "Take a photo"
     public var pdfAddCamera: String { tr("pdf.add_camera") }
     /// "Add from Files"
@@ -584,7 +622,7 @@ public struct Strings: Sendable {
     public func pdfImageLabel(number: Int) -> String { fmt("pdf.image_label", [number]) }
     /// "Choose a PDF and the size the form allows."
     public var pdfIntroCompress: String { tr("pdf.intro_compress") }
-    /// "Add photos of the pages or a PDF you already have. ScanFit makes one PDF that fits."
+    /// "Add photos of the pages or a PDF you already have. Mr Doc makes one PDF that fits."
     public var pdfIntroExam: String { tr("pdf.intro_exam") }
     /// "Add the front and the back of the card, then crop each side to the card's edges."
     public var pdfIntroIdCard: String { tr("pdf.intro_id_card") }
@@ -684,6 +722,10 @@ public struct Strings: Sendable {
     public var photoZoomIn: String { tr("photo.zoom_in") }
     /// "Zoom out"
     public var photoZoomOut: String { tr("photo.zoom_out") }
+    /// "{count:int} free saves left"
+    public func quotaLeft(count: Int) -> String { fmt("quota.left", [count]) }
+    /// "No free saves left. Pro saves as many files as you like."
+    public var quotaNone: String { tr("quota.none") }
     /// "After"
     public var reviewAfter: String { tr("review.after") }
     /// "Before"
@@ -706,24 +748,44 @@ public struct Strings: Sendable {
     public func reviewSizeA11y(count: Int) -> String { fmt("review.size_a11y", [count]) }
     /// "About"
     public var settingsAbout: String { tr("settings.about") }
+    /// "Share anonymous usage data"
+    public var settingsAnalytics: String { tr("settings.analytics") }
+    /// "Counts such as “a signature was saved”. Never your files, names or text."
+    public var settingsAnalyticsHint: String { tr("settings.analytics_hint") }
     /// "Check for updates"
     public var settingsCheckUpdates: String { tr("settings.check_updates") }
+    /// "Get Pro"
+    public var settingsGetPro: String { tr("settings.get_pro") }
     /// "Help"
     public var settingsHelp: String { tr("settings.help") }
     /// "Language"
     public var settingsLanguage: String { tr("settings.language") }
     /// "Change the app language in system settings"
     public var settingsLanguageHint: String { tr("settings.language_hint") }
+    /// "No email app found. Write to us at {email:str}."
+    public func settingsNoEmail(email: String) -> String { fmt("settings.no_email", [email]) }
     /// "Exam specs version {version:int}"
     public func settingsPresetsVersion(version: Int) -> String { fmt("settings.presets_version", [version]) }
     /// "Privacy"
     public var settingsPrivacy: String { tr("settings.privacy") }
+    /// "Your photos and files are processed on your phone and never uploaded."
+    public var settingsPrivacyNote: String { tr("settings.privacy_note") }
+    /// "Mr Doc Pro"
+    public var settingsPro: String { tr("settings.pro") }
+    /// "Pro is active. Save as many files as you like."
+    public var settingsProActive: String { tr("settings.pro_active") }
+    /// "Please describe the problem above. Don't attach your documents. App {app:str} · {os:str} · specs v{presets:str}"
+    public func settingsReportBody(app: String, os: String, presets: String) -> String { fmt("settings.report_body", [app, os, presets]) }
     /// "Report a problem"
     public var settingsReportProblem: String { tr("settings.report_problem") }
+    /// "Mr Doc problem report"
+    public var settingsReportSubject: String { tr("settings.report_subject") }
     /// "Show unverified exams"
     public var settingsShowUnverified: String { tr("settings.show_unverified") }
     /// "Also list exams whose upload rules are not confirmed yet"
     public var settingsShowUnverifiedHint: String { tr("settings.show_unverified_hint") }
+    /// "Version {version:str}"
+    public func settingsVersion(version: String) -> String { fmt("settings.version", [version]) }
     /// "Home"
     public var tabHome: String { tr("tab.home") }
     /// "My Kit"

@@ -1,19 +1,53 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "CFBundleDisplayName": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mr Doc"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mr Doc"
+          }
+        }
+      }
+    },
+    "CFBundleName": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mr Doc"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mr Doc"
+          }
+        }
+      }
+    },
     "NSCameraUsageDescription": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "ScanFit uses the camera to take your photo for exam forms. The photo stays on your phone."
+            "value": "Mr Doc uses the camera to take your photo for exam forms. The photo stays on your phone."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "ScanFit परीक्षा फ़ॉर्म के लिए आपकी फ़ोटो लेने के लिए कैमरे का इस्तेमाल करता है। फ़ोटो आपके फ़ोन पर ही रहती है।"
+            "value": "Mr Doc परीक्षा फ़ॉर्म के लिए आपकी फ़ोटो लेने के लिए कैमरे का इस्तेमाल करता है। फ़ोटो आपके फ़ोन पर ही रहती है।"
           }
         }
       }

@@ -19,6 +19,7 @@ import kit  # noqa: E402
 import match_note  # noqa: E402
 import pdf  # noqa: E402
 import photo_crop  # noqa: E402
+import quota  # noqa: E402
 import save_all  # noqa: E402
 import release_preflight  # noqa: E402
 from _common import SPEC, require  # noqa: E402
@@ -295,6 +296,13 @@ class CasesFile(unittest.TestCase):
             for c in cases:
                 self.assertEqual(rule(c), c["expect"], f"{section}/{c['id']}")
 
+    def test_save_quota_expectations_match_the_reference(self):
+        """save_quota_cases are computed by quota.py: a hand edit that drifts from ALGORITHMS 14 fails here."""
+        cases = self.cases["save_quota_cases"]
+        self.assertGreaterEqual(len(cases), 8)
+        for c in cases:
+            self.assertEqual(quota.run(c), quota.expectations(c), c["id"])
+
     def test_pdf_expectations_match_the_reference(self):
         """pdf_*_cases are computed by pdf.py: a hand edit that drifts from ALGORITHMS 9.10 fails here."""
         for section, rule in pdf.SECTIONS.items():
@@ -411,6 +419,10 @@ class ReleasePreflight(unittest.TestCase):
         self.put("android/upload.jks", "not really a keystore")
         self.put("ios/Config/Local.xcconfig", "DEVELOPMENT_TEAM = QWERTY1234\n")
         self.put("spec/strings/hi.json", '{"_doc": "TODO_HI: ignored", "a": "ठीक"}')
+        for f in release_preflight.LINK_FILES:
+            self.put(os.path.join(*f), 'PRIVACY_POLICY = "https://mrdoc.in/privacy"\n')
+        for f in release_preflight.BILLING_FILES:
+            self.put(os.path.join(*f), "RevenueCatBilling()\n")
 
     def run_pre(self, **kw):
         kw.setdefault("env", {})
@@ -460,6 +472,25 @@ class ReleasePreflight(unittest.TestCase):
         self.complete_repo()
         self.put("ios/Config/Local.xcconfig", "DEVELOPMENT_TEAM = ABCDE12345\n")
         self.assertTrue(any("example value" in b for b in self.run_pre().blockers))
+
+    def test_placeholder_links_and_stand_in_billing_warn_then_block_a_final_release(self):
+        self.complete_repo()
+        self.put(os.path.join(*release_preflight.LINK_FILES[1]), 'privacyPolicy = "https://mrdoc.example/privacy"\n')
+        self.put(os.path.join(*release_preflight.BILLING_FILES[0]), "LocalBilling(emptyList())\n")
+        r = self.run_pre()
+        self.assertEqual([], r.blockers)
+        self.assertEqual(2, len(r.warnings))
+        final = self.run_pre(final=True)
+        self.assertTrue(any("placeholder mrdoc.example" in b for b in final.blockers))
+        self.assertTrue(any("LocalBilling" in b for b in final.blockers))
+
+    def test_website_placeholders_warn_then_block_a_final_release(self):
+        self.complete_repo()
+        self.put(os.path.join(*release_preflight.WEB_PAGES[1]), "<p>Made by [OPERATOR: you]</p><!-- REVIEW: x -->\n")
+        self.assertTrue(any("website pages" in w for w in self.run_pre().warnings))
+        self.assertTrue(any("website pages" in b for b in self.run_pre(final=True).blockers))
+        self.put(os.path.join(*release_preflight.WEB_PAGES[1]), "<p>Made by Real Name, Pune</p>\n")
+        self.assertFalse(any("website pages" in w for w in self.run_pre().warnings))
 
     def test_android_and_ios_versions_must_agree(self):
         self.complete_repo()

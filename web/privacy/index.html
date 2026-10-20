@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacy policy — Mr Doc</title>
+  <meta name="description" content="How Mr Doc handles your data: your photos and documents never leave your phone.">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="../icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../apple-touch-icon.png">
+  <link rel="stylesheet" href="../site.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="../"><img src="../icon.svg" alt="" width="32" height="32">Mr Doc</a>
+      <nav class="site-nav" aria-label="Site">
+        <a href="../help/">Help</a>
+        <a href="./" aria-current="page">Privacy</a>
+        <a href="../terms/">Terms</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- REVIEW: this policy was drafted from the app's design (docs/PRD.md §6, docs/ARCHITECTURE.md §8–10) and is not
+       legal advice. Have a lawyer check it against India's DPDP Act 2023 and its Rules, the Google Play and App Store
+       policies, and what the shipped build actually does, before publishing. Replace every placeholder. -->
+  <main class="wrap doc">
+    <h1>Privacy policy</h1>
+    <p class="updated">Last updated: 20 October 2026</p>
+
+    <div class="summary">
+      <strong>The short version</strong>
+      <ul>
+        <li>Your photos, signatures, documents and PDFs are processed on your phone and never uploaded to us.</li>
+        <li>Your account (Google or Apple sign-in) holds only your email, your name and how many free saves you have
+          used.</li>
+        <li>We use crash reports and usage statistics that never contain your files, file names or text, and you can
+          turn the statistics off.</li>
+        <li>No ads. We don't sell your data or track you across other apps.</li>
+      </ul>
+    </div>
+
+    <h2>Who we are</h2>
+    <p>Mr Doc is made by Sarvesh Roshan, an individual developer in Gurugram (Gurgaon), Haryana, India ("we", "us").
+      For any question about this policy or your data, write to
+      <a href="mailto:pro.sarvesh.roshan@gmail.com">pro.sarvesh.roshan@gmail.com</a>.</p>
+    <!-- REVIEW: DPDP expects the contact of a person who can answer questions about processing (and a grievance
+         officer, if one is required for the operator). Add them here. -->
+
+    <h2>What stays on your phone</h2>
+    <p>Everything you capture or open in Mr Doc stays on your device: photos, signatures, thumb impressions, handwritten
+      pages, certificates, PDFs, the files you make, their names, the exams you pick or pin, your saved originals ("My
+      Kit") and your save history. Mr Doc processes them on the phone itself and never sends them to us or to any of
+      our service providers.</p>
+    <p>A file leaves your phone only when you choose to save it to a folder or share it with another app. What happens
+      after that is up to you and the app you share with.</p>
+    <p>Mr Doc asks for the camera only when you take a photo in the app, and reads only the photos and files you pick.</p>
+
+    <h2>What we collect, and why</h2>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th scope="col">Data</th><th scope="col">Why</th><th scope="col">Who processes it</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Your email address, name and an account ID, from signing in with Google or Apple. With Apple you can hide
+              your email; we then get a private relay address.</td>
+            <td>To keep your free-save count and Pro with you on any phone.</td>
+            <td>Firebase Authentication (Google)</td>
+          </tr>
+          <tr>
+            <td>The number of saves you have used, and when it last changed.</td>
+            <td>To give you 20 free saves and keep the count when you reinstall or change phones.</td>
+            <td>Firebase database (Google)</td>
+          </tr>
+          <tr>
+            <td>Purchase records: which plan, when, its status, and your account ID. We never see your card, UPI or bank
+              details; Google Play or the App Store handles payment.</td>
+            <td>To unlock Pro and restore it on your other phones.</td>
+            <td>Google Play or Apple; RevenueCat</td>
+          </tr>
+          <tr>
+            <td>Crash reports: what went wrong in the app, the device model, operating system and app version, and an
+              installation ID. Never your files, file names or text.</td>
+            <td>To find and fix crashes.</td>
+            <td>Firebase Crashlytics (Google)</td>
+          </tr>
+          <tr>
+            <td>Usage statistics: events such as "a PDF was saved" or "the paywall was shown", with categories and rounded
+              numbers only, and an app-instance ID. Never your files, file names, text or the advertising ID.</td>
+            <td>To learn which tools help people and where the app is confusing. You can turn this off in Settings ›
+              Privacy.</td>
+            <td>Firebase Analytics (Google)</td>
+          </tr>
+          <tr>
+            <td>App and device integrity tokens, and app settings we send to the app.</td>
+            <td>To protect our servers from abuse and to change settings such as the free-save limit without an update.</td>
+            <td>Firebase App Check and Remote Config (Google)</td>
+          </tr>
+          <tr>
+            <td>Your IP address, when the app downloads updated exam rules from our website.</td>
+            <td>To deliver the file. We don't keep logs that identify you.</td>
+            <td>GitHub Pages (our web host, run by GitHub)</td>
+          </tr>
+          <tr>
+            <td>What you write to us, your email address, and the exam ID and app and rules versions the app adds to a
+              "Report a problem" email. Never a file.</td>
+            <td>To answer you and fix the problem.</td>
+            <td>Us, through our email provider</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <!-- REVIEW: confirm the final list of SDKs in the shipped build (RevenueCat, Firebase Auth/database/Crashlytics/
+         Analytics/Remote Config/App Check, Google Sign-In) and that it matches the Play Data safety form and Apple's
+         App Privacy labels. If a build ships without some of them (for example the first test builds), this policy may
+         describe more than that build does, never less. -->
+
+    <h2>What we don't do</h2>
+    <ul>
+      <li>We don't show ads and we don't use the advertising ID.</li>
+      <li>We don't sell or rent your data, and we don't share it for advertising.</li>
+      <li>We don't track you across other apps or websites.</li>
+      <li>We don't upload, read or analyse your documents.</li>
+    </ul>
+
+    <h2>Where your data is kept</h2>
+    <p>Our service providers may process the data above on servers outside India, including in the United States. They
+      act on our instructions and protect the data in transit with encryption.</p>
+    <!-- REVIEW: name the regions actually used (database region, e.g. asia-south1) and check any DPDP transfer rules. -->
+
+    <h2>How long we keep it</h2>
+    <ul>
+      <li>Account and save count: until you delete your account.</li>
+      <li>Crash reports: up to 90 days.</li>
+      <li>Usage statistics: up to 14 months.</li>
+      <li>Purchase records: as long as the stores, RevenueCat and the law (for example tax rules) require.</li>
+      <li>Emails to us: as long as needed to help you, then deleted.</li>
+    </ul>
+    <!-- REVIEW: match these periods to the Firebase project settings and RevenueCat's retention. -->
+
+    <h2>Your choices and rights</h2>
+    <ul>
+      <li><strong>Delete your account</strong> in the app (Settings › Account › Delete account) or by email. See
+        <a href="../delete-account/">how to delete your account</a>.</li>
+      <li><strong>Turn off usage statistics</strong> in Settings › Privacy.</li>
+      <li><strong>Ask for a copy, a correction or deletion</strong> of the data we hold about you, or raise a complaint,
+        by writing to <a href="mailto:pro.sarvesh.roshan@gmail.com">pro.sarvesh.roshan@gmail.com</a>. Under India's Digital Personal
+        Data Protection Act, 2023, you can also complain to the Data Protection Board of India if we don't resolve your
+        complaint.</li>
+      <li>Your files are yours: delete them from your phone, or uninstall the app to remove everything it stored there.</li>
+    </ul>
+    <!-- REVIEW: response times, consent withdrawal and nomination rights under DPDP. -->
+
+    <h2>Children and teenagers</h2>
+    <p>Mr Doc is for people preparing documents and forms, including students preparing for entrance exams. It is not
+      meant for children under 13. If you are under 18, use Mr Doc with the permission and help of a parent or
+      guardian.</p>
+    <!-- REVIEW: the DPDP Act treats everyone under 18 as a child and requires verifiable parental consent before
+         processing a child's personal data (the account email and name, analytics). Decide how the app meets this
+         before launch (for example an age question and a parent consent step, or analytics off for under-18s). -->
+
+    <h2>Security</h2>
+    <p>Data travels between the app and our providers over encrypted connections. Your account record can be read and
+      changed only by you, through the app, and only the save count can change, and only upwards.</p>
+
+    <h2>Changes to this policy</h2>
+    <p>If we change this policy, we update the date at the top. If a change matters for your data, we tell you in the
+      app before it takes effect.</p>
+
+    <h2>Contact</h2>
+    <!-- REVIEW: ask the lawyer whether a full postal address is needed here. -->
+    <p>Sarvesh Roshan, Gurugram (Gurgaon), Haryana, India<br>
+      Email: <a href="mailto:pro.sarvesh.roshan@gmail.com">pro.sarvesh.roshan@gmail.com</a></p>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <nav aria-label="Legal">
+        <a href="../">Home</a>
+        <a href="../help/">Help</a>
+        <a href="../terms/">Terms of use</a>
+        <a href="../delete-account/">Delete your account</a>
+      </nav>
+      <p class="disclaimer">Mr Doc is an independent tool. It is not affiliated with any exam body or government. Specs
+        come from official notifications (linked in the app), but always check the current notice before you submit.</p>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,4 +1,4 @@
-# ScanFit (working name)
+# Mr Doc (code name: ScanFit)
 
 Exam and government-form uploads, done right on the phone. Photo, signature, thumb, declaration
 and certificates, fitted to each exam's exact rules, verified, and matched to every exam that

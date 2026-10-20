@@ -42,4 +42,10 @@ class FakeUserPreferences(
     override suspend fun rememberCustomSize(text: String) {
         recentCustomSizes.value = CustomSize.remember(recentCustomSizes.value, text)
     }
+
+    override val analyticsEnabled = MutableStateFlow(true)
+
+    override suspend fun setAnalyticsEnabled(enabled: Boolean) {
+        analyticsEnabled.value = enabled
+    }
 }

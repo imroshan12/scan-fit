@@ -24,6 +24,15 @@ TEAM_ID_EXAMPLE = "ABCDE12345"
 UPLOAD_ENV = ("SCANFIT_UPLOAD_STORE_FILE", "SCANFIT_UPLOAD_STORE_PASSWORD", "SCANFIT_UPLOAD_KEY_ALIAS", "SCANFIT_UPLOAD_KEY_PASSWORD")
 KEYSTORE_FIELDS = ("storeFile", "storePassword", "keyAlias", "keyPassword")
 SEMVER = re.compile(r"\d+\.\d+\.\d+(-[0-9A-Za-z.]+)?")
+PLACEHOLDER_DOMAIN = "mrdoc.example"
+LINK_FILES = (("android", "core", "config", "src", "main", "kotlin", "app", "scanfit", "core", "config", "AppLinks.kt"),
+              ("ios", "Packages", "Core", "Sources", "Config", "Config.swift"))
+BILLING_FILES = (("android", "app", "src", "main", "kotlin", "app", "scanfit", "AppModule.kt"),
+                 ("ios", "ScanFit", "AppContainer.swift"))
+WEB_PAGES = (("web", "index.html"), ("web", "privacy", "index.html"), ("web", "terms", "index.html"),
+             ("web", "help", "index.html"), ("web", "delete-account", "index.html"))
+# Left in the website drafts on purpose until the user and a lawyer fill them in (docs/LAUNCH_PLAN.md week 1).
+WEB_PLACEHOLDERS = (PLACEHOLDER_DOMAIN, "[OPERATOR", "[DEVELOPER NAME", "[CITY", "REVIEW:")
 
 
 class Report:
@@ -164,6 +173,31 @@ def check_strings(root, final, r):
                "(tag -rc/-beta, build_all.sh --release --allow-todo-hi), a blocker for a final release (--final)")
 
 
+def check_launch_wiring(root, final, r):
+    """Website links (privacy policy, terms: required by both stores) and real billing (ALGORITHMS 14)."""
+    def flag(msg):
+        (r.block if final else r.warn)(msg)
+
+    links = [os.path.join(*f) for f in LINK_FILES if PLACEHOLDER_DOMAIN in (read(root, *f) or "")]
+    if links:
+        flag(f"AppLinks still point at the placeholder {PLACEHOLDER_DOMAIN} ({', '.join(links)}): set the real privacy "
+             "policy, terms, help and support address once the domain is picked")
+    else:
+        r.ok("website links are set")
+    pages = [os.path.join(*f) for f in WEB_PAGES if any(m in (read(root, *f) or "") for m in WEB_PLACEHOLDERS)]
+    if pages:
+        flag(f"website pages still have placeholders or REVIEW notes ({', '.join(pages)}): fill in the operator, "
+             "city, developer name and support address, have the policies reviewed, and remove the REVIEW comments")
+    else:
+        r.ok("website pages are filled in")
+    stand_in = [os.path.join(*f) for f in BILLING_FILES if "LocalBilling(" in (read(root, *f) or "")]
+    if stand_in:
+        flag(f"the stand-in LocalBilling is still wired ({', '.join(stand_in)}): release builds cannot sell Pro "
+             "until RevenueCat replaces it (LAUNCH_PLAN week 1)")
+    else:
+        r.ok("billing is wired")
+
+
 def run(root, platform="all", final=False, env=None):
     env = os.environ if env is None else env
     r = Report()
@@ -174,13 +208,15 @@ def run(root, platform="all", final=False, env=None):
     if platform in ("all", "ios"):
         check_ios(root, env, r)
     check_strings(root, final, r)
+    check_launch_wiring(root, final, r)
     return r
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--platform", choices=["all", "android", "ios"], default="all")
-    ap.add_argument("--final", action="store_true", help="production release: TODO_HI strings are blockers")
+    ap.add_argument("--final", action="store_true",
+                    help="production release: TODO_HI strings, placeholder links and stand-in billing are blockers")
     args = ap.parse_args()
     r = run(REPO, args.platform, args.final)
     for m in r.oks:

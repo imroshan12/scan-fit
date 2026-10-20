@@ -20,7 +20,7 @@ struct StringsTests {
     @Test("the TODO_HI marker never reaches the UI")
     func todoPrefixStripped() {
         #expect(!hi.homeTitle.contains("TODO_HI"))
-        #expect(hi.homeTitle == "आप किसके लिए आवेदन कर रहे हैं?")
+        #expect(hi.homeTitle == "आप क्या करना चाहते हैं?")
     }
 
     @Test("placeholders are filled")
@@ -50,8 +50,8 @@ struct StringsTests {
 
     @Test("plural with a second argument keeps both (reordered in Hindi)")
     func pluralWithTwoArgs() {
-        #expect(en.flowSavedTo(count: 1, folder: "ScanFit/IBPS PO") == "1 file saved to ScanFit/IBPS PO")
-        #expect(en.flowSavedTo(count: 4, folder: "ScanFit/IBPS PO") == "4 files saved to ScanFit/IBPS PO")
+        #expect(en.flowSavedTo(count: 1, folder: "Mr Doc/IBPS PO") == "1 file saved to Mr Doc/IBPS PO")
+        #expect(en.flowSavedTo(count: 4, folder: "Mr Doc/IBPS PO") == "4 files saved to Mr Doc/IBPS PO")
         let hindi = hi.flowSavedTo(count: 4, folder: "IBPS PO")
         #expect(hindi.contains("4") && hindi.contains("IBPS PO"))
     }

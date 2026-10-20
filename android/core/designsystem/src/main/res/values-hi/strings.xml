@@ -4,7 +4,7 @@
    Change the spec source and re-run the generator (CI checks for drift).
 -->
 <resources>
-    <string name="app_name">ScanFit</string>
+    <string name="app_name">Mr Doc</string>
     <string name="category_banking">बैंकिंग</string>
     <string name="category_defence">रक्षा</string>
     <string name="category_entrance">प्रवेश परीक्षा</string>
@@ -22,15 +22,15 @@
     <string name="checker_fix">%1$s के लिए ठीक करें</string>
     <string name="checker_fixed_heading">ठीक की गई कॉपी</string>
     <string name="checker_fixing">ठीक किया जा रहा है…</string>
-    <string name="checker_intro">जो फ़ाइल आप अपलोड करने वाले हैं उसे चुनें। ScanFit उसे परीक्षा के नियमों से जाँचता है और आपके कहे बिना कुछ नहीं बदलता।</string>
+    <string name="checker_intro">जो फ़ाइल आप अपलोड करने वाले हैं उसे चुनें। Mr Doc उसे परीक्षा के नियमों से जाँचता है और आपके कहे बिना कुछ नहीं बदलता।</string>
     <string name="checker_kind_declaration">हस्तलिखित घोषणा</string>
     <string name="checker_kind_fingers">उँगलियाँ और अंगूठा</string>
     <string name="checker_kind_pdf">PDF दस्तावेज़</string>
     <string name="checker_kind_photo">फ़ोटो</string>
     <string name="checker_kind_signature">हस्ताक्षर</string>
     <string name="checker_kind_thumb">अंगूठे का निशान</string>
-    <string name="checker_needs_pdf">ScanFit इस फ़ाइल से PDF नहीं बना सकता। अगर इस पर पासवर्ड है, तो पहले उसे हटाएँ।</string>
-    <string name="checker_no_fix">ScanFit यह फ़ाइल यहाँ ठीक नहीं कर सकता। परीक्षा की चेकलिस्ट से नई फ़ाइल बनाएँ।</string>
+    <string name="checker_needs_pdf">Mr Doc इस फ़ाइल से PDF नहीं बना सकता। अगर इस पर पासवर्ड है, तो पहले उसे हटाएँ।</string>
+    <string name="checker_no_fix">Mr Doc यह फ़ाइल यहाँ ठीक नहीं कर सकता। परीक्षा की चेकलिस्ट से नई फ़ाइल बनाएँ।</string>
     <string name="checker_no_issues">फ़ाइल में अपने आप में कोई समस्या नहीं है।</string>
     <string name="checker_open_failed">यह फ़ाइल नहीं खुल सकी। कोई दूसरी चुनें।</string>
     <string name="checker_original_kept">आपकी मूल फ़ाइल नहीं बदली गई है।</string>
@@ -64,7 +64,7 @@
     <string name="custom_error_width_range">चौड़ाई 16 से 2000 पिक्सेल के बीच होनी चाहिए।</string>
     <string name="custom_height">ऊँचाई</string>
     <string name="custom_in_pixels">= %1$d × %2$d px</string>
-    <string name="custom_intro">ऐसे फ़ॉर्म के लिए जो ScanFit में नहीं है। उसके नोटिस से सीमाएँ भरें।</string>
+    <string name="custom_intro">ऐसे फ़ॉर्म के लिए जो Mr Doc में नहीं है। उसके नोटिस से सीमाएँ भरें।</string>
     <string name="custom_kb_heading">फ़ाइल साइज़</string>
     <string name="custom_max_kb">अधिकतम KB</string>
     <string name="custom_meets">आपके साइज़ के अनुसार है</string>
@@ -230,7 +230,7 @@
     <string name="kit_preview_page">पन्ना %1$d / %2$d</string>
     <string name="kit_save_failed">मेरी किट में नहीं रख पाए। कृपया फिर कोशिश करें।</string>
     <string name="kit_save_original">मेरी किट में रखें</string>
-    <string name="kit_save_preview_body">ScanFit पूरी फ़ोटो रखता है, क्रॉप की गई फ़ाइल नहीं, ताकि आप इसे दूसरी परीक्षाओं के लिए फिर से इस्तेमाल कर सकें।</string>
+    <string name="kit_save_preview_body">Mr Doc पूरी फ़ोटो रखता है, क्रॉप की गई फ़ाइल नहीं, ताकि आप इसे दूसरी परीक्षाओं के लिए फिर से इस्तेमाल कर सकें।</string>
     <string name="kit_save_preview_title">यह फ़ोटो My Kit में सेव करें?</string>
     <string name="kit_saved_on">%1$s को रखा गया</string>
     <string name="kit_saved_original">मेरी किट में रखा गया</string>
@@ -244,8 +244,10 @@
     <string name="language_hi">हिन्दी</string>
     <string name="language_system">सिस्टम डिफ़ॉल्ट</string>
     <string name="legal_accept">मैं समझ गया/गई</string>
-    <string name="legal_disclaimer">ScanFit एक स्वतंत्र टूल है। इसका किसी परीक्षा संस्था या सरकार से कोई संबंध नहीं है। स्पेक्स आधिकारिक नोटिफ़िकेशन से लिए गए हैं (ऐप में लिंक दिए गए हैं), फिर भी सबमिट करने से पहले ताज़ा नोटिस ज़रूर देखें।</string>
+    <string name="legal_disclaimer">Mr Doc एक स्वतंत्र टूल है। इसका किसी परीक्षा संस्था या सरकार से कोई संबंध नहीं है। स्पेक्स आधिकारिक नोटिफ़िकेशन से लिए गए हैं (ऐप में लिंक दिए गए हैं), फिर भी सबमिट करने से पहले ताज़ा नोटिस ज़रूर देखें।</string>
     <string name="legal_disclaimer_title">शुरू करने से पहले</string>
+    <string name="legal_privacy_policy">गोपनीयता नीति</string>
+    <string name="legal_terms">उपयोग की शर्तें</string>
     <plurals name="match_accepted">
         <item quantity="one">%1$d परीक्षा में मान्य</item>
         <item quantity="other">%1$d परीक्षाओं में मान्य</item>
@@ -260,7 +262,7 @@
     <string name="match_need_at_most">≤ %1$d KB चाहिए</string>
     <string name="match_need_baseline">सामान्य (baseline) JPG चाहिए</string>
     <string name="match_need_jpeg">JPG फ़ाइल चाहिए</string>
-    <string name="match_none">ScanFit की किसी परीक्षा से मेल नहीं खाता — दूसरे फ़ॉर्म के लिए यह ठीक है</string>
+    <string name="match_none">Mr Doc की किसी परीक्षा से मेल नहीं खाता — दूसरे फ़ॉर्म के लिए यह ठीक है</string>
     <plurals name="match_preview_more">
         <item quantity="one">+%1$d और</item>
         <item quantity="other">+%1$d और</item>
@@ -273,6 +275,23 @@
     <string name="match_sheet_title">इस फ़ाइल को स्वीकार करने वाली परीक्षाएँ</string>
     <string name="match_verdict_accepted">मान्य</string>
     <string name="match_verdict_exact">बिल्कुल सही साइज़</string>
+    <string name="paywall_benefit_no_ads">कभी कोई विज्ञापन नहीं</string>
+    <string name="paywall_benefit_private">आपकी फ़ाइलें अब भी आपके फ़ोन से बाहर नहीं जातीं</string>
+    <string name="paywall_benefit_unlimited">जितनी चाहें उतनी फ़ाइलें सेव और शेयर करें</string>
+    <string name="paywall_body">आपके मुफ़्त सेव पूरे हो गए। एडिट करना, फ़ाइलें जाँचना और My Kit मुफ़्त ही रहेंगे।</string>
+    <string name="paywall_cancel_app_store">सालाना प्लान हर साल रिन्यू होता है। App Store सेटिंग्स में कभी भी रद्द करें।</string>
+    <string name="paywall_cancel_play">सालाना प्लान हर साल रिन्यू होता है। Play Store सेटिंग्स में कभी भी रद्द करें।</string>
+    <string name="paywall_failed">खरीदारी पूरी नहीं हुई। कृपया फिर से कोशिश करें।</string>
+    <string name="paywall_lifetime">लाइफ़टाइम</string>
+    <string name="paywall_lifetime_price">%1$s एक बार</string>
+    <string name="paywall_pending">आपका भुगतान अभी बाकी है। भुगतान पूरा होते ही Pro चालू हो जाएगा।</string>
+    <string name="paywall_restore">खरीदारी वापस लाएँ</string>
+    <string name="paywall_restore_none">इस खाते में कोई Pro खरीदारी नहीं मिली।</string>
+    <string name="paywall_thanks">Pro चालू हो गया। धन्यवाद!</string>
+    <string name="paywall_title">Pro के साथ सेव करते रहें</string>
+    <string name="paywall_unavailable">अभी स्टोर से जुड़ नहीं पा रहे। अपना इंटरनेट देखें और फिर से कोशिश करें।</string>
+    <string name="paywall_yearly">सालाना</string>
+    <string name="paywall_yearly_price">%1$s प्रति वर्ष</string>
     <string name="pdf_add_camera">फ़ोटो लें</string>
     <string name="pdf_add_files">Files से जोड़ें</string>
     <string name="pdf_add_gallery">गैलरी से जोड़ें</string>
@@ -299,7 +318,7 @@
     <string name="pdf_history_row">%1$d KB · %2$s · PDF</string>
     <string name="pdf_image_label">फ़ोटो %1$d</string>
     <string name="pdf_intro_compress">PDF चुनें और फ़ॉर्म में दी गई साइज़ लिखें।</string>
-    <string name="pdf_intro_exam">पन्नों की फ़ोटो या अपनी PDF जोड़ें। ScanFit एक सही साइज़ की PDF बनाएगा।</string>
+    <string name="pdf_intro_exam">पन्नों की फ़ोटो या अपनी PDF जोड़ें। Mr Doc एक सही साइज़ की PDF बनाएगा।</string>
     <string name="pdf_intro_id_card">कार्ड का आगे और पीछे का हिस्सा जोड़ें, फिर हर हिस्से को कार्ड के किनारों तक क्रॉप करें।</string>
     <string name="pdf_intro_images">हर पन्ने की फ़ोटो जोड़ें। हर फ़ोटो एक A4 पन्ना बनेगी।</string>
     <string name="pdf_intro_merge">PDF उसी क्रम में जोड़ें जिसमें आप चाहते हैं।</string>
@@ -355,6 +374,11 @@
     <string name="photo_white_bg_unavailable">इस डिवाइस पर सफ़ेद बैकग्राउंड उपलब्ध नहीं है।</string>
     <string name="photo_zoom_in">ज़ूम इन करें</string>
     <string name="photo_zoom_out">ज़ूम आउट करें</string>
+    <plurals name="quota_left">
+        <item quantity="one">%1$d मुफ़्त सेव बचा है</item>
+        <item quantity="other">%1$d मुफ़्त सेव बचे हैं</item>
+    </plurals>
+    <string name="quota_none">कोई मुफ़्त सेव नहीं बचा। Pro से जितनी चाहें उतनी फ़ाइलें सेव करें।</string>
     <string name="review_after">बाद में</string>
     <string name="review_before">पहले</string>
     <string name="review_check_fail">%1$s, इस दस्तावेज़ की जाँच सफल नहीं</string>
@@ -369,15 +393,25 @@
         <item quantity="other">%1$d किलोबाइट</item>
     </plurals>
     <string name="settings_about">ऐप के बारे में</string>
+    <string name="settings_analytics">गुमनाम उपयोग डेटा भेजें</string>
+    <string name="settings_analytics_hint">जैसे “एक हस्ताक्षर सेव हुआ” जैसी गिनती। आपकी फ़ाइलें, नाम या टेक्स्ट कभी नहीं।</string>
     <string name="settings_check_updates">अपडेट जाँचें</string>
+    <string name="settings_get_pro">Pro लें</string>
     <string name="settings_help">मदद</string>
     <string name="settings_language">भाषा</string>
     <string name="settings_language_hint">ऐप की भाषा सिस्टम सेटिंग्स में बदलें</string>
+    <string name="settings_no_email">कोई ईमेल ऐप नहीं मिला। हमें %1$s पर लिखें।</string>
     <string name="settings_presets_version">परीक्षा स्पेक्स संस्करण %1$d</string>
     <string name="settings_privacy">गोपनीयता</string>
+    <string name="settings_privacy_note">आपकी फ़ोटो और फ़ाइलें आपके फ़ोन पर ही प्रोसेस होती हैं और कभी अपलोड नहीं होतीं।</string>
+    <string name="settings_pro">Mr Doc Pro</string>
+    <string name="settings_pro_active">Pro चालू है। जितनी चाहें उतनी फ़ाइलें सेव करें।</string>
+    <string name="settings_report_body">कृपया ऊपर समस्या लिखें। अपने दस्तावेज़ अटैच न करें। ऐप %1$s · %2$s · स्पेक्स v%3$s</string>
     <string name="settings_report_problem">समस्या बताएँ</string>
+    <string name="settings_report_subject">Mr Doc समस्या रिपोर्ट</string>
     <string name="settings_show_unverified">असत्यापित परीक्षाएँ दिखाएँ</string>
     <string name="settings_show_unverified_hint">वे परीक्षाएँ भी दिखाएँ जिनके अपलोड नियमों की अभी पुष्टि नहीं हुई है</string>
+    <string name="settings_version">संस्करण %1$s</string>
     <string name="tab_home">होम</string>
     <string name="tab_kit">मेरी किट</string>
     <string name="tab_settings">सेटिंग्स</string>

@@ -3,12 +3,186 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ScanFit</title>
+  <title>Mr Doc — photo and PDF editor for forms</title>
+  <meta name="description" content="Resize photos and signatures to the exact KB, compress and merge PDFs, and get exam and government form uploads right the first time. Everything stays on your phone. No ads.">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="stylesheet" href="site.css">
 </head>
-<body style="font: 16px/1.5 system-ui, sans-serif; max-width: 40rem; margin: 2rem auto; padding: 0 1rem">
-  <h1>ScanFit</h1>
-  <p>Exam upload files, fitted to each exam's rules. Site coming with the launch (ROADMAP Phase 6).</p>
-  <p><a href="upload-test/">Upload echo test</a> (for QA: shows exactly what a browser sees in a file)</p>
-  <p style="color: #4a4a58">Independent tool. Not affiliated with any exam body or government.</p>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="./"><img src="icon.svg" alt="" width="32" height="32">Mr Doc</a>
+      <nav class="site-nav" aria-label="Site">
+        <a href="#tools">Tools</a>
+        <a href="#pricing">Pricing</a>
+        <a href="help/">Help</a>
+        <a href="privacy/">Privacy</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="hero">
+      <h1>Photos and PDFs, ready for any form.</h1>
+      <p class="lead">Resize photos and signatures to the exact KB, compress and merge PDFs, and get exam and government
+        form uploads right the first time. Everything happens on your phone.</p>
+      <div class="stores">
+        <span class="button soon" aria-disabled="true">Google Play · coming soon</span>
+        <span class="button soon" aria-disabled="true">App Store · coming soon</span>
+      </div>
+      <ul class="pills" aria-label="Highlights">
+        <li>Your files never leave your phone</li>
+        <li>No ads</li>
+        <li>Works offline</li>
+        <li>English and हिन्दी</li>
+      </ul>
+    </section>
+
+    <section id="tools" aria-labelledby="tools-title">
+      <h2 id="tools-title">Everything for your documents</h2>
+      <p class="section-lead">Every tool opens from the home screen. Pick one, add a photo or a file, and save a copy
+        that fits.</p>
+      <div class="tools">
+        <article class="tool exam">
+          <span class="tile"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3 1 9l11 6 9-4.91V17h2V9L12 3z"/></svg></span>
+          <h3>Exam forms</h3>
+          <p>Every upload for 55+ exams, with the exact rules and links to the official notice.</p>
+        </article>
+        <article class="tool photo">
+          <span class="tile"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg></span>
+          <h3>Resize photo</h3>
+          <p>Any size in pixels, cm or KB, with a clean background if you want one.</p>
+        </article>
+        <article class="tool ink">
+          <span class="tile"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M3 16C5 9 8 5 9 8s-3 9-.5 9S12 11 14 12s0 4 2 4 2.5-2 5-2"/><path fill="currentColor" d="M3 19h18v1.5H3z"/></svg></span>
+          <h3>Signature</h3>
+          <p>Sign on paper, take a photo. Mr Doc cleans the background and keeps every stroke.</p>
+        </article>
+        <article class="tool pdf">
+          <span class="tile"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 19h3v3h2v-3h3l-4-4-4 4zM16 4h-3V1h-2v3H8l4 4 4-4zM4 9v2h16V9H4zM4 12h16v2H4z"/></svg></span>
+          <h3>Compress PDF</h3>
+          <p>Bring a PDF under the size a form asks for, like 200 KB.</p>
+        </article>
+        <article class="tool pdf">
+          <span class="tile"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20 2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6z"/></svg></span>
+          <h3>Images to PDF</h3>
+          <p>Turn photos of pages into one neat PDF, with crop and cleanup.</p>
+        </article>
+        <article class="tool pdf">
+          <span class="tile"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17 20.41 18.41 19 15 15.59 13.59 17 17 20.41zM7.5 8H11v5.59L5.59 19 7 20.41l6-6V8h3.5L12 3.5 7.5 8z"/></svg></span>
+          <h3>Merge PDFs</h3>
+          <p>Join several PDFs or photos into one file that fits the limit.</p>
+        </article>
+        <article class="tool pdf">
+          <span class="tile"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zM9 8c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm4 8H5v-.5c0-1.33 2.67-2 4-2s4 .67 4 2v.5zm6-1h-4v-1.5h4V15zm0-3.5h-4V10h4v1.5z"/></svg></span>
+          <h3>ID card</h3>
+          <p>Front and back of a card on one page, at true size.</p>
+        </article>
+        <article class="tool check">
+          <span class="tile"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2 4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3zm-1.06 13.54L7.4 12l1.41-1.41 2.12 2.12 4.24-4.24 1.41 1.41-5.64 5.66z"/></svg></span>
+          <h3>Check a file</h3>
+          <p>See if a file will pass before you upload: size, pixels, format, colour.</p>
+        </article>
+        <article class="tool ink">
+          <span class="tile"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="13" rx="2.4" ry="3"/><ellipse cx="12" cy="13" rx="4.8" ry="6"/><ellipse cx="12" cy="13" rx="7.2" ry="9"/></g></svg></span>
+          <h3>Thumb impression</h3>
+          <p>A clear, square thumb print from a photo of paper.</p>
+        </article>
+        <article class="tool ink">
+          <span class="tile"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg></span>
+          <h3>Handwritten page</h3>
+          <p>A declaration or note on paper, made crisp and the right size.</p>
+        </article>
+      </div>
+    </section>
+
+    <section aria-labelledby="why-title">
+      <h2 id="why-title">Why Mr Doc</h2>
+      <div class="reasons">
+        <div class="reason">
+          <h3>Private by design</h3>
+          <p>Photos, signatures and documents are processed on your phone and never uploaded. There are no ads.</p>
+        </div>
+        <div class="reason">
+          <h3>Exactly what the form asks for</h3>
+          <p>Size in KB, pixels, DPI and format are hit exactly, including a portal's minimum size, and checked again
+            after saving.</p>
+        </div>
+        <div class="reason">
+          <h3>Exam rules built in</h3>
+          <p>55+ exams with each upload's rules, the date they were checked and a link to the official notice.</p>
+        </div>
+        <div class="reason">
+          <h3>Made for every phone</h3>
+          <p>Fast on budget phones, works without internet, in English and Hindi.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="pricing" aria-labelledby="pricing-title">
+      <h2 id="pricing-title">Simple pricing</h2>
+      <p class="section-lead">Use every tool for free. Pay only when you need more than 20 saves.</p>
+      <div class="plans">
+        <div class="plan">
+          <h3>Free</h3>
+          <p class="price">₹0</p>
+          <p class="alt">no card needed</p>
+          <ul>
+            <li>Every tool and every exam</li>
+            <li>20 saves in total</li>
+            <li>Check any file, any time</li>
+          </ul>
+        </div>
+        <div class="plan pro">
+          <h3>Pro</h3>
+          <p class="price">₹99 <span class="per">a year</span></p>
+          <p class="alt">or ₹199 once, for life</p>
+          <ul>
+            <li>Unlimited saves</li>
+            <li>Your saved originals kept until you delete them</li>
+            <li>Works on your Android phone and iPhone with one account</li>
+          </ul>
+        </div>
+      </div>
+      <p class="note">A save is a new file you save or share from the app. Saving the same file again is free. Prices
+        for India; the store shows the price in your currency. Cancel the yearly plan any time in Google Play or App
+        Store settings.</p>
+    </section>
+
+    <section aria-labelledby="faq-title">
+      <h2 id="faq-title">Questions</h2>
+      <details>
+        <summary>Is Mr Doc an official government or exam app?</summary>
+        <p>No. Mr Doc is an independent tool and is not affiliated with any exam body or government. Exam rules come
+          from official notifications, linked in the app. Always check the current notice before you submit.</p>
+      </details>
+      <details>
+        <summary>Do my photos or documents get uploaded?</summary>
+        <p>No. Everything you capture is processed and stored on your phone. A file leaves your phone only when you save
+          or share it yourself.</p>
+      </details>
+      <details>
+        <summary>Why do I sign in?</summary>
+        <p>Your Google or Apple account keeps your free-save count and your Pro purchase, so they stay with you when you
+          change phones. The account holds only your email, your name and the number of saves you have used.</p>
+      </details>
+      <p><a href="help/">More answers in Help</a></p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <nav aria-label="Legal">
+        <a href="help/">Help</a>
+        <a href="privacy/">Privacy policy</a>
+        <a href="terms/">Terms of use</a>
+        <a href="delete-account/">Delete your account</a>
+      </nav>
+      <p class="disclaimer">Mr Doc is an independent tool. It is not affiliated with any exam body or government. Specs
+        come from official notifications (linked in the app), but always check the current notice before you submit.</p>
+    </div>
+  </footer>
 </body>
 </html>

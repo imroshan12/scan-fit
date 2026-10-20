@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import app.scanfit.core.data.SavedDocument
 import app.scanfit.core.data.export.DocumentExporter
 import app.scanfit.core.data.export.SaveState
+import app.scanfit.core.data.quota.PaywallTrigger
 import app.scanfit.core.imaging.FitError
 import app.scanfit.core.presets.PresetsLoadOutcome
 import app.scanfit.core.presets.PresetsSummary
@@ -16,12 +17,14 @@ import app.scanfit.core.testing.FakePresetsRepository
 import app.scanfit.core.testing.FakeShareStager
 import app.scanfit.core.testing.FakeUserPreferences
 import app.scanfit.core.testing.SpecPresets
+import app.scanfit.core.testing.TestSaveGate
 import app.scanfit.core.vision.FaceBox
 import app.scanfit.core.vision.PersonSegmenter
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -55,6 +58,7 @@ class PhotoSaveViewModelTest {
     private fun TestScope.model(
         destination: FakeExportDestinations = destinations,
         segmenter: PersonSegmenter = FakePersonSegmenter(),
+        quota: TestSaveGate = TestSaveGate(),
     ): PhotoFlowViewModel {
         val model = PhotoFlowViewModel(
             SavedStateHandle(mapOf("examId" to "ibps_po", "docType" to "photo")),
@@ -63,7 +67,7 @@ class PhotoSaveViewModelTest {
             FakeFaceDetector(listOf(FaceBox(400.0, 500.0, 200.0, 240.0))),
             segmenter,
             dispatcher,
-            DocumentExporter(destination, preferences, FakeKitStore()),
+            DocumentExporter(destination, preferences, FakeKitStore(), quota.gate),
             FakeDraftStore(),
             share,
             FakeKitStore(),
@@ -75,6 +79,48 @@ class PhotoSaveViewModelTest {
     }
 
     private val PhotoFlowViewModel.review get() = uiState.value as PhotoUiState.Review
+
+    @Test
+    fun spentFreeSavesOpenThePaywallInsteadOfSavingOrSharing() = runTest(dispatcher) {
+        val quota = TestSaveGate(used = 20)
+        quota.gate.status.first() // the app's root keeps the state loaded
+        val model = model(quota = quota)
+        assertNull(model.onSave())
+        assertEquals("the review stays as it was", SaveState.IDLE, model.review.save.state)
+        assertEquals(PaywallTrigger.SAVE, quota.paywall.current.value)
+        assertEquals(0, destinations.events.count { it == "create" })
+        quota.paywall.close()
+        model.onShare()
+        advanceUntilIdle()
+        assertNull(share.staged)
+        assertEquals(PaywallTrigger.SHARE, quota.paywall.current.value)
+    }
+
+    @Test
+    fun aSaveThenAShareOfTheSameBytesSpendsOneFreeSave() = runTest(dispatcher) {
+        val quota = TestSaveGate(used = 19)
+        quota.gate.status.first()
+        val model = model(quota = quota)
+        model.onSave()
+        advanceUntilIdle()
+        assertEquals(SaveState.SAVED, model.review.save.state)
+        model.onShare()
+        advanceUntilIdle()
+        assertTrue(share.staged != null)
+        assertEquals(20, quota.store.state.used)
+        assertNull("the last free save went to this file; sharing it again is free", quota.paywall.current.value)
+    }
+
+    @Test
+    fun aFailedSaveSpendsNothing() = runTest(dispatcher) {
+        destinations.operation = "write_failed"
+        val quota = TestSaveGate(used = 3)
+        val model = model(quota = quota)
+        model.onSave()
+        advanceUntilIdle()
+        assertEquals(SaveState.SAVE_FAILED, model.review.save.state)
+        assertEquals(3, quota.store.state.used)
+    }
 
     @Test
     fun duplicateSaveAndEditsAreRejectedWhileSaving() = runTest(dispatcher) {

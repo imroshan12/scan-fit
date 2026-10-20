@@ -15,6 +15,7 @@ import app.scanfit.core.testing.FakePresetsRepository
 import app.scanfit.core.testing.FakeShareStager
 import app.scanfit.core.testing.FakeUserPreferences
 import app.scanfit.core.testing.SpecPresets
+import app.scanfit.core.testing.TestSaveGate
 import app.scanfit.core.vision.FaceBox
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -53,7 +54,7 @@ class PhotoCustomViewModelTest {
         FakeFaceDetector(listOf(FaceBox(400.0, 500.0, 200.0, 240.0))),
         FakePersonSegmenter(),
         dispatcher,
-        DocumentExporter(destinations, prefs, FakeKitStore()),
+        DocumentExporter(destinations, prefs, FakeKitStore(), TestSaveGate().gate),
         drafts,
         share,
         FakeKitStore(),

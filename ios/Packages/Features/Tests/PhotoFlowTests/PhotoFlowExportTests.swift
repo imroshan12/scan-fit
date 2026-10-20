@@ -49,12 +49,12 @@ struct PhotoFlowExportTests {
         preferences = UserPreferences(defaults: defaults)
     }
 
-    private func model(_ examId: String = "ibps_po") async throws -> PhotoFlowViewModel {
+    private func model(_ examId: String = "ibps_po", gate: SaveGate? = nil) async throws -> PhotoFlowViewModel {
         let bundle = try SpecPresets.bundle()
         let model = PhotoFlowViewModel(
             examId: examId, docType: .photo, tools: tools,
             faces: FakeFaceDetector(faces: [Face(x: 400, y: 500, w: 200, h: 240)]),
-            preferences: preferences, exporter: exporter
+            preferences: preferences, exporter: exporter, gate: gate
         ) { bundle }
         await model.onAppear()
         await model.imageSelected([1])
@@ -76,6 +76,37 @@ struct PhotoFlowExportTests {
             guard case .review = model.state else { Issue.record("review lost: \(test.id)"); continue }
             #expect(model.canSave, "retry stays available: \(test.id)")
         }
+    }
+
+    @Test("spent free saves open the paywall instead of saving or sharing (ALGORITHMS 14.3)")
+    func spentFreeSaves() async throws {
+        let gate = await testSaveGate(used: 20)
+        let model = try await model(gate: gate)
+        await model.save()
+        #expect(model.exportState == .idle, "the review stays as it was")
+        #expect(exporter.requests.isEmpty)
+        #expect(gate.paywall.current == .save)
+        gate.paywall.close()
+        await model.share()
+        #expect(gate.paywall.current == .share)
+        #expect(model.share == .none)
+        #expect(!preferences.isSaved("ibps_po", .photo))
+    }
+
+    @Test("a save then a share of the same bytes spends one free save; a failed save spends none")
+    func countsOnce() async throws {
+        let gate = await testSaveGate(used: 18)
+        let model = try await model(gate: gate)
+        exporter.operation = "write_failed"
+        await model.save()
+        #expect(gate.state?.used == 18)
+        exporter.operation = "success"
+        await model.save()
+        #expect(model.exportState == .saved)
+        await model.share()
+        #expect(gate.state?.used == 19)
+        #expect(gate.paywall.current == nil)
+        model.shareHandled()
     }
 
     @Test("saving rejects duplicates, option changes, new sources and back navigation")

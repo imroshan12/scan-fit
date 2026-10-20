@@ -192,7 +192,7 @@ private fun Header() {
         modifier = Modifier.padding(horizontal = ScanFitSpacing.screenMargin),
         verticalArrangement = Arrangement.spacedBy(ScanFitSpacing.xs),
     ) {
-        Text("ScanFit", style = ScanFitType.label, color = MaterialTheme.colorScheme.primary)
+        Text(stringResource(R.string.app_name), style = ScanFitType.label, color = MaterialTheme.colorScheme.primary)
         Text(
             stringResource(R.string.home_title),
             style = ScanFitType.display,

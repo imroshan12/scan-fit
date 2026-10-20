@@ -7,13 +7,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "ScanFit"
+            "value": "Mr Doc"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "ScanFit"
+            "value": "Mr Doc"
           }
         }
       }
@@ -313,13 +313,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pick the file you plan to upload. ScanFit checks it against the exam's rules and changes nothing unless you ask."
+            "value": "Pick the file you plan to upload. Mr Doc checks it against the exam's rules and changes nothing unless you ask."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "जो फ़ाइल आप अपलोड करने वाले हैं उसे चुनें। ScanFit उसे परीक्षा के नियमों से जाँचता है और आपके कहे बिना कुछ नहीं बदलता।"
+            "value": "जो फ़ाइल आप अपलोड करने वाले हैं उसे चुनें। Mr Doc उसे परीक्षा के नियमों से जाँचता है और आपके कहे बिना कुछ नहीं बदलता।"
           }
         }
       }
@@ -432,13 +432,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "ScanFit can't make a PDF from this file. If it has a password, remove it first."
+            "value": "Mr Doc can't make a PDF from this file. If it has a password, remove it first."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "ScanFit इस फ़ाइल से PDF नहीं बना सकता। अगर इस पर पासवर्ड है, तो पहले उसे हटाएँ।"
+            "value": "Mr Doc इस फ़ाइल से PDF नहीं बना सकता। अगर इस पर पासवर्ड है, तो पहले उसे हटाएँ।"
           }
         }
       }
@@ -449,13 +449,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "ScanFit can't fix this file here. Make a new one from the exam's checklist."
+            "value": "Mr Doc can't fix this file here. Make a new one from the exam's checklist."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "ScanFit यह फ़ाइल यहाँ ठीक नहीं कर सकता। परीक्षा की चेकलिस्ट से नई फ़ाइल बनाएँ।"
+            "value": "Mr Doc यह फ़ाइल यहाँ ठीक नहीं कर सकता। परीक्षा की चेकलिस्ट से नई फ़ाइल बनाएँ।"
           }
         }
       }
@@ -1027,13 +1027,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "For a form that isn't in ScanFit. Copy the limits from its notice."
+            "value": "For a form that isn't in Mr Doc. Copy the limits from its notice."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "ऐसे फ़ॉर्म के लिए जो ScanFit में नहीं है। उसके नोटिस से सीमाएँ भरें।"
+            "value": "ऐसे फ़ॉर्म के लिए जो Mr Doc में नहीं है। उसके नोटिस से सीमाएँ भरें।"
           }
         }
       }
@@ -3795,13 +3795,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "ScanFit keeps the whole picture, not the cropped file, so you can use it again for other exams."
+            "value": "Mr Doc keeps the whole picture, not the cropped file, so you can use it again for other exams."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "ScanFit पूरी फ़ोटो रखता है, क्रॉप की गई फ़ाइल नहीं, ताकि आप इसे दूसरी परीक्षाओं के लिए फिर से इस्तेमाल कर सकें।"
+            "value": "Mr Doc पूरी फ़ोटो रखता है, क्रॉप की गई फ़ाइल नहीं, ताकि आप इसे दूसरी परीक्षाओं के लिए फिर से इस्तेमाल कर सकें।"
           }
         }
       }
@@ -4033,13 +4033,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "ScanFit is an independent tool. It is not affiliated with any exam body or government. Specs come from official notifications (linked in the app), but always check the current notice before you submit."
+            "value": "Mr Doc is an independent tool. It is not affiliated with any exam body or government. Specs come from official notifications (linked in the app), but always check the current notice before you submit."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "ScanFit एक स्वतंत्र टूल है। इसका किसी परीक्षा संस्था या सरकार से कोई संबंध नहीं है। स्पेक्स आधिकारिक नोटिफ़िकेशन से लिए गए हैं (ऐप में लिंक दिए गए हैं), फिर भी सबमिट करने से पहले ताज़ा नोटिस ज़रूर देखें।"
+            "value": "Mr Doc एक स्वतंत्र टूल है। इसका किसी परीक्षा संस्था या सरकार से कोई संबंध नहीं है। स्पेक्स आधिकारिक नोटिफ़िकेशन से लिए गए हैं (ऐप में लिंक दिए गए हैं), फिर भी सबमिट करने से पहले ताज़ा नोटिस ज़रूर देखें।"
           }
         }
       }
@@ -4057,6 +4057,40 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "शुरू करने से पहले"
+          }
+        }
+      }
+    },
+    "legal.privacy_policy": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privacy policy"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "गोपनीयता नीति"
+          }
+        }
+      }
+    },
+    "legal.terms": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terms of use"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "उपयोग की शर्तें"
           }
         }
       }
@@ -4251,13 +4285,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Doesn't match any exam in ScanFit — that's fine for other forms"
+            "value": "Doesn't match any exam in Mr Doc — that's fine for other forms"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "ScanFit की किसी परीक्षा से मेल नहीं खाता — दूसरे फ़ॉर्म के लिए यह ठीक है"
+            "value": "Mr Doc की किसी परीक्षा से मेल नहीं खाता — दूसरे फ़ॉर्म के लिए यह ठीक है"
           }
         }
       }
@@ -4408,6 +4442,295 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "बिल्कुल सही साइज़"
+          }
+        }
+      }
+    },
+    "paywall.benefit_no_ads": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No ads, ever"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "कभी कोई विज्ञापन नहीं"
+          }
+        }
+      }
+    },
+    "paywall.benefit_private": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your files still never leave your phone"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "आपकी फ़ाइलें अब भी आपके फ़ोन से बाहर नहीं जातीं"
+          }
+        }
+      }
+    },
+    "paywall.benefit_unlimited": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save and share as many files as you like"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "जितनी चाहें उतनी फ़ाइलें सेव और शेयर करें"
+          }
+        }
+      }
+    },
+    "paywall.body": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You've used your free saves. Editing, checking files and My Kit stay free."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "आपके मुफ़्त सेव पूरे हो गए। एडिट करना, फ़ाइलें जाँचना और My Kit मुफ़्त ही रहेंगे।"
+          }
+        }
+      }
+    },
+    "paywall.cancel_app_store": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yearly renews each year. Cancel anytime in App Store settings."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "सालाना प्लान हर साल रिन्यू होता है। App Store सेटिंग्स में कभी भी रद्द करें।"
+          }
+        }
+      }
+    },
+    "paywall.cancel_play": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yearly renews each year. Cancel anytime in Play Store settings."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "सालाना प्लान हर साल रिन्यू होता है। Play Store सेटिंग्स में कभी भी रद्द करें।"
+          }
+        }
+      }
+    },
+    "paywall.failed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The purchase didn't finish. Please try again."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "खरीदारी पूरी नहीं हुई। कृपया फिर से कोशिश करें।"
+          }
+        }
+      }
+    },
+    "paywall.lifetime": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lifetime"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "लाइफ़टाइम"
+          }
+        }
+      }
+    },
+    "paywall.lifetime_price": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ once"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ एक बार"
+          }
+        }
+      }
+    },
+    "paywall.pending": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your payment is pending. Pro turns on as soon as it goes through."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "आपका भुगतान अभी बाकी है। भुगतान पूरा होते ही Pro चालू हो जाएगा।"
+          }
+        }
+      }
+    },
+    "paywall.restore": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore purchases"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "खरीदारी वापस लाएँ"
+          }
+        }
+      }
+    },
+    "paywall.restore_none": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Pro purchase was found for this account."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "इस खाते में कोई Pro खरीदारी नहीं मिली।"
+          }
+        }
+      }
+    },
+    "paywall.thanks": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pro is on. Thank you!"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Pro चालू हो गया। धन्यवाद!"
+          }
+        }
+      }
+    },
+    "paywall.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep saving with Pro"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Pro के साथ सेव करते रहें"
+          }
+        }
+      }
+    },
+    "paywall.unavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can't reach the store right now. Check your connection and try again."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "अभी स्टोर से जुड़ नहीं पा रहे। अपना इंटरनेट देखें और फिर से कोशिश करें।"
+          }
+        }
+      }
+    },
+    "paywall.yearly": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yearly"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "सालाना"
+          }
+        }
+      }
+    },
+    "paywall.yearly_price": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ a year"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@ प्रति वर्ष"
           }
         }
       }
@@ -4860,13 +5183,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Add photos of the pages or a PDF you already have. ScanFit makes one PDF that fits."
+            "value": "Add photos of the pages or a PDF you already have. Mr Doc makes one PDF that fits."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "पन्नों की फ़ोटो या अपनी PDF जोड़ें। ScanFit एक सही साइज़ की PDF बनाएगा।"
+            "value": "पन्नों की फ़ोटो या अपनी PDF जोड़ें। Mr Doc एक सही साइज़ की PDF बनाएगा।"
           }
         }
       }
@@ -5752,6 +6075,64 @@
         }
       }
     },
+    "quota.left": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld free save left"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld free saves left"
+                }
+              }
+            }
+          }
+        },
+        "hi": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "needs_review",
+                  "value": "%1$lld मुफ़्त सेव बचा है"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "needs_review",
+                  "value": "%1$lld मुफ़्त सेव बचे हैं"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "quota.none": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No free saves left. Pro saves as many files as you like."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "कोई मुफ़्त सेव नहीं बचा। Pro से जितनी चाहें उतनी फ़ाइलें सेव करें।"
+          }
+        }
+      }
+    },
     "review.after": {
       "extractionState": "manual",
       "localizations": {
@@ -5963,6 +6344,40 @@
         }
       }
     },
+    "settings.analytics": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share anonymous usage data"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "गुमनाम उपयोग डेटा भेजें"
+          }
+        }
+      }
+    },
+    "settings.analytics_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Counts such as “a signature was saved”. Never your files, names or text."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "जैसे “एक हस्ताक्षर सेव हुआ” जैसी गिनती। आपकी फ़ाइलें, नाम या टेक्स्ट कभी नहीं।"
+          }
+        }
+      }
+    },
     "settings.check_updates": {
       "extractionState": "manual",
       "localizations": {
@@ -5976,6 +6391,23 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "अपडेट जाँचें"
+          }
+        }
+      }
+    },
+    "settings.get_pro": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get Pro"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Pro लें"
           }
         }
       }
@@ -6031,6 +6463,23 @@
         }
       }
     },
+    "settings.no_email": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No email app found. Write to us at %1$@."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "कोई ईमेल ऐप नहीं मिला। हमें %1$@ पर लिखें।"
+          }
+        }
+      }
+    },
     "settings.presets_version": {
       "extractionState": "manual",
       "localizations": {
@@ -6065,6 +6514,74 @@
         }
       }
     },
+    "settings.privacy_note": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your photos and files are processed on your phone and never uploaded."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "आपकी फ़ोटो और फ़ाइलें आपके फ़ोन पर ही प्रोसेस होती हैं और कभी अपलोड नहीं होतीं।"
+          }
+        }
+      }
+    },
+    "settings.pro": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mr Doc Pro"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mr Doc Pro"
+          }
+        }
+      }
+    },
+    "settings.pro_active": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pro is active. Save as many files as you like."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Pro चालू है। जितनी चाहें उतनी फ़ाइलें सेव करें।"
+          }
+        }
+      }
+    },
+    "settings.report_body": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please describe the problem above. Don't attach your documents. App %1$@ · %2$@ · specs v%3$@"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "कृपया ऊपर समस्या लिखें। अपने दस्तावेज़ अटैच न करें। ऐप %1$@ · %2$@ · स्पेक्स v%3$@"
+          }
+        }
+      }
+    },
     "settings.report_problem": {
       "extractionState": "manual",
       "localizations": {
@@ -6078,6 +6595,23 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "समस्या बताएँ"
+          }
+        }
+      }
+    },
+    "settings.report_subject": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mr Doc problem report"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mr Doc समस्या रिपोर्ट"
           }
         }
       }
@@ -6112,6 +6646,23 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "वे परीक्षाएँ भी दिखाएँ जिनके अपलोड नियमों की अभी पुष्टि नहीं हुई है"
+          }
+        }
+      }
+    },
+    "settings.version": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version %1$@"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "संस्करण %1$@"
           }
         }
       }

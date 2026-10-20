@@ -6,6 +6,7 @@ import Home
 import Kit
 import InkFlow
 import PDFTools
+import Paywall
 import PhotoFlow
 import Presets
 import ScanData
@@ -21,6 +22,8 @@ struct RootView: View {
     @State private var kitModel: KitViewModel
     @State private var kitOriginals: KitOriginalsViewModel
     @State private var kitHistory: KitHistoryViewModel
+    @State private var paywall: PaywallViewModel
+    @State private var settings: SettingsViewModel
     @State private var presets: PresetsSummary?
     /// The Home stack's path, so a flow can leave itself explicitly (see `PhotoFlowView.onExit`).
     @State private var homePath = NavigationPath()
@@ -40,6 +43,10 @@ struct RootView: View {
         })
         _kitOriginals = State(initialValue: KitOriginalsViewModel(kit: container.kit))
         _kitHistory = State(initialValue: KitHistoryViewModel(kit: container.kit))
+        _paywall = State(initialValue: PaywallViewModel(billing: container.billing, requests: container.gate.paywall))
+        _settings = State(initialValue: SettingsViewModel(
+            preferences: container.preferences, gate: container.gate, billing: container.billing
+        ))
     }
 
     /// Document types the photo flow handles (ALGORITHMS 1.2: the kinds that are cropped, not padded).
@@ -59,7 +66,7 @@ struct RootView: View {
                         ExamView(
                             model: ExamViewModel(
                                 examId: route.examId, preferences: container.preferences, drafts: container.drafts,
-                                kit: container.kit
+                                kit: container.kit, gate: container.gate
                             ) {
                                 await container.trustedBundle()
                             },
@@ -115,12 +122,21 @@ struct RootView: View {
             }
             .tabItem { Label(strings.tabKit, systemImage: "tray.full") }
             .tag(Tab.kit)
-            SettingsView(presets: presets, preferences: container.preferences, strings: strings)
+            SettingsView(model: settings, presets: presets, strings: strings)
                 .tabItem { Label(strings.tabSettings, systemImage: "gearshape") }
                 .tag(Tab.settings)
         }
         .tint(ScanFitColor.primary)
+        // ALGORITHMS 14.3: reviews show "N free saves left"; a blocked save opens the paywall over everything.
+        .environment(\.freeSavesLeft, container.gate.status.flatMap { $0.showsLeft ? $0.remaining : nil })
+        .fullScreenCover(item: Binding(
+            get: { container.gate.paywall.current },
+            set: { if $0 == nil { container.gate.paywall.close() } }
+        )) { _ in
+            PaywallView(model: paywall, strings: strings)
+        }
         .task {
+            await container.gate.load()
             // A file staged for the share sheet never outlives the session (ALGORITHMS 1.6.2).
             await ShareStager.clear()
             if case let .ready(summary) = await container.presetsOutcome.value {
@@ -141,7 +157,7 @@ struct RootView: View {
     /// The pre-submit Checker (ALGORITHMS 12): a file the user already has, against the exam slot they choose.
     private func checker(strings: Strings) -> some View {
         CheckerView(
-            model: CheckerViewModel(preferences: container.preferences, kit: container.kit) {
+            model: CheckerViewModel(preferences: container.preferences, kit: container.kit, gate: container.gate) {
                 await container.trustedBundle()
             },
             strings: strings
@@ -151,7 +167,9 @@ struct RootView: View {
     /// The PDF tools and an exam slot's PDF maker (ALGORITHMS 6); Done after a verified save leaves the screen.
     private func pdfMaker(_ route: PdfRoute, strings: Strings, onDone: @escaping () -> Void) -> some View {
         PdfMakerView(
-            model: PdfMakerViewModel(route: route, preferences: container.preferences, kit: container.kit) {
+            model: PdfMakerViewModel(
+                route: route, preferences: container.preferences, kit: container.kit, gate: container.gate
+            ) {
                 await container.trustedBundle()
             },
             strings: strings,
@@ -166,7 +184,7 @@ struct RootView: View {
             PhotoFlowView(
                 model: PhotoFlowViewModel(
                     target: route.target, preferences: container.preferences, drafts: container.drafts,
-                    kit: container.kit, originalID: route.original
+                    kit: container.kit, gate: container.gate, originalID: route.original
                 ) {
                     await container.trustedBundle()
                 },
@@ -177,7 +195,7 @@ struct RootView: View {
             InkFlowView(
                 model: InkFlowViewModel(
                     target: route.target, preferences: container.preferences, drafts: container.drafts,
-                    kit: container.kit, originalID: route.original
+                    kit: container.kit, gate: container.gate, originalID: route.original
                 ) {
                     await container.trustedBundle()
                 },

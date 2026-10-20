@@ -13,10 +13,13 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
@@ -27,6 +30,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import app.scanfit.core.data.kit.KitIds
 import app.scanfit.core.designsystem.R
+import app.scanfit.core.designsystem.components.LocalFreeSavesLeft
 import app.scanfit.core.designsystem.theme.ScanFitTheme
 import app.scanfit.core.model.DocType
 import app.scanfit.core.model.FlowTarget
@@ -48,6 +52,8 @@ import app.scanfit.feature.kit.KitHistoryPreviewViewModel
 import app.scanfit.feature.kit.KitOriginalRoute
 import app.scanfit.feature.kit.KitOriginalViewModel
 import app.scanfit.feature.kit.KitRoute
+import app.scanfit.feature.paywall.PaywallHost
+import app.scanfit.feature.paywall.PaywallViewModel
 import app.scanfit.feature.pdf.PdfMakerRoute
 import app.scanfit.feature.pdf.PdfMakerViewModel
 import app.scanfit.feature.settings.SettingsRoute
@@ -66,177 +72,185 @@ private enum class Tab(
     SETTINGS("settings", R.string.tab_settings, Icons.Filled.Settings),
 }
 
+/** The app: navigation, plus the paywall over everything and the free-saves count reviews show (ALGORITHMS 14.3). */
 @Composable
-fun ScanFitApp() {
+fun ScanFitApp(paywall: PaywallViewModel = hiltViewModel()) {
     ScanFitTheme {
-        val navController = rememberNavController()
-        val backStack by navController.currentBackStackEntryAsState()
-        val destination = backStack?.destination
-        // My Kit owns its own screens and the flows it opens (a prepared file or "Use for exam…").
-        val flowFromKit = destination?.route?.startsWith("$EXAM_ROUTE/") == true &&
-            navController.previousBackStackEntry?.destination?.route?.startsWith(Tab.KIT.route) == true
-        val inKit = destination?.route?.let {
-            it.startsWith("$KIT_ORIGINAL_ROUTE/") || it.startsWith("$KIT_HISTORY_ROUTE/")
+        val freeSavesLeft by paywall.freeSavesLeft.collectAsStateWithLifecycle()
+        CompositionLocalProvider(LocalFreeSavesLeft provides freeSavesLeft) { AppNavigation() }
+        PaywallHost(paywall)
+    }
+}
+
+@Composable
+private fun AppNavigation() {
+    val navController = rememberNavController()
+    val backStack by navController.currentBackStackEntryAsState()
+    val destination = backStack?.destination
+    // My Kit owns its own screens and the flows it opens (a prepared file or "Use for exam…").
+    val flowFromKit = destination?.route?.startsWith("$EXAM_ROUTE/") == true &&
+        navController.previousBackStackEntry?.destination?.route?.startsWith(Tab.KIT.route) == true
+    val inKit = destination?.route?.let {
+        it.startsWith("$KIT_ORIGINAL_ROUTE/") || it.startsWith("$KIT_HISTORY_ROUTE/")
+    } == true
+    // Every tool opens from Home (the Tools tab was folded into it, UI_UX §2).
+    val inTool =
+        destination?.route?.let {
+            it.startsWith(CUSTOM_ROUTE) || it == CHECKER_ROUTE || it.startsWith("$PDF_ROUTE/") ||
+                it == EXAMS_ROUTE
         } == true
-        // Every tool opens from Home (the Tools tab was folded into it, UI_UX §2).
-        val inTool =
-            destination?.route?.let {
-                it.startsWith(CUSTOM_ROUTE) || it == CHECKER_ROUTE || it.startsWith("$PDF_ROUTE/") ||
-                    it == EXAMS_ROUTE
-            } == true
-        Scaffold(
-            containerColor = MaterialTheme.colorScheme.background,
-            bottomBar = {
-                NavigationBar {
-                    Tab.entries.forEach { tab ->
-                        NavigationBarItem(
-                            selected =
-                            destination?.hierarchy?.any { it.route == tab.route } == true ||
-                                (tab == Tab.KIT && (flowFromKit || inKit)) ||
-                                (tab == Tab.HOME && inTool) ||
-                                (
-                                    tab == Tab.HOME && !flowFromKit &&
-                                        destination?.route?.startsWith("$EXAM_ROUTE/") == true
-                                    ),
-                            onClick = {
-                                navController.navigate(tab.route) {
-                                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        bottomBar = {
+            NavigationBar {
+                Tab.entries.forEach { tab ->
+                    NavigationBarItem(
+                        selected =
+                        destination?.hierarchy?.any { it.route == tab.route } == true ||
+                            (tab == Tab.KIT && (flowFromKit || inKit)) ||
+                            (tab == Tab.HOME && inTool) ||
+                            (
+                                tab == Tab.HOME && !flowFromKit &&
+                                    destination?.route?.startsWith("$EXAM_ROUTE/") == true
+                                ),
+                        onClick = {
+                            navController.navigate(tab.route) {
+                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        icon = { Icon(tab.icon, contentDescription = null) },
+                        label = { Text(stringResource(tab.label)) },
+                    )
+                }
+            }
+        },
+    ) { padding ->
+        NavHost(navController, startDestination = Tab.HOME.route, modifier = Modifier.padding(padding)) {
+            composable(Tab.HOME.route) {
+                HomeRoute(
+                    onOpenExam = { id -> navController.navigate("$EXAM_ROUTE/$id") },
+                    onTool = { tool -> navController.navigate(route(tool)) { launchSingleTop = true } },
+                )
+            }
+            composable(EXAMS_ROUTE) {
+                ExamBrowserRoute(
+                    onBack = { navController.popBackStack() },
+                    onOpenExam = { id -> navController.navigate("$EXAM_ROUTE/$id") },
+                    onCustomSize = { navController.navigate(CUSTOM_ROUTE) { launchSingleTop = true } },
+                    onChecker = { navController.navigate(CHECKER_ROUTE) { launchSingleTop = true } },
+                )
+            }
+            composable(CHECKER_ROUTE) { CheckerRoute(onBack = { navController.popBackStack() }) }
+            composable(
+                "$CUSTOM_ROUTE?${CustomViewModel.DOC}={${CustomViewModel.DOC}}",
+                arguments = listOf(optionalArgument(CustomViewModel.DOC)),
+            ) {
+                CustomRoute(
+                    onBack = { navController.popBackStack() },
+                    onContinue = { size ->
+                        val flow = if (size.doc in PHOTO_FLOW_TYPES) PHOTO_ROUTE else INK_ROUTE
+                        val route = "$CUSTOM_ROUTE/$flow?${FlowTarget.CUSTOM}=${Uri.encode(size.text)}"
+                        navController.navigate(route) {
+                            launchSingleTop = true
+                        }
+                    },
+                )
+            }
+            composable(
+                "$CUSTOM_ROUTE/$PHOTO_ROUTE?${FlowTarget.CUSTOM}={${FlowTarget.CUSTOM}}",
+                arguments = listOf(customArgument()),
+            ) {
+                PhotoFlowRoute(onBack = { navController.popBackStack() }, onDone = { navController.popBackStack() })
+            }
+            composable(
+                "$CUSTOM_ROUTE/$INK_ROUTE?${FlowTarget.CUSTOM}={${FlowTarget.CUSTOM}}",
+                arguments = listOf(customArgument()),
+            ) {
+                InkFlowRoute(onBack = { navController.popBackStack() }, onDone = { navController.popBackStack() })
+            }
+            composable("$EXAM_ROUTE/{${ExamViewModel.EXAM_ID}}") {
+                ExamRoute(
+                    onBack = { navController.popBackStack() },
+                    docActions =
+                    DocActions(
+                        // Every other slot type is a PDF slot (the PDF maker says so when it takes none).
+                        canOpen = { true },
+                        onOpen = { examId, type ->
+                            // Single top: a double tap must not stack two flows (Done would land on the second).
+                            val flow =
+                                when (type) {
+                                    in PHOTO_FLOW_TYPES -> PHOTO_ROUTE
+                                    in INK_FLOW_TYPES -> INK_ROUTE
+                                    else -> PDF_ROUTE
                                 }
-                            },
-                            icon = { Icon(tab.icon, contentDescription = null) },
-                            label = { Text(stringResource(tab.label)) },
-                        )
-                    }
-                }
-            },
-        ) { padding ->
-            NavHost(navController, startDestination = Tab.HOME.route, modifier = Modifier.padding(padding)) {
-                composable(Tab.HOME.route) {
-                    HomeRoute(
-                        onOpenExam = { id -> navController.navigate("$EXAM_ROUTE/$id") },
-                        onTool = { tool -> navController.navigate(route(tool)) { launchSingleTop = true } },
-                    )
-                }
-                composable(EXAMS_ROUTE) {
-                    ExamBrowserRoute(
-                        onBack = { navController.popBackStack() },
-                        onOpenExam = { id -> navController.navigate("$EXAM_ROUTE/$id") },
-                        onCustomSize = { navController.navigate(CUSTOM_ROUTE) { launchSingleTop = true } },
-                        onChecker = { navController.navigate(CHECKER_ROUTE) { launchSingleTop = true } },
-                    )
-                }
-                composable(CHECKER_ROUTE) { CheckerRoute(onBack = { navController.popBackStack() }) }
-                composable(
-                    "$CUSTOM_ROUTE?${CustomViewModel.DOC}={${CustomViewModel.DOC}}",
-                    arguments = listOf(optionalArgument(CustomViewModel.DOC)),
-                ) {
-                    CustomRoute(
-                        onBack = { navController.popBackStack() },
-                        onContinue = { size ->
-                            val flow = if (size.doc in PHOTO_FLOW_TYPES) PHOTO_ROUTE else INK_ROUTE
-                            val route = "$CUSTOM_ROUTE/$flow?${FlowTarget.CUSTOM}=${Uri.encode(size.text)}"
+                            val route = "$EXAM_ROUTE/$examId/$flow/${type.name.lowercase()}"
                             navController.navigate(route) {
                                 launchSingleTop = true
                             }
                         },
-                    )
-                }
-                composable(
-                    "$CUSTOM_ROUTE/$PHOTO_ROUTE?${FlowTarget.CUSTOM}={${FlowTarget.CUSTOM}}",
-                    arguments = listOf(customArgument()),
-                ) {
-                    PhotoFlowRoute(onBack = { navController.popBackStack() }, onDone = { navController.popBackStack() })
-                }
-                composable(
-                    "$CUSTOM_ROUTE/$INK_ROUTE?${FlowTarget.CUSTOM}={${FlowTarget.CUSTOM}}",
-                    arguments = listOf(customArgument()),
-                ) {
-                    InkFlowRoute(onBack = { navController.popBackStack() }, onDone = { navController.popBackStack() })
-                }
-                composable("$EXAM_ROUTE/{${ExamViewModel.EXAM_ID}}") {
-                    ExamRoute(
-                        onBack = { navController.popBackStack() },
-                        docActions =
-                        DocActions(
-                            // Every other slot type is a PDF slot (the PDF maker says so when it takes none).
-                            canOpen = { true },
-                            onOpen = { examId, type ->
-                                // Single top: a double tap must not stack two flows (Done would land on the second).
-                                val flow =
-                                    when (type) {
-                                        in PHOTO_FLOW_TYPES -> PHOTO_ROUTE
-                                        in INK_FLOW_TYPES -> INK_ROUTE
-                                        else -> PDF_ROUTE
-                                    }
-                                val route = "$EXAM_ROUTE/$examId/$flow/${type.name.lowercase()}"
-                                navController.navigate(route) {
-                                    launchSingleTop = true
-                                }
-                            },
-                        ),
-                    )
-                }
-                composable(
-                    "$EXAM_ROUTE/{${PhotoFlowViewModel.EXAM_ID}}/$PHOTO_ROUTE/{${PhotoFlowViewModel.DOC_TYPE}}" +
-                        "?${PhotoFlowViewModel.ORIGINAL}={${PhotoFlowViewModel.ORIGINAL}}",
-                    arguments = listOf(optionalArgument(PhotoFlowViewModel.ORIGINAL)),
-                ) {
-                    PhotoFlowRoute(
-                        onBack = { navController.popBackStack() },
-                        onDone = { navController.popBackStack() },
-                    )
-                }
-                composable(
-                    "$EXAM_ROUTE/{${InkFlowViewModel.EXAM_ID}}/$INK_ROUTE/{${InkFlowViewModel.DOC_TYPE}}" +
-                        "?${InkFlowViewModel.ORIGINAL}={${InkFlowViewModel.ORIGINAL}}",
-                    arguments = listOf(optionalArgument(InkFlowViewModel.ORIGINAL)),
-                ) {
-                    InkFlowRoute(
-                        onBack = { navController.popBackStack() },
-                        onDone = { navController.popBackStack() },
-                    )
-                }
-                composable("$EXAM_ROUTE/{${PdfMakerViewModel.EXAM_ID}}/$PDF_ROUTE/{${PdfMakerViewModel.DOC_TYPE}}") {
-                    PdfMakerRoute(onBack = { navController.popBackStack() }, onDone = { navController.popBackStack() })
-                }
-                composable("$PDF_ROUTE/{${PdfMakerViewModel.TOOL}}") {
-                    PdfMakerRoute(onBack = { navController.popBackStack() }, onDone = { navController.popBackStack() })
-                }
-                composable(Tab.KIT.route) {
-                    KitRoute(
-                        onOpen = { examId, type ->
-                            val flow = if (type in PHOTO_FLOW_TYPES) PHOTO_ROUTE else INK_ROUTE
-                            navController.navigate("$EXAM_ROUTE/$examId/$flow/${type.name.lowercase()}") {
-                                launchSingleTop = true
-                            }
-                        },
-                        onOpenOriginal = { id ->
-                            navController.navigate("$KIT_ORIGINAL_ROUTE/$id") { launchSingleTop = true }
-                        },
-                        onOpenHistory = { id ->
-                            navController.navigate("$KIT_HISTORY_ROUTE/$id") { launchSingleTop = true }
-                        },
-                    )
-                }
-                composable("$KIT_HISTORY_ROUTE/{${KitHistoryPreviewViewModel.EXPORT_ID}}") {
-                    KitHistoryPreviewRoute(onBack = { navController.popBackStack() })
-                }
-                composable("$KIT_ORIGINAL_ROUTE/{${KitOriginalViewModel.ORIGINAL_ID}}") { entry ->
-                    val id = entry.arguments?.getString(KitOriginalViewModel.ORIGINAL_ID).orEmpty()
-                    KitOriginalRoute(
-                        onBack = { navController.popBackStack() },
-                        // "Use for exam…" (ALGORITHMS 13.2): the slot's flow starts from the original; Done comes back.
-                        onUse = { examId, type ->
-                            val flow = if (type in PHOTO_FLOW_TYPES) PHOTO_ROUTE else INK_ROUTE
-                            val slot = "$EXAM_ROUTE/$examId/$flow/${type.name.lowercase()}"
-                            navController.navigate("$slot?${KitIds.ROUTE_ARGUMENT}=$id") { launchSingleTop = true }
-                        },
-                    )
-                }
-                composable(Tab.SETTINGS.route) { SettingsRoute() }
+                    ),
+                )
             }
+            composable(
+                "$EXAM_ROUTE/{${PhotoFlowViewModel.EXAM_ID}}/$PHOTO_ROUTE/{${PhotoFlowViewModel.DOC_TYPE}}" +
+                    "?${PhotoFlowViewModel.ORIGINAL}={${PhotoFlowViewModel.ORIGINAL}}",
+                arguments = listOf(optionalArgument(PhotoFlowViewModel.ORIGINAL)),
+            ) {
+                PhotoFlowRoute(
+                    onBack = { navController.popBackStack() },
+                    onDone = { navController.popBackStack() },
+                )
+            }
+            composable(
+                "$EXAM_ROUTE/{${InkFlowViewModel.EXAM_ID}}/$INK_ROUTE/{${InkFlowViewModel.DOC_TYPE}}" +
+                    "?${InkFlowViewModel.ORIGINAL}={${InkFlowViewModel.ORIGINAL}}",
+                arguments = listOf(optionalArgument(InkFlowViewModel.ORIGINAL)),
+            ) {
+                InkFlowRoute(
+                    onBack = { navController.popBackStack() },
+                    onDone = { navController.popBackStack() },
+                )
+            }
+            composable("$EXAM_ROUTE/{${PdfMakerViewModel.EXAM_ID}}/$PDF_ROUTE/{${PdfMakerViewModel.DOC_TYPE}}") {
+                PdfMakerRoute(onBack = { navController.popBackStack() }, onDone = { navController.popBackStack() })
+            }
+            composable("$PDF_ROUTE/{${PdfMakerViewModel.TOOL}}") {
+                PdfMakerRoute(onBack = { navController.popBackStack() }, onDone = { navController.popBackStack() })
+            }
+            composable(Tab.KIT.route) {
+                KitRoute(
+                    onOpen = { examId, type ->
+                        val flow = if (type in PHOTO_FLOW_TYPES) PHOTO_ROUTE else INK_ROUTE
+                        navController.navigate("$EXAM_ROUTE/$examId/$flow/${type.name.lowercase()}") {
+                            launchSingleTop = true
+                        }
+                    },
+                    onOpenOriginal = { id ->
+                        navController.navigate("$KIT_ORIGINAL_ROUTE/$id") { launchSingleTop = true }
+                    },
+                    onOpenHistory = { id ->
+                        navController.navigate("$KIT_HISTORY_ROUTE/$id") { launchSingleTop = true }
+                    },
+                )
+            }
+            composable("$KIT_HISTORY_ROUTE/{${KitHistoryPreviewViewModel.EXPORT_ID}}") {
+                KitHistoryPreviewRoute(onBack = { navController.popBackStack() })
+            }
+            composable("$KIT_ORIGINAL_ROUTE/{${KitOriginalViewModel.ORIGINAL_ID}}") { entry ->
+                val id = entry.arguments?.getString(KitOriginalViewModel.ORIGINAL_ID).orEmpty()
+                KitOriginalRoute(
+                    onBack = { navController.popBackStack() },
+                    // "Use for exam…" (ALGORITHMS 13.2): the slot's flow starts from the original; Done comes back.
+                    onUse = { examId, type ->
+                        val flow = if (type in PHOTO_FLOW_TYPES) PHOTO_ROUTE else INK_ROUTE
+                        val slot = "$EXAM_ROUTE/$examId/$flow/${type.name.lowercase()}"
+                        navController.navigate("$slot?${KitIds.ROUTE_ARGUMENT}=$id") { launchSingleTop = true }
+                    },
+                )
+            }
+            composable(Tab.SETTINGS.route) { SettingsRoute() }
         }
     }
 }

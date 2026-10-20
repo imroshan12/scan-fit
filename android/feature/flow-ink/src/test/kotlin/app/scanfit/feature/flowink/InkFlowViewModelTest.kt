@@ -23,6 +23,7 @@ import app.scanfit.core.testing.FakeShareStager
 import app.scanfit.core.testing.FakeUserPreferences
 import app.scanfit.core.testing.SpecPresets
 import app.scanfit.core.testing.TestJpeg
+import app.scanfit.core.testing.TestSaveGate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -65,7 +66,7 @@ class InkFlowViewModelTest {
         FakePresetsRepository(PresetsLoadOutcome.Ready(PresetsSummary(55, 2)), SpecPresets.bundle),
         tools,
         prefs,
-        DocumentExporter(destination, prefs, FakeKitStore()),
+        DocumentExporter(destination, prefs, FakeKitStore(), TestSaveGate().gate),
         dispatcher,
         FakeDraftStore(),
         share,

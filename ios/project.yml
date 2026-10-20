@@ -21,7 +21,7 @@ settings:
         GCC_TREAT_WARNINGS_AS_ERRORS: YES
         CLANG_ANALYZER_NONNULL: YES
         CODE_SIGN_STYLE: Automatic # the team comes from Config/*.xcconfig (Local.xcconfig or the CI command line)
-        APP_BUNDLE_ID: com.roshtech.scanfit # PLACEHOLDER: permanent once published. Change here only, and the Android applicationId to match
+        APP_BUNDLE_ID: com.roshtech.scanfit # FINAL (user, 2026-10-20): permanent once published; the Android applicationId matches
 
 configFiles:
     Debug: Config/Debug.xcconfig
@@ -50,7 +50,8 @@ targets:
         info:
             path: ScanFit/Info.plist
             properties:
-                CFBundleDisplayName: ScanFit
+                CFBundleDisplayName: Mr Doc
+                CFBundleName: Mr Doc
                 CFBundleShortVersionString: $(MARKETING_VERSION) # XcodeGen would otherwise write a literal 1.0
                 CFBundleVersion: $(CURRENT_PROJECT_VERSION) # must rise on every TestFlight upload
                 CFBundleLocalizations: [en, hi]
@@ -64,7 +65,7 @@ targets:
                     - UIInterfaceOrientationLandscapeRight
                 ITSAppUsesNonExemptEncryption: false # only Ed25519 signature verification + HTTPS
                 # English fallback; the shown text is localised from ScanFit/InfoPlist.xcstrings (spec infoplist.*).
-                NSCameraUsageDescription: ScanFit uses the camera to take your photo for exam forms. The photo stays on your phone.
+                NSCameraUsageDescription: Mr Doc uses the camera to take your photo for exam forms. The photo stays on your phone.
         dependencies:
             - package: Core
               product: DesignSystem
@@ -92,6 +93,10 @@ targets:
               product: PDFTools
             - package: Features
               product: Settings
+            - package: Features
+              product: Paywall
+            - package: Core
+              product: Billing
         postBuildScripts:
             - name: Embed signed presets
               script: '"${SRCROOT}/Scripts/embed_presets.sh"'
@@ -111,6 +116,18 @@ targets:
             - package: Core
               product: Presets
 
+    ScanFitUITests:
+        type: bundle.ui-testing
+        platform: iOS
+        sources:
+            - path: ScanFitUITests
+        settings:
+            base:
+                PRODUCT_BUNDLE_IDENTIFIER: $(APP_BUNDLE_ID).uitests
+                GENERATE_INFOPLIST_FILE: YES
+        dependencies:
+            - target: ScanFit
+
 schemes:
     ScanFit:
         build:
@@ -124,3 +141,12 @@ schemes:
                 - ScanFitTests
         archive:
             config: Release
+    ScanFitSmoke:
+        build:
+            targets:
+                ScanFit: all
+        test:
+            config: Debug
+            targets:
+                - ScanFitUITests
+            gatherCoverageData: false

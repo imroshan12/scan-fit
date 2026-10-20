@@ -15,7 +15,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.IOException
 import javax.inject.Inject
 
-/** Android 10+: a pending MediaStore entry in `Download/ScanFit/<Exam>/`; Android 8–9: the user's SAF pick. */
+/** Android 10+: a pending MediaStore entry in `Download/Mr Doc/<Exam>/`; Android 8–9: the user's SAF pick. */
 class AndroidExportDestinations
 @Inject
 constructor(
@@ -35,10 +35,11 @@ constructor(
     @RequiresApi(Build.VERSION_CODES.Q)
     private fun createDownload(request: ExportRequest): ExportDestination {
         val folder = ExportNaming.examShort(request.examName).ifEmpty { request.examId }
+        val path = "${Environment.DIRECTORY_DOWNLOADS}/${ExportNaming.APP_FOLDER}/$folder/"
         val values = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, request.fileName)
             put(MediaStore.MediaColumns.MIME_TYPE, request.mimeType)
-            put(MediaStore.MediaColumns.RELATIVE_PATH, "${Environment.DIRECTORY_DOWNLOADS}/ScanFit/$folder/")
+            put(MediaStore.MediaColumns.RELATIVE_PATH, path)
             put(MediaStore.MediaColumns.IS_PENDING, 1)
         }
         val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)

@@ -84,6 +84,8 @@ public final class PdfMakerViewModel {
     @ObservationIgnored private let tools: any PdfMakerTools
     @ObservationIgnored private let preferences: UserPreferences?
     @ObservationIgnored private let kit: any KitStore
+    /// The free-saves gate (ALGORITHMS 14); `nil` saves and shares without counting (tests, previews).
+    @ObservationIgnored private let gate: SaveGate?
     @ObservationIgnored private var bytes: [Int: [UInt8]] = [:]
     @ObservationIgnored private var nextId = 1
     @ObservationIgnored private var job: Task<Void, Never>?
@@ -95,9 +97,10 @@ public final class PdfMakerViewModel {
     /// `examId` + `docType` for an exam slot (resolved through `load`), else `tool`.
     public init(
         route: PdfRoute, tools: any PdfMakerTools = LivePdfMakerTools(), preferences: UserPreferences?,
-        exporter: any DocumentExporting = FilesExporter(), kit: any KitStore = NoKitStore(),
+        exporter: any DocumentExporting = FilesExporter(), kit: any KitStore = NoKitStore(), gate: SaveGate? = nil,
         load: @escaping @Sendable () async -> PresetBundle?
     ) {
+        self.gate = gate
         tool = route.examId == nil ? PdfTool(rawValue: route.tool) ?? .images : .exam
         self.tools = tools
         self.preferences = preferences
@@ -326,10 +329,12 @@ public final class PdfMakerViewModel {
 
     /// Saves the PDF (ALGORITHMS 6.5); Saved (exam slots) and history are recorded only after verification.
     public func save() async {
-        guard canSave, let request = request(), let target else { return }
+        guard canSave, let request = request(), let target,
+              gate?.allows([request.bytes], trigger: .save) ?? true else { return }
         exportState = .saving
         exportState = await exporter.save(request)
         if exportState == .saved {
+            await gate?.record(request.bytes)
             if target.exam { preferences?.recordSaved(target.examId, target.spec.type) }
             await kit.recordExport(request, examId: target.examId, examName: target.examName)
         }
@@ -337,9 +342,10 @@ public final class PdfMakerViewModel {
 
     /// Shares exactly the made PDF under its export name (ALGORITHMS 1.6.2); same gate as Save.
     public func sharePdf() async {
-        guard canSave, let request = request() else { return }
+        guard canSave, let request = request(), gate?.allows([request.bytes], trigger: .share) ?? true else { return }
         let staged = result
         let url = await ShareStager.stage(request.bytes, filename: request.filename)
+        if url != nil { await gate?.record(request.bytes) }
         guard result == staged else { return }
         share = url.map { .ready(SharedFile(url: $0)) } ?? .failed
     }

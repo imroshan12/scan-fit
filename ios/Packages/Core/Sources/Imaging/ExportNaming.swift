@@ -1,7 +1,7 @@
 import Foundation
 import ScanModel
 
-/// Export file names (ALGORITHMS 1.7 / 9.8). The folder (`Files > ScanFit > <Exam>/`) is chosen by the export layer.
+/// Export file names (ALGORITHMS 1.7 / 9.8). The folder (`Files > Mr Doc > <Exam>/`) is chosen by the export layer.
 public enum ExportNaming {
     /// `IBPS PO / MT` -> `IBPS-PO`.
     public static func examShort(_ name: String) -> String {

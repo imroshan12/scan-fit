@@ -46,6 +46,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.scanfit.core.data.export.SaveState
 import app.scanfit.core.designsystem.R
 import app.scanfit.core.designsystem.components.FreeCropEditor
+import app.scanfit.core.designsystem.components.FreeSavesNote
 import app.scanfit.core.designsystem.components.ShareEffect
 import app.scanfit.core.designsystem.components.labelRes
 import app.scanfit.core.designsystem.theme.ScanFitSpacing
@@ -297,6 +298,7 @@ private fun BottomBar(
                     TextButton(onClick = actions.onShare, enabled = state.canSave, modifier = Modifier.fullWidth()) {
                         Text(stringResource(R.string.common_share))
                     }
+                    if (!saved) FreeSavesNote()
                 }
 
                 !state.notFound -> {

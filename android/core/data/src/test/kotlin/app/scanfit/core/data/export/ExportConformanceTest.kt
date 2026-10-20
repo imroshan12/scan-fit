@@ -6,6 +6,7 @@ import app.scanfit.core.testing.FakeKitStore
 import app.scanfit.core.testing.FakeUserPreferences
 import app.scanfit.core.testing.SpecPresets
 import app.scanfit.core.testing.TestJpeg
+import app.scanfit.core.testing.TestSaveGate
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
@@ -46,7 +47,7 @@ class ExportConformanceTest(
             else -> error("$id: unknown export operation $operation")
         }
         val kit = FakeKitStore()
-        val result = DocumentExporter(destination, prefs, kit).export(ExportRequest(exam.id, exam.name, spec, DocKind.PHOTO, bytes))
+        val result = DocumentExporter(destination, prefs, kit, TestSaveGate().gate).export(ExportRequest(exam.id, exam.name, spec, DocKind.PHOTO, bytes))
         val expect = case.getValue("expect").jsonObject
         assertEquals(id, expect.getValue("state").jsonPrimitive.content, result.state.name.lowercase())
         assertEquals(id, expect.getValue("delete").jsonPrimitive.boolean, "delete" in destination.events)

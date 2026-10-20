@@ -9,6 +9,9 @@ import app.scanfit.core.data.export.ExportDestinations
 import app.scanfit.core.data.export.ShareStager
 import app.scanfit.core.data.kit.FileKitStore
 import app.scanfit.core.data.kit.KitStore
+import app.scanfit.core.data.quota.FileQuotaStore
+import app.scanfit.core.data.quota.QuotaConfig
+import app.scanfit.core.data.quota.QuotaStore
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -44,5 +47,15 @@ internal abstract class DataModule {
         fun kitStore(
             @ApplicationContext context: Context,
         ): KitStore = FileKitStore(File(context.noBackupFilesDir.canonicalFile, "kit"))
+
+        /** The free-saves count (ALGORITHMS 14.4): no-backup storage, so file identities never leave the phone. */
+        @Provides
+        @Singleton
+        fun quotaStore(
+            @ApplicationContext context: Context,
+        ): QuotaStore = FileQuotaStore(File(context.noBackupFilesDir.canonicalFile, "quota"))
+
+        @Provides
+        fun quotaConfig(): QuotaConfig = QuotaConfig { QuotaConfig.DEFAULT_FREE_SAVES_TOTAL }
     }
 }

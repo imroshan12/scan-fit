@@ -88,7 +88,7 @@ public struct HomeView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: ScanFitSpacing.xs) {
-            Text(verbatim: "ScanFit").scanFitText(.label).foregroundStyle(ScanFitColor.primary)
+            Text(strings.appName).scanFitText(.label).foregroundStyle(ScanFitColor.primary)
             Text(strings.homeTitle)
                 .scanFitText(.display)
                 .foregroundStyle(ScanFitColor.onBackground)

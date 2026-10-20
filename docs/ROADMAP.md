@@ -9,6 +9,10 @@ Target: **Android public launch ~W11, iOS ~W12.** Aim to be live before the next
 wave (typically CUET UG / NEET UG registration in Jan–Feb, and the IBPS/SSC notification cycles
 through the year). Check the actual 2027 dates when scheduling the launch.
 
+**Update 2026-10-20 (user decisions):** store name **Mr Doc**; a lean v1.0 (what is built + Pro + Settings + legal +
+Hindi review) launches on both stores in the **first week of December 2026**. Scan entry, the guide sheet and the live
+coach move to v1.1. Monetisation is 20 free saves then Pro, no ads (PRD §6). Week-by-week plan: `docs/LAUNCH_PLAN.md`.
+
 ---
 
 ## Phase 0 — Foundations (W1)
@@ -29,7 +33,7 @@ through the year). Check the actual 2027 dates when scheduling the launch.
     - _Done:_ Android: `EmbedPresetsTask` verifies with the JDK and refuses to embed a snapshot that does not match the key. iOS: `Scripts/embed_presets.sh` does the same. Debug embeds the dev key, release requires `prod_public_key.b64` (refused if missing). _Found and fixed:_ Tink's Ed25519 cost 0.7-1.4 s per cold start on a 2 GB emulator, so Android caches a verified digest (`docs/spikes/ed25519-verify-cost.md`).
 - [ ] [Ops] GitHub Actions: `spec.yml`, `android.yml`, `ios.yml` (path-filtered), caches, required checks on `main`
     - _Not done:_ `spec.yml`, `android.yml`, `ios.yml` are written and parse, but have **never run**: this folder is not a git repo and has no remote. Expect first-run fixes. `swiftformat` is deliberately not a CI step.
-- [ ] [W] `web/`: Cloudflare Pages (or GitHub Pages) project serving `/presets/v2/`, plus `upload-test/` (TECH_FEASIBILITY spike 1)
+- [ ] [W] `web/`: Cloudflare Pages (or GitHub Pages) project serving `/presets/v2/`, plus `upload-test/` (TECH_FEASIBILITY spike 1). _2026-10-20: GitHub Pages chosen (user); `.github/workflows/pages.yml` deploys `web/` to `https://imroshan12.github.io/scan-fit/` once Pages is set to "GitHub Actions" in the repo settings._
     - _Partly done:_ `web/upload-test/` built and tested (Node + browser), `_headers`, `web/presets/v2/` staging dir. _Not done:_ the Cloudflare Pages project itself (an Ops task).
 - [ ] Spikes 1, 4, 5 → `docs/spikes/*.md`
     - _Not done:_ see `docs/spikes/README.md`. Spike 1's tool is built; none needs the devices run yet.
@@ -229,11 +233,14 @@ file passes the upload echo page. Zero P0/P1 bugs open.
     - Home is a grid of large tool cards (Exam forms is one card; the old list moved to Exam forms); tabs Home · My Kit ·
       Settings (Tools tab removed, its tools are cards). My Kit: row thumbnails, History file preview (image / PDF pages),
       Save to My Kit shows the picture first. UI_UX §1–3, ALGORITHMS §6.6, §11, §13.3. Device QA open (HANDOFF §5).
-- [ ] Scan entry: ML Kit Document Scanner / VisionKit, with the Android low-RAM fallback (CameraX + 4-corner crop)
-- [ ] Printable guide sheet PDF generator (true-scale boxes: signature 7:3, thumb square, declaration 2:1, triple signature, NEET fingers) + a "Print / Share" action
-- [ ] Settings: language, presets version + manual update, unverified toggle, privacy, help, "Report a problem" (mailto with exam id + app/preset version, **no file**)
+- [ ] Scan entry: ML Kit Document Scanner / VisionKit, with the Android low-RAM fallback (CameraX + 4-corner crop). _Moved to v1.1 (lean v1.0, 2026-10-20)._
+- [ ] Printable guide sheet PDF generator (true-scale boxes: signature 7:3, thumb square, declaration 2:1, triple signature, NEET fingers) + a "Print / Share" action. _Moved to v1.1 (lean v1.0, 2026-10-20)._
+- [x] Settings: language, presets version + manual update, unverified toggle, privacy, help, "Report a problem" (mailto with exam id + app/preset version, **no file**); Pro status, free saves left and Restore purchases come with Phase 4
+      _Done 2026-10-20 on both apps:_ Pro (status, free saves left, Get Pro, Restore), language, unverified, presets version, privacy (note, analytics opt-out, policy, terms), Help, Report a problem (mailto: app, OS and specs versions, no file, no exam id from Settings), disclaimer, app version. _Deviation:_ no manual presets update button until OTA sync exists (Phase 4); website links are placeholders on `mrdoc.example` (`AppLinks`, preflight blocks `--final`). Account rows come with sign-in.
+- [ ] Rename to **Mr Doc** (user decision 2026-10-20): app display name, user-facing strings that say "ScanFit", website. Module and package names stay. Pick the permanent `applicationId` / bundle id before the first upload (RELEASE_CHECKLIST §1)
+      _Done 2026-10-20 except the ids:_ `app.name`, every "ScanFit" string (en + hi), iOS `CFBundleDisplayName`/`CFBundleName` now spec keys (`infoplist.display_name`, `infoplist.bundle_name`), camera text, the Home wordmark, `web/`, and the Android folder `Downloads/Mr Doc/<Exam>/` (user choice; `ExportNaming.APP_FOLDER`). Waiting on the user's permanent ids.
 - [ ] Hindi review of all primary-flow strings by a native speaker; clear `TODO_HI`
-- [ ] [Ops] **Start the Play closed test now** (if a personal account): ≥ 12 real testers opted in for 14 continuous days, using the app on several days. Recruit from aspirant groups/friends; give testers a script (TESTING §6)
+- [ ] [Ops] **Start the Play closed test now — target 2026-10-27** (the account is personal, so this is mandatory): ≥ 12 real testers opted in for 14 continuous days, using the app on several days. Recruit from aspirant groups/friends; give testers a script (TESTING §6)
 - [ ] [Ops] TestFlight external beta group
 
 **Exit gate:** PDF fixtures (add 3 sample PDFs to `spec/fixtures`) compress into each target;
@@ -242,16 +249,20 @@ closed test running with ≥ 12 testers.
 ## Phase 4 — Monetisation, coach, operations (W8)
 
 - [ ] RevenueCat setup (products `pro_yearly`, `pro_lifetime`, entitlement `pro`), paywall screen, restore, entitlement cache offline
-- [ ] Free export counter (daily, local) + rewarded ad unlock; interstitial cap; `AdGate` with kill switch; UMP consent; non-personalised requests
+      _Partly done 2026-10-20:_ `Billing` interface on both apps (`:core:billing`, iOS `Billing`) with `LocalBilling` (release: store unavailable; debug: fake ₹99/₹199 products granting Pro for the session); paywall screen + VM on both apps (ALGORITHMS 14.3: loading, unavailable/Retry, buying, pending, failed, thanks, Restore, privacy/terms links). Open: RevenueCat SDK behind `Billing` (needs the user's RevenueCat project and keys), `logIn(uid)`, offline entitlement cache.
+      _QA follow-up 2026-10-20:_ fixed stale store responses across close/reopen on both apps; 3 shared lifecycle cases plus duplicate-action/offer guards. iOS `ScanFitSmoke` (4 XCUITests, no screenshot baselines) passes on iPhone 11 Pro Max / iOS 26.5: Settings, fake purchase, Restore, unavailable-store Retry, Hindi largest text. Real purchases, Android native UI and iOS 17 remain open.
+- [ ] Accounts (user decision 2026-10-20, PRD §6): sign-in on first launch (Google; Apple on iPhone), Firebase Auth + database record with the save count only, Sign out / Delete account in Settings, security rules, App Check, offline first launch
+- [x] Free saves (user decision 2026-10-20, PRD §6): 20 saves in total, then the paywall; `SaveQuota` (ARCHITECTURE §8), "N free saves left" in Settings and on the review at ≤ 5. Spec the counting rules in ALGORITHMS first. **No ads** (the old rewarded/interstitial/UMP task is dropped)
+      _Done 2026-10-20 on both apps, local only:_ ALGORITHMS §14 + 11 `save_quota_cases` (reference `spec/tools/quota.py`); `SaveQuotaRules`, `FileQuotaStore` (no-backup), `SaveGate` gating review Save/Share, Checker, PDF tools/slots, Custom size and Save all (whole batch decided first); History re-share and Save to My Kit free. Open: the account sync (`merge`) with sign-in, `free_saves_total` from Remote Config, `free_saves_spent` analytics.
 - [ ] Remote Config defaults + fetch; all keys in ARCHITECTURE §9 wired
 - [ ] Analytics events from the generated enum; Crashlytics with no PII keys
 - [ ] Preset OTA sync (WorkManager / BGTask + foreground), ETag, signature check, version monotonicity, "Spec updated" badges on exams whose files changed
-- [ ] Live photo coach (§7) with thresholds from Remote Config; practice-only copy
+- [ ] Live photo coach (§7) with thresholds from Remote Config; practice-only copy. _Moved to v1.1 (lean v1.0, 2026-10-20)._
 - [ ] My Kit retention by plan (user decision 2026-10-15): free users keep originals 30 days, Pro until deleted; "Make all files" from My Kit (Pro, PRD F11)
 - [ ] "Did the portal accept it?" one-tap prompt 24 h after a save (local notification only if permission was already granted; otherwise an in-app card on next open)
 
 **Exit gate:** purchase + restore work on real devices (Play test cards/UPI test, StoreKit sandbox);
-ads render and can be killed remotely; a preset change published to the CDN appears in the app within
+the 21st save opens the paywall and a purchase unblocks it; a preset change published to the CDN appears in the app within
 one foreground cycle, and a tampered bundle is rejected.
 
 ## Phase 5 — Hardening + store readiness (W9–W10)

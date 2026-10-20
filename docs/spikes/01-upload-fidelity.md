@@ -19,7 +19,7 @@ For each fixture output (the 4 IBPS PO files from the app, plus `progressive_200
 
 | Path | Android Chrome | Samsung Internet | iOS Safari | Chrome iOS |
 |---|---|---|---|---|
-| Files / Downloads (`Download/ScanFit/<Exam>/`) | ☐ | ☐ | ☐ (Files) | ☐ (Files) |
+| Files / Downloads (`Download/Mr Doc/<Exam>/`) | ☐ | ☐ | ☐ (Files) | ☐ (Files) |
 | Photo Picker | ☐ | ☐ | n/a | n/a |
 | Photos library | n/a | n/a | ☐ | ☐ |
 

@@ -28,6 +28,7 @@ import app.scanfit.core.testing.FakeUserPreferences
 import app.scanfit.core.testing.SpecPresets
 import app.scanfit.core.testing.TestJpeg
 import app.scanfit.core.testing.TestPdf
+import app.scanfit.core.testing.TestSaveGate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -107,7 +108,7 @@ class CheckerViewModelTest {
         FakePresetsRepository(PresetsLoadOutcome.Ready(PresetsSummary(55, 2)), SpecPresets.bundle),
         tools,
         prefs,
-        DocumentExporter(destinations, prefs, FakeKitStore()),
+        DocumentExporter(destinations, prefs, FakeKitStore(), TestSaveGate().gate),
         share,
         dispatcher,
     )

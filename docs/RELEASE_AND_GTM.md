@@ -1,5 +1,9 @@
 # RELEASE_AND_GTM.md — rollout, marketing, beating the competition
 
+**Update 2026-10-20 (user decisions):** the store name is **Mr Doc**, positioned as an everyday photo and PDF editor
+with exam forms built in; 20 free saves then Pro, **no ads** (PRD §6); launch dates and owners in `docs/LAUNCH_PLAN.md`.
+Where this file still says ScanFit, rewarded ads or the season pass, LAUNCH_PLAN and PRD §6 win.
+
 ## 1. Competitive landscape (researched Sept 2026)
 | Type | Examples | Strengths | Gaps we exploit |
 |---|---|---|---|
@@ -43,13 +47,14 @@ that exam: "Spec corrected on <date>. Re-make your files". (4) Post-mortem in `d
 
 ## 3. ASO (App Store Optimisation)
 - **Name/title:** brand + generic keywords, no exam-body names in the title (impersonation risk).
-  E.g. "ScanFit: Exam Photo & Sign Resizer". Short description: "Photo, signature, thumb &
-  PDF fixed to exact KB for 55+ exams. Offline."
+  E.g. "Mr Doc: Photo & PDF Resizer" (≤ 30 characters). Short description: "Resize photos, signatures
+  & PDFs to exact KB. 55+ exam forms built in. Offline, no ads."
 - **Long description:** exam names appear naturally in lists ("Supports presets for IBPS, SBI,
   SSC, UPSC, RRB, NTA exams like JEE Main, NEET and CUET…") + disclaimer + source statement. A
   Hindi localised listing (Play supports hi-IN) ranks for Hindi queries.
-- **Screenshots (8):** 1 "Accepted by 14 exams" moment, 2 signature paper → clean, 3 exam
-  checklist, 4 Checker catching an error, 5 My Kit, 6 live coach, 7 PDF ID card, 8 Hindi UI.
+- **Screenshots (8):** 1 Home tool grid ("Everything for your documents"), 2 "Accepted by 14 exams"
+  moment, 3 signature paper → clean, 4 compress PDF to KB, 5 Checker catching an error, 6 My Kit,
+  7 PDF ID card, 8 Hindi UI. (The live coach moved to v1.1.)
 - **Ratings:** in-app review prompt (Play In-App Review / `requestReview`) only after a verified
   save **and** a "Portal accepted it" yes. Never after an error. Reply to every review in week 1–4.
 - Seasonal Custom Store Listings (Play) / Custom Product Pages (iOS): an "NEET/JEE" variant in
@@ -97,7 +102,7 @@ fix taps, paywall conversion, rewarded completions, crash/ANR, preset sync succe
 Monthly: D7/D30 by install cohort (aligned to exam seasons), revenue split (subs / lifetime /
 ads), rating trend, top support issues → roadmap.
 
-## 7. Pricing experiments (Remote Config `paywall_variant`)
-A: ₹99/yr + ₹199 lifetime (control) · B: ₹149/yr + ₹249 lifetime · C: ₹49 per exam season (90
-days) + ₹199 lifetime. Run each for ≥ 2 weeks inside a comparable exam season. Measure revenue
+## 7. Pricing experiments (Remote Config `paywall_variant`, `free_saves_total`)
+A: ₹99/yr + ₹199 lifetime, 20 free saves (control, launch) · B: ₹149/yr + ₹249 lifetime · C: ₹49 per exam season (90
+days) + ₹199 lifetime · D: control prices with 10 or 30 free saves. Start no experiment before a full season of control data. Run each for ≥ 2 weeks inside a comparable exam season. Measure revenue
 per paywall view, not just conversion.

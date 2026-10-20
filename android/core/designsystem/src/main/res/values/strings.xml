@@ -4,7 +4,7 @@
    Change the spec source and re-run the generator (CI checks for drift).
 -->
 <resources>
-    <string name="app_name">ScanFit</string>
+    <string name="app_name">Mr Doc</string>
     <string name="category_banking">Banking</string>
     <string name="category_defence">Defence</string>
     <string name="category_entrance">Entrance</string>
@@ -22,15 +22,15 @@
     <string name="checker_fix">Make it fit for %1$s</string>
     <string name="checker_fixed_heading">Fixed copy</string>
     <string name="checker_fixing">Making it fit…</string>
-    <string name="checker_intro">Pick the file you plan to upload. ScanFit checks it against the exam\'s rules and changes nothing unless you ask.</string>
+    <string name="checker_intro">Pick the file you plan to upload. Mr Doc checks it against the exam\'s rules and changes nothing unless you ask.</string>
     <string name="checker_kind_declaration">Handwritten declaration</string>
     <string name="checker_kind_fingers">Fingers and thumb</string>
     <string name="checker_kind_pdf">PDF document</string>
     <string name="checker_kind_photo">Photo</string>
     <string name="checker_kind_signature">Signature</string>
     <string name="checker_kind_thumb">Thumb impression</string>
-    <string name="checker_needs_pdf">ScanFit can\'t make a PDF from this file. If it has a password, remove it first.</string>
-    <string name="checker_no_fix">ScanFit can\'t fix this file here. Make a new one from the exam\'s checklist.</string>
+    <string name="checker_needs_pdf">Mr Doc can\'t make a PDF from this file. If it has a password, remove it first.</string>
+    <string name="checker_no_fix">Mr Doc can\'t fix this file here. Make a new one from the exam\'s checklist.</string>
     <string name="checker_no_issues">No problems with the file itself.</string>
     <string name="checker_open_failed">Couldn\'t open this file. Try another one.</string>
     <string name="checker_original_kept">Your original file is not changed.</string>
@@ -64,7 +64,7 @@
     <string name="custom_error_width_range">Width must be between 16 and 2000 pixels.</string>
     <string name="custom_height">Height</string>
     <string name="custom_in_pixels">= %1$d × %2$d px</string>
-    <string name="custom_intro">For a form that isn\'t in ScanFit. Copy the limits from its notice.</string>
+    <string name="custom_intro">For a form that isn\'t in Mr Doc. Copy the limits from its notice.</string>
     <string name="custom_kb_heading">File size</string>
     <string name="custom_max_kb">Max KB</string>
     <string name="custom_meets">Meets your size</string>
@@ -230,7 +230,7 @@
     <string name="kit_preview_page">Page %1$d of %2$d</string>
     <string name="kit_save_failed">Could not save to My Kit. Please try again.</string>
     <string name="kit_save_original">Save to My Kit</string>
-    <string name="kit_save_preview_body">ScanFit keeps the whole picture, not the cropped file, so you can use it again for other exams.</string>
+    <string name="kit_save_preview_body">Mr Doc keeps the whole picture, not the cropped file, so you can use it again for other exams.</string>
     <string name="kit_save_preview_title">Save this picture to My Kit?</string>
     <string name="kit_saved_on">Saved %1$s</string>
     <string name="kit_saved_original">Saved to My Kit</string>
@@ -244,8 +244,10 @@
     <string name="language_hi">हिन्दी</string>
     <string name="language_system">System default</string>
     <string name="legal_accept">I understand</string>
-    <string name="legal_disclaimer">ScanFit is an independent tool. It is not affiliated with any exam body or government. Specs come from official notifications (linked in the app), but always check the current notice before you submit.</string>
+    <string name="legal_disclaimer">Mr Doc is an independent tool. It is not affiliated with any exam body or government. Specs come from official notifications (linked in the app), but always check the current notice before you submit.</string>
     <string name="legal_disclaimer_title">Before you start</string>
+    <string name="legal_privacy_policy">Privacy policy</string>
+    <string name="legal_terms">Terms of use</string>
     <plurals name="match_accepted">
         <item quantity="one">Accepted by %1$d exam</item>
         <item quantity="other">Accepted by %1$d exams</item>
@@ -260,7 +262,7 @@
     <string name="match_need_at_most">Needs ≤ %1$d KB</string>
     <string name="match_need_baseline">Needs a standard (baseline) JPG</string>
     <string name="match_need_jpeg">Needs a JPG file</string>
-    <string name="match_none">Doesn\'t match any exam in ScanFit — that\'s fine for other forms</string>
+    <string name="match_none">Doesn\'t match any exam in Mr Doc — that\'s fine for other forms</string>
     <plurals name="match_preview_more">
         <item quantity="one">+%1$d more</item>
         <item quantity="other">+%1$d more</item>
@@ -273,6 +275,23 @@
     <string name="match_sheet_title">Exams that accept this file</string>
     <string name="match_verdict_accepted">Accepted</string>
     <string name="match_verdict_exact">Exact size</string>
+    <string name="paywall_benefit_no_ads">No ads, ever</string>
+    <string name="paywall_benefit_private">Your files still never leave your phone</string>
+    <string name="paywall_benefit_unlimited">Save and share as many files as you like</string>
+    <string name="paywall_body">You\'ve used your free saves. Editing, checking files and My Kit stay free.</string>
+    <string name="paywall_cancel_app_store">Yearly renews each year. Cancel anytime in App Store settings.</string>
+    <string name="paywall_cancel_play">Yearly renews each year. Cancel anytime in Play Store settings.</string>
+    <string name="paywall_failed">The purchase didn\'t finish. Please try again.</string>
+    <string name="paywall_lifetime">Lifetime</string>
+    <string name="paywall_lifetime_price">%1$s once</string>
+    <string name="paywall_pending">Your payment is pending. Pro turns on as soon as it goes through.</string>
+    <string name="paywall_restore">Restore purchases</string>
+    <string name="paywall_restore_none">No Pro purchase was found for this account.</string>
+    <string name="paywall_thanks">Pro is on. Thank you!</string>
+    <string name="paywall_title">Keep saving with Pro</string>
+    <string name="paywall_unavailable">Can\'t reach the store right now. Check your connection and try again.</string>
+    <string name="paywall_yearly">Yearly</string>
+    <string name="paywall_yearly_price">%1$s a year</string>
     <string name="pdf_add_camera">Take a photo</string>
     <string name="pdf_add_files">Add from Files</string>
     <string name="pdf_add_gallery">Add from gallery</string>
@@ -299,7 +318,7 @@
     <string name="pdf_history_row">%1$d KB · %2$s · PDF</string>
     <string name="pdf_image_label">Photo %1$d</string>
     <string name="pdf_intro_compress">Choose a PDF and the size the form allows.</string>
-    <string name="pdf_intro_exam">Add photos of the pages or a PDF you already have. ScanFit makes one PDF that fits.</string>
+    <string name="pdf_intro_exam">Add photos of the pages or a PDF you already have. Mr Doc makes one PDF that fits.</string>
     <string name="pdf_intro_id_card">Add the front and the back of the card, then crop each side to the card\'s edges.</string>
     <string name="pdf_intro_images">Add photos of each page. Each one becomes an A4 page.</string>
     <string name="pdf_intro_merge">Add the PDFs in the order you want them.</string>
@@ -355,6 +374,11 @@
     <string name="photo_white_bg_unavailable">White background isn\'t available on this device.</string>
     <string name="photo_zoom_in">Zoom in</string>
     <string name="photo_zoom_out">Zoom out</string>
+    <plurals name="quota_left">
+        <item quantity="one">%1$d free save left</item>
+        <item quantity="other">%1$d free saves left</item>
+    </plurals>
+    <string name="quota_none">No free saves left. Pro saves as many files as you like.</string>
     <string name="review_after">After</string>
     <string name="review_before">Before</string>
     <string name="review_check_fail">%1$s, does not pass this slot\'s check</string>
@@ -369,15 +393,25 @@
         <item quantity="other">%1$d kilobytes</item>
     </plurals>
     <string name="settings_about">About</string>
+    <string name="settings_analytics">Share anonymous usage data</string>
+    <string name="settings_analytics_hint">Counts such as “a signature was saved”. Never your files, names or text.</string>
     <string name="settings_check_updates">Check for updates</string>
+    <string name="settings_get_pro">Get Pro</string>
     <string name="settings_help">Help</string>
     <string name="settings_language">Language</string>
     <string name="settings_language_hint">Change the app language in system settings</string>
+    <string name="settings_no_email">No email app found. Write to us at %1$s.</string>
     <string name="settings_presets_version">Exam specs version %1$d</string>
     <string name="settings_privacy">Privacy</string>
+    <string name="settings_privacy_note">Your photos and files are processed on your phone and never uploaded.</string>
+    <string name="settings_pro">Mr Doc Pro</string>
+    <string name="settings_pro_active">Pro is active. Save as many files as you like.</string>
+    <string name="settings_report_body">Please describe the problem above. Don\'t attach your documents. App %1$s · %2$s · specs v%3$s</string>
     <string name="settings_report_problem">Report a problem</string>
+    <string name="settings_report_subject">Mr Doc problem report</string>
     <string name="settings_show_unverified">Show unverified exams</string>
     <string name="settings_show_unverified_hint">Also list exams whose upload rules are not confirmed yet</string>
+    <string name="settings_version">Version %1$s</string>
     <string name="tab_home">Home</string>
     <string name="tab_kit">My Kit</string>
     <string name="tab_settings">Settings</string>

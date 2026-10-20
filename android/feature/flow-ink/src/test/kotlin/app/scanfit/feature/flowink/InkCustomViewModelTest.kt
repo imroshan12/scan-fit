@@ -15,6 +15,7 @@ import app.scanfit.core.testing.FakePresetsRepository
 import app.scanfit.core.testing.FakeShareStager
 import app.scanfit.core.testing.FakeUserPreferences
 import app.scanfit.core.testing.SpecPresets
+import app.scanfit.core.testing.TestSaveGate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -54,7 +55,7 @@ class InkCustomViewModelTest {
         presets,
         tools,
         prefs,
-        DocumentExporter(destinations, prefs, FakeKitStore()),
+        DocumentExporter(destinations, prefs, FakeKitStore(), TestSaveGate().gate),
         dispatcher,
         drafts,
         share,

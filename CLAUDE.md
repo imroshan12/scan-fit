@@ -1,4 +1,9 @@
-# CLAUDE.md — ScanFit (working name)
+# CLAUDE.md — ScanFit (store name: Mr Doc)
+
+The app launches as **Mr Doc** (user decision 2026-10-20); code and modules keep `scanfit` (store ids: see
+`docs/LAUNCH_PLAN.md` week 0). Launch plan and dates:
+`docs/LAUNCH_PLAN.md`. Money: 20 free saves then Pro, no ads (`docs/PRD.md` §6). Sign-in (Google; Apple on iPhone) on first
+launch; the account holds only email, name and the save count, never anything the user captures (rule 2 still holds).
 
 Offline-first mobile app that turns phone photos of photos, signatures, thumb impressions,
 declarations and certificates into files that pass Indian exam and government portal upload rules.
@@ -14,6 +19,7 @@ Read these before changing anything:
 | Structuring code, adding a module or dependency | `docs/ARCHITECTURE.md`, `docs/TECH_FEASIBILITY.md` |
 | Editing exam presets | `spec/README.md` |
 | Building, signing, CI or releasing | `docs/BUILD_AND_RELEASE.md` (concepts + how-to), `docs/RELEASE_CHECKLIST.md` (to-do list) |
+| Planning or doing launch work, pricing, Pro | `docs/LAUNCH_PLAN.md` (dates, owners), `docs/OWNER_STEPS.md` (the owner's how-to), `docs/STORE_LISTING.md`, `docs/PRD.md` §6 (money) |
 | Writing tests | `docs/TESTING.md` |
 
 ## Repo layout
@@ -92,5 +98,5 @@ swiftlint --strict
   6 KB at q=100, but IBPS needs 10–20 KB). See ALGORITHMS §1.4. Don't "fix" this.
 - Exports are always **baseline JPEG, RGB, EXIF stripped, JFIF density set**. Some portals reject
   progressive or CMYK JPEGs, and phone EXIF can carry GPS.
-- Android saves to `Downloads/ScanFit/<Exam>/`, and iOS defaults to Files, not Photos. Uploading
+- Android saves to `Downloads/Mr Doc/<Exam>/`, and iOS defaults to Files, not Photos. Uploading
   from Photos through some browsers may re-encode the file (see TECH_FEASIBILITY §3, spike 1).

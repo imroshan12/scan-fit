@@ -1,9 +1,12 @@
 package app.scanfit
 
 import android.content.Context
+import android.content.pm.ApplicationInfo
 import android.os.Process
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.preferencesDataStoreFile
+import app.scanfit.core.billing.Billing
+import app.scanfit.core.billing.LocalBilling
 import app.scanfit.core.data.DataStoreUserPreferences
 import app.scanfit.core.data.UserPreferences
 import app.scanfit.core.presets.AssetEmbeddedPresetSource
@@ -52,6 +55,16 @@ object AppModule {
             context.preferencesDataStoreFile("user_preferences")
         },
     )
+
+    /** RevenueCat replaces this (LAUNCH_PLAN week 1). Debug builds sell fake products so the paywall can be walked. */
+    @Provides
+    @Singleton
+    fun billing(
+        @ApplicationContext context: Context,
+    ): Billing {
+        val debuggable = context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
+        return LocalBilling(if (debuggable) LocalBilling.DEBUG_PRODUCTS else emptyList())
+    }
 
     @Provides
     @Singleton

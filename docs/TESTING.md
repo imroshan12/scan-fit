@@ -51,16 +51,43 @@ review → Replace/re-save → Done and accessibility checks remain open; old da
 2. Signature from the paper fixture → cleanup → near-miss fix on another exam → second file saved.
 3. Custom resize 20–50 KB 200×230 → match note lists the IBPS family.
 4. Checker on `cmyk_photo_200x230.jpg` → CMYK issue → Fix → re-check passes.
-5. Free limit reached → paywall → rewarded path (fake ad) → export allowed.
+5. Free limit reached → paywall → fake Pro purchase → retry Save → export allowed (no ads).
 6. Offline launch (airplane mode) → embedded presets → full flow works.
 7. Tampered preset bundle from a fake CDN → rejected, old bundle retained, no crash.
 8. Hindi locale → the whole journey 1 with no truncation.
+
+### Settings and paywall smoke (iOS, no screenshot baselines)
+
+`ios/ScanFitUITests/PaywallSmokeTests.swift` checks the real native screens: 3 free saves left, Restore with no purchase,
+Close returning to unchanged Settings, exhausted quota → fake Lifetime purchase → Thanks → Pro status, store unavailable
+→ Retry/Restore/Close, and Hindi with the largest accessibility text size (stacked products, reachable legal links).
+The quota values are seeded; these are not 20 physical exports. Actual save/count integration and the 21st blocked save
+remain covered by the photo/export and Save all view-model tests; provider/device export QA is still required.
+
+```bash
+cd ios
+xcodegen generate
+xcodebuild -scheme ScanFitSmoke \
+  -destination 'platform=iOS Simulator,name=iPhone 11 Pro Max' \
+  -parallel-testing-enabled NO -collect-test-diagnostics never test
+```
+
+The optional `ScanFitSmoke` scheme is separate from the normal `ScanFit` app tests. Test launch argument `--ui-testing`
+is honoured only in **Debug simulator** builds: it selects `MemoryQuotaStore`, a dedicated preferences suite,
+`NoDraftStore` and `NoKitStore`, never the user's quota/documents/preferences. `SCANFIT_UI_TEST_SAVES_USED` seeds the count;
+`SCANFIT_UI_TEST_STORE=unavailable` selects the unavailable-store stand-in. The app is terminated after each test.
+No purchase is charged. The 2026-10-20 local run used the iPhone 11 Pro Max on **iOS 26.5**, not the minimum iOS 17.
+`-collect-test-diagnostics never` avoids a locally observed 600-second simulator sysdiagnose timeout on failed tests.
+
+Delayed-billing VM tests on both apps consume all three `paywall_lifecycle_cases`: hold purchase, restore or product
+loading across close/reopen; reject stale UI results while honouring the billing entitlement; keep duplicate actions
+disabled. Additional tests reject products not in the loaded offer and ignore Retry while buying.
 
 ## 3. Test doubles
 
 Every platform service sits behind an interface with a fake in `core:testing` / `TestSupport`:
 `FaceDetector`, `Segmenter`, `DocumentScanner`, `ImagePicker`, `Clock`, `PresetRemote`,
-`Entitlements`, `AdGate`, `Analytics` (records events, and asserts no event param contains a
+`Billing`, `QuotaStore`, `Analytics` (records events, and asserts no event param contains a
 path/URI — a test helper fails if any string param contains `/` or `content:`).
 PDF tools: `PdfMakerTools` and `CheckerTools.makePdf` have fakes in each feature's tests; the engine takes a `PdfOpener`.
 Robolectric cannot run Android's `PdfRenderer`, so Android's `pdf_job_cases` use `FixturePdfOpener` (test-only: draws the

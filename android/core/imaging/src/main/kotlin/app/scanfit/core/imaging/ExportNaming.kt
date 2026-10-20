@@ -4,8 +4,11 @@ import app.scanfit.core.model.DocSpec
 import app.scanfit.core.model.DocType
 import app.scanfit.core.model.Exam
 
-/** Export file names (ALGORITHMS 1.7 / 9.8). The folder (`Downloads/ScanFit/<Exam>/`) is chosen by the export layer. */
+/** Export file names (ALGORITHMS 1.7 / 9.8). The folder (`Downloads/Mr Doc/<Exam>/`) is chosen by the export layer. */
 object ExportNaming {
+    /** The app's folder under Downloads (the store name, user decision 2026-10-20). */
+    const val APP_FOLDER = "Mr Doc"
+
     private const val BYTES_PER_KB = 1024.0
     private val SEPARATORS = Regex("[^A-Za-z0-9]+")
 

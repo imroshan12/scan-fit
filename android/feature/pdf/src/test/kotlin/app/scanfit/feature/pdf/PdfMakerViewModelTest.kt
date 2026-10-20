@@ -29,6 +29,7 @@ import app.scanfit.core.testing.FakeUserPreferences
 import app.scanfit.core.testing.SpecPresets
 import app.scanfit.core.testing.TestJpeg
 import app.scanfit.core.testing.TestPdf
+import app.scanfit.core.testing.TestSaveGate
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -121,7 +122,7 @@ class PdfMakerViewModelTest {
         SavedStateHandle(args.toMap()),
         FakePresetsRepository(PresetsLoadOutcome.Ready(PresetsSummary(55, 2)), SpecPresets.bundle),
         tools,
-        DocumentExporter(destinations, prefs, FakeKitStore()),
+        DocumentExporter(destinations, prefs, FakeKitStore(), TestSaveGate().gate),
         share,
         dispatcher,
     )
@@ -355,7 +356,7 @@ class PdfMakerViewModelTest {
                 SavedStateHandle(mapOf(PdfMakerViewModel.TOOL to "images")),
                 FakePresetsRepository(PresetsLoadOutcome.Ready(PresetsSummary(55, 2)), SpecPresets.bundle),
                 tools,
-                DocumentExporter(picker, prefs, FakeKitStore()),
+                DocumentExporter(picker, prefs, FakeKitStore(), TestSaveGate().gate),
                 share,
                 dispatcher,
             )

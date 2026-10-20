@@ -14,18 +14,20 @@ public final class InkFlowViewModel {
     public private(set) var state: InkState = .loading
     /// The exam slot or Custom size this flow makes a file for (ALGORITHMS 11).
     public let target: FlowTarget
-    public private(set) var exportState: ExportState = .idle
+    public internal(set) var exportState: ExportState = .idle
     public private(set) var renderPending = false
     public private(set) var draftValidationPending = false
     /// The share sheet's file, or the staging failure (ALGORITHMS 1.6.2).
     public internal(set) var share: ShareStatus = .none
     public let exporter: any DocumentExporting
 
-    @ObservationIgnored private let preferences: UserPreferences?
+    @ObservationIgnored let preferences: UserPreferences?
     @ObservationIgnored private let drafts: any DraftStore
     /// Save to My Kit for the picture this review was made from (ALGORITHMS 13.1); hidden for restored reviews.
     public internal(set) var kitSave: KitSaveStatus = .idle
     @ObservationIgnored let kit: any KitStore
+    /// The free-saves gate (ALGORITHMS 14); `nil` saves and shares without counting (tests, previews).
+    @ObservationIgnored let gate: SaveGate?
     /// "Use for exam…" from My Kit (ALGORITHMS 13.2): the flow starts from this original instead of the picker.
     @ObservationIgnored private let originalID: String?
     @ObservationIgnored private var originalOpened = false
@@ -53,11 +55,12 @@ public final class InkFlowViewModel {
         exporter: any DocumentExporting = FilesExporter(),
         drafts: any DraftStore = NoDraftStore(),
         kit: any KitStore = NoKitStore(),
+        gate: SaveGate? = nil,
         load: @escaping @Sendable () async -> PresetBundle?
     ) {
         self.init(
             target: .exam(examId: examId, docType: docType), tools: tools, preferences: preferences,
-            exporter: exporter, drafts: drafts, kit: kit, load: load
+            exporter: exporter, drafts: drafts, kit: kit, gate: gate, load: load
         )
     }
 
@@ -68,11 +71,13 @@ public final class InkFlowViewModel {
         exporter: any DocumentExporting = FilesExporter(),
         drafts: any DraftStore = NoDraftStore(),
         kit: any KitStore = NoKitStore(),
+        gate: SaveGate? = nil,
         originalID: String? = nil,
         load: @escaping @Sendable () async -> PresetBundle?
     ) {
         self.target = target
         self.kit = kit
+        self.gate = gate
         self.originalID = originalID.flatMap { KitIds.isValid($0) ? $0 : nil }
         self.tools = tools
         self.preferences = preferences
@@ -177,29 +182,6 @@ public final class InkFlowViewModel {
         if renderPending { return true }
         guard case let .ready(ready) = review.result else { return false }
         return ready.meetsRules
-    }
-
-    /// Saves the review (ALGORITHMS 1.6) once the running render has finished; Saved is recorded only after the
-    /// exporter verified and published the file.
-    public func save() async {
-        guard canSave else { return }
-        exportState = .saving
-        await renderTask?.value
-        guard case let .review(review) = state, case let .ready(ready) = review.result, ready.meetsRules else {
-            exportState = .idle
-            return
-        }
-        let filename = ExportNaming.fileName(
-            examName: review.slot.examName, slot: review.slot.spec,
-            width: ready.width, height: ready.height, bytes: ready.bytes.count
-        )
-        let request = ExportRequest(
-            bytes: ready.bytes, filename: filename, spec: review.slot.spec, kind: review.slot.kind
-        )
-        exportState = await exporter.save(request)
-        guard exportState == .saved else { return }
-        if !review.slot.custom { preferences?.recordSaved(review.slot.examId, review.slot.spec.type) }
-        await kit.recordExport(request, examId: review.slot.examId, examName: review.slot.examName)
     }
 
     /// Back inside the flow: Review -> Crop -> PickSource. false = leave the flow.

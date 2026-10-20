@@ -100,7 +100,7 @@ Verification also requires SOF0, no EXIF/GPS/XMP, JFIF units 1 and both densitie
 and written bytes identical to the review bytes. The slot verdict must be EXACT or ACCEPTED (§9.7).
 Android keeps a MediaStore entry pending until verification succeeds; a publish failure is a save error.
 iOS uses the Files picker and re-opens its returned URL with security-scoped access and coordinated reading.
-The iOS picker chooses the folder; `ScanFit/<Exam>/` is recommended, not forced. Existing user files are
+The iOS picker chooses the folder; `Mr Doc/<Exam>/` is recommended, not forced. Existing user files are
 never deleted on picker cancellation. Save failures keep the review available for retry.
 Only after successful verification and publication, persist the exam/document's Saved checklist status
 locally. A later failed or cancelled save does not clear a previously verified Saved status. This status
@@ -181,7 +181,7 @@ its request by **byte equality** (the picker may rename on "Keep both"), so a UR
 verified as, or deleted for, the wrong slot. Cancelling the iOS picker saves nothing and records nothing.
 
 Outcome: `saved` count and the `failed` slots. All saved: `flow.saved_to` with the folder (Android
-`Downloads/ScanFit/<examShort>`, iOS the picked folder's localized name, or `export.files_app` at a provider's root) and, on Android, `flow.open_folder` (opens the system
+`Downloads/Mr Doc/<examShort>`, iOS the picked folder's localized name, or `export.files_app` at a provider's root) and, on Android, `flow.open_folder` (opens the system
 Downloads view; a specific subfolder cannot be targeted portably). Some failed: `export.save_all_partial` and a retry that
 re-plans from the current checklist, so already-saved slots are not written twice. Nothing is held in memory beyond the
 JPEGs of the running save.
@@ -191,7 +191,7 @@ JPEGs of the running save.
 `<filename or docType>_<examShort>_<WxH>_<KB>kb.jpg`, e.g. `signature_IBPS-PO_140x60_16kb.jpg`.
 If the preset has `filename` (NTA: `Photograph`, `Signature`), use exactly `<filename>.jpg`, and put
 files in a per-exam folder so names don't collide:
-Android `Downloads/ScanFit/<Exam>/`, iOS `Files › ScanFit › <Exam>/`.
+Android `Downloads/Mr Doc/<Exam>/`, iOS `Files › Mr Doc › <Exam>/`.
 
 ---
 
@@ -407,7 +407,7 @@ cross-reference table, so every reader ignores it.
 encrypted, and (for a PDF the app wrote) `pages` equal to the job's page count and `imageOnly`; size in the window; for an
 exam slot the slot verdict (§9.7, kind `pdf_document`) is EXACT or ACCEPTED. A Tools PDF is checked against its synthetic
 slot (§6.6). Saving records Saved for an exam slot and appends a history entry (§13.3). Android saves to
-`Downloads/ScanFit/<Exam>/` (MIME `application/pdf`; Tools: `Downloads/ScanFit/PDF/`), iOS through the Files picker.
+`Downloads/Mr Doc/<Exam>/` (MIME `application/pdf`; Tools: `Downloads/Mr Doc/PDF/`), iOS through the Files picker.
 
 ### 6.6 Screens, names and the Checker
 
@@ -672,7 +672,7 @@ A fit case names either `preset` + `doc`, or an inline `spec` (a full document o
 (inclusive), `aspect` ± `aspect_tol`, `background_mean_min` (median luma of the whole image ≥ value), `ink_pixels_min_pct` (% of pixels with luma < 128 ≥ value),
 `exif: "none"` (no APP1), `dpi` (JFIF units 1 and both densities equal), `export_filename` (§9.8), `decodes` (re-decodes without error),
 `max_ms_midrange` (measured by the benchmark, not asserted in unit tests). Other sections: `inspect_cases`, `decode_cases`, `patch_cases`,
-`geometry_cases`, `crop_cases`, `match_cases`, `match_note_cases`, `save_all_cases`, `checker_cases`, `kit_size_cases`, `kit_history_cases`, `kit_id_cases`, `search_cases`, and the PDF sections
+`geometry_cases`, `crop_cases`, `match_cases`, `match_note_cases`, `save_all_cases`, `checker_cases`, `kit_size_cases`, `kit_history_cases`, `kit_id_cases`, `save_quota_cases` (§14), `search_cases`, and the PDF sections
 of §9.10 (their keys are documented inline in the file).
 `thumb_preservation_cases` draw a grey print parametrically: paper luma `round(left + (right − left)·x/(W−1))`; inside the
 `print` ellipse `(cx, cy, rx, ry)` a pixel is a ridge when `⌊2d/period⌋` is even, `d` = distance to the centre with `y` scaled
@@ -791,7 +791,7 @@ pixel value with decimals is rounded the same way). Neither = keep the picture's
 **Slot.** `type = doc`, `formats = [jpg]`, `size_kb = {min: min_kb if > 0 else null, max: max_kb, target: null}`,
 `dimensions = {mode: exact, width, height}` when given, else `{mode: none}`, `dpi`, no `filename`, no `declaration_text`.
 Exam id `custom`, exam name `Custom` (not translated: it names the file and the folder), so §9.8 gives
-`signature_Custom_140x60_16kb.jpg` and Android saves to `Downloads/ScanFit/Custom/`.
+`signature_Custom_140x60_16kb.jpg` and Android saves to `Downloads/Mr Doc/Custom/`.
 
 **Flow differences from an exam slot.** No retained draft, no Saved/Ready status (there is no checklist), no handwriting
 confirmation (the CAPITAL-letters rule belongs to exams), and the verdict reads "Meets your size" / "Doesn't meet your size"
@@ -915,3 +915,80 @@ writes nothing until the user confirms; Cancel changes nothing.
 
 Conformance: `kit_size_cases` (`width`, `height` → stored size), `kit_history_cases` (`entries` in recorded order, `now_ms`,
 `max_entries` → `kept` ids in order and `shareable` ids), `kit_id_cases` (`id` → `valid`). Reference: `spec/tools/kit.py`.
+
+## 14. Free saves and Pro (PRD §6)
+
+Every tool, exam, edit, preview and check is free. A free user gets `free_saves_total` saves **in total** (default `20`,
+Remote Config later; never per day), then Save and Share open the paywall. Pro (entitlement `pro`, ARCHITECTURE §8) is
+unlimited. There are no ads and no watermark on either plan. Nothing here sends a file, a name or a hash anywhere (rule 2).
+
+### 14.1 What counts
+
+A **save** is one new verified file leaving the app. The file's identity is the lowercase hex SHA-256 of its exact bytes
+(the bytes that were verified and published, or staged for Share). Counted, once per identity:
+
+| Action | Checked before | Recorded after |
+|---|---|---|
+| Review Save (photo, ink, Custom size), Checker save, PDF save (Tools and exam PDF slots) | the picker or destination is created | §1.6 / §6.5 verification and publication succeed |
+| Save all (§1.6.2) | the whole batch, before the first file | each file that saved |
+| Share (review, Checker, PDF) | staging starts | the staged copy passed its byte check and the sheet was handed the file |
+
+Not checked and never counted: a History re-share (§13.3), Save to My Kit (§13.1, the file stays in the app), retaining a
+draft (§1.6.1), checking a file in the Checker (§12), and any save that is cancelled or fails (nothing is recorded). Saving
+or sharing bytes the app has already recorded is free: Share after Save of the same review, a restored draft saved again,
+Save all of files already shared. Share cannot see whether the user finished sharing, so it counts once the sheet opens.
+
+### 14.2 Rules (`SaveQuota`, pure)
+
+State: `used` (int ≥ 0), `allowance` (int ≥ 0), `hashes` (known identities, oldest first, at most `max_hashes` = `1000`).
+A new install starts at `used 0, allowance 0, hashes []`, and `total` is applied before the first decision.
+
+- `total(t)`: `allowance = max(allowance, t)` (a negative `t` is ignored). The configured total is applied on every launch,
+  so raising it gives everyone more saves at once, and lowering it never takes back saves a user has already been shown;
+  it only applies to new installs.
+- `remaining = max(0, allowance − used)`.
+- `decide(files, pro)`: `new` = the distinct identities of `files`, in order, that are not in `hashes`. **Allowed** when
+  `pro`, or `new` is empty, or `|new| ≤ remaining`; otherwise **blocked**. Deciding changes nothing.
+- `record(file, pro)`: a known identity moves to the newest end and nothing is counted. An unknown identity is appended
+  (the oldest are dropped beyond `max_hashes`) and `used += 1` unless `pro`. Recording never refuses: two saves racing
+  past the last free save may both count; `remaining` stays at 0.
+- `merge(remote_used)`: `used = max(used, remote_used)` (the account's copy, PRD §6; negative values are ignored).
+- `shows_left(pro)`: `!pro && remaining ≤ 5`.
+
+### 14.3 Screens
+
+A blocked decision opens the paywall (trigger `save`, `share` or `save_all`) over the current screen; the review, its
+retained draft and its save state stay as they were. Closing the paywall changes nothing; after a purchase the user taps
+Save or Share again. The paywall never opens at launch. Settings opens it with trigger `settings`.
+
+A review (photo, ink, Checker result, PDF maker) shows `quota.left` ("3 free saves left") under its actions when
+`shows_left`, or `quota.none` at 0. Settings shows `quota.left` with the full count for a free user, or Pro.
+
+**Paywall** (App Store guideline 3.1.2): title, three plain benefits, both products side by side with the store's
+localised price and period (`pro_yearly` "₹99 a year", `pro_lifetime` "₹199 once"), "Cancel anytime in Play Store / App
+Store settings", Restore purchases, and links to the privacy policy and the terms. While products load it shows a spinner;
+when the store cannot be reached it says `paywall.unavailable` with Retry. A purchase in progress disables both products.
+A successful purchase or restore with `pro` replaces the offer with `paywall.thanks` and Done, which closes it; a restore
+without `pro` says `paywall.restore_none`; a payment the store holds as pending (e.g. UPI waiting for approval) says
+`paywall.pending`; a failure says `paywall.failed`. A cancelled purchase changes nothing and shows no error.
+
+**Store-request lifecycle.** Closing a paywall invalidates that presentation's UI results, not an in-flight store
+transaction. If it is reopened before a purchase or restore returns, the products and Restore stay disabled until that
+operation finishes; a second purchase/restore must not start. Its result may update the billing entitlement but must not
+replace the reopened offer with an old error or Thanks. Late product loads must not overwrite a newer presentation's
+products. Retry does nothing while buying/restoring. Only a product in the current loaded offer can be purchased.
+Native delayed-billing tests on both apps consume `paywall_lifecycle_cases` (`operation` held across close/reopen,
+`late_result`, then the expected `busy_reopened`, `message_after`, `products_after` and `pro_after`).
+
+### 14.4 Storage
+
+One versioned record `{version: 1, used, allowance, hashes}` written atomically in app-private storage excluded from
+backup, like drafts and My Kit (Android `noBackupFilesDir/quota/quota.json`, iOS Application Support `quota/quota.json`
+with `isExcludedFromBackup`): file identities never leave the phone, not even in a backup. A record that is missing,
+corrupt or of another version starts again from the new-install state; the account copy (`merge`, PRD §6) restores
+`used` after a reinstall or on a new phone once signed in. Reads and writes run off the main thread under one lock.
+
+Conformance: `save_quota_cases`: optional `start` state and `max_hashes`, then `steps` run in order (`total` with `total`;
+`decide` with `files`, `pro` → `{allowed, new}`; `record` with `file`, `pro`; `merge` with `remote_used`; `state` with `pro`
+→ `{used, allowance, remaining, shows_left}`). Identities in the cases are short labels standing in for SHA-256 hex.
+Reference: `spec/tools/quota.py`.

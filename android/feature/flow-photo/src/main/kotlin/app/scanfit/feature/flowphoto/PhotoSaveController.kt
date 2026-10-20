@@ -5,6 +5,7 @@ import app.scanfit.core.data.export.ExportRequest
 import app.scanfit.core.data.export.SaveResult
 import app.scanfit.core.data.export.SaveState
 import app.scanfit.core.data.export.ShareStager
+import app.scanfit.core.data.quota.PaywallTrigger
 import app.scanfit.core.match.DocKind
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -25,6 +26,7 @@ internal class PhotoSaveController(
         val review = state.value as? PhotoUiState.Review ?: return null
         val ready = review.result as? ReviewResult.Ready ?: return null
         if (review.rendering || !ready.meetsRules || review.save.state == SaveState.SAVING) return null
+        if (!exporter.gate.allows(listOf(ready.bytes), PaywallTrigger.SAVE)) return null
         val slot = review.slot
         val request =
             ExportRequest(
@@ -49,10 +51,12 @@ internal class PhotoSaveController(
         val review = state.value as? PhotoUiState.Review ?: return
         val ready = review.result as? ReviewResult.Ready ?: return
         if (review.rendering || !ready.meetsRules || review.save.state == SaveState.SAVING) return
+        if (!exporter.gate.allows(listOf(ready.bytes), PaywallTrigger.SHARE)) return
         val slot = review.slot
         val name = ExportRequest(slot.examId, slot.examName, slot.spec, DocKind.PHOTO, ready.bytes).fileName
         scope.launch {
             val uri = share.stage(name, ready.bytes)
+            if (uri != null) withContext(work) { exporter.gate.record(ready.bytes) }
             val current = state.value as? PhotoUiState.Review ?: return@launch
             if (current.result !== ready) return@launch
             state.value = current.copy(shareUri = uri, shareFailed = uri == null)

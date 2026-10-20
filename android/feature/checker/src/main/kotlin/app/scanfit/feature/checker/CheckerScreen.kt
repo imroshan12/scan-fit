@@ -45,6 +45,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.scanfit.core.data.export.SaveState
 import app.scanfit.core.designsystem.R
+import app.scanfit.core.designsystem.components.FreeSavesNote
 import app.scanfit.core.designsystem.components.NoticeCard
 import app.scanfit.core.designsystem.components.NoticeKind
 import app.scanfit.core.designsystem.components.ShareEffect
@@ -263,6 +264,7 @@ private fun FixBar(
                 enabled = state.canSave,
                 modifier = Modifier.fillMaxWidth().heightIn(min = ScanFitSpacing.minTouchTarget),
             ) { Text(stringResource(R.string.common_share)) }
+            if (state.save.state != SaveState.SAVED) FreeSavesNote()
         }
     }
 }

@@ -52,6 +52,16 @@ class DataStoreUserPreferencesTest {
     }
 
     @Test
+    fun analyticsIsOnUntilTheUserOptsOut() = runTest {
+        val prefs = prefs()
+        prefs.analyticsEnabled.test {
+            assertTrue(awaitItem())
+            prefs.setAnalyticsEnabled(false)
+            assertFalse(awaitItem())
+        }
+    }
+
+    @Test
     fun theHandwritingConfirmationIsAskedOnceAndRemembered() = runTest {
         val prefs = prefs()
         prefs.handwritingConfirmed.test {

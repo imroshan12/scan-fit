@@ -34,10 +34,14 @@ KEY_RE = re.compile(r"^[a-z0-9_]+(\.[a-z0-9_]+)+$")
 PH_RE = re.compile(r"\{([a-z][a-z0-9_]*):(int|str)\}")
 PLURAL_FORMS = ("one", "other")
 TODO_PREFIX = "TODO_HI:"
-# `infoplist.<name>` keys are Info.plist values (iOS permission prompts), not app strings: they go only to the app target's
+# `infoplist.<name>` keys are Info.plist values (the home-screen name, iOS permission prompts), not app strings: they go only to the app target's
 # InfoPlist.xcstrings, under the Info.plist key named here.
 INFOPLIST_PREFIX = "infoplist."
-INFOPLIST_KEYS = {"infoplist.camera_usage": "NSCameraUsageDescription"}
+INFOPLIST_KEYS = {
+    "infoplist.display_name": "CFBundleDisplayName",
+    "infoplist.bundle_name": "CFBundleName",
+    "infoplist.camera_usage": "NSCameraUsageDescription",
+}
 
 
 def load(lang):

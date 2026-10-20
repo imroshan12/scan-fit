@@ -95,9 +95,9 @@ that. Clear the prefixes after a native-speaker review, then tag a final release
 
 ## 5. Store-side one-time setup (yours)
 - **Google Play:** create the app (the id from section 1 is now permanent), keep **Play App Signing** on (your keystore is only the
-  *upload* key and Google can reset it), complete Data safety (no data collected today; revisit when Phase 4 adds Firebase and ads),
-  content rating, target audience, then upload the first AAB **by hand** (Internal testing > Create release). Google opens the publishing
-  API only after that. CI therefore leaves the AAB as an artifact instead of uploading it.
+  *upload* key and Google can reset it), complete Data safety (no data collected today; v1.0 adds RevenueCat purchases and
+  Firebase crash/analytics data, no ads: `docs/LAUNCH_PLAN.md` week 3 lists what to declare), content rating, target audience,
+  then upload the first AAB **by hand** (Internal testing > Create release). Google opens the publishing API only after that. CI therefore leaves the AAB as an artifact instead of uploading it.
 - **App Store Connect:** create the app record with the iOS id, fill the privacy "nutrition label" to match `PrivacyInfo.xcprivacy`
   (no tracking, nothing collected today), add the API key from section 3, then a tag upload appears in TestFlight. Encryption export
   compliance is already declared in `Info.plist` (`ITSAppUsesNonExemptEncryption = false`).

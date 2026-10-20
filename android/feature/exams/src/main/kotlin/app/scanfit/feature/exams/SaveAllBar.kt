@@ -148,8 +148,8 @@ private class SaveAllPreviewStates : PreviewParameterProvider<ExamUiState.Ready>
         sequenceOf(
             base,
             base.copy(saveAll = SaveAllStatus.Saving(1, 2)),
-            base.copy(saveAll = SaveAllStatus.Done(2, 2, "Downloads/ScanFit/IBPS-PO")),
-            base.copy(saveAll = SaveAllStatus.Done(1, 2, "Downloads/ScanFit/IBPS-PO")),
+            base.copy(saveAll = SaveAllStatus.Done(2, 2, "Downloads/Mr Doc/IBPS-PO")),
+            base.copy(saveAll = SaveAllStatus.Done(1, 2, "Downloads/Mr Doc/IBPS-PO")),
         )
 }
 

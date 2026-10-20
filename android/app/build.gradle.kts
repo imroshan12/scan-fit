@@ -45,6 +45,8 @@ dependencies {
     implementation(project(":feature:checker"))
     implementation(project(":feature:pdf"))
     implementation(project(":feature:settings"))
+    implementation(project(":feature:paywall"))
+    implementation(project(":core:billing"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
@@ -52,4 +54,6 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.compose.material.icons.core)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
 }

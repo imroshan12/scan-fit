@@ -1,4 +1,6 @@
-# Cloudflare Pages / Netlify-style headers. GitHub Pages ignores this file (and cannot set headers: prefer Cloudflare).
+# Cloudflare Pages / Netlify-style headers. The site is on GitHub Pages now (user decision 2026-10-20), which ignores
+# this file; it is kept for a later move to Cloudflare. GitHub Pages already sends Access-Control-Allow-Origin: * and a
+# short cache, which is what /presets/v2/ needs; upload-test keeps its noindex as a meta tag.
 /presets/v2/*
   Cache-Control: public, max-age=300, must-revalidate
   Access-Control-Allow-Origin: *
@@ -7,3 +9,25 @@
 /upload-test/*
   X-Robots-Tag: noindex
   Referrer-Policy: no-referrer
+
+# Public pages: no framing, no sniffing, no referrer to other sites.
+/
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+/privacy/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+/terms/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+/help/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+/delete-account/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin

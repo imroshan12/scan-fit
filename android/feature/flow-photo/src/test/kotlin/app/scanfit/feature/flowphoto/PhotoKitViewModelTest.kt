@@ -18,6 +18,7 @@ import app.scanfit.core.testing.FakeShareStager
 import app.scanfit.core.testing.FakeUserPreferences
 import app.scanfit.core.testing.SpecPresets
 import app.scanfit.core.testing.TestJpeg
+import app.scanfit.core.testing.TestSaveGate
 import app.scanfit.core.vision.FaceBox
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -61,7 +62,7 @@ class PhotoKitViewModelTest {
         faces,
         FakePersonSegmenter(),
         dispatcher,
-        DocumentExporter(FakeExportDestinations(), FakeUserPreferences(), kit),
+        DocumentExporter(FakeExportDestinations(), FakeUserPreferences(), kit, TestSaveGate().gate),
         drafts,
         FakeShareStager(),
         kit,

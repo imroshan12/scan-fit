@@ -175,6 +175,7 @@ public struct PdfMakerView: View {
                 Button(strings.commonShare) { Task { await model.sharePdf() } }
                     .frame(maxWidth: .infinity, minHeight: ScanFitSpacing.minTouchTarget)
                     .disabled(!model.canSave)
+                if !saved { FreeSavesNote(strings: strings) }
             } else if !model.notFound {
                 if let hint = missingHint {
                     Text(hint).scanFitText(.caption).foregroundStyle(ScanFitColor.onSurfaceVariant)

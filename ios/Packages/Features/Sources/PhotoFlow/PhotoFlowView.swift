@@ -176,6 +176,9 @@ public struct PhotoFlowView: View {
                     Button(strings.commonShare) { Task { await model.share() } }
                         .frame(maxWidth: .infinity, minHeight: ScanFitSpacing.minTouchTarget)
                         .disabled(!model.canSave || model.renderPending)
+                        .background(.bar)
+                    // ALGORITHMS 14.3: "N free saves left" once 5 or fewer remain.
+                    FreeSavesNote(strings: strings)
                         .padding(.bottom, ScanFitSpacing.sm)
                         .background(.bar)
                 }

@@ -13,6 +13,8 @@ let vision: Target.Dependency = .product(name: "ScanVision", package: "Core")
 let match: Target.Dependency = .product(name: "Match", package: "Core")
 let inspect: Target.Dependency = .product(name: "Inspect", package: "Core")
 let pdf: Target.Dependency = .product(name: "PDF", package: "Core")
+let billing: Target.Dependency = .product(name: "Billing", package: "Core")
+let config: Target.Dependency = .product(name: "Config", package: "Core")
 
 let package = Package(
     name: "Features",
@@ -36,17 +38,19 @@ let package = Package(
         // Phase 0 content
         .target(name: "Home", dependencies: [core, presets, model, data]),
         .target(name: "Kit", dependencies: [core, model, data, match, imaging, pdf]),
-        .target(name: "Settings", dependencies: [core, presets, data]),
+        .target(name: "Settings", dependencies: [core, presets, data, billing, config]),
         .target(name: "Exams", dependencies: [core, model, data, match, imaging, inspect]),
         .target(name: "PhotoFlow", dependencies: [core, model, imaging, vision, match, inspect, data]),
         .target(name: "InkFlow", dependencies: [core, model, imaging, match, inspect, data]),
         .target(name: "Custom", dependencies: [core, model, data]),
         .target(name: "Checker", dependencies: [core, model, data, match, inspect, imaging, pdf]),
         .target(name: "PDFTools", dependencies: [core, model, data, match, inspect, imaging, pdf]),
-        // Empty until their phase (ROADMAP Phase 2-4)
+        .target(name: "Paywall", dependencies: [core, data, billing, config]),
+        // Empty until its phase (live coach, v1.1)
         .target(name: "Coach", dependencies: [core, model]),
-        .target(name: "Paywall", dependencies: [core]),
         .testTarget(name: "HomeTests", dependencies: ["Home", presets, model, data, testSupport]),
+        .testTarget(name: "PaywallTests", dependencies: ["Paywall", data, billing, testSupport]),
+        .testTarget(name: "SettingsTests", dependencies: ["Settings", presets, data, billing, testSupport]),
         .testTarget(name: "ExamsTests", dependencies: ["Exams", model, data, match, testSupport]),
         .testTarget(name: "KitTests", dependencies: ["Kit", model, data, match, imaging, inspect, testSupport]),
         .testTarget(name: "CustomTests", dependencies: ["Custom", model, data]),

@@ -75,6 +75,8 @@ public final class CheckerViewModel {
     @ObservationIgnored private let tools: any CheckerTools
     /// Export history (ALGORITHMS 13.3): one entry per verified fixed copy.
     @ObservationIgnored private let kit: any KitStore
+    /// The free-saves gate (ALGORITHMS 14); `nil` saves and shares without counting (tests, previews).
+    @ObservationIgnored private let gate: SaveGate?
     @ObservationIgnored private let load: @Sendable () async -> PresetBundle?
     /// The picked file's bytes, kept out of the observed state; only "Make it fit" decodes them.
     @ObservationIgnored private var bytes: [UInt8]?
@@ -84,11 +86,12 @@ public final class CheckerViewModel {
 
     public init(
         tools: any CheckerTools = LiveCheckerTools(), preferences: UserPreferences?,
-        exporter: any DocumentExporting = FilesExporter(), kit: any KitStore = NoKitStore(),
+        exporter: any DocumentExporting = FilesExporter(), kit: any KitStore = NoKitStore(), gate: SaveGate? = nil,
         load: @escaping @Sendable () async -> PresetBundle?
     ) {
         self.tools = tools
         self.kit = kit
+        self.gate = gate
         self.preferences = preferences
         self.exporter = exporter
         self.load = load
@@ -203,9 +206,10 @@ public final class CheckerViewModel {
 
     /// Saves the fitted copy for the chosen exam slot (ALGORITHMS 1.6); Saved is recorded only after verification.
     public func save() async {
-        guard canSave, let request = request() else { return }
+        guard canSave, let request = request(), gate?.allows([request.bytes], trigger: .save) ?? true else { return }
         exportState = .saving
         exportState = await exporter.save(request)
+        if exportState == .saved { await gate?.record(request.bytes) }
         if exportState == .saved, let target = result?.target {
             preferences?.recordSaved(target.exam.id, target.slot.type)
             await kit.recordExport(request, examId: target.exam.id, examName: target.exam.name)
@@ -214,9 +218,10 @@ public final class CheckerViewModel {
 
     /// Shares exactly the fitted copy under its export name (ALGORITHMS 1.6.2); same gate as Save.
     public func shareCopy() async {
-        guard canSave, let request = request() else { return }
+        guard canSave, let request = request(), gate?.allows([request.bytes], trigger: .share) ?? true else { return }
         let staged = fix
         let url = await ShareStager.stage(request.bytes, filename: request.filename)
+        if url != nil { await gate?.record(request.bytes) }
         guard fix == staged else { return }
         share = url.map { .ready(SharedFile(url: $0)) } ?? .failed
     }

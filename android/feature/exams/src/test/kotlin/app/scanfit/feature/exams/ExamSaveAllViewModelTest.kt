@@ -3,6 +3,7 @@ package app.scanfit.feature.exams
 import androidx.lifecycle.SavedStateHandle
 import app.scanfit.core.data.SavedDocument
 import app.scanfit.core.data.export.DocumentExporter
+import app.scanfit.core.data.quota.PaywallTrigger
 import app.scanfit.core.match.DocKind
 import app.scanfit.core.model.DocType
 import app.scanfit.core.presets.PresetsLoadOutcome
@@ -14,6 +15,7 @@ import app.scanfit.core.testing.FakePresetsRepository
 import app.scanfit.core.testing.FakeUserPreferences
 import app.scanfit.core.testing.SpecPresets
 import app.scanfit.core.testing.TestJpeg
+import app.scanfit.core.testing.TestSaveGate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -27,6 +29,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -48,13 +51,14 @@ class ExamSaveAllViewModelTest {
     private fun TestScope.model(
         prefs: FakeUserPreferences,
         destinations: FakeExportDestinations = FakeExportDestinations(),
+        quota: TestSaveGate = TestSaveGate(),
     ): ExamViewModel {
         val m = ExamViewModel(
             SavedStateHandle(mapOf(ExamViewModel.EXAM_ID to exam.id)),
             presets,
             prefs,
             drafts,
-            DocumentExporter(destinations, prefs, FakeKitStore()),
+            DocumentExporter(destinations, prefs, FakeKitStore(), quota.gate),
             dispatcher,
         )
         backgroundScope.launch(dispatcher) { m.uiState.collect {} }
@@ -77,13 +81,41 @@ class ExamSaveAllViewModelTest {
         assertEquals(listOf(DocType.PHOTO, DocType.SIGNATURE), m.ready.saveAllPlan.included)
         m.onSaveAll()
         advanceUntilIdle()
-        assertEquals(SaveAllStatus.Done(2, 2, "Downloads/ScanFit/IBPS-PO"), m.ready.saveAll)
+        assertEquals(SaveAllStatus.Done(2, 2, "Downloads/Mr Doc/IBPS-PO"), m.ready.saveAll)
         assertEquals(
             setOf(SavedDocument(exam.id, "PHOTO"), SavedDocument(exam.id, "SIGNATURE")),
             prefs.savedDocuments.first(),
         )
         assertEquals("the exact retained bytes are written", 2, destinations.requests.size)
         assertTrue("saved rows leave the plan", m.ready.saveAllPlan.included.isEmpty())
+    }
+
+    @Test
+    fun theWholeBatchIsDecidedFirstAndTooFewFreeSavesSaveNothing() = runTest(dispatcher) {
+        retainBoth()
+        val prefs = FakeUserPreferences(handwritingConfirmed = true)
+        val destinations = FakeExportDestinations()
+        val quota = TestSaveGate(used = 19)
+        quota.gate.status.first()
+        val m = model(prefs, destinations, quota)
+        m.onSaveAll()
+        advanceUntilIdle()
+        assertEquals(PaywallTrigger.SAVE_ALL, quota.paywall.current.value)
+        assertEquals(SaveAllStatus.Idle, m.ready.saveAll)
+        assertTrue(destinations.requests.isEmpty())
+        assertEquals(19, quota.store.state.used)
+    }
+
+    @Test
+    fun eachSavedFileSpendsOneFreeSave() = runTest(dispatcher) {
+        retainBoth()
+        val quota = TestSaveGate(used = 18)
+        quota.gate.status.first()
+        val m = model(FakeUserPreferences(handwritingConfirmed = true), quota = quota)
+        m.onSaveAll()
+        advanceUntilIdle()
+        assertEquals(20, quota.store.state.used)
+        assertNull(quota.paywall.current.value)
     }
 
     @Test
@@ -102,7 +134,7 @@ class ExamSaveAllViewModelTest {
         destinations.requests.clear()
         m.onSaveAll()
         advanceUntilIdle()
-        assertEquals(SaveAllStatus.Done(1, 1, "Downloads/ScanFit/IBPS-PO"), m.ready.saveAll)
+        assertEquals(SaveAllStatus.Done(1, 1, "Downloads/Mr Doc/IBPS-PO"), m.ready.saveAll)
         assertEquals("only the failed row is written again", listOf(DocType.PHOTO), destinations.requests.map { it.spec.type })
     }
 

@@ -6,6 +6,8 @@ plugins {
 dependencies {
     api(libs.androidx.datastore.preferences)
     api(libs.kotlinx.coroutines.android)
+    // The free-saves gate (ALGORITHMS 14) reads the Pro entitlement.
+    api(project(":core:billing"))
     implementation(libs.kotlinx.serialization.json)
     // Export (ALGORITHMS 1.6): naming, re-inspection and the slot verdict of the written file.
     api(project(":core:match"))

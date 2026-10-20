@@ -10,6 +10,7 @@ import app.scanfit.core.data.export.PdfExport
 import app.scanfit.core.data.export.SaveResult
 import app.scanfit.core.data.export.SaveState
 import app.scanfit.core.data.export.ShareStager
+import app.scanfit.core.data.quota.PaywallTrigger
 import app.scanfit.core.imaging.AndroidImageDecoder
 import app.scanfit.core.imaging.FitError
 import app.scanfit.core.imaging.PipelineOutcome
@@ -270,6 +271,7 @@ constructor(
         val state = _uiState.value
         val request = request(state) ?: return null
         if (!state.canSave) return null
+        if (!exporter.gate.allows(listOf(request.bytes), PaywallTrigger.SAVE)) return null
         _uiState.value = state.copy(save = SaveResult(SaveState.SAVING))
         if (exporter.destinations.requiresPicker) {
             pendingSave = request
@@ -299,9 +301,11 @@ constructor(
         val state = _uiState.value
         val request = request(state) ?: return
         if (!state.canSave) return
+        if (!exporter.gate.allows(listOf(request.bytes), PaywallTrigger.SHARE)) return
         val fix = state.fix
         viewModelScope.launch {
             val uri = share.stage(request.fileName, request.bytes)
+            if (uri != null) withContext(work) { exporter.gate.record(request.bytes) }
             if (_uiState.value.fix !== fix) return@launch
             _uiState.value = _uiState.value.copy(shareUri = uri, shareFailed = uri == null)
         }

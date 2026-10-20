@@ -18,6 +18,7 @@ import app.scanfit.core.testing.FakePresetsRepository
 import app.scanfit.core.testing.FakeShareStager
 import app.scanfit.core.testing.FakeUserPreferences
 import app.scanfit.core.testing.SpecPresets
+import app.scanfit.core.testing.TestSaveGate
 import app.scanfit.core.vision.FaceBox
 import app.scanfit.core.vision.FaceDetector
 import kotlinx.coroutines.Dispatchers
@@ -64,7 +65,7 @@ class PhotoFlowViewModelTest {
         detector,
         segmenter,
         dispatcher,
-        DocumentExporter(FakeExportDestinations(), FakeUserPreferences(), FakeKitStore()),
+        DocumentExporter(FakeExportDestinations(), FakeUserPreferences(), FakeKitStore(), TestSaveGate().gate),
         FakeDraftStore(),
         share,
         FakeKitStore(),

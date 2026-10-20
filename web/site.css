@@ -1,0 +1,163 @@
+/* Mr Doc website. Colours are copied from spec/tokens/tokens.json (light + dark); keep them in step when tokens change. */
+:root {
+  color-scheme: light dark;
+  --primary: #3F4DB8;
+  --on-primary: #FFFFFF;
+  --primary-container: #E1E4FF;
+  --on-primary-container: #10186B;
+  --bg: #FAFAFC;
+  --on-bg: #1A1A21;
+  --surface: #FFFFFF;
+  --surface-variant: #EDEDF3;
+  --on-surface-variant: #4A4A58;
+  --outline-variant: #CFCFD9;
+  --success: #1B7A3A;
+  --success-container: #DDF2E2;
+  --on-success-container: #0B3A1A;
+  --photo: #00696B;
+  --photo-container: #CDF1F0;
+  --on-photo-container: #002021;
+  --ink: #6A3FB0;
+  --ink-container: #EBDDFF;
+  --on-ink-container: #23005C;
+  --pdf: #B4235A;
+  --pdf-container: #FFD9E2;
+  --on-pdf-container: #3E0019;
+  --radius-card: 20px;
+  --radius-small: 12px;
+  --gutter: 16px;
+  --max: 1080px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --primary: #B8C1FF;
+    --on-primary: #141C73;
+    --primary-container: #2D3894;
+    --on-primary-container: #DFE2FF;
+    --bg: #121217;
+    --on-bg: #E4E4EC;
+    --surface: #1A1A21;
+    --surface-variant: #2A2A34;
+    --on-surface-variant: #C5C5D3;
+    --outline-variant: #454553;
+    --success: #7ED79A;
+    --success-container: #0F4F27;
+    --on-success-container: #B9F0CA;
+    --photo: #4FD8D9;
+    --photo-container: #004F51;
+    --on-photo-container: #CDF1F0;
+    --ink: #D3BBFF;
+    --ink-container: #51259A;
+    --on-ink-container: #EBDDFF;
+    --pdf: #FFB1C8;
+    --pdf-container: #8C0B44;
+    --on-pdf-container: #FFD9E2;
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--on-bg);
+  font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Noto Sans Devanagari", sans-serif;
+  overflow-wrap: break-word;
+}
+
+a { color: var(--primary); }
+a:focus-visible, .button:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+
+.wrap { max-width: var(--max); margin: 0 auto; padding: 0 var(--gutter); }
+
+/* Header and footer */
+.site-header { border-bottom: 1px solid var(--outline-variant); background: var(--surface); }
+.site-header .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 64px; flex-wrap: wrap; }
+.brand { display: inline-flex; align-items: center; gap: 10px; color: var(--on-bg); text-decoration: none; font-weight: 700; font-size: 1.2rem; }
+.brand img { width: 32px; height: 32px; }
+.site-nav { display: flex; gap: 16px; flex-wrap: wrap; font-size: .95rem; }
+.site-nav a { text-decoration: none; color: var(--on-surface-variant); }
+.site-nav a:hover, .site-nav a[aria-current="page"] { color: var(--primary); }
+
+.site-footer { margin-top: 64px; padding: 32px 0 48px; border-top: 1px solid var(--outline-variant); color: var(--on-surface-variant); font-size: .9rem; }
+.site-footer nav { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
+.disclaimer { max-width: 60rem; }
+
+/* Landing */
+.hero { padding: 56px 0 32px; }
+.hero h1 { font-size: clamp(2rem, 6vw, 3.25rem); line-height: 1.15; margin: 0 0 16px; letter-spacing: -0.02em; }
+.hero p.lead { font-size: clamp(1.05rem, 2.5vw, 1.25rem); color: var(--on-surface-variant); max-width: 40rem; margin: 0 0 24px; }
+.stores { display: flex; gap: 12px; flex-wrap: wrap; }
+.button {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 10px 18px; border-radius: 999px;
+  background: var(--primary); color: var(--on-primary); text-decoration: none; font-weight: 600;
+}
+.button.soon { background: var(--surface-variant); color: var(--on-surface-variant); cursor: default; }
+.pills { display: flex; gap: 8px; flex-wrap: wrap; margin: 20px 0 0; padding: 0; list-style: none; }
+.pills li { background: var(--success-container); color: var(--on-success-container); border-radius: 999px; padding: 4px 12px; font-size: .9rem; }
+
+h2 { font-size: clamp(1.4rem, 4vw, 1.9rem); line-height: 1.25; margin: 56px 0 8px; }
+.section-lead { color: var(--on-surface-variant); margin: 0 0 24px; max-width: 42rem; }
+
+.tools { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.tool { border-radius: var(--radius-card); padding: 16px; min-height: 148px; display: flex; flex-direction: column; gap: 8px; }
+.tool h3 { margin: 0; font-size: 1.05rem; line-height: 1.3; }
+.tool p { margin: 0; font-size: .9rem; line-height: 1.45; }
+.tile { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; }
+.tile svg { width: 24px; height: 24px; }
+.tool.exam { background: var(--primary-container); color: var(--on-primary-container); }
+.tool.exam .tile { background: var(--primary); color: var(--primary-container); }
+.tool.photo { background: var(--photo-container); color: var(--on-photo-container); }
+.tool.photo .tile { background: var(--photo); color: var(--photo-container); }
+.tool.ink { background: var(--ink-container); color: var(--on-ink-container); }
+.tool.ink .tile { background: var(--ink); color: var(--ink-container); }
+.tool.pdf { background: var(--pdf-container); color: var(--on-pdf-container); }
+.tool.pdf .tile { background: var(--pdf); color: var(--pdf-container); }
+.tool.check { background: var(--success-container); color: var(--on-success-container); }
+.tool.check .tile { background: var(--success); color: var(--success-container); }
+
+.reasons { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.reason { background: var(--surface); border: 1px solid var(--outline-variant); border-radius: var(--radius-card); padding: 20px; }
+.reason h3 { margin: 0 0 6px; font-size: 1.05rem; }
+.reason p { margin: 0; color: var(--on-surface-variant); }
+
+.plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.plan { background: var(--surface); border: 1px solid var(--outline-variant); border-radius: var(--radius-card); padding: 24px; }
+.plan.pro { border: 2px solid var(--primary); }
+.plan h3 { margin: 0 0 4px; font-size: 1.2rem; }
+.plan .price { font-size: 1.75rem; font-weight: 700; margin: 4px 0 0; }
+.plan .price .per { font-size: 1rem; font-weight: 500; color: var(--on-surface-variant); }
+.plan .alt { margin: 0 0 12px; color: var(--on-surface-variant); }
+.plan ul { margin: 0; padding-left: 1.2rem; }
+.plan li { margin: 4px 0; }
+.note { color: var(--on-surface-variant); font-size: .9rem; }
+
+details { background: var(--surface); border: 1px solid var(--outline-variant); border-radius: var(--radius-small); padding: 12px 16px; margin: 8px 0; }
+summary { cursor: pointer; font-weight: 600; min-height: 32px; }
+details p { margin: 8px 0 4px; color: var(--on-surface-variant); }
+
+/* Policy pages */
+.doc { max-width: 46rem; padding-top: 32px; }
+.doc h1 { font-size: clamp(1.8rem, 5vw, 2.4rem); line-height: 1.2; margin: 0 0 8px; }
+.doc h2 { margin: 40px 0 8px; font-size: 1.35rem; }
+.doc h3 { margin: 24px 0 6px; font-size: 1.1rem; }
+.doc .updated { color: var(--on-surface-variant); margin: 0 0 24px; }
+.doc .summary { background: var(--primary-container); color: var(--on-primary-container); border-radius: var(--radius-small); padding: 16px 20px; }
+.doc .summary ul { margin: 8px 0 0; padding-left: 1.2rem; }
+.doc table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: .95rem; }
+.doc th, .doc td { text-align: left; vertical-align: top; padding: 8px; border-bottom: 1px solid var(--outline-variant); }
+.doc .table-scroll { overflow-x: auto; }
+.placeholder { background: var(--surface-variant); border-radius: 4px; padding: 0 4px; }
+
+/* Narrow screens: the privacy table becomes one card per row. */
+@media (max-width: 560px) {
+  .doc table, .doc tbody, .doc tr, .doc td { display: block; width: 100%; }
+  .doc thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .doc tr { border: 1px solid var(--outline-variant); border-radius: var(--radius-small); padding: 8px 12px; margin: 0 0 12px; background: var(--surface); }
+  .doc td { border: 0; padding: 4px 0; }
+  .doc td:nth-child(2)::before { content: "Why: "; font-weight: 600; }
+  .doc td:nth-child(3)::before { content: "Who: "; font-weight: 600; }
+}

@@ -134,6 +134,7 @@ public struct CheckerView: View {
                 Button(strings.commonShare) { Task { await model.shareCopy() } }
                     .frame(maxWidth: .infinity, minHeight: ScanFitSpacing.minTouchTarget)
                     .disabled(!model.canSave)
+                if model.exportState != .saved { FreeSavesNote(strings: strings) }
             }
             .padding(ScanFitSpacing.screenMargin)
             .background(.bar)

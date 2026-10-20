@@ -35,7 +35,7 @@ struct ExamSaveAllTests {
     private let exporter = BatchExporter()
     private let kit = FakeKitStore()
 
-    private func model(confirmed: Bool) async throws -> (ExamViewModel, UserPreferences) {
+    private func model(confirmed: Bool, gate: SaveGate? = nil) async throws -> (ExamViewModel, UserPreferences) {
         let defaults = try #require(UserDefaults(suiteName: "scanfit.exam.saveall.\(UUID().uuidString)"))
         let prefs = UserPreferences(defaults: defaults)
         if confirmed { prefs.confirmHandwriting() }
@@ -43,7 +43,7 @@ struct ExamSaveAllTests {
         await drafts.seed(TestJpeg.make(width: 140, height: 60, size: 16 * 1024), examID: "ibps_po", type: .signature)
         let bundle = try SpecPresets.bundle()
         let model = ExamViewModel(
-            examId: "ibps_po", preferences: prefs, drafts: drafts, exporter: exporter, kit: kit
+            examId: "ibps_po", preferences: prefs, drafts: drafts, exporter: exporter, kit: kit, gate: gate
         ) { bundle }
         await model.onAppear()
         return (model, prefs)
@@ -59,6 +59,27 @@ struct ExamSaveAllTests {
         #expect(exporter.batches[0].map(\.filename) == ["photo_IBPS-PO_200x230_34kb.jpg", "signature_IBPS-PO_140x60_16kb.jpg"])
         #expect(prefs.isSaved("ibps_po", .photo) && prefs.isSaved("ibps_po", .signature))
         #expect(model.saveAllPlan.included.isEmpty, "saved rows leave the plan")
+    }
+
+    @Test("the whole batch is decided first: too few free saves save nothing (ALGORITHMS 14.1)")
+    func spentFreeSaves() async throws {
+        let gate = await testSaveGate(used: 19)
+        let (model, prefs) = try await model(confirmed: true, gate: gate)
+        await model.saveAll()
+        #expect(gate.paywall.current == .saveAll)
+        #expect(model.saveAllStatus == .idle)
+        #expect(exporter.batches.isEmpty)
+        #expect(!prefs.isSaved("ibps_po", .photo))
+        #expect(gate.state?.used == 19)
+    }
+
+    @Test("each saved file spends one free save")
+    func spendsPerFile() async throws {
+        let gate = await testSaveGate(used: 18)
+        let (model, _) = try await model(confirmed: true, gate: gate)
+        await model.saveAll()
+        #expect(gate.state?.used == 20)
+        #expect(gate.paywall.current == nil)
     }
 
     @Test("a failure does not stop the others; retry writes only the rest")

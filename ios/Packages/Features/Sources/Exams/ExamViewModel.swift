@@ -32,13 +32,16 @@ public final class ExamViewModel {
     @ObservationIgnored private let drafts: any DraftStore
     /// Export history (ALGORITHMS 13.3): one entry per verified file.
     @ObservationIgnored private let kit: any KitStore
+    /// The free-saves gate (ALGORITHMS 14); `nil` saves and shares without counting (tests, previews).
+    @ObservationIgnored private let gate: SaveGate?
     @ObservationIgnored private var generation = 0
 
     public init(
         examId: String, preferences: UserPreferences, drafts: any DraftStore = NoDraftStore(),
-        exporter: any DocumentExporting = FilesExporter(), kit: any KitStore = NoKitStore(),
+        exporter: any DocumentExporting = FilesExporter(), kit: any KitStore = NoKitStore(), gate: SaveGate? = nil,
         load: @escaping @Sendable () async -> PresetBundle?
     ) {
+        self.gate = gate
         self.examId = examId
         self.preferences = preferences
         self.load = load
@@ -82,6 +85,11 @@ public final class ExamViewModel {
             )
             requests.append((type, ExportRequest(bytes: draft.bytes, filename: filename, spec: spec, kind: kind)))
         }
+        // ALGORITHMS 14.1: the whole batch is decided before the first file; spent free saves save nothing.
+        guard gate?.allows(requests.map(\.1.bytes), trigger: .saveAll) ?? true else {
+            saveAllStatus = .idle
+            return
+        }
         let outcome = requests.isEmpty
             ? SaveAllOutcome(states: [], folder: nil)
             : await exporter.saveAll(requests.map(\.1))
@@ -91,6 +99,7 @@ public final class ExamViewModel {
         }
         var saved = 0
         for ((type, request), result) in zip(requests, outcome.states) where result == .saved {
+            await gate?.record(request.bytes)
             preferences.recordSaved(exam.id, type)
             await kit.recordExport(request, examId: exam.id, examName: exam.name)
             saved += 1

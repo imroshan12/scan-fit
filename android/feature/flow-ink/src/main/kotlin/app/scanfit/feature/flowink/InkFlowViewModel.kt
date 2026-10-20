@@ -14,6 +14,7 @@ import app.scanfit.core.data.export.ShareStager
 import app.scanfit.core.data.kit.KitIds
 import app.scanfit.core.data.kit.KitSave
 import app.scanfit.core.data.kit.KitStore
+import app.scanfit.core.data.quota.PaywallTrigger
 import app.scanfit.core.imaging.AndroidImageDecoder
 import app.scanfit.core.imaging.CropAdjust
 import app.scanfit.core.imaging.CropCorner
@@ -455,6 +456,7 @@ constructor(
         val review = _uiState.value as? InkUiState.Review ?: return null
         val ready = review.result as? InkReviewResult.Ready ?: return null
         if (!review.canSave) return null
+        if (!exporter.gate.allows(listOf(ready.bytes), PaywallTrigger.SAVE)) return null
         val slot = review.slot
         val request =
             ExportRequest(slot.examId, slot.examName, slot.spec, slot.kind, ready.bytes, recordsSaved = !slot.custom)
@@ -475,10 +477,12 @@ constructor(
         val review = _uiState.value as? InkUiState.Review ?: return
         val ready = review.result as? InkReviewResult.Ready ?: return
         if (!review.canSave) return
+        if (!exporter.gate.allows(listOf(ready.bytes), PaywallTrigger.SHARE)) return
         val slot = review.slot
         val name = ExportRequest(slot.examId, slot.examName, slot.spec, slot.kind, ready.bytes).fileName
         viewModelScope.launch {
             val uri = share.stage(name, ready.bytes)
+            if (uri != null) withContext(work) { exporter.gate.record(ready.bytes) }
             val current = _uiState.value as? InkUiState.Review ?: return@launch
             if (current.result !== ready) return@launch
             _uiState.value = current.copy(shareUri = uri, shareFailed = uri == null)

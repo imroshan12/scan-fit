@@ -32,14 +32,16 @@ let package = Package(
         ),
         .target(name: "Presets", dependencies: ["ScanModel"]),
         .target(name: "Analytics"),
-        .target(name: "TestSupport", dependencies: ["Imaging", "ScanVision", "ScanModel", "ScanData", "Match"]),
-        // Empty until their phase (ROADMAP): engines in Phase 1, services in Phase 3-4.
+        .target(
+            name: "TestSupport", dependencies: ["Imaging", "ScanVision", "ScanModel", "ScanData", "Match", "Billing"]
+        ),
+        // Engines (Phase 1) and services (Phase 3-4; Config and Ads still empty).
         .target(name: "Imaging", dependencies: ["ScanModel", "Inspect"]),
         .target(name: "Match", dependencies: ["ScanModel", "Inspect"]),
         .target(name: "Inspect", dependencies: ["ScanModel"]),
         .target(name: "PDF", dependencies: ["ScanModel", "Imaging", "Inspect"]),
         .target(name: "ScanVision", dependencies: ["ScanModel", "Imaging"]),
-        .target(name: "ScanData", dependencies: ["ScanModel", "Inspect", "Match"]),
+        .target(name: "ScanData", dependencies: ["ScanModel", "Inspect", "Match", "Billing"]),
         .target(name: "Billing"),
         .target(name: "Ads"),
         .target(name: "Config"),
@@ -48,9 +50,11 @@ let package = Package(
         .testTarget(name: "PresetsTests", dependencies: ["Presets", "ScanModel", "TestSupport"]),
         .testTarget(name: "DesignSystemTests", dependencies: ["DesignSystem", "TestSupport"]),
         .testTarget(
-            name: "ScanDataTests", dependencies: ["ScanData", "ScanModel", "Inspect", "Imaging", "TestSupport"]
+            name: "ScanDataTests",
+            dependencies: ["ScanData", "ScanModel", "Inspect", "Imaging", "Billing", "TestSupport"]
         ),
         .testTarget(name: "AnalyticsTests", dependencies: ["Analytics"]),
+        .testTarget(name: "BillingTests", dependencies: ["Billing"]),
         .testTarget(name: "InspectTests", dependencies: ["Inspect", "TestSupport"]),
         .testTarget(name: "ScanVisionTests", dependencies: ["ScanVision", "Imaging", "TestSupport"]),
         .testTarget(name: "MatchTests", dependencies: ["Match", "Inspect", "ScanModel", "TestSupport"]),

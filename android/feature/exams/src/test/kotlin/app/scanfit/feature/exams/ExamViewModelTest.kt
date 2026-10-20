@@ -11,6 +11,7 @@ import app.scanfit.core.testing.FakeKitStore
 import app.scanfit.core.testing.FakePresetsRepository
 import app.scanfit.core.testing.FakeUserPreferences
 import app.scanfit.core.testing.SpecPresets
+import app.scanfit.core.testing.TestSaveGate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -43,7 +44,7 @@ class ExamViewModelTest {
         presets,
         prefs,
         FakeDraftStore(),
-        DocumentExporter(FakeExportDestinations(), prefs, FakeKitStore()),
+        DocumentExporter(FakeExportDestinations(), prefs, FakeKitStore(), TestSaveGate().gate),
         UnconfinedTestDispatcher(),
     )
 

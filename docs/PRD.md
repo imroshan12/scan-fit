@@ -1,4 +1,7 @@
-# PRD — ScanFit (working name)
+# PRD — Mr Doc (code name ScanFit)
+
+Store name: **Mr Doc** (user decision 2026-10-20). Code, modules and ids still say `scanfit`. Marketed as an everyday photo
+and PDF editor, with exam and government forms built in (UI_UX §1).
 
 **One line:** Get every upload for your exam form right the first time. Photo, signature, thumb,
 declaration and certificates, fixed on your phone, offline.
@@ -18,8 +21,9 @@ before you upload it.
 | **Entrance aspirant** (secondary), 16–19 with a parent helping | JEE, NEET, CUET: one busy season a year | Finger/thumb impressions, postcard photo, certificate PDFs |
 | **General user** (tertiary) | Any form needing "under 200 KB" | Scanner + compress to KB, ID card on one page |
 
-Minors use the entrance flows. Collect no age data, run no personalised ads for them
-(use non-personalised ads for everyone; see ARCHITECTURE §8), and store nothing off-device.
+Minors use the entrance flows. Collect no age data, show no ads (v1.0 has none, §6), keep analytics to the closed enum
+set (ARCHITECTURE §9), and keep every document on the device. The sign-in account (§6) holds only email, name and the
+save count.
 
 ## 3. Goals and success metrics (6 months after launch)
 | Metric | Target |
@@ -27,7 +31,7 @@ Minors use the entrance flows. Collect no age data, run no personalised ads for 
 | Upload success (self-reported "Portal accepted it?" prompt) | ≥ 97% yes |
 | Time from "pick exam" to all files saved (IBPS 4-file kit) | median ≤ 3 min |
 | D7 retention | ≥ 18% (seasonal product; D30 matters less than repeat per notification) |
-| Free → Pro conversion | ≥ 2.5% of monthly actives |
+| Free → Pro conversion | ≥ 5% of users who use all 20 free saves; ≥ 2.5% of monthly actives |
 | Play rating | ≥ 4.5 with ≥ 1,000 ratings |
 | Crash-free sessions / ANR rate | ≥ 99.7% / < 0.3% |
 
@@ -47,14 +51,14 @@ Minors use the entrance flows. Collect no age data, run no personalised ads for 
 | F9 | **Custom resize**: any KB window, px, cm@dpi, format; live match note | For forms not in the catalogue |
 | F10 | **Pre-submit Checker**: open any file → format, KB, px, DPI, CMYK, progressive, EXIF → per-exam verdicts + fixes | §5 |
 | F11 | **My Kit**: store cleaned originals once (photo, signature, thumb, declaration) → generate any exam's set in one tap | Originals in app storage only |
-| F12 | **Save all**: exports to `Downloads/ScanFit/<Exam>/` (Android) / Files (iOS) with correct names; share sheet | Verify-after-write §1.6 |
+| F12 | **Save all**: exports to `Downloads/Mr Doc/<Exam>/` (Android) / Files (iOS) with correct names; share sheet | Verify-after-write §1.6 |
 | F13 | **Certificate PDF tools**: images → PDF, compress PDF to KB, merge, **ID card on one page** | §6 |
 | F14 | **Basic scan**: ML Kit Document Scanner / VisionKit → straight into F13 or F4–F6 | |
-| F15 | **Live photo coach** (Pro): practise the SSC/UPSC/NTA live capture with real-time checks | §7 |
+| F15 | **Live photo coach**: practise the SSC/UPSC/NTA live capture with real-time checks (moved to v1.1, LAUNCH_PLAN) | §7 |
 | F16 | **Hindi + English UI** | All strings via spec/strings |
 | F17 | **Printable guide sheet** (PDF): boxes at true scale for signature, thumb, declaration, triple signature, NEET fingers | Improves capture quality a lot |
 | F18 | Preset OTA updates + "Spec updated" badges | Signed bundle, daily check |
-| F19 | Monetisation: Pro (yearly + lifetime), rewarded ads for free extra exports, no banner ads | §6 below |
+| F19 | Monetisation: 20 free saves, then Pro (yearly + lifetime). No ads | §6 below |
 
 ### v1.1 — Full scanner (4–6 weeks after launch)
 Scan library with folders; on-device OCR full-text search (ML Kit Latin + Devanagari; Vision on iOS);
@@ -73,8 +77,10 @@ On-device assistant ("when does my insurance expire?") using platform models whe
 Intelligence devices), with a graceful fallback to search. Coaching-institute partner packs.
 
 ### Non-goals (all versions)
-Filling in or submitting portal forms. Any cloud processing of user documents. User accounts
-(Pro is tied to the store account). Web version of the app (the web site is SEO + presets only).
+Filling in or submitting portal forms. Any cloud processing of user documents. Accounts that hold more than the email,
+name, save count and the link to Pro (2026-10-20: sign-in exists only for the free-save count and Pro across phones;
+documents, file names, file hashes and exam choices never go to the account). Web version of the app (the web site is SEO
++ presets only).
 
 ## 5. Feature F8 in detail — exam match note
 **Where it appears:** (a) the review screen after every exam flow; (b) Custom resize, live as the
@@ -94,20 +100,57 @@ user changes KB/px; (c) Checker results; (d) My Kit items ("This signature works
 - Uses the *verified written file* (§1.6) for final verdicts, not the in-memory estimate.
 - The match note is identical on Android and iOS for every `match_cases` fixture.
 
-## 6. Monetisation
+## 6. Monetisation (decided with the user 2026-10-20; replaces the ads plan)
+
+**Model: free tier + Pro, no ads.** Every tool, every exam and every edit is free. A free user gets **20 saves in total**
+(not per day), then needs Pro to save or share more. Pro is unlimited. There are no banner, interstitial or rewarded ads in
+v1.0, so the listing can say "No ads" and the privacy story stays simple.
+
 | | Free | Pro |
 |---|---|---|
-| All exams, all flows, checker, match note | ✓ | ✓ |
-| Exports | 5 per day, +3 per rewarded ad | Unlimited |
-| No watermark, no banner ads | ✓ (always) | ✓ |
-| My Kit one-tap full exam set | Photo + signature only | All documents |
-| Live photo coach, PDF compress > 3 pages, batch | — | ✓ |
-| Interstitials | Max 1 per 3 sessions, never mid-flow, never before a save | none |
+| All tools, all exams, editing, previews, match note, Checker, My Kit | ✓ | ✓ |
+| Saves (files leaving the app) | 20 in total | Unlimited |
+| My Kit originals | kept 30 days (user decision 2026-10-15) | kept until deleted |
+| Ads, watermark | never | never |
 
-Prices (to test via Remote Config paywall variants): India ₹99/year, ₹199 lifetime. Rest of world:
-$4.99/year, $9.99 lifetime. Google Play supports UPI, including UPI Autopay for subscriptions.
-Offer a 3-day trial on yearly only. The lifetime option is a trust signal against the "hidden
-trial" complaints seen in competitor reviews. Every paywall shows plainly "Cancel anytime in Play Store".
+**What counts as a save.** One count per *new verified file* that leaves the app: Save, each file of Save all, Share,
+the Checker's "Make it fit" save, and every PDF tool save. Not counted: saving or sharing the same bytes again (a History
+re-share, Share after Save of the same review), Save to My Kit (it stays in the app), checking a file, and a save that is
+cancelled or fails verification (count only after §1.6 passes).
+
+**When the free saves run out.** The user can still edit, preview, read the match note and check files. Save/Share opens
+the paywall, and the draft is retained (30-day drafts), so after buying they save the same file without redoing it. The
+count is never a surprise: "N free saves left" shows in Settings, and on the review once 5 or fewer remain. Changing the limit (Remote Config `free_saves_total`, default 20) applies to future saves only; it never takes
+back saves a user was already shown.
+
+**Prices.** India ₹99 per year (auto-renewing) and ₹199 lifetime (one-time). Rest of the world $4.99 / $9.99 (store
+tier nearest to these). No store free trial: the 20 free saves are the trial, which also avoids the "hidden trial"
+complaints seen in competitor reviews (my call; easy to add a 3-day trial on yearly later). Google Play supports UPI,
+including UPI Autopay for the yearly plan.
+
+**Paywall rules.** Native screen, both products side by side, the price and period in plain words, "Cancel anytime in
+Play Store / App Store settings", Restore purchases, and links to the privacy policy and terms (App Store guideline
+3.1.2). Shown only when a save is blocked or from Settings, never on launch. Variants via Remote Config `paywall_variant`.
+
+**Accounts and where the count lives (user decision 2026-10-20).** Sign-in on first launch: Google on both apps, plus
+Sign in with Apple on iPhone (Apple requires it next to Google). Firebase Auth; the account's database record holds only
+the save count (an integer that can only go up) and timestamps, next to the Auth email and name. The phone keeps a local
+copy so saving works offline and syncs later; the "same file again" check stays on the phone (no file hashes leave it).
+A reinstall or a new phone with the same account keeps the count; a second Google account starts at 20 again (accepted).
+RevenueCat uses the Firebase user id, so Pro follows the account across Android and iPhone; store Restore still works.
+No internet at first launch: the app opens anyway, counts locally, and asks for sign-in when online. Settings has Sign out
+and **Delete account** (both stores require in-app deletion; deleting removes the Auth user and the record, keeps files on
+the phone, and reminds the user that a subscription is cancelled in the store, not by deleting the account). Where the
+sign-in gate sits is one setting: if App Review objects to sign-in before any use (Apple guideline 5.1.1(v)), it moves to
+the first save.
+
+**Rough economics (illustrative, not a forecast).** After the 15% store fee (Play subscriptions; Apple Small Business
+Program, enrol) a ₹99 year nets about ₹84 and a ₹199 lifetime about ₹169, before tax. Example: 20,000 installs in the
+first season, 30% use all 20 saves, 5% of those buy at ~₹130 net on average ≈ ₹39,000. Revenue at these prices comes from
+volume, so ratings, SEO and seasonal content matter more than price tweaks.
+
+**Watch weekly.** Share of users who reach 20 saves, paywall views → purchases, yearly vs lifetime split, refund rate,
+reviews that mention price. Raise or lower the limit only with a season's data (RELEASE_AND_GTM §7).
 
 ## 7. Risks
 | Risk | Mitigation |

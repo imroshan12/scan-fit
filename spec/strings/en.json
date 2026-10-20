@@ -1,7 +1,7 @@
 {
 	"_doc": "Source-language strings. Flat dotted keys (namespace.name). Placeholders are {name:int} or {name:str}. A plural is an object with 'one' and 'other'. Keys starting with '_' are ignored. Run spec/tools/gen_strings.py after any change.",
 
-	"app.name": "ScanFit",
+	"app.name": "Mr Doc",
 
 	"draft.replace": "Replace file",
 	"draft.retain_failed": "Could not keep this file for later. You can still save it now.",
@@ -138,7 +138,7 @@
 	},
 	"match.fix_needs_size": "{exam:str} {doc:str} needs ≤ {max_kb:int} KB",
 	"match.likely_ok": "Likely OK · Unverified",
-	"match.none": "Doesn't match any exam in ScanFit — that's fine for other forms",
+	"match.none": "Doesn't match any exam in Mr Doc — that's fine for other forms",
 	"match.likely_ok_count": {
 		"one": "Likely OK for {count:int} exam · Unverified",
 		"other": "Likely OK for {count:int} exams · Unverified"
@@ -204,8 +204,43 @@
 	"settings.about": "About",
 
 	"legal.disclaimer_title": "Before you start",
-	"legal.disclaimer": "ScanFit is an independent tool. It is not affiliated with any exam body or government. Specs come from official notifications (linked in the app), but always check the current notice before you submit.",
+	"legal.disclaimer": "Mr Doc is an independent tool. It is not affiliated with any exam body or government. Specs come from official notifications (linked in the app), but always check the current notice before you submit.",
 	"legal.accept": "I understand",
+
+	"quota.left": {
+		"one": "{count:int} free save left",
+		"other": "{count:int} free saves left"
+	},
+	"quota.none": "No free saves left. Pro saves as many files as you like.",
+	"paywall.title": "Keep saving with Pro",
+	"paywall.body": "You've used your free saves. Editing, checking files and My Kit stay free.",
+	"paywall.benefit_unlimited": "Save and share as many files as you like",
+	"paywall.benefit_private": "Your files still never leave your phone",
+	"paywall.benefit_no_ads": "No ads, ever",
+	"paywall.yearly": "Yearly",
+	"paywall.yearly_price": "{price:str} a year",
+	"paywall.lifetime": "Lifetime",
+	"paywall.lifetime_price": "{price:str} once",
+	"paywall.cancel_play": "Yearly renews each year. Cancel anytime in Play Store settings.",
+	"paywall.cancel_app_store": "Yearly renews each year. Cancel anytime in App Store settings.",
+	"paywall.restore": "Restore purchases",
+	"paywall.unavailable": "Can't reach the store right now. Check your connection and try again.",
+	"paywall.failed": "The purchase didn't finish. Please try again.",
+	"paywall.pending": "Your payment is pending. Pro turns on as soon as it goes through.",
+	"paywall.restore_none": "No Pro purchase was found for this account.",
+	"paywall.thanks": "Pro is on. Thank you!",
+	"legal.privacy_policy": "Privacy policy",
+	"legal.terms": "Terms of use",
+	"settings.pro": "Mr Doc Pro",
+	"settings.pro_active": "Pro is active. Save as many files as you like.",
+	"settings.get_pro": "Get Pro",
+	"settings.privacy_note": "Your photos and files are processed on your phone and never uploaded.",
+	"settings.analytics": "Share anonymous usage data",
+	"settings.analytics_hint": "Counts such as “a signature was saved”. Never your files, names or text.",
+	"settings.version": "Version {version:str}",
+	"settings.report_subject": "Mr Doc problem report",
+	"settings.report_body": "Please describe the problem above. Don't attach your documents. App {app:str} · {os:str} · specs v{presets:str}",
+	"settings.no_email": "No email app found. Write to us at {email:str}.",
 
 	"tools.custom_resize": "Custom size",
 	"tools.checker": "Checker",
@@ -215,7 +250,7 @@
 	"tools.coach": "Live photo coach",
 
 	"checker.title": "Check a file",
-	"checker.intro": "Pick the file you plan to upload. ScanFit checks it against the exam's rules and changes nothing unless you ask.",
+	"checker.intro": "Pick the file you plan to upload. Mr Doc checks it against the exam's rules and changes nothing unless you ask.",
 	"checker.choose_another": "Choose another file",
 	"checker.open_failed": "Couldn't open this file. Try another one.",
 	"checker.file_heading": "This file",
@@ -231,8 +266,8 @@
 	"checker.which": "Which exam is it for?",
 	"checker.search": "Search exams",
 	"checker.change_exam": "Change exam",
-	"checker.no_fix": "ScanFit can't fix this file here. Make a new one from the exam's checklist.",
-	"checker.needs_pdf": "ScanFit can't make a PDF from this file. If it has a password, remove it first.",
+	"checker.no_fix": "Mr Doc can't fix this file here. Make a new one from the exam's checklist.",
+	"checker.needs_pdf": "Mr Doc can't make a PDF from this file. If it has a password, remove it first.",
 	"checker.fix": "Make it fit for {exam:str}",
 	"checker.fixing": "Making it fit\u2026",
 	"checker.fixed_heading": "Fixed copy",
@@ -240,7 +275,7 @@
 	"home.check_file": "Already have a file? Check it.",
 
 	"custom.title": "Custom size",
-	"custom.intro": "For a form that isn't in ScanFit. Copy the limits from its notice.",
+	"custom.intro": "For a form that isn't in Mr Doc. Copy the limits from its notice.",
 	"custom.what": "What are you making?",
 	"custom.doc_photo": "Photo",
 	"custom.doc_signature": "Signature",
@@ -347,7 +382,7 @@
 	"pdf.intro_compress": "Choose a PDF and the size the form allows.",
 	"pdf.intro_merge": "Add the PDFs in the order you want them.",
 	"pdf.intro_id_card": "Add the front and the back of the card, then crop each side to the card's edges.",
-	"pdf.intro_exam": "Add photos of the pages or a PDF you already have. ScanFit makes one PDF that fits.",
+	"pdf.intro_exam": "Add photos of the pages or a PDF you already have. Mr Doc makes one PDF that fits.",
 	"pdf.pages_heading": "Pages",
 	"pdf.files_heading": "Files",
 	"pdf.empty": "Nothing added yet.",
@@ -419,7 +454,9 @@
 	"kit.preview_failed": "Couldn't open this file. It may no longer be kept.",
 	"kit.preview_page": "Page {number:int} of {total:int}",
 	"kit.save_preview_title": "Save this picture to My Kit?",
-	"kit.save_preview_body": "ScanFit keeps the whole picture, not the cropped file, so you can use it again for other exams.",
+	"kit.save_preview_body": "Mr Doc keeps the whole picture, not the cropped file, so you can use it again for other exams.",
 
-	"infoplist.camera_usage": "ScanFit uses the camera to take your photo for exam forms. The photo stays on your phone."
+	"infoplist.display_name": "Mr Doc",
+	"infoplist.bundle_name": "Mr Doc",
+	"infoplist.camera_usage": "Mr Doc uses the camera to take your photo for exam forms. The photo stays on your phone."
 }

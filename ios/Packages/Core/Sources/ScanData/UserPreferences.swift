@@ -17,6 +17,8 @@ public final class UserPreferences {
     public private(set) var handwritingConfirmed: Bool
     /// Custom sizes in their canonical text, newest first, at most 5 (ALGORITHMS 11).
     public private(set) var recentCustomSizes: [String]
+    /// Settings "Share anonymous usage data" (ARCHITECTURE §9): on unless the user opts out.
+    public private(set) var analyticsEnabled: Bool
 
     @ObservationIgnored private let defaults: UserDefaults
     private static let pinnedKey = "pinned_exam_ids"
@@ -24,6 +26,7 @@ public final class UserPreferences {
     private static let savedKey = "saved_documents"
     private static let handwritingKey = "handwriting_confirmed"
     private static let recentCustomKey = "recent_custom_sizes"
+    private static let analyticsKey = "analytics_enabled"
 
     public init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -33,6 +36,12 @@ public final class UserPreferences {
         savedDocuments = defaults.dictionary(forKey: Self.savedKey) as? [String: [String]] ?? [:]
         handwritingConfirmed = defaults.bool(forKey: Self.handwritingKey)
         recentCustomSizes = defaults.stringArray(forKey: Self.recentCustomKey) ?? []
+        analyticsEnabled = defaults.object(forKey: Self.analyticsKey) as? Bool ?? true
+    }
+
+    public func setAnalyticsEnabled(_ enabled: Bool) {
+        analyticsEnabled = enabled
+        defaults.set(enabled, forKey: Self.analyticsKey)
     }
 
     /// Moves `text` (a canonical Custom size) to the front of `recentCustomSizes`.

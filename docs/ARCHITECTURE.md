@@ -157,7 +157,7 @@ user-visible destination is stored. Full lifecycle: ALGORITHMS §1.6.1.
 | Pick input | Photo Picker (`PickVisualMedia`, no storage permission); SAF `OpenDocument` for images from Files and for PDFs | `PhotosPicker`; `fileImporter` (Files: images, PDFs)                                                                                       |
 | Camera     | CameraX (capture + `ImageAnalysis` for the coach)                                                              | AVFoundation (`AVCaptureSession`, video data output for the coach)                                                                         |
 | Doc scan   | ML Kit Document Scanner (Play services UI, no camera permission)                                               | `VNDocumentCameraViewController`                                                                                                           |
-| Save       | API 29+: `MediaStore.Downloads` → `Download/ScanFit/<Exam>/`. API 26–28: SAF `CreateDocument`                  | `fileExporter` / `UIDocumentPickerViewController(forExporting:)` to Files (default); "Save to Photos" as a secondary option with a warning |
+| Save       | API 29+: `MediaStore.Downloads` → `Download/Mr Doc/<Exam>/`. API 26–28: SAF `CreateDocument`                  | `fileExporter` / `UIDocumentPickerViewController(forExporting:)` to Files (default); "Save to Photos" as a secondary option with a warning |
 | Share      | `ACTION_SEND` via `FileProvider`                                                                               | `ShareLink`                                                                                                                                |
 
 No broad storage permission is ever requested (Play's photo/video permission policy).
@@ -165,7 +165,7 @@ No broad storage permission is ever requested (Play's photo/video permission pol
 Phase 2 single-photo exports use a separate save state and re-open the destination off the UI thread. Android leaves the
 MediaStore entry pending until verification, then publishes it; older APIs use CreateDocument. iOS currently bridges
 UIDocumentPickerViewController (copy export), re-reading its returned URL with security scope and NSFileCoordinator.
-Verification and cleanup follow ALGORITHMS §1.6. The picker controls the iOS folder; the app cannot force `ScanFit/<Exam>/`.
+Verification and cleanup follow ALGORITHMS §1.6. The picker controls the iOS folder; the app cannot force `Mr Doc/<Exam>/`.
 Verified checklist status is stored in the existing DataStore/UserDefaults preferences, keyed by exam/document type. This is
 a historical Saved marker, not a file-existence check. Ready instead comes from a verified available private draft.
 Restored photo/ink reviews skip processing and re-save those exact bytes; Replace starts source selection while retaining
@@ -178,27 +178,49 @@ the last good draft. The full Export entity, cleaned originals, sharing and hist
   (non-consumable/one-time). Why RevenueCat: receipt validation and cross-store analytics without
   running a server; free under its revenue threshold. The alternative (direct PBL + StoreKit 2) is
   documented in TECH_FEASIBILITY if we want zero third parties.
-- **Ads**: Google Mobile Ads SDK. Formats: **rewarded** (primary) and interstitial (capped by
-  Remote Config). Google UMP for consent where required. **Request non-personalised ads only** and
-  don't show the ATT prompt in v1. Simpler privacy story, safer for teen users; the revenue cost is
-  accepted. `AdGate` interface so ads can be killed via Remote Config.
+- **Accounts** (PRD §6, user decision 2026-10-20): Firebase Auth with Google (Android: Credential Manager + Google ID;
+  iOS: GoogleSignIn) and Sign in with Apple (iOS, AuthenticationServices). An `AccountRepository` exposes the signed-in
+  state as a flow; the sign-in gate's position (`launch` | `first_save`) is one setting. RevenueCat `logIn(uid)` links Pro
+  to the account.
+- **Free saves** (PRD §6, ALGORITHMS §14): 20 saves in total, then Pro. In the data layer (Android `:core:data/quota`,
+  iOS `ScanData`): the pure `SaveQuotaRules` (conformance `save_quota_cases`), a `QuotaStore` (one versioned JSON
+  record in no-backup storage) and the `SaveGate` service. Flows call `gate.allows(files, trigger)` before Save, Share or
+  Save all (not suspending, so a tap can still launch the system picker; it opens the paywall through the app-wide
+  `PaywallRequests`) and `gate.record(bytes)` once a file has left the app (Android records saves centrally in
+  `DocumentExporter` after verification; iOS in each view model after `.saved`). The app's root hosts the paywall and
+  provides the "N free saves left" count to reviews (Compose `LocalFreeSavesLeft`, SwiftUI `\.freeSavesLeft`). The
+  "same bytes again" check is a local set of SHA-256 hashes that never leaves the phone. `Billing` (`:core:billing`,
+  iOS `Billing`) exposes `isPro`, products, purchase and restore; `LocalBilling` stands in until RevenueCat (release:
+  store unavailable; debug: fake products that grant Pro for the session). The count is synced to the account's
+  record in the Firebase database (`users/{uid}`: `savesUsed`, `updatedAt`; Firestore, or Realtime Database if
+  Firestore's SDK breaks the size budget in §11). Security rules: a user reads and writes only their own record, and
+  `savesUsed` can only go up; App Check (Play Integrity / App Attest) on. Offline saves sync later; on conflict the higher
+  count wins. Flows ask `SaveQuota` before Save/Share and open the paywall when it is spent; Pro skips it.
+- **Ads: none in v1.0** (user decision 2026-10-20). No Google Mobile Ads SDK, no UMP, no ATT prompt. If ads ever come
+  back they go behind an `AdGate` with a Remote Config kill switch, rewarded only.
 - **Paywall**: native screen (not a web paywall) with variants driven by Remote Config.
+  Each view model versions its presentation and product loads. Dismissal invalidates UI results without cancelling a
+  store transaction; a reopened paywall stays busy until the previous purchase/restore completes. A late result may
+  update the entitlement, but never supplies a message to the newer presentation (ALGORITHMS §14.3).
+  iOS's optional `ScanFitSmoke` scheme uses a Debug-simulator-only container with in-memory quota and no document stores;
+  it never changes the normal container or production billing configuration (TESTING §2).
 
 ## 9. Analytics, crashes, config
 
-Firebase Analytics + Crashlytics + Remote Config (Firebase links AdMob revenue to analytics for
-LTV). Events are a closed enum set, defined once in `spec/analytics/events.json` (Phase 0) and
-generated for both apps:
+Firebase Analytics + Crashlytics + Remote Config (user decision 2026-10-20: ship with v1.0). Analytics advertising-ID
+collection is off (`google_analytics_adid_collection_enabled` / no AdSupport), and Settings has an opt-out. Events are
+a closed enum set, defined once in `spec/analytics/events.json` (Phase 0) and generated for both apps:
 `exam_opened(exam_id)`, `flow_started(doc_type)`, `fit_completed(doc_type, strategy, ms_bucket, result)`,
 `export_saved(doc_type, verified)`, `match_shown(n_exact_bucket, n_fix)`, `fix_tapped`,
 `checker_run(issues_count)`, `coach_all_green(seconds_bucket)`, `paywall_shown(variant, trigger)`,
-`purchase(product)`, `rewarded_completed`, `preset_sync(result)`, `portal_feedback(accepted)`.
+`purchase(product)`, `free_saves_spent` (replaces `rewarded_completed` in `events.json` with the Pro work),
+`preset_sync(result)`, `portal_feedback(accepted)`.
 `exam_id` is public preset data, not personal data. **Never** log file names, sizes of user files
 beyond buckets, text, or images. Crashlytics: no custom keys holding paths.
 
 Remote Config keys (defaults ship in the app): `min_presets_version`, `min_fill_strategy`,
-`allow_grayscale_docs`, `coach_thresholds`, `free_exports_per_day`, `rewarded_bonus`,
-`interstitial_every_n_sessions`, `paywall_variant`, `ads_enabled`, `popular_exam_order`,
+`allow_grayscale_docs`, `coach_thresholds`, `free_saves_total` (default 20, applies to future saves only),
+`paywall_variant`, `popular_exam_order`,
 `kill_switch_<feature>`. The `popular_exam_order` default is not an in-app constant: it is `popular` in the signed presets
 bundle (`spec/presets/popular.json`), so it updates with presets; Remote Config only overrides it.
 

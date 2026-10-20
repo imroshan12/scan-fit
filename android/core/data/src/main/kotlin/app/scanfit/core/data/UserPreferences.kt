@@ -43,6 +43,11 @@ interface UserPreferences {
 
     /** Moves [text] (a canonical Custom size) to the front of [recentCustomSizes]. */
     suspend fun rememberCustomSize(text: String)
+
+    /** Settings "Share anonymous usage data" (ARCHITECTURE §9): on unless the user opts out. */
+    val analyticsEnabled: Flow<Boolean>
+
+    suspend fun setAnalyticsEnabled(enabled: Boolean)
 }
 
 data class SavedDocument(val examId: String, val docType: String)
@@ -106,6 +111,12 @@ class DataStoreUserPreferences(
         }
     }
 
+    override val analyticsEnabled: Flow<Boolean> = data.map { it[ANALYTICS] ?: true }.distinctUntilChanged()
+
+    override suspend fun setAnalyticsEnabled(enabled: Boolean) {
+        store.edit { it[ANALYTICS] = enabled }
+    }
+
     private companion object {
         // Exam ids match ^[a-z0-9_]+$ (spec/schema), so a comma can never be part of one.
         const val SEPARATOR = ","
@@ -114,6 +125,7 @@ class DataStoreUserPreferences(
         val SAVED_DOCUMENTS = stringSetPreferencesKey("saved_documents")
         val HANDWRITING_CONFIRMED = booleanPreferencesKey("handwriting_confirmed")
         val RECENT_CUSTOM = stringPreferencesKey("recent_custom_sizes")
+        val ANALYTICS = booleanPreferencesKey("analytics_enabled")
 
         // A canonical Custom size never contains '|' (ALGORITHMS 11).
         const val RECENT_SEPARATOR = "|"
