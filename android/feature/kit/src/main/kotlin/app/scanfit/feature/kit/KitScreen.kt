@@ -82,6 +82,7 @@ import java.util.Locale
 fun KitRoute(
     onOpen: (String, DocType) -> Unit,
     onOpenOriginal: (String) -> Unit,
+    onOpenHistory: (String) -> Unit,
     modifier: Modifier = Modifier,
     prepared: KitViewModel = hiltViewModel(),
     originals: KitOriginalsViewModel = hiltViewModel(),
@@ -113,6 +114,9 @@ fun KitRoute(
             onShare = history::onShare,
             onClearHistory = history::onClear,
             thumbnail = originals::thumbnail,
+            preparedThumbnail = prepared::thumbnail,
+            historyThumbnail = history::thumbnail,
+            onPreview = onOpenHistory,
         ),
         modifier,
     )
@@ -213,6 +217,11 @@ private fun PreparedContent(
                             title = stringResource(document.type.labelRes()),
                             caption = stringResource(R.string.draft_ready_size, document.roundedKb),
                             onClick = { actions.onOpen(exam.id, document.type) },
+                            thumbnail = {
+                                Thumbnail("${exam.id}/${document.type}/${document.roundedKb}") {
+                                    actions.preparedThumbnail(exam.id, document.type)
+                                }
+                            },
                         )
                         HorizontalDivider()
                     }
@@ -259,10 +268,6 @@ private fun OriginalRow(
     original: KitOriginal,
     actions: KitActions,
 ) {
-    val thumbnail by produceState<ImageBitmap?>(null, original.id) {
-        val raster = actions.thumbnail(original.id)
-        value = raster?.let { withContext(Dispatchers.Default) { it.toBitmap().asImageBitmap() } }
-    }
     Row(
         modifier = Modifier.fillMaxWidth().heightIn(min = 72.dp)
             .clickable(role = Role.Button) { actions.onOpenOriginal(original.id) }
@@ -271,12 +276,7 @@ private fun OriginalRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(ScanFitSpacing.md),
     ) {
-        Box(
-            Modifier.size(THUMBNAIL).clip(RoundedCornerShape(8.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant),
-        ) {
-            thumbnail?.let { Image(it, contentDescription = null, contentScale = ContentScale.Crop) }
-        }
+        Thumbnail(original.id) { actions.thumbnail(original.id) }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(ScanFitSpacing.xs)) {
             Text(stringResource(R.string.kit_saved_on, formatDay(original.createdAtMillis)), style = ScanFitType.body)
             Text(
@@ -324,10 +324,17 @@ private fun HistoryRow(
 ) {
     val record = entry.record
     Row(
-        modifier = Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(vertical = ScanFitSpacing.sm),
+        modifier =
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = 72.dp)
+            // A kept copy opens its preview (ALGORITHMS 13.3 previews); an expired row only explains itself.
+            .previewable(entry.shareable) { actions.onPreview(record.id) }
+            .padding(vertical = ScanFitSpacing.sm),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(ScanFitSpacing.sm),
     ) {
+        Thumbnail("${record.id}/${entry.shareable}") { actions.historyThumbnail(record.id) }
         Column(
             Modifier.weight(1f).semantics(mergeDescendants = true) {},
             verticalArrangement = Arrangement.spacedBy(ScanFitSpacing.xs),
@@ -369,5 +376,9 @@ private fun HistoryRow(
     }
 }
 
-private val THUMBNAIL = 56.dp
 private const val KB = 1024
+
+private fun Modifier.previewable(
+    enabled: Boolean,
+    onClick: () -> Unit,
+): Modifier = if (enabled) clickable(role = Role.Button, onClick = onClick) else this

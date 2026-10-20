@@ -59,6 +59,7 @@ import app.scanfit.core.designsystem.components.specSummary
 import app.scanfit.core.designsystem.theme.ScanFitSpacing
 import app.scanfit.core.designsystem.theme.ScanFitType
 import app.scanfit.core.imaging.CropCorner
+import app.scanfit.core.imaging.Raster
 import app.scanfit.core.match.DocKind
 
 /** The ink flow's entry point: wires the pickers, the save destination and system back to the Hilt view model. */
@@ -147,6 +148,7 @@ fun InkFlowRoute(
             onReplace = viewModel::onReplace,
             onShare = viewModel::onShare,
             onSaveOriginal = viewModel::onSaveOriginal,
+            originalPreview = viewModel::originalPreview,
         ),
         modifier = modifier,
     )
@@ -172,6 +174,8 @@ internal class InkActions(
     val onReplace: () -> Unit = {},
     val onShare: () -> Unit = {},
     val onSaveOriginal: () -> Unit = {},
+    /** The picture Save to My Kit would keep, for its confirmation. */
+    val originalPreview: suspend () -> Raster? = { null },
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -281,7 +285,11 @@ private fun BottomAction(
             }
             // Save to My Kit keeps the picture, not the fitted file (ALGORITHMS 13.1); a restored review has none.
             if (state is InkUiState.Review && !state.restored && state.save.state != SaveState.SAVING) {
-                SaveToKitButton(SaveToKitStatus.valueOf(state.kit.name), actions.onSaveOriginal)
+                SaveToKitButton(
+                    SaveToKitStatus.valueOf(state.kit.name),
+                    actions.onSaveOriginal,
+                    preview = actions.originalPreview,
+                )
             }
         }
     }

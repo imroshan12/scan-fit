@@ -101,6 +101,27 @@ private struct KitOriginalRow: View {
     }
 }
 
+/// A 56 pt rounded thumbnail loaded once per `key` off the main actor; an empty tile until (or unless) it loads.
+struct KitThumbnail: View {
+    let key: String
+    let load: @MainActor () async -> CGImage?
+    @State private var image: CGImage?
+
+    var body: some View {
+        Group {
+            if let image {
+                Image(decorative: image, scale: 1).resizable().scaledToFill()
+            } else {
+                ScanFitColor.surfaceVariant
+            }
+        }
+        .frame(width: 56, height: 56)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .accessibilityHidden(true)
+        .task(id: key) { image = await load() }
+    }
+}
+
 /// My Kit's History view (ALGORITHMS 13.3): every verified save, newest first, shareable for 30 days.
 struct KitHistoryList: View {
     @Bindable var model: KitHistoryViewModel
@@ -122,7 +143,14 @@ struct KitHistoryList: View {
                 if model.share == .failed {
                     NoticeCard(text: strings.exportShareFailed, kind: .error).listRowSeparator(.hidden)
                 }
-                ForEach(entries) { entry in row(entry) }
+                ForEach(entries) { entry in
+                    // A kept copy opens its preview (ALGORITHMS 13.3 previews); an expired row only explains itself.
+                    if entry.shareable {
+                        NavigationLink(value: KitHistoryRoute(id: entry.id)) { row(entry) }
+                    } else {
+                        row(entry)
+                    }
+                }
             }
             .listStyle(.plain)
         }
@@ -133,6 +161,7 @@ struct KitHistoryList: View {
         let exam = record.examId == CustomSize.examId ? strings.kitHistoryCustom : record.examName
         let kb = (record.size + 512) / 1024
         return HStack(spacing: ScanFitSpacing.sm) {
+            KitThumbnail(key: "\(entry.id)/\(entry.shareable)") { await model.thumbnail(entry.id) }
             VStack(alignment: .leading, spacing: ScanFitSpacing.xs) {
                 Text(strings.label(record.docType)).scanFitText(.body)
                 Text(exam).scanFitText(.caption)

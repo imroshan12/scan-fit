@@ -43,6 +43,15 @@ struct InkKitTests {
         #expect(await kit.originalsList.first?.kind == .thumb)
     }
 
+    @Test("the preview is the working picture and saves nothing")
+    func preview() async throws {
+        let m = try await model(.leftThumb)
+        await reviewed(m)
+        let picture = try #require(await m.originalPreview())
+        #expect(max(picture.width, picture.height) <= 720)
+        #expect(await kit.originalsList.isEmpty)
+    }
+
     @Test("an original opens at the crop and counts as kept")
     func fromOriginal() async throws {
         guard case let .saved(id) = await kit.saveOriginal(

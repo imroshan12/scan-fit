@@ -45,8 +45,10 @@ public final class CustomViewModel {
     public private(set) var attempted = false
     @ObservationIgnored private let preferences: UserPreferences?
 
-    public init(preferences: UserPreferences?) {
+    /// `doc` is what Home's card chose (ALGORITHMS 11); a kind Custom size does not make starts at Photo.
+    public init(preferences: UserPreferences?, doc: DocType? = nil) {
         self.preferences = preferences
+        if let doc, CustomSize.docs.contains(doc) { form.doc = doc }
     }
 
     public var errors: [CustomSizeError] { form.fields.errors }

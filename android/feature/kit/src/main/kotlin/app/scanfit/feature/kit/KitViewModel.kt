@@ -3,6 +3,7 @@ package app.scanfit.feature.kit
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.scanfit.core.data.draft.DraftStore
+import app.scanfit.core.imaging.Raster
 import app.scanfit.core.match.DocKind
 import app.scanfit.core.model.Confidence
 import app.scanfit.core.model.DocType
@@ -47,9 +48,14 @@ class KitViewModel internal constructor(
     private val drafts: DraftStore,
     /** Where draft files are read; tests pass their scheduler so no read outlives the test. */
     private val io: CoroutineDispatcher,
+    private val images: KitImages? = null,
 ) : ViewModel() {
     @Inject
-    constructor(presets: PresetsRepository, drafts: DraftStore) : this(presets, drafts, Dispatchers.IO)
+    constructor(
+        presets: PresetsRepository,
+        drafts: DraftStore,
+        images: KitImages,
+    ) : this(presets, drafts, Dispatchers.IO, images)
 
     private val refreshes = MutableStateFlow(0L)
 
@@ -98,6 +104,17 @@ class KitViewModel internal constructor(
         }
     }
 
+    /** A Prepared row's thumbnail: the retained draft, re-read through its checks (ALGORITHMS 13.3 previews). */
+    suspend fun thumbnail(
+        examId: String,
+        type: DocType,
+    ): Raster? = withContext(io) {
+        val exam = presets.bundle.value?.exams?.firstOrNull { it.id == examId } ?: return@withContext null
+        val spec = exam.documents.firstOrNull { it.type == type } ?: return@withContext null
+        val draft = drafts.read(exam.id, spec, DocKind.of(type)) ?: return@withContext null
+        images?.decode(draft.bytes, THUMBNAIL_PX)
+    }
+
     private suspend fun availableExams(bundle: PresetBundle): List<KitExam> = buildList {
         for (exam in bundle.exams) {
             currentCoroutineContext().ensureActive()
@@ -118,5 +135,8 @@ class KitViewModel internal constructor(
     companion object {
         private const val STOP_TIMEOUT_MS = 5_000L
         private const val KB = 1024
+
+        /** Twice the 56 dp row thumbnail at the densest common screens. */
+        internal const val THUMBNAIL_PX = 168
     }
 }

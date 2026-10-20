@@ -1,5 +1,7 @@
 package app.scanfit.feature.kit
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -9,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.AccountBox
@@ -18,8 +22,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -31,7 +41,10 @@ import app.scanfit.core.designsystem.R
 import app.scanfit.core.designsystem.theme.ScanFitSpacing
 import app.scanfit.core.designsystem.theme.ScanFitType
 import app.scanfit.core.imaging.Raster
+import app.scanfit.core.imaging.toBitmap
 import app.scanfit.core.model.DocType
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -53,6 +66,12 @@ internal class KitActions(
     val onClearHistory: () -> Unit = {},
     /** A small upright copy of an original for its row; `null` while unavailable. */
     val thumbnail: suspend (String) -> Raster? = { null },
+    /** A Prepared row's thumbnail (exam id, document type). */
+    val preparedThumbnail: suspend (String, DocType) -> Raster? = { _, _ -> null },
+    /** A History row's thumbnail (export id): the image or a PDF's first page. */
+    val historyThumbnail: suspend (String) -> Raster? = { null },
+    /** Opens a kept History file's preview (ALGORITHMS 13.3 previews). */
+    val onPreview: (String) -> Unit = {},
 )
 
 /** Everything the original's screen can ask for. */
@@ -69,11 +88,33 @@ internal fun KitTab.labelRes(): Int = when (this) {
     KitTab.HISTORY -> R.string.kit_tab_history
 }
 
+/** A 56 dp rounded thumbnail loaded once per [key] off the main thread; an empty tile until (or unless) it loads. */
+@Composable
+internal fun Thumbnail(
+    key: Any,
+    load: suspend () -> Raster?,
+) {
+    val thumbnail by produceState<ImageBitmap?>(null, key) {
+        val raster = load()
+        value = raster?.let { withContext(Dispatchers.Default) { it.toBitmap().asImageBitmap() } }
+    }
+    Box(
+        Modifier.size(THUMBNAIL_SIZE).clip(RoundedCornerShape(THUMBNAIL_RADIUS))
+            .background(MaterialTheme.colorScheme.surfaceVariant),
+    ) {
+        thumbnail?.let { Image(it, contentDescription = null, contentScale = ContentScale.Crop) }
+    }
+}
+
+private val THUMBNAIL_SIZE = 56.dp
+private val THUMBNAIL_RADIUS = 8.dp
+
 @Composable
 internal fun KitRow(
     title: String,
     caption: String,
     onClick: () -> Unit,
+    thumbnail: (@Composable () -> Unit)? = null,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
@@ -82,6 +123,7 @@ internal fun KitRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(ScanFitSpacing.sm),
     ) {
+        thumbnail?.invoke()
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(ScanFitSpacing.xs)) {
             Text(title, style = ScanFitType.body)
             Text(caption, style = ScanFitType.caption, color = MaterialTheme.colorScheme.onSurfaceVariant)

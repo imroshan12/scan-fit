@@ -2,177 +2,193 @@ import DesignSystem
 import ScanModel
 import SwiftUI
 
-/// Home tab content. The app target owns the `NavigationStack` and maps `ExamRoute` to the exam screen, so Home never
-/// imports another feature (ARCHITECTURE §3).
+/// Home (UI_UX §3, editor first): a title, a grid of large tool cards (Exam forms is one of them), the pinned exams
+/// and the tools still to come. Two columns, or one at accessibility text sizes. The app target owns the stack and maps
+/// each card's route, so Home never imports another feature (ARCHITECTURE §3).
 public struct HomeView: View {
-    @Bindable private var model: HomeViewModel
+    private let model: HomeViewModel
     private let strings: Strings
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     public init(model: HomeViewModel, strings: Strings = Strings()) {
         self.model = model
         self.strings = strings
     }
 
+    private struct Card: Identifiable {
+        let id: String
+        let title: String
+        let body: String
+        let symbol: String
+        let accent: ToolAccent
+        let route: Target?
+    }
+
+    /// Where a card goes; each opens a typed route, so the app's destinations match it.
+    private enum Target {
+        case exams, custom(DocType), pdf(String), check
+    }
+
+    /// In UI_UX §3 order: Exam forms first, then the everyday editors, the PDF tools and the Checker.
+    private var tools: [Card] {
+        [
+            Card(id: "exams", title: strings.homeCardExams, body: strings.homeCardExamsBody,
+                 symbol: "graduationcap.fill", accent: .exam, route: .exams),
+            Card(id: "photo", title: strings.homeCardPhoto, body: strings.homeCardPhotoBody,
+                 symbol: "photo.fill", accent: .photo, route: .custom(.photo)),
+            Card(id: "signature", title: strings.homeCardSignature, body: strings.homeCardSignatureBody,
+                 symbol: "signature", accent: .ink, route: .custom(.signature)),
+            Card(id: "compress", title: strings.toolsPdfCompress, body: strings.toolsPdfCompressBody,
+                 symbol: "arrow.down.right.and.arrow.up.left", accent: .pdf, route: .pdf("compress")),
+            Card(id: "images", title: strings.toolsPdfImages, body: strings.toolsPdfImagesBody,
+                 symbol: "doc.richtext.fill", accent: .pdf, route: .pdf("images")),
+            Card(id: "merge", title: strings.toolsPdfMerge, body: strings.toolsPdfMergeBody,
+                 symbol: "arrow.triangle.merge", accent: .pdf, route: .pdf("merge")),
+            Card(id: "id_card", title: strings.toolsPdfIdCard, body: strings.toolsPdfIdCardBody,
+                 symbol: "person.text.rectangle.fill", accent: .pdf, route: .pdf("id_card")),
+            Card(id: "check", title: strings.homeCardCheck, body: strings.homeFixFileBody,
+                 symbol: "checkmark.seal.fill", accent: .check, route: .check),
+            Card(id: "thumb", title: strings.homeCardThumb, body: strings.homeCardThumbBody,
+                 symbol: "touchid", accent: .ink, route: .custom(.thumbImpression)),
+            Card(id: "document", title: strings.homeCardDocument, body: strings.homeCardDocumentBody,
+                 symbol: "doc.text.fill", accent: .ink, route: .custom(.handwrittenDeclaration)),
+        ]
+    }
+
+    private var comingSoon: [Card] {
+        [
+            Card(id: "scan", title: strings.toolsScan, body: strings.toolsScanBody, symbol: "doc.viewfinder",
+                 accent: .muted, route: nil),
+            Card(id: "guide", title: strings.toolsGuideSheet, body: strings.toolsGuideSheetBody, symbol: "printer.fill",
+                 accent: .muted, route: nil),
+            Card(id: "coach", title: strings.toolsCoach, body: strings.toolsCoachBody, symbol: "face.smiling",
+                 accent: .muted, route: nil),
+        ]
+    }
+
     public var body: some View {
-        List {
-            Section {
-                Text(strings.homeTitle)
-                    .scanFitText(.display)
-                    .foregroundStyle(ScanFitColor.onBackground)
-                    .accessibilityAddTraits(.isHeader)
-                categoryChips
+        ScrollView {
+            VStack(alignment: .leading, spacing: ScanFitSpacing.md) {
+                header
+                grid(tools)
+                if !model.pinned.isEmpty { pinnedExams }
+                sectionTitle(strings.homeComingSoonHeading)
+                comingSoonList
             }
-            .listRowSeparator(.hidden)
-            content
+            .padding(.vertical, ScanFitSpacing.lg)
         }
-        .listStyle(.plain)
-        .searchable(text: $model.query, prompt: strings.homeSearchHint(count: examCount))
-        // Exam codes (IBPS, CGL) must reach the search as typed: no autocorrect, no auto-capitals.
-        .autocorrectionDisabled()
-        #if os(iOS)
-            .textInputAutocapitalization(.never)
-        #endif
+        .background(ScanFitColor.background)
         .navigationTitle(strings.tabHome)
         #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar(.hidden, for: .navigationBar)
         #endif
             .task { await model.onAppear() }
     }
 
+    private var header: some View {
+        VStack(alignment: .leading, spacing: ScanFitSpacing.xs) {
+            Text(verbatim: "ScanFit").scanFitText(.label).foregroundStyle(ScanFitColor.primary)
+            Text(strings.homeTitle)
+                .scanFitText(.display)
+                .foregroundStyle(ScanFitColor.onBackground)
+                .accessibilityAddTraits(.isHeader)
+            Text(strings.homeSubtitle).scanFitText(.body).foregroundStyle(ScanFitColor.onSurfaceVariant)
+        }
+        .padding(.horizontal, ScanFitSpacing.screenMargin)
+    }
+
+    /// Rows of cards; every card in a row is as tall as the tallest.
+    private func grid(_ cards: [Card]) -> some View {
+        let columns = typeSize.isAccessibilitySize ? 1 : 2
+        let rows = stride(from: 0, to: cards.count, by: columns).map {
+            Array(cards[$0..<min($0 + columns, cards.count)])
+        }
+        return Grid(horizontalSpacing: ScanFitSpacing.md, verticalSpacing: ScanFitSpacing.md) {
+            ForEach(rows, id: \.first?.id) { row in
+                GridRow {
+                    ForEach(row) { card in cell(card) }
+                    if row.count < columns { Color.clear.gridCellUnsizedAxes([.horizontal, .vertical]) }
+                }
+            }
+        }
+        .padding(.horizontal, ScanFitSpacing.screenMargin)
+    }
+
     @ViewBuilder
-    private var content: some View {
-        if model.showsSections {
-            if !model.pinned.isEmpty {
-                Section(strings.homeSectionPinned) { rows(model.pinned, prefix: "pinned") }
-            }
-            if !model.popular.isEmpty {
-                Section(strings.homeSectionPopular) { rows(model.popular, prefix: "popular") }
-            }
-            Section { status }.listRowSeparator(.hidden)
-            Section {
-                customSizeLink
-                checkerLink
-            }
-        } else if model.presets == .loading || model.presets == .failed {
-            // Nothing to search until the signed presets are verified: say that, never "no matches".
-            Section { status }.listRowSeparator(.hidden)
-        } else if model.results.isEmpty {
-            Text(strings.homeNoResults(query: model.query.trimmingCharacters(in: .whitespaces)))
-                .scanFitText(.body)
-                .foregroundStyle(ScanFitColor.onSurfaceVariant)
-                .listRowSeparator(.hidden)
-            customSizeLink
-            checkerLink
-        } else {
-            rows(model.results, prefix: "result")
+    private func cell(_ card: Card) -> some View {
+        let content = ToolCard(title: card.title, description: card.body, symbol: card.symbol, accent: card.accent)
+        switch card.route {
+        case .exams: NavigationLink(value: ExamBrowserRoute()) { content }.buttonStyle(.plain)
+        case let .custom(doc): NavigationLink(value: CustomSizeRoute(doc: doc)) { content }.buttonStyle(.plain)
+        case let .pdf(tool): NavigationLink(value: PdfRoute(tool: tool)) { content }.buttonStyle(.plain)
+        case .check: NavigationLink(value: CheckerRoute()) { content }.buttonStyle(.plain)
+        case nil: content
         }
     }
 
-    /// "Not listed? Use Custom size." (UI_UX §3 Home): forms outside the catalogue (ALGORITHMS 11).
-    private var customSizeLink: some View {
-        NavigationLink(value: CustomSizeRoute()) {
-            Text(strings.homeEmptyHint).scanFitText(.body).foregroundStyle(ScanFitColor.primary)
-                .frame(minHeight: ScanFitSpacing.minTouchTarget, alignment: .leading)
-        }
+    private func sectionTitle(_ text: String) -> some View {
+        Text(text)
+            .scanFitText(.headline)
+            .foregroundStyle(ScanFitColor.onBackground)
+            .accessibilityAddTraits(.isHeader)
+            .padding(.horizontal, ScanFitSpacing.screenMargin)
+            .padding(.top, ScanFitSpacing.md)
     }
 
-    /// "Already have a file? Check it." (UI_UX §3 Home): the pre-submit Checker (ALGORITHMS 12).
-    private var checkerLink: some View {
-        NavigationLink(value: CheckerRoute()) {
-            Text(strings.homeCheckFile).scanFitText(.body).foregroundStyle(ScanFitColor.primary)
-                .frame(minHeight: ScanFitSpacing.minTouchTarget, alignment: .leading)
+    /// The tools still to come: one quiet card with a row each, not tappable.
+    private var comingSoonList: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(Array(comingSoon.enumerated()), id: \.element.id) { index, card in
+                if index > 0 { Divider().padding(.leading, 56) }
+                HStack(spacing: ScanFitSpacing.md) {
+                    Image(systemName: card.symbol)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(ScanFitColor.onSurfaceVariant)
+                        .frame(width: 32, height: 32)
+                        .background(ScanFitColor.outlineVariant.opacity(0.6), in: Circle())
+                        .accessibilityHidden(true)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(card.title).scanFitText(.body).foregroundStyle(ScanFitColor.onSurface)
+                        Text(card.body).scanFitText(.caption).foregroundStyle(ScanFitColor.onSurfaceVariant)
+                    }
+                    Spacer(minLength: 0)
+                }
+                .padding(.vertical, ScanFitSpacing.md)
+                .frame(minHeight: ScanFitSpacing.minTouchTarget)
+                .accessibilityElement(children: .combine)
+                .accessibilityHint(strings.commonComingSoon)
+            }
         }
+        .padding(.horizontal, ScanFitSpacing.lg)
+        .background(ScanFitColor.surfaceVariant, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .padding(.horizontal, ScanFitSpacing.screenMargin)
     }
 
-    private func rows(_ exams: [Exam], prefix: String) -> some View {
-        ForEach(exams, id: \.id) { exam in
-            NavigationLink(value: ExamRoute(examId: exam.id)) {
-                VStack(alignment: .leading, spacing: ScanFitSpacing.xs) {
-                    Text(exam.name).scanFitText(.headline)
-                    HStack(spacing: ScanFitSpacing.sm) {
-                        Text(strings.subtitle(body: exam.body, category: exam.category))
-                            .scanFitText(.caption)
-                            .foregroundStyle(ScanFitColor.onSurfaceVariant)
-                        // Only the unverified state needs a badge in a list (CLAUDE.md rule 6).
-                        if exam.confidence == .low { ConfidenceBadge(.low, strings: strings) }
+    /// "My exams": the pinned exams as a row of pills; each opens its checklist.
+    private var pinnedExams: some View {
+        VStack(alignment: .leading, spacing: ScanFitSpacing.sm) {
+            sectionTitle(strings.homeSectionPinned)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: ScanFitSpacing.sm) {
+                    ForEach(model.pinned, id: \.id) { exam in
+                        NavigationLink(value: ExamRoute(examId: exam.id)) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(exam.name).scanFitText(.body).foregroundStyle(ScanFitColor.onSurface)
+                                Text(exam.body).scanFitText(.caption).foregroundStyle(ScanFitColor.onSurfaceVariant)
+                            }
+                            .padding(.horizontal, ScanFitSpacing.lg)
+                            .padding(.vertical, ScanFitSpacing.md)
+                            .frame(minHeight: ScanFitSpacing.minTouchTarget)
+                            .background(ScanFitColor.surface, in: RoundedRectangle(cornerRadius: ScanFitRadius.card))
+                            .overlay(RoundedRectangle(cornerRadius: ScanFitRadius.card)
+                                .stroke(ScanFitColor.outlineVariant, lineWidth: 1))
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
-                .frame(minHeight: ScanFitSpacing.minTouchTarget, alignment: .leading)
-            }
-            .id("\(prefix):\(exam.id)")
-        }
-    }
-
-    private var categoryChips: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: ScanFitSpacing.sm) {
-                chip(strings.homeCategoryAll, selected: model.category == nil) { model.select(nil) }
-                ForEach(ExamCategory.allCases, id: \.self) { category in
-                    chip(strings.label(category), selected: model.category == category) { model.select(category) }
-                }
+                .padding(.horizontal, ScanFitSpacing.screenMargin)
             }
         }
-    }
-
-    private func chip(_ title: String, selected: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(title)
-                .scanFitText(.label)
-                .padding(.horizontal, ScanFitSpacing.md)
-                .frame(minHeight: ScanFitSpacing.minTouchTarget)
-                .foregroundStyle(selected ? ScanFitColor.onPrimaryContainer : ScanFitColor.onSurfaceVariant)
-                .background(selected ? ScanFitColor.primaryContainer : ScanFitColor.surfaceVariant, in: Capsule())
-        }
-        .buttonStyle(.plain)
-        .accessibilityAddTraits(selected ? .isSelected : [])
-    }
-
-    @ViewBuilder
-    private var status: some View {
-        switch model.presets {
-        case .loading:
-            // Same card shape as the loaded state, so nothing jumps when the result arrives.
-            HStack(spacing: ScanFitSpacing.sm) {
-                ProgressView()
-                Text(strings.homePresetsVerifying).scanFitText(.label)
-                    .foregroundStyle(ScanFitColor.onSurfaceVariant)
-            }
-            .padding(ScanFitSpacing.lg)
-            .frame(maxWidth: .infinity, minHeight: ScanFitSpacing.minTouchTarget, alignment: .leading)
-            .background(ScanFitColor.surfaceVariant, in: RoundedRectangle(cornerRadius: ScanFitRadius.card))
-            .accessibilityElement(children: .combine)
-        case let .ready(summary):
-            HStack(spacing: ScanFitSpacing.sm) {
-                Image(systemName: "checkmark.seal.fill")
-                    .foregroundStyle(ScanFitColor.success)
-                    .accessibilityHidden(true)
-                VStack(alignment: .leading, spacing: ScanFitSpacing.xs) {
-                    Text(strings.homePresetsVerified).scanFitText(.label)
-                    Text(strings.homePresetsStatus(count: summary.examCount, version: String(summary.version)))
-                        .scanFitText(.figure)
-                }
-                .foregroundStyle(ScanFitColor.onSuccessContainer)
-            }
-            .padding(ScanFitSpacing.lg)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(ScanFitColor.successContainer, in: RoundedRectangle(cornerRadius: ScanFitRadius.card))
-            .accessibilityElement(children: .combine)
-        case .failed:
-            HStack(spacing: ScanFitSpacing.sm) {
-                Image(systemName: "exclamationmark.triangle.fill")
-                    .foregroundStyle(ScanFitColor.error)
-                    .accessibilityHidden(true)
-                Text(strings.homePresetsUnverified).scanFitText(.label)
-                    .foregroundStyle(ScanFitColor.onErrorContainer)
-            }
-            .padding(ScanFitSpacing.lg)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(ScanFitColor.errorContainer, in: RoundedRectangle(cornerRadius: ScanFitRadius.card))
-            .accessibilityElement(children: .combine)
-        }
-    }
-
-    private var examCount: Int {
-        if case let .ready(summary) = model.presets { summary.examCount } else { 55 }
     }
 }

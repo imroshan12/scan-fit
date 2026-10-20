@@ -66,6 +66,12 @@ private fun record(id: Int, exam: String, name: String, type: DocType, kb: Int, 
     "file.jpg", kb * KB, w, h,
 )
 
+private val pdfRecord =
+    ExportRecord(
+        "00000000-0000-4000-8000-000000000009", DAY, "jee_main", "JEE Main", DocType.CLASS10_CERTIFICATE,
+        DocKind.PDF_DOCUMENT, "class10_certificate_JEE-Main_182kb.pdf", 182 * KB, 0, 0, pages = 3,
+    )
+
 private val previewHistory = KitHistoryUiState.Ready(
     listOf(
         HistoryEntry(record(1, "ibps_po", "IBPS PO / MT", DocType.PHOTO, 34, 200, 230), shareable = true),
@@ -110,7 +116,11 @@ private fun KitPreview(
             shown as? KitUiState ?: previewPrepared,
             shown as? KitOriginalsUiState ?: previewOriginals,
             shown as? KitHistoryUiState ?: previewHistory,
-            KitActions(thumbnail = { gradient }),
+            KitActions(
+                thumbnail = { gradient },
+                preparedThumbnail = { _, _ -> gradient },
+                historyThumbnail = { gradient },
+            ),
         )
     }
 }
@@ -163,3 +173,28 @@ private fun previewExam(id: String, name: String, confidence: Confidence) = Exam
     confidenceNote = "",
     lastVerified = "2026-10-01",
 )
+
+/** A kept photo, a three-page PDF and a copy that is gone. */
+private class KitHistoryPreviewStates : PreviewParameterProvider<KitHistoryPreviewUiState> {
+    override val values =
+        sequenceOf(
+            KitHistoryPreviewUiState.Ready(
+                record(1, "ibps_po", "IBPS PO / MT", DocType.PHOTO, 34, 200, 230),
+                gradient,
+                1,
+            ),
+            KitHistoryPreviewUiState.Ready(pdfRecord, null, 3),
+            KitHistoryPreviewUiState.Failed,
+        )
+}
+
+@Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(showBackground = true, fontScale = 2f)
+@Preview(showBackground = true, locale = "hi")
+@Composable
+private fun KitHistoryPreviewPreview(
+    @PreviewParameter(KitHistoryPreviewStates::class) state: KitHistoryPreviewUiState,
+) {
+    ScanFitTheme { KitHistoryPreviewScreen(state, {}, {}, { _, w -> Raster.white(w, (w * 1.41).toInt()) }) }
+}

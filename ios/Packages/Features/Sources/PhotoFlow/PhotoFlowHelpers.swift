@@ -67,6 +67,18 @@ public extension PhotoFlowViewModel {
 }
 
 public extension PhotoFlowViewModel {
+
+    /// What Save to My Kit would keep (ALGORITHMS 13.3 previews): the working source, downsampled for display only.
+    func originalPreview() async -> Raster? {
+        guard let source = lastCrop?.image else { return nil }
+        return await Task.detached(priority: .userInitiated) {
+            let scale = 720.0 / Double(max(source.width, source.height))
+            guard scale < 1 else { return source }
+            return Resampler.resize(source, width: max(1, Int(Double(source.width) * scale)),
+                                    height: max(1, Int(Double(source.height) * scale)))
+        }.value
+    }
+
     /// Keeps the picture this review was made from in My Kit (ALGORITHMS 13.1). The review itself never changes.
     func saveOriginal() async {
         guard case let .review(review) = state, !review.restored, let source = lastCrop?.image,

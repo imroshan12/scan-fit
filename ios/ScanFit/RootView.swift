@@ -13,8 +13,8 @@ import ScanModel
 import Settings
 import SwiftUI
 
-/// Tab shell: Home · My Kit · Tools · Settings (UI_UX §2). The Home stack maps `ExamRoute` to the exam screen and
-/// `FlowRoute` to the photo or ink flow, so the features never import each other.
+/// Tab shell: Home · My Kit · Settings (UI_UX §2; every tool opens from Home's cards). The Home stack maps `ExamRoute`
+/// to the exam screen and `FlowRoute` to the photo or ink flow, so the features never import each other.
 struct RootView: View {
     private let container: AppContainer
     @State private var homeModel: HomeViewModel
@@ -25,10 +25,9 @@ struct RootView: View {
     /// The Home stack's path, so a flow can leave itself explicitly (see `PhotoFlowView.onExit`).
     @State private var homePath = NavigationPath()
     @State private var kitPath = NavigationPath()
-    @State private var toolsPath = NavigationPath()
     @State private var selectedTab = Tab.home
 
-    private enum Tab: Hashable { case home, kit, tools, settings }
+    private enum Tab: Hashable { case home, kit, settings }
 
     init(container: AppContainer) {
         self.container = container
@@ -77,10 +76,13 @@ struct RootView: View {
                             if !homePath.isEmpty { homePath.removeLast() }
                         }
                     }
-                    .navigationDestination(for: CustomSizeRoute.self) { _ in
-                        customSize(strings: strings) { homePath.append(FlowRoute(custom: $0)) }
+                    .navigationDestination(for: CustomSizeRoute.self) { route in
+                        customSize(route, strings: strings) { homePath.append(FlowRoute(custom: $0)) }
                     }
                     .navigationDestination(for: CheckerRoute.self) { _ in checker(strings: strings) }
+                    .navigationDestination(for: ExamBrowserRoute.self) { _ in
+                        ExamBrowserView(model: homeModel, strings: strings)
+                    }
             }
             .tabItem { Label(strings.tabHome, systemImage: "house") }
             .tag(Tab.home)
@@ -93,6 +95,11 @@ struct RootView: View {
                     flow(route, strings: strings) {
                         if !kitPath.isEmpty { kitPath.removeLast() }
                     }
+                }
+                .navigationDestination(for: KitHistoryRoute.self) { route in
+                    KitHistoryPreviewView(
+                        model: KitHistoryPreviewViewModel(id: route.id, kit: container.kit), strings: strings
+                    )
                 }
                 .navigationDestination(for: KitOriginalRoute.self) { route in
                     // "Use for exam…" (ALGORITHMS 13.2) opens the slot's flow on this stack; Done comes back here.
@@ -108,23 +115,6 @@ struct RootView: View {
             }
             .tabItem { Label(strings.tabKit, systemImage: "tray.full") }
             .tag(Tab.kit)
-            NavigationStack(path: $toolsPath) {
-                ToolsView(strings: strings)
-                    .navigationDestination(for: CustomSizeRoute.self) { _ in
-                        customSize(strings: strings) { toolsPath.append(FlowRoute(custom: $0)) }
-                    }
-                    .navigationDestination(for: CheckerRoute.self) { _ in checker(strings: strings) }
-                    .navigationDestination(for: FlowRoute.self) { route in
-                        flow(route, strings: strings) {
-                            if !toolsPath.isEmpty { toolsPath.removeLast() }
-                        }
-                    }
-                    .navigationDestination(for: PdfRoute.self) { route in
-                        pdfMaker(route, strings: strings) { if !toolsPath.isEmpty { toolsPath.removeLast() } }
-                    }
-            }
-            .tabItem { Label(strings.tabTools, systemImage: "wrench.and.screwdriver") }
-            .tag(Tab.tools)
             SettingsView(presets: presets, preferences: container.preferences, strings: strings)
                 .tabItem { Label(strings.tabSettings, systemImage: "gearshape") }
                 .tag(Tab.settings)
@@ -140,8 +130,12 @@ struct RootView: View {
     }
 
     /// The Custom size form (ALGORITHMS 11); Continue opens the photo or ink flow for the size on the same stack.
-    private func customSize(strings: Strings, open: @escaping (CustomSize) -> Void) -> some View {
-        CustomView(model: CustomViewModel(preferences: container.preferences), strings: strings, onContinue: open)
+    private func customSize(_ route: CustomSizeRoute, strings: Strings, open: @escaping (CustomSize) -> Void)
+        -> some View {
+        CustomView(
+            model: CustomViewModel(preferences: container.preferences, doc: route.doc), strings: strings,
+            onContinue: open
+        )
     }
 
     /// The pre-submit Checker (ALGORITHMS 12): a file the user already has, against the exam slot they choose.

@@ -142,14 +142,19 @@ public struct KitView: View {
                     Section {
                         ForEach(group.rows) { row in
                             NavigationLink(value: row.route) {
-                                VStack(alignment: .leading, spacing: ScanFitSpacing.xs) {
-                                    Label(strings.label(row.route.docType), systemImage: icon(row.route.docType))
-                                        .scanFitText(.headline)
-                                    Text(strings.reviewSize(kb: row.roundedKB)).scanFitText(.figure)
-                                        .foregroundStyle(ScanFitColor.onSurfaceVariant)
+                                HStack(spacing: ScanFitSpacing.md) {
+                                    KitThumbnail(key: "\(row.route.examId)/\(row.id)/\(row.roundedKB)") {
+                                        await model.thumbnail(row.route)
+                                    }
+                                    VStack(alignment: .leading, spacing: ScanFitSpacing.xs) {
+                                        Label(strings.label(row.route.docType), systemImage: icon(row.route.docType))
+                                            .scanFitText(.headline)
+                                        Text(strings.reviewSize(kb: row.roundedKB)).scanFitText(.figure)
+                                            .foregroundStyle(ScanFitColor.onSurfaceVariant)
+                                    }
+                                    .accessibilityElement(children: .combine)
                                 }
                                 .frame(minHeight: ScanFitSpacing.minTouchTarget, alignment: .leading)
-                                .accessibilityElement(children: .combine)
                             }
                         }
                     } header: {

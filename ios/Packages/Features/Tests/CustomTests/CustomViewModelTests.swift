@@ -23,6 +23,15 @@ struct CustomViewModelTests {
         #expect(m.attempted && m.shows(.maxKbMissing))
     }
 
+    @Test("a Home card chooses the kind; anything else starts at Photo")
+    func homeCard() {
+        #expect(CustomViewModel(preferences: nil, doc: .signature).form.doc == .signature)
+        #expect(CustomViewModel(preferences: nil, doc: .thumbImpression).form.doc == .thumbImpression)
+        #expect(CustomViewModel(preferences: nil, doc: .handwrittenDeclaration).form.doc == .handwrittenDeclaration)
+        #expect(CustomViewModel(preferences: nil, doc: .class10Certificate).form.doc == .photo)
+        #expect(CustomViewModel(preferences: nil).form.doc == .photo)
+    }
+
     @Test("fields keep only what they can hold")
     func filters() {
         let m = CustomViewModel(preferences: nil)

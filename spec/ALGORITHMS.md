@@ -411,7 +411,8 @@ slot (§6.6). Saving records Saved for an exam slot and appends a history entry 
 
 ### 6.6 Screens, names and the Checker
 
-**Tools → PDF** lists the four tools; an exam's PDF row opens the same **PDF maker** for that slot (decision 2026-10-15).
+**Home's PDF cards** open the four tools (the Tools tab was folded into Home on 2026-10-20); an exam's PDF row opens the same
+**PDF maker** for that slot (decision 2026-10-15).
 Tools use a synthetic slot: exam id `pdf`, exam name `PDF` (not translated: it names the file and the folder),
 `type` `id_card` for the ID card and `document` for the other tools (two schema document types added for this; no preset
 uses them yet), `formats = [pdf]`, `dimensions.mode = none`, the window above. Names (§9.8): an exam
@@ -799,7 +800,8 @@ confirmation (the CAPITAL-letters rule belongs to exams), and the verdict reads 
 **Canonical text** (navigation argument and recent sizes): `<doc>;<W>x<H>;<min>-<max>;<dpi>`, with `-` for no size and `0` for
 no minimum: `signature;140x60;10-20;200`, `photo;-;0-50;200`. Parsing accepts exactly this form for a size that passes the
 validation above, else nothing. **Recent sizes:** the last 5 distinct texts, newest first, kept on the device; Continue moves
-its text to the front. Conformance: `custom_size_cases` (`fields` → codes, or slot summary + text; `parse` text → canonical text or null),
+its text to the front. Home's Resize photo, Signature, Thumb impression and Handwritten page cards open the form with that
+`doc` chosen (everything else empty); the navigation argument carries only the doc's wire name. Conformance: `custom_size_cases` (`fields` → codes, or slot summary + text; `parse` text → canonical text or null),
 computed by `spec/tools/custom_size.py`.
 
 ## 12. Checker (PRD F10)
@@ -903,6 +905,13 @@ is re-read and must match the entry's size and dimensions and pass the read chec
 under its recorded file name exactly as §1.6.2 (byte equality before the sheet; never records Saved). A copy that is gone
 or older than 30 days shows `kit.history_expired` instead. `kit.history_clear` (with a confirmation) deletes every entry
 and copy; the checklist's Saved markers are not history and stay.
+
+**Previews (2026-10-20).** Prepared and History rows show a thumbnail decoded off the main thread at no more than twice
+its display size: a draft's JPEG (re-read through §1.6.1), a history copy's JPEG or its PDF's first page (the copy passes the
+read check above first; a copy that fails it is deleted and the row says it is no longer kept). A shareable History row
+opens a preview of its copy: the image, or the PDF's pages rendered lazily to the screen width (at most 20 pages), with
+Share as above. Save to My Kit (§13.1) first shows the working source that would be kept (display only, downsampled) and
+writes nothing until the user confirms; Cancel changes nothing.
 
 Conformance: `kit_size_cases` (`width`, `height` → stored size), `kit_history_cases` (`entries` in recorded order, `now_ms`,
 `max_entries` → `kept` ids in order and `shareable` ids), `kit_id_cases` (`id` → `valid`). Reference: `spec/tools/kit.py`.

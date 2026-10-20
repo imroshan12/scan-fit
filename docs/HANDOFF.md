@@ -1,15 +1,15 @@
 # HANDOFF.md — where work stopped (read this first when picking the project up)
 
 Last updated: **2026-10-20**. Current phase: **Phase 3 — PDF, scan, guide sheet** (Phase 2 device QA still open, docs/ROADMAP.md).
-Latest commit: `b7513ef New changes` (My Kit, plus the first half of the PDF tools). **Uncommitted:** the rest of the PDF
-tools on both apps (§4 first entry).
+Latest commit: `ee51218 pdf feature update`. **Uncommitted:** the editor-first Home and My Kit previews on both apps (§4
+first entry).
 The user commits; a session never runs `git add/commit/push`.
 
 ## 1. State in one screen
 
 | Area                                         | State                                                                                                                                                                                                                                                                                          |
 | -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Home (search, categories, My exams, Popular) | Done on both apps (ROADMAP Phase 2, ticked).                                                                                                                                                                                                                                                   |
+| Home                                         | Redesigned 2026-10-20 (user): editor first. "What would you like to do?" + a grid of large tool cards (Exam forms, Resize photo, Signature, Images to PDF, Compress PDF, Merge PDFs, ID card, Check a file, Thumb impression, Handwritten page), pinned exams, compact "Coming soon". The old search/categories/Popular list is now **Exam forms**. Tabs are Home · My Kit · Settings (Tools tab removed). iOS checked on the iPhone 17 simulator; Android only in previews. |
 | Exam checklist                               | Photo/ink rows reopen retained files. Verified private drafts show "Ready · KB" after relaunch; historical Saved takes precedence. Missing/invalid/expired drafts never show Ready. Broader PDF/live-photo flows remain open.                                                                  |
 | Photo flow                                   | Built on both apps, including save, retry, cancellation and Done after success. Physical-device camera/navigation confirmation remains open (§3).                                                                                                                                              |
 | Share / Save all                             | Built on both apps (2026-10-13): Share under Save (exact review bytes, never Saved); Save all on the checklist (every Ready row, verified per file, failures isolated, retry re-plans). iOS one Files picker for all files. Hand-checked on the iPhone 11 Pro Max simulator. |
@@ -20,10 +20,17 @@ The user commits; a session never runs `git add/commit/push`.
 | Thumb cleanup                                | Rewritten 2026-10-13 (user report: details cleared). Paper-only background, linear stretch, box-centred square; 3 `thumb_preservation_cases`. Device check with a real inked thumb open. |
 | Checker                                      | Built on both apps (2026-10-15): ALGORITHMS §12. Pick a file (gallery/Files, image or PDF) → its own problems → kind chips → exam list → per-slot verdict → "Make it fit" refits a verified copy; Save (records Saved) and Share. From Tools and Home. Hand-checked on the iPhone 11 Pro Max simulator. |
 | My Kit                                       | Built on both apps (2026-10-15): ALGORITHMS §13. Three views (Prepared · Originals · History). Save to My Kit on new photo/ink reviews; "Use for exam…" starts a slot's flow from an original; every verified export listed with 30-day re-share; Clear history. Hand-checked on the iPhone 11 Pro Max simulator (signature → Save to My Kit → Originals → Use for exam → IBPS save → History → Share); Android not walked by hand. |
+| My Kit previews                              | Built on both apps (2026-10-20, ALGORITHMS §13.3 Previews): thumbnails on Prepared and History rows (PDF = first page), tap a History file → full preview (image or up to 20 PDF pages) with Share, and Save to My Kit shows the picture first (Save / Cancel). VM tests only; Kit not walked by hand (the simulator Kit was empty). |
 | PDF tools                                    | Built on both apps (2026-10-15/20): ALGORITHMS §6 + §9.10. Tools → Images to PDF · Compress · Merge · ID card; an exam's PDF row opens the same PDF maker (records Saved); Checker "Make it fit" makes a PDF for PDF slots; PDF exports join My Kit History. Grayscale + cleanup on by default, Tools need a Max KB (user decisions). Not run by hand on a simulator or device yet. |
 | Screenshot tests                             | Removed for good (user decision 2026-10-03). Don't add them back (CLAUDE.md Definition of done).                                                                                                                                                                                               |
 
-Gates last run (2026-10-20, PDF tools): Android `./gradlew spotlessCheck detekt testDebugUnitTest :core:match:test
+Gates last run (2026-10-20, Home + Kit previews): Android `./gradlew spotlessCheck detekt testDebugUnitTest
+:core:match:test :core:model:test lint :app:assembleDebug` green (446 unit tests, lint clean). iOS strict SwiftLint (0),
+Core SwiftPM (209) and Features SwiftPM (153) with no warnings, app tests on the iPhone 17 simulator (TEST SUCCEEDED).
+Spec: `test_tools.py` (66, via `unittest discover`), `build_presets.py`, `gen_strings.py --check`, `gen_tokens.py --check` (lowest text
+contrast 5.40:1). Hand-checked: the iOS Home grid, Exam forms and Coming soon on the iPhone 17 simulator. Not done: an
+Android visual check (previews only), a Kit preview walk with real files, the iPhone 11 Pro Max build, any device.
+Previous gates (2026-10-20, PDF tools): Android `./gradlew spotlessCheck detekt testDebugUnitTest :core:match:test
 :core:model:test lint :app:assembleDebug` green (427 unit tests, lint clean). iOS strict SwiftLint (0), Core SwiftPM (all
 suites, incl. `PDFTests`: every `pdf_*` case through the real CoreGraphics renderer, ~90 s in debug) and Features SwiftPM
 (145 tests) with no warnings, app tests on the iPhone 17 simulator (TEST SUCCEEDED). Spec: `test_tools.py` (66),
@@ -52,6 +59,15 @@ Device/provider QA remains open. New `review.*`, `draft.*` and `kit.*` Hindi mes
 drafted with `TODO_HI:`. The spec suite still emits pre-existing unclosed-file `ResourceWarning`s in `exam_search.py`.
 
 ## 2. Decisions made with the user (not obvious from the code)
+
+- **Editor first (user, 2026-10-20, question cards):** the app is marketed as a normal photo/PDF editor with exams built in.
+  Home = a grid of large tool cards with a title and one-line description; exams are one card ("Exam forms", the old Home
+  list). Cards chosen by the user: Exam forms + Check a file, Resize photo + Signature, all four PDF tools, Thumb + document.
+  The user answered "Keep My Kit as it store my data" to "what happens to the Tools tab"; I read that as: drop Tools (its
+  tools are all Home cards now), keep My Kit → tabs Home · My Kit · Settings. My calls: accent colours per tool family
+  (exam/photo/ink/pdf/check tokens, contrast-checked), 2 columns (1 at large text), Scan/Guide sheet/Coach shown as one
+  compact muted "Coming soon" list instead of dead cards. Kit previews: all three the user picked (History preview,
+  thumbnails everywhere, preview before Save to My Kit).
 
 - **PDF tools (user, 2026-10-15, question cards):** an exam's PDF row opens a PDF maker for that slot; certificate PDFs are
   grayscale + cleanup by default (both toggles); Tools require a Max KB (quick picks 100/200/300/500, default 200); merge
@@ -152,6 +168,28 @@ drafted with `TODO_HI:`. The spec suite still emits pre-existing unclosed-file `
   device is still needed with the updated build. Files saved before the fix are not retroactively marked; save again to verify.
 
 ## 4. What changed (by area, for review)
+
+### Editor-first Home and My Kit previews (2026-10-20)
+
+- **Spec:** `tokens.json` accent roles `photo/ink/pdf` (+ `Container`, `on…Container`, light and dark; `gen_tokens.py`
+  checks their contrast); strings `home.title` reworded, `home.subtitle`, `home.card_*` (+ `_body`), `home.coming_soon_heading`,
+  `tools.*_body`, `kit.preview_*`, `kit.save_preview_*` (Hindi `TODO_HI:`), `tab.tools` removed. ALGORITHMS §6.6 (Home's PDF
+  cards), §11 (Home cards open Custom size with the kind chosen), §13.3 "Previews". UI_UX principle 1 "Editor first", IA,
+  Home and Exam forms sections.
+- **Android:** design system `ScanFitIcons` (tool glyphs as `ImageVector`s, no icons-extended dependency), `ToolCard`,
+  `ToolAccent`, `SaveToKitButton(preview =)` + `SaveToKitDialog`. `:feature:home`: new `HomeScreen` grid + `HomeTool`,
+  old list → `ExamBrowserScreen` (route `exams`), previews in `ExamBrowserPreviews.kt`. `ScanFitApp`: tabs Home/Kit/Settings,
+  `route(HomeTool)`, `custom?doc=…`, `kit/history`; `ToolsScreen.kt` deleted. `CustomViewModel` reads `doc` from
+  `SavedStateHandle`. Photo/Ink VMs `originalPreview()` (≤ 720 px). `:feature:kit` depends on `:core:pdf`: `KitImages.openPdf`
+  / `pdfFirstPage`, `KitViewModel.thumbnail`, `KitHistoryViewModel.thumbnail`, new `KitHistoryPreviewViewModel` +
+  `KitHistoryPreviewScreen`, `Thumbnail` in `KitComponents`.
+- **iOS:** DesignSystem `ToolCard`/`ToolAccent`, `SaveToKitButton(preview:)` sheet. Home: new `HomeView` grid (typed
+  `Target`), `ExamBrowserView` (old list, search always visible), `HomePreviews`. ScanModel `CustomSizeRoute(doc:)`,
+  `ExamBrowserRoute`, `KitHistoryRoute`. `RootView` tabs Home/Kit/Settings; `ToolsView.swift` deleted (xcodegen re-run).
+  `CustomViewModel(doc:)`. Kit package depends on `PDF`: `KitImages` PDF pages via `CGPdfOpener`, `KitThumbnail`,
+  `KitHistoryPreviewViewModel` + `KitHistoryPreviewView` (+ previews in `KitPreviews.swift`).
+- **Tests:** Android `KitPreviewsViewModelTest` (5), Custom `doc` test, Photo/Ink `originalPreview` tests; iOS
+  `KitPreviewsTests` (5), Custom `homeCard`, Photo/Ink preview tests.
 
 ### PDF tools (2026-10-15 → 2026-10-20)
 
@@ -422,12 +460,15 @@ drafted with `TODO_HI:`. The spec suite still emits pre-existing unclosed-file `
    "Use for exam…" into another exam (photo face check runs; ink opens at the crop); Done returns to the original; Delete;
    a full Kit (30). History: save, Save all, Checker save and Custom size each add a row; Share from history; Clear history.
    Hindi at the largest font (segmented labels, history rows). iOS simulator walk done (§1); Android and real devices not yet.
-11. **PDF tools device QA (new):** Android on a phone first (Robolectric cannot run `PdfRenderer`, so the real renderer is
+11. **Home + Kit previews QA (new):** Android Home on a phone (grid at default and 200 % text, Hindi; every card opens the
+   right screen; Back returns to Home), Exam forms search; Kit: thumbnails, tap a History photo and a History PDF (pages
+   scroll, Share), Save to My Kit dialog. iOS: the Kit walk with real files on the iPhone 11 Pro Max simulator.
+12. **PDF tools device QA:** Android on a phone first (Robolectric cannot run `PdfRenderer`, so the real renderer is
    untested): compress a real certificate PDF (also one with `/Rotate`, one password-protected), merge two PDFs, images →
    PDF with crop/rotate, ID card front/back, JEE Main class 10 row → Save → row Saved → History share. iOS the same on the
    iPhone 11 Pro Max simulator and a device. Time a 3-page compress on the low-end profiles (the iOS debug job suite takes
    ~90 s on a Mac; measure release before optimising). Hindi at the largest font (add buttons wrap).
-12. Next features: Scan entry, guide sheet (Phase 3). Verify UPSC ESE / CMS presets
+13. Next features: Scan entry, guide sheet (Phase 3). Verify UPSC ESE / CMS presets
    only with official sources and user direction.
 
 ## 6. Testing tips that cost time to learn

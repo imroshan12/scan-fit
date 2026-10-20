@@ -147,7 +147,10 @@ public struct InkFlowView: View {
                 reviewActions
                 // Save to My Kit keeps the picture, not the fitted file (ALGORITHMS 13.1); a restored review has none.
                 if !review.restored, model.exportState != .saving {
-                    SaveToKitButton(status: model.kitSave, strings: strings) { Task { await model.saveOriginal() } }
+                    SaveToKitButton(
+                        status: model.kitSave, strings: strings, preview: { await model.originalPreview() },
+                        action: { Task { await model.saveOriginal() } }
+                    )
                         .padding(.bottom, ScanFitSpacing.sm)
                         .background(.bar)
                 }

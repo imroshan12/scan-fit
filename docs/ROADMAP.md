@@ -225,6 +225,10 @@ file passes the upload echo page. Zero P0/P1 bugs open.
       q20 at 100 DPI because iOS ImageIO compresses less; a Tools limit never pads; merge/compress rasterise pages (text
       not selectable, user decision); grayscale + cleanup on by default (user decision). Pro limits come with Phase 4.
       Android's real `PdfRenderer` is device-QA only (Robolectric cannot run it).
+- [x] Editor-first Home + My Kit previews (user request, 2026-10-20; not in the original plan)
+    - Home is a grid of large tool cards (Exam forms is one card; the old list moved to Exam forms); tabs Home · My Kit ·
+      Settings (Tools tab removed, its tools are cards). My Kit: row thumbnails, History file preview (image / PDF pages),
+      Save to My Kit shows the picture first. UI_UX §1–3, ALGORITHMS §6.6, §11, §13.3. Device QA open (HANDOFF §5).
 - [ ] Scan entry: ML Kit Document Scanner / VisionKit, with the Android low-RAM fallback (CameraX + 4-corner crop)
 - [ ] Printable guide sheet PDF generator (true-scale boxes: signature 7:3, thumb square, declaration 2:1, triple signature, NEET fingers) + a "Print / Share" action
 - [ ] Settings: language, presets version + manual update, unverified toggle, privacy, help, "Report a problem" (mailto with exam id + app/preset version, **no file**)

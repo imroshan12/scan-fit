@@ -25,6 +25,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -76,6 +77,19 @@ class InkKitViewModelTest {
         assertEquals(DocKind.THUMB, kit.originals.single().kind)
         assertSame(tools.decoded, tools.originalInput)
         assertSame(before, m.review.result)
+    }
+
+    @Test
+    fun thePreviewIsTheWorkingPictureAndSavesNothing() = runTest(dispatcher) {
+        val m = model()
+        advanceUntilIdle()
+        assertNull("nothing to preview before a picture", m.originalPreview())
+        m.onImageSelected("picture")
+        m.onCropDone()
+        advanceUntilIdle()
+        val preview = requireNotNull(m.originalPreview())
+        assertTrue(maxOf(preview.width, preview.height) <= 720)
+        assertTrue("a preview writes nothing", kit.originals.isEmpty())
     }
 
     @Test

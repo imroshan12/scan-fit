@@ -58,7 +58,7 @@ class KitPersistenceTest {
         val original = requireNotNull(root.listFiles()).associate { it.name to it.readBytes() }
         val expected = listOf(KitDocument(DocType.PHOTO, 35), KitDocument(DocType.SIGNATURE, 16))
         for (instance in listOf(store, FileDraftStore(root))) {
-            KitViewModel(presets, instance).uiState.test {
+            KitViewModel(presets, instance, FakeKitImages()).uiState.test {
                 val state = resolved() as KitUiState.Ready
                 assertEquals(listOf(bank.id), state.exams.map { it.id })
                 assertEquals(expected, state.exams.single().documents)
@@ -78,7 +78,7 @@ class KitPersistenceTest {
         val store = FileDraftStore(root, clock = { now })
         assertTrue(store.retain(bank.id, photo, DocKind.PHOTO, photoBytes))
         requireNotNull(root.listFiles()).single().writeText("corrupted")
-        val model = KitViewModel(presets, store)
+        val model = KitViewModel(presets, store, FakeKitImages())
         model.uiState.test {
             assertEquals(KitUiState.Empty, resolved())
             assertEquals(2L, store.revisions.value)

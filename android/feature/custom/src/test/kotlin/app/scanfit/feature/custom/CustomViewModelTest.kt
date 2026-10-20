@@ -1,5 +1,6 @@
 package app.scanfit.feature.custom
 
+import androidx.lifecycle.SavedStateHandle
 import app.scanfit.core.model.CustomSize
 import app.scanfit.core.model.CustomSizeError
 import app.scanfit.core.model.DocType
@@ -41,6 +42,20 @@ class CustomViewModelTest {
     }
 
     private val CustomViewModel.state get() = uiState.value
+
+    @Test
+    fun aHomeCardChoosesTheKindAndAnythingElseFallsBackToPhoto() = runTest(dispatcher) {
+        fun opened(doc: String?): DocType {
+            val m = CustomViewModel(prefs, SavedStateHandle(listOfNotNull(doc?.let { CustomViewModel.DOC to it }).toMap()))
+            backgroundScope.launch(dispatcher) { m.uiState.collect {} }
+            return m.state.form.doc
+        }
+        assertEquals(DocType.SIGNATURE, opened("signature"))
+        assertEquals(DocType.THUMB_IMPRESSION, opened("thumb_impression"))
+        assertEquals(DocType.HANDWRITTEN_DECLARATION, opened("handwritten_declaration"))
+        assertEquals("a type Custom size does not make", DocType.PHOTO, opened("class10_certificate"))
+        assertEquals(DocType.PHOTO, opened(null))
+    }
 
     @Test
     fun aFreshFormShowsNoErrorsUntilContinueIsTried() = runTest(dispatcher) {

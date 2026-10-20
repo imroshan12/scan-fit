@@ -1,3 +1,4 @@
+import CoreGraphics
 import Foundation
 import Observation
 import ScanData
@@ -16,15 +17,27 @@ public final class KitHistoryViewModel {
     /// The share sheet's file, or the staging failure (ALGORITHMS 1.6.2).
     public private(set) var share: ShareStatus = .none
     @ObservationIgnored private let kit: any KitStore
+    @ObservationIgnored private let images: any KitImages
     @ObservationIgnored private let stage: @Sendable ([UInt8], String) async -> URL?
     @ObservationIgnored private var generation = 0
 
     public init(
-        kit: any KitStore,
+        kit: any KitStore, images: any KitImages = LiveKitImages(),
         stage: @escaping @Sendable ([UInt8], String) async -> URL? = { await ShareStager.stage($0, filename: $1) }
     ) {
         self.kit = kit
+        self.images = images
         self.stage = stage
+    }
+
+    /// A row's thumbnail: the kept copy (an image, or a PDF's first page); nil once it is no longer kept.
+    public func thumbnail(_ id: String) async -> CGImage? {
+        guard case let .ready(entries) = state, let entry = entries.first(where: { $0.id == id && $0.shareable }),
+              let bytes = await kit.exportCopy(id: id) else { return nil }
+        let images = self.images, pdf = entry.record.isPdf, size = KitOriginalsViewModel.thumbnailPixels
+        return await Task.detached(priority: .userInitiated) {
+            pdf ? images.pdfThumbnail(bytes, maxPixelSize: size) : images.image(bytes, maxPixelSize: size)
+        }.value
     }
 
     #if DEBUG

@@ -25,6 +25,7 @@ import app.scanfit.core.imaging.InkVariant
 import app.scanfit.core.imaging.Pipeline
 import app.scanfit.core.imaging.PipelineOutcome
 import app.scanfit.core.imaging.Raster
+import app.scanfit.core.imaging.Resampler
 import app.scanfit.core.inspect.Inspector
 import app.scanfit.core.match.DocKind
 import app.scanfit.core.match.FileFacts
@@ -94,6 +95,7 @@ data class InkSlot(
         }
 
     private companion object {
+
         const val HALF = 0.5
     }
 }
@@ -344,6 +346,20 @@ constructor(
                         InkUiState.Crop(slot, raster, wholeImage(raster))
                     }
             }
+    }
+
+    /** What Save to My Kit would keep (ALGORITHMS 13.3 previews): the working source, downsampled for display only. */
+    suspend fun originalPreview(): Raster? {
+        val source = lastCrop?.image ?: return null
+        return withContext(work) {
+            val scale = PREVIEW_LONG_SIDE.toDouble() / maxOf(source.width, source.height)
+            if (scale >= 1) {
+                source
+            } else {
+                val width = maxOf(1, (source.width * scale).toInt())
+                Resampler.resize(source, width, maxOf(1, (source.height * scale).toInt()))
+            }
+        }
     }
 
     /** Keeps the picture this review was made from in My Kit (ALGORITHMS 13.1). The review itself never changes. */
@@ -610,6 +626,8 @@ constructor(
     }
 
     companion object {
+        private const val PREVIEW_LONG_SIDE = 720
+
         /** Navigation arguments: `exam/{examId}/ink/{docType}` or `custom/ink?custom={text}` (ALGORITHMS 11). */
         const val EXAM_ID = FlowTarget.EXAM_ID
         const val DOC_TYPE = FlowTarget.DOC_TYPE

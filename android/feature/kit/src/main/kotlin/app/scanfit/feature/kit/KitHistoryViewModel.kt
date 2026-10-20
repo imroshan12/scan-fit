@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import app.scanfit.core.data.export.ShareStager
 import app.scanfit.core.data.kit.HistoryEntry
 import app.scanfit.core.data.kit.KitStore
+import app.scanfit.core.imaging.Raster
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -39,9 +40,10 @@ class KitHistoryViewModel internal constructor(
     private val kit: KitStore,
     private val share: ShareStager,
     private val io: CoroutineDispatcher,
+    private val images: KitImages? = null,
 ) : ViewModel() {
     @Inject
-    constructor(kit: KitStore, share: ShareStager) : this(kit, share, Dispatchers.IO)
+    constructor(kit: KitStore, share: ShareStager, images: KitImages) : this(kit, share, Dispatchers.IO, images)
 
     private val refreshes = MutableStateFlow(0L)
     private val _uiState = MutableStateFlow<KitHistoryUiState>(KitHistoryUiState.Loading)
@@ -83,6 +85,19 @@ class KitHistoryViewModel internal constructor(
             _uiState.value = current.copy(shareUri = uri, shareFailed = uri == null)
             // A copy that failed its check was deleted: the row now says it is no longer kept.
             if (uri == null) refresh()
+        }
+    }
+
+    /** A row's thumbnail: the kept copy (an image, or a PDF's first page); `null` once it is no longer kept. */
+    suspend fun thumbnail(id: String): Raster? = withContext(io) {
+        val entry = (_uiState.value as? KitHistoryUiState.Ready)?.entries?.firstOrNull { it.record.id == id }
+        if (entry == null || !entry.shareable) return@withContext null
+        val copy = kit.exportCopy(id) ?: return@withContext null
+        val images = images ?: return@withContext null
+        if (entry.record.isPdf) {
+            images.pdfFirstPage(copy, KitViewModel.THUMBNAIL_PX)
+        } else {
+            images.decode(copy, KitViewModel.THUMBNAIL_PX)
         }
     }
 

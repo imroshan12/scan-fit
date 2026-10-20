@@ -25,7 +25,10 @@ ROLES = ["primary", "onPrimary", "primaryContainer", "onPrimaryContainer", "back
          "surface", "onSurface", "surfaceVariant", "onSurfaceVariant", "outline", "outlineVariant",
          "success", "onSuccess", "successContainer", "onSuccessContainer",
          "warning", "onWarning", "warningContainer", "onWarningContainer",
-         "error", "onError", "errorContainer", "onErrorContainer", "scrim"]
+         "error", "onError", "errorContainer", "onErrorContainer",
+         # Tool accents (UI_UX §4): Home cards and tool screens. Exams use primary, the Checker success.
+         "photo", "photoContainer", "onPhotoContainer", "ink", "inkContainer", "onInkContainer",
+         "pdf", "pdfContainer", "onPdfContainer", "scrim"]
 
 TEXT_PAIRS = [("onPrimary", "primary"), ("onPrimaryContainer", "primaryContainer"),
               ("onBackground", "background"), ("onSurface", "surface"), ("onSurface", "surfaceVariant"),
@@ -33,10 +36,15 @@ TEXT_PAIRS = [("onPrimary", "primary"), ("onPrimaryContainer", "primaryContainer
               ("onSuccess", "success"), ("onSuccessContainer", "successContainer"),
               ("onWarning", "warning"), ("onWarningContainer", "warningContainer"),
               ("onError", "error"), ("onErrorContainer", "errorContainer"),
-              ("primary", "surface"), ("success", "surface"), ("error", "surface"), ("warning", "surface")]
+              ("primary", "surface"), ("success", "surface"), ("error", "surface"), ("warning", "surface"),
+              ("onPhotoContainer", "photoContainer"), ("onInkContainer", "inkContainer"),
+              ("onPdfContainer", "pdfContainer")]
 # Icons, borders and focus indicators only need 3:1.
 GRAPHIC_PAIRS = [("outline", "background"), ("outline", "surface"), ("success", "surface"),
-                 ("warning", "surface"), ("error", "surface"), ("primary", "surface")]
+                 ("warning", "surface"), ("error", "surface"), ("primary", "surface"),
+                 # A tool card's icon tile is the accent on its container.
+                 ("photo", "photoContainer"), ("ink", "inkContainer"), ("pdf", "pdfContainer"),
+                 ("primary", "primaryContainer"), ("success", "successContainer")]
 # Text-coloured status roles are also used as text on surface, so they are in TEXT_PAIRS too.
 WEIGHTS_KT = {400: "Normal", 500: "Medium", 600: "SemiBold", 700: "Bold"}
 WEIGHTS_SW = {400: "regular", 500: "medium", 600: "semibold", 700: "bold"}

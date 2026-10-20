@@ -165,3 +165,60 @@ private struct KitOriginalPreview: View {
     KitOriginalPreview(state: .missing)
 }
 #endif
+
+#if DEBUG
+@MainActor
+private enum KitHistoryPreviewData {
+    static let record = ExportRecord(
+        id: "00000000-0000-4000-8000-000000000009", createdAt: 1_800_000_000_000, examId: "jee_main",
+        examName: "JEE Main", docType: .class10Certificate, kind: .pdfDocument,
+        fileName: "class10_certificate_JEE-Main_182kb.pdf", size: 182 * 1024, width: 0, height: 0, pages: 3
+    )
+    static let photoRecord = ExportRecord(
+        id: "00000000-0000-4000-8000-000000000001", createdAt: 1_800_000_000_000, examId: "ibps_po",
+        examName: "IBPS PO / MT", docType: .photo, kind: .photo, fileName: "photo.jpg", size: 34 * 1024, width: 200,
+        height: 230
+    )
+    static let image: CGImage? = CGContext(
+        data: nil, width: 200, height: 230, bitsPerComponent: 8, bytesPerRow: 0,
+        space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue
+    ).flatMap { context in
+        context.setFillColor(red: 0.85, green: 0.9, blue: 1, alpha: 1)
+        context.fill(CGRect(x: 0, y: 0, width: 200, height: 230))
+        return context.makeImage()
+    }
+}
+
+#Preview("History preview - photo, light") {
+    NavigationStack {
+        KitHistoryPreviewView(
+            model: KitHistoryPreviewViewModel(previewState: .ready(
+                record: KitHistoryPreviewData.photoRecord, image: KitHistoryPreviewData.image, pages: 1
+            )),
+            strings: Strings(languageCode: "en")
+        )
+    }
+}
+
+#Preview("History preview - PDF, dark largest") {
+    NavigationStack {
+        KitHistoryPreviewView(
+            model: KitHistoryPreviewViewModel(previewState: .ready(
+                record: KitHistoryPreviewData.record, image: nil, pages: 3
+            )),
+            strings: Strings(languageCode: "en")
+        )
+    }
+    .preferredColorScheme(.dark)
+    .dynamicTypeSize(.accessibility5)
+}
+
+#Preview("History preview - gone, Hindi") {
+    NavigationStack {
+        KitHistoryPreviewView(
+            model: KitHistoryPreviewViewModel(previewState: .failed), strings: Strings(languageCode: "hi")
+        )
+    }
+    .environment(\.locale, Locale(identifier: "hi"))
+}
+#endif

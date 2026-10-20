@@ -330,10 +330,34 @@ public struct Strings: Sendable {
     public var flowToggleNameDate: String { tr("flow.toggle_name_date") }
     /// "White background"
     public var flowToggleWhiteBg: String { tr("flow.toggle_white_bg") }
+    /// "Check a file"
+    public var homeCardCheck: String { tr("home.card_check") }
+    /// "Handwritten page"
+    public var homeCardDocument: String { tr("home.card_document") }
+    /// "Declarations and notes, cleaned up and sized"
+    public var homeCardDocumentBody: String { tr("home.card_document_body") }
+    /// "Exam forms"
+    public var homeCardExams: String { tr("home.card_exams") }
+    /// "Every photo, signature and document an exam asks for, made to its rules"
+    public var homeCardExamsBody: String { tr("home.card_exams_body") }
+    /// "Resize photo"
+    public var homeCardPhoto: String { tr("home.card_photo") }
+    /// "Any size in KB, pixels or cm"
+    public var homeCardPhotoBody: String { tr("home.card_photo_body") }
+    /// "Signature"
+    public var homeCardSignature: String { tr("home.card_signature") }
+    /// "Clean up and resize a signature on paper"
+    public var homeCardSignatureBody: String { tr("home.card_signature_body") }
+    /// "Thumb impression"
+    public var homeCardThumb: String { tr("home.card_thumb") }
+    /// "A clear thumb print at any size"
+    public var homeCardThumbBody: String { tr("home.card_thumb_body") }
     /// "All"
     public var homeCategoryAll: String { tr("home.category_all") }
     /// "Already have a file? Check it."
     public var homeCheckFile: String { tr("home.check_file") }
+    /// "Coming soon"
+    public var homeComingSoonHeading: String { tr("home.coming_soon_heading") }
     /// "Not listed? Use Custom size."
     public var homeEmptyHint: String { tr("home.empty_hint") }
     /// "Check a photo, signature or PDF before you upload it."
@@ -358,7 +382,9 @@ public struct Strings: Sendable {
     public var homeSectionPinned: String { tr("home.section_pinned") }
     /// "Popular now"
     public var homeSectionPopular: String { tr("home.section_popular") }
-    /// "What are you applying for?"
+    /// "Resize photos and signatures, make PDFs, or get every file an exam form asks for."
+    public var homeSubtitle: String { tr("home.subtitle") }
+    /// "What would you like to do?"
     public var homeTitle: String { tr("home.title") }
     /// "Drag the corners to leave out everything else"
     public var inkCropHint: String { tr("ink.crop_hint") }
@@ -436,10 +462,18 @@ public struct Strings: Sendable {
     public var kitOriginalsEmptyTitle: String { tr("kit.originals_empty_title") }
     /// "Could not load your originals. Please try again."
     public var kitOriginalsLoadFailed: String { tr("kit.originals_load_failed") }
+    /// "Couldn't open this file. It may no longer be kept."
+    public var kitPreviewFailed: String { tr("kit.preview_failed") }
+    /// "Page {number:int} of {total:int}"
+    public func kitPreviewPage(number: Int, total: Int) -> String { fmt("kit.preview_page", [number, total]) }
     /// "Could not save to My Kit. Please try again."
     public var kitSaveFailed: String { tr("kit.save_failed") }
     /// "Save to My Kit"
     public var kitSaveOriginal: String { tr("kit.save_original") }
+    /// "ScanFit keeps the whole picture, not the cropped file, so you can use it again for other exams."
+    public var kitSavePreviewBody: String { tr("kit.save_preview_body") }
+    /// "Save this picture to My Kit?"
+    public var kitSavePreviewTitle: String { tr("kit.save_preview_title") }
     /// "Saved {date:str}"
     public func kitSavedOn(date: String) -> String { fmt("kit.saved_on", [date]) }
     /// "Saved to My Kit"
@@ -696,16 +730,18 @@ public struct Strings: Sendable {
     public var tabKit: String { tr("tab.kit") }
     /// "Settings"
     public var tabSettings: String { tr("tab.settings") }
-    /// "Tools"
-    public var tabTools: String { tr("tab.tools") }
     /// "Checker"
     public var toolsChecker: String { tr("tools.checker") }
     /// "Live photo coach"
     public var toolsCoach: String { tr("tools.coach") }
+    /// "Practise the live photo a portal takes"
+    public var toolsCoachBody: String { tr("tools.coach_body") }
     /// "Custom size"
     public var toolsCustomResize: String { tr("tools.custom_resize") }
     /// "Printable guide sheet"
     public var toolsGuideSheet: String { tr("tools.guide_sheet") }
+    /// "Print boxes at true size to sign in"
+    public var toolsGuideSheetBody: String { tr("tools.guide_sheet_body") }
     /// "PDF tools"
     public var toolsPdf: String { tr("tools.pdf") }
     /// "Compress a PDF"
@@ -726,4 +762,6 @@ public struct Strings: Sendable {
     public var toolsPdfMergeBody: String { tr("tools.pdf_merge_body") }
     /// "Scan"
     public var toolsScan: String { tr("tools.scan") }
+    /// "Scan pages with your camera"
+    public var toolsScanBody: String { tr("tools.scan_body") }
 }

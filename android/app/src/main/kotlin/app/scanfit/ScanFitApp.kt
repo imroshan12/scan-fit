@@ -4,7 +4,6 @@ import android.net.Uri
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBox
-import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
@@ -33,6 +32,7 @@ import app.scanfit.core.model.DocType
 import app.scanfit.core.model.FlowTarget
 import app.scanfit.feature.checker.CheckerRoute
 import app.scanfit.feature.custom.CustomRoute
+import app.scanfit.feature.custom.CustomViewModel
 import app.scanfit.feature.exams.DocActions
 import app.scanfit.feature.exams.ExamRoute
 import app.scanfit.feature.exams.ExamViewModel
@@ -40,7 +40,11 @@ import app.scanfit.feature.flowink.InkFlowRoute
 import app.scanfit.feature.flowink.InkFlowViewModel
 import app.scanfit.feature.flowphoto.PhotoFlowRoute
 import app.scanfit.feature.flowphoto.PhotoFlowViewModel
+import app.scanfit.feature.home.ExamBrowserRoute
 import app.scanfit.feature.home.HomeRoute
+import app.scanfit.feature.home.HomeTool
+import app.scanfit.feature.kit.KitHistoryPreviewRoute
+import app.scanfit.feature.kit.KitHistoryPreviewViewModel
 import app.scanfit.feature.kit.KitOriginalRoute
 import app.scanfit.feature.kit.KitOriginalViewModel
 import app.scanfit.feature.kit.KitRoute
@@ -59,7 +63,6 @@ private enum class Tab(
 ) {
     HOME("home", R.string.tab_home, Icons.Filled.Home),
     KIT("kit", R.string.tab_kit, Icons.Filled.AccountBox),
-    TOOLS("tools", R.string.tab_tools, Icons.Filled.Build),
     SETTINGS("settings", R.string.tab_settings, Icons.Filled.Settings),
 }
 
@@ -72,10 +75,14 @@ fun ScanFitApp() {
         // My Kit owns its own screens and the flows it opens (a prepared file or "Use for exam…").
         val flowFromKit = destination?.route?.startsWith("$EXAM_ROUTE/") == true &&
             navController.previousBackStackEntry?.destination?.route?.startsWith(Tab.KIT.route) == true
-        val inKit = destination?.route?.startsWith("$KIT_ORIGINAL_ROUTE/") == true
-        val inCustom =
+        val inKit = destination?.route?.let {
+            it.startsWith("$KIT_ORIGINAL_ROUTE/") || it.startsWith("$KIT_HISTORY_ROUTE/")
+        } == true
+        // Every tool opens from Home (the Tools tab was folded into it, UI_UX §2).
+        val inTool =
             destination?.route?.let {
-                it.startsWith(CUSTOM_ROUTE) || it == CHECKER_ROUTE || it.startsWith("$PDF_ROUTE/")
+                it.startsWith(CUSTOM_ROUTE) || it == CHECKER_ROUTE || it.startsWith("$PDF_ROUTE/") ||
+                    it == EXAMS_ROUTE
             } == true
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
@@ -86,7 +93,7 @@ fun ScanFitApp() {
                             selected =
                             destination?.hierarchy?.any { it.route == tab.route } == true ||
                                 (tab == Tab.KIT && (flowFromKit || inKit)) ||
-                                (tab == Tab.TOOLS && inCustom) ||
+                                (tab == Tab.HOME && inTool) ||
                                 (
                                     tab == Tab.HOME && !flowFromKit &&
                                         destination?.route?.startsWith("$EXAM_ROUTE/") == true
@@ -109,12 +116,22 @@ fun ScanFitApp() {
                 composable(Tab.HOME.route) {
                     HomeRoute(
                         onOpenExam = { id -> navController.navigate("$EXAM_ROUTE/$id") },
+                        onTool = { tool -> navController.navigate(route(tool)) { launchSingleTop = true } },
+                    )
+                }
+                composable(EXAMS_ROUTE) {
+                    ExamBrowserRoute(
+                        onBack = { navController.popBackStack() },
+                        onOpenExam = { id -> navController.navigate("$EXAM_ROUTE/$id") },
                         onCustomSize = { navController.navigate(CUSTOM_ROUTE) { launchSingleTop = true } },
                         onChecker = { navController.navigate(CHECKER_ROUTE) { launchSingleTop = true } },
                     )
                 }
                 composable(CHECKER_ROUTE) { CheckerRoute(onBack = { navController.popBackStack() }) }
-                composable(CUSTOM_ROUTE) {
+                composable(
+                    "$CUSTOM_ROUTE?${CustomViewModel.DOC}={${CustomViewModel.DOC}}",
+                    arguments = listOf(optionalArgument(CustomViewModel.DOC)),
+                ) {
                     CustomRoute(
                         onBack = { navController.popBackStack() },
                         onContinue = { size ->
@@ -198,7 +215,13 @@ fun ScanFitApp() {
                         onOpenOriginal = { id ->
                             navController.navigate("$KIT_ORIGINAL_ROUTE/$id") { launchSingleTop = true }
                         },
+                        onOpenHistory = { id ->
+                            navController.navigate("$KIT_HISTORY_ROUTE/$id") { launchSingleTop = true }
+                        },
                     )
+                }
+                composable("$KIT_HISTORY_ROUTE/{${KitHistoryPreviewViewModel.EXPORT_ID}}") {
+                    KitHistoryPreviewRoute(onBack = { navController.popBackStack() })
                 }
                 composable("$KIT_ORIGINAL_ROUTE/{${KitOriginalViewModel.ORIGINAL_ID}}") { entry ->
                     val id = entry.arguments?.getString(KitOriginalViewModel.ORIGINAL_ID).orEmpty()
@@ -212,13 +235,6 @@ fun ScanFitApp() {
                         },
                     )
                 }
-                composable(Tab.TOOLS.route) {
-                    ToolsScreen(
-                        onCustomSize = { navController.navigate(CUSTOM_ROUTE) { launchSingleTop = true } },
-                        onChecker = { navController.navigate(CHECKER_ROUTE) { launchSingleTop = true } },
-                        onPdf = { tool -> navController.navigate("$PDF_ROUTE/$tool") { launchSingleTop = true } },
-                    )
-                }
                 composable(Tab.SETTINGS.route) { SettingsRoute() }
             }
         }
@@ -227,6 +243,23 @@ fun ScanFitApp() {
 
 /** `exam/<id>`: the exam checklist, opened from Home. */
 private const val EXAM_ROUTE = "exam"
+
+/** `exams`: Exam forms, the exam catalogue opened from Home's first card (UI_UX §3). */
+private const val EXAMS_ROUTE = "exams"
+
+/** Where a Home card goes (UI_UX §3 Home). */
+private fun route(tool: HomeTool): String = when (tool) {
+    HomeTool.EXAMS -> EXAMS_ROUTE
+    HomeTool.PHOTO -> "$CUSTOM_ROUTE?${CustomViewModel.DOC}=photo"
+    HomeTool.SIGNATURE -> "$CUSTOM_ROUTE?${CustomViewModel.DOC}=signature"
+    HomeTool.THUMB -> "$CUSTOM_ROUTE?${CustomViewModel.DOC}=thumb_impression"
+    HomeTool.DOCUMENT -> "$CUSTOM_ROUTE?${CustomViewModel.DOC}=handwritten_declaration"
+    HomeTool.COMPRESS_PDF -> "$PDF_ROUTE/compress"
+    HomeTool.IMAGES_TO_PDF -> "$PDF_ROUTE/images"
+    HomeTool.MERGE_PDFS -> "$PDF_ROUTE/merge"
+    HomeTool.ID_CARD -> "$PDF_ROUTE/id_card"
+    HomeTool.CHECK -> CHECKER_ROUTE
+}
 
 /** `checker`: the pre-submit Checker (ALGORITHMS 12). */
 private const val CHECKER_ROUTE = "checker"
@@ -243,6 +276,9 @@ private fun optionalArgument(name: String) = navArgument(name) {
 
 /** `kit/original/<id>`: one My Kit original, with "Use for exam…" (ALGORITHMS 13.2). */
 private const val KIT_ORIGINAL_ROUTE = "kit/original"
+
+/** `kit/history/<id>`: a saved file's preview before it is shared again (ALGORITHMS 13.3 previews). */
+private const val KIT_HISTORY_ROUTE = "kit/history"
 
 /** `exam/<id>/photo/<docType>`: the photo flow for one of the exam's photo slots. */
 private const val PHOTO_ROUTE = "photo"

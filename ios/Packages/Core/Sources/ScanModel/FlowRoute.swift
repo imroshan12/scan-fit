@@ -69,12 +69,22 @@ public struct FlowRoute: Hashable, Sendable {
     }
 }
 
-/// Navigation value for the Custom size form (ALGORITHMS 11), pushed from Home or Tools.
+/// Navigation value for the Custom size form (ALGORITHMS 11), pushed from Home's cards or Exam forms. `doc` is the kind
+/// a Home card chose (Resize photo, Signature, Thumb impression, Handwritten page); nil starts at Photo.
 public struct CustomSizeRoute: Hashable, Sendable {
+    public let doc: DocType?
+
+    public init(doc: DocType? = nil) {
+        self.doc = doc
+    }
+}
+
+/// Navigation value for Exam forms, the exam catalogue opened from Home's first card (UI_UX §3).
+public struct ExamBrowserRoute: Hashable, Sendable {
     public init() {}
 }
 
-/// Navigation value for the pre-submit Checker (ALGORITHMS 12), pushed from Home or Tools.
+/// Navigation value for the pre-submit Checker (ALGORITHMS 12), pushed from Home or Exam forms.
 public struct CheckerRoute: Hashable, Sendable {
     public init() {}
 }
@@ -97,5 +107,15 @@ public struct PdfRoute: Hashable, Sendable {
         tool = "exam"
         self.examId = examId
         self.docType = docType
+    }
+}
+
+/// Navigation value for a saved file's preview in My Kit's History (ALGORITHMS 13.3 previews): an export id, never a
+/// path.
+public struct KitHistoryRoute: Hashable, Sendable {
+    public let id: String
+
+    public init(id: String) {
+        self.id = id
     }
 }

@@ -2575,6 +2575,193 @@
         }
       }
     },
+    "home.card_check": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check a file"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "फ़ाइल जाँचें"
+          }
+        }
+      }
+    },
+    "home.card_document": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handwritten page"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "हाथ से लिखा पन्ना"
+          }
+        }
+      }
+    },
+    "home.card_document_body": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Declarations and notes, cleaned up and sized"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "घोषणा और नोट्स, साफ़ और सही साइज़ में"
+          }
+        }
+      }
+    },
+    "home.card_exams": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exam forms"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "परीक्षा फ़ॉर्म"
+          }
+        }
+      }
+    },
+    "home.card_exams_body": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every photo, signature and document an exam asks for, made to its rules"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "परीक्षा के नियमों के हिसाब से हर फ़ोटो, हस्ताक्षर और दस्तावेज़"
+          }
+        }
+      }
+    },
+    "home.card_photo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resize photo"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "फ़ोटो का साइज़ बदलें"
+          }
+        }
+      }
+    },
+    "home.card_photo_body": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Any size in KB, pixels or cm"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "KB, पिक्सेल या सेमी में कोई भी साइज़"
+          }
+        }
+      }
+    },
+    "home.card_signature": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signature"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "हस्ताक्षर"
+          }
+        }
+      }
+    },
+    "home.card_signature_body": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clean up and resize a signature on paper"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "कागज़ पर किए हस्ताक्षर को साफ़ करें और साइज़ बदलें"
+          }
+        }
+      }
+    },
+    "home.card_thumb": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thumb impression"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "अंगूठे का निशान"
+          }
+        }
+      }
+    },
+    "home.card_thumb_body": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A clear thumb print at any size"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "किसी भी साइज़ में साफ़ अंगूठे का निशान"
+          }
+        }
+      }
+    },
     "home.category_all": {
       "extractionState": "manual",
       "localizations": {
@@ -2605,6 +2792,23 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "पहले से फ़ाइल है? उसे जाँचें।"
+          }
+        }
+      }
+    },
+    "home.coming_soon_heading": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coming soon"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "जल्द आ रहा है"
           }
         }
       }
@@ -2837,19 +3041,36 @@
         }
       }
     },
+    "home.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resize photos and signatures, make PDFs, or get every file an exam form asks for."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "फ़ोटो और हस्ताक्षर का साइज़ बदलें, PDF बनाएँ, या परीक्षा फ़ॉर्म की हर फ़ाइल तैयार करें।"
+          }
+        }
+      }
+    },
     "home.title": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "What are you applying for?"
+            "value": "What would you like to do?"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "आप किसके लिए आवेदन कर रहे हैं?"
+            "value": "आप क्या करना चाहते हैं?"
           }
         }
       }
@@ -3500,6 +3721,40 @@
         }
       }
     },
+    "kit.preview_failed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't open this file. It may no longer be kept."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "यह फ़ाइल नहीं खुली। हो सकता है अब यह रखी न गई हो।"
+          }
+        }
+      }
+    },
+    "kit.preview_page": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Page %1$lld of %2$lld"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "पन्ना %1$lld / %2$lld"
+          }
+        }
+      }
+    },
     "kit.save_failed": {
       "extractionState": "manual",
       "localizations": {
@@ -3530,6 +3785,40 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "मेरी किट में रखें"
+          }
+        }
+      }
+    },
+    "kit.save_preview_body": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ScanFit keeps the whole picture, not the cropped file, so you can use it again for other exams."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ScanFit पूरी फ़ोटो रखता है, क्रॉप की गई फ़ाइल नहीं, ताकि आप इसे दूसरी परीक्षाओं के लिए फिर से इस्तेमाल कर सकें।"
+          }
+        }
+      }
+    },
+    "kit.save_preview_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save this picture to My Kit?"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "यह फ़ोटो My Kit में सेव करें?"
           }
         }
       }
@@ -5878,23 +6167,6 @@
         }
       }
     },
-    "tab.tools": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tools"
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "टूल्स"
-          }
-        }
-      }
-    },
     "tools.checker": {
       "extractionState": "manual",
       "localizations": {
@@ -5929,6 +6201,23 @@
         }
       }
     },
+    "tools.coach_body": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Practise the live photo a portal takes"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "पोर्टल पर ली जाने वाली लाइव फ़ोटो का अभ्यास करें"
+          }
+        }
+      }
+    },
     "tools.custom_resize": {
       "extractionState": "manual",
       "localizations": {
@@ -5959,6 +6248,23 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "प्रिंट करने लायक गाइड शीट"
+          }
+        }
+      }
+    },
+    "tools.guide_sheet_body": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Print boxes at true size to sign in"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "असली साइज़ के बॉक्स प्रिंट करें और उनमें हस्ताक्षर करें"
           }
         }
       }
@@ -6129,6 +6435,23 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "स्कैन"
+          }
+        }
+      }
+    },
+    "tools.scan_body": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scan pages with your camera"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "कैमरे से पन्ने स्कैन करें"
           }
         }
       }

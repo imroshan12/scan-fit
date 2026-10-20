@@ -63,6 +63,15 @@ public enum ScanFitColor {
     public static let onError = Color(light: 0xFFFFFF, dark: 0x690005)
     public static let errorContainer = Color(light: 0xFFDAD6, dark: 0x93000A)
     public static let onErrorContainer = Color(light: 0x410002, dark: 0xFFDAD6)
+    public static let photo = Color(light: 0x00696B, dark: 0x4FD8D9)
+    public static let photoContainer = Color(light: 0xCDF1F0, dark: 0x004F51)
+    public static let onPhotoContainer = Color(light: 0x002021, dark: 0xCDF1F0)
+    public static let ink = Color(light: 0x6A3FB0, dark: 0xD3BBFF)
+    public static let inkContainer = Color(light: 0xEBDDFF, dark: 0x51259A)
+    public static let onInkContainer = Color(light: 0x23005C, dark: 0xEBDDFF)
+    public static let pdf = Color(light: 0xB4235A, dark: 0xFFB1C8)
+    public static let pdfContainer = Color(light: 0xFFD9E2, dark: 0x8C0B44)
+    public static let onPdfContainer = Color(light: 0x3E0019, dark: 0xFFD9E2)
     public static let scrim = Color(light: 0x000000, dark: 0x000000)
 }
 

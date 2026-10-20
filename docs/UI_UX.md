@@ -2,7 +2,8 @@
 
 ## 1. Principles
 
-1. **Task first, not tool first.** Home asks "What are you applying for?", not "Resize / Compress / Convert".
+1. **Editor first, exams built in** (user decision 2026-10-20, replacing "task first"). Home asks "What would you like to
+   do?" with large tool cards; exam forms are one of them, and the exam rules stay the app's strength inside every tool.
 2. **Show certainty.** Every result shows a green verdict backed by numbers (`34 KB · 200×230 · JPG ✓`)
    and the exam match note. Anxiety is the real problem we solve.
 3. **One primary action per screen**, pinned to the bottom within thumb reach.
@@ -16,21 +17,32 @@
 ## 2. Information architecture
 
 ```
-Tabs:  Home  ·  My Kit  ·  Tools  ·  Settings
-Home ─ search exams ─ My exams (pinned) ─ Popular now (Remote Config) ─ "Already have a file? Check it." (Checker) link
+Tabs:  Home  ·  My Kit  ·  Settings          (the Tools tab was folded into Home, 2026-10-20)
+Home ─ tool cards: Exam forms · Resize photo · Signature · Compress PDF · Images to PDF · Merge PDFs · ID card ·
+       Check a file · Thumb impression · Handwritten page ─ My exams strip (pinned) ─ Coming soon (Scan, guide sheet, coach)
+  ├ Exam forms ─ search exams ─ category chips ─ My exams ─ Popular now ─ specs status ─ Custom size / Checker links
   └ Exam screen (checklist) ─ Photo flow | Signature flow | Thumb flow | Declaration flow | Certificates
                             ─ "Captured live on portal" row → Live coach
                             ─ Save all
 My Kit ─ Photo · Signature · Thumb · Declaration originals ─ "Use for exam…" ─ Export history
-Tools ─ Custom resize ─ Checker ─ PDF: images→PDF, compress, merge, ID card ─ Scan ─ Printable guide sheet ─ Live coach
 Settings ─ Language ─ Pro ─ Presets version + "Check for updates" ─ Show unverified exams ─ Privacy ─ Help/Report a problem
 ```
 
 ## 3. Key screens (states: loading · empty · content · error · offline)
 
-**Home.** Large search field ("Search 55+ exams — IBPS, SSC, NEET…", Hindi aliases indexed, e.g.
-"बैंक" → banking). Category chips. Pinned exams show a progress ring (3/4 files ready).
-Empty state for first launch: 3 popular exam cards + "Not listed? Use Custom size".
+**Home** (redesigned 2026-10-20: editor first). A small "ScanFit" wordmark, the title "What would you like to do?" and a
+one-line subtitle, then a grid of large tool cards: two columns (one column at the largest text sizes or narrow screens),
+each card a soft tinted container with a round icon tile in its accent colour, a title and a one-line description; every
+card in a row is as tall as the tallest. Order: Exam forms, Resize photo, Signature, Compress a PDF, Images to PDF, Merge
+PDFs, ID card on one page, Check a file, Thumb impression, Handwritten page. Accents (tokens `photo`, `ink`, `pdf`; exams
+use primary, the Checker success): Resize photo = photo; Signature, Thumb, Handwritten page = ink; the four PDF tools = pdf.
+Resize photo / Signature / Thumb / Handwritten page open Custom size with that kind chosen. Under the grid: "My exams" as
+a horizontal strip of pinned exams (only when there are any), then "Coming soon" with muted cards (Scan, Printable guide
+sheet, Live photo coach). No search field on Home.
+
+**Exam forms** (the former Home list). Large search field ("Search 55+ exams — IBPS, SSC, NEET…", Hindi aliases indexed,
+e.g. "बैंक" → banking). Category chips. My exams, Popular now, the specs status card, and the "Not listed? Use Custom
+size." / "Already have a file? Check it." links.
 
 **Exam checklist.** Header: exam name, body, "Specs verified 30 Sep 2026 · Source" link, and a
 confidence badge. Rows per document: icon, name, requirement summary (`20–50 KB · 200×230`), and a
@@ -84,8 +96,8 @@ Comparison never changes options, Saved or export bytes. Three wrapping KB/dimen
 pass/fail labels backed by the re-inspected output. Pending edits and failures hide old output/chips. Technical passes
 do not certify an unverified preset; the separate "Likely OK · Unverified" verdict stays. See ALGORITHMS §4.
 
-**PDF maker** (ALGORITHMS §6, built 2026-10-15). Tools → PDF lists Images to PDF, Compress a PDF, Merge PDFs and ID card on
-one page (title + one-line description each); an exam's PDF row (e.g. JEE Main "Class 10 certificate") opens the same
+**PDF maker** (ALGORITHMS §6, built 2026-10-15). Home's PDF cards open Images to PDF, Compress a PDF, Merge PDFs and ID card
+on one page; an exam's PDF row (e.g. JEE Main "Class 10 certificate") opens the same
 screen for that slot. One scrolling screen, top to bottom:
 1. *Intro* — the exam name and window (`50–300 KB · PDF`) for a slot, then one line on what to add.
 2. *Pages / Files* — each file with a 56 dp/pt thumbnail, "Photo 2" or "PDF", `3 pages · 812 KB`; move up/down and remove
@@ -128,11 +140,15 @@ changes.
   days). A row opens the original's screen: preview, date and size, a pinned **Use for exam…** button that opens a
   sheet with the Checker's exam list and search, and Delete (toolbar, with a confirmation). Choosing an exam opens that
   slot's flow straight at the crop step with the original; Done comes back to the original's screen.
+- *Previews (2026-10-20, user request):* every Prepared and History row has a 56 dp/pt thumbnail (the file itself; a PDF's
+  first page). Tapping a History row that is still kept opens a full preview (the image, or a PDF's pages one under
+  another) with Share. On a review, Save to My Kit first shows the picture that will be kept, with Save to My Kit / Cancel.
 - *History:* every verified save, newest first: document, exam (or "Custom size"), `34 KB · 200×230 · JPG` and the
   date. Share re-sends the private copy for 30 days, then the row says "No longer kept (30 days)". Clear history (toolbar,
   with a confirmation) deletes the list and copies, never the user's saved files or the checklist's Saved marks.
 
-**Custom size** (built 2026-10-13, ALGORITHMS 11). Reached from Tools and from Home ("Not listed? Use Custom size.",
+**Custom size** (built 2026-10-13, ALGORITHMS 11). Reached from Home's Resize photo / Signature / Thumb / Handwritten page cards
+(that kind already chosen) and from Exam forms ("Not listed? Use Custom size.",
 under the lists and under "no matches"). One scrolling form: "What are you making?" (Photo · Signature · Thumb impression ·
 Handwritten document), Dimensions (Pixels/Centimetres segmented control, Width, Height, DPI; "= 276 × 354 px" while in
 centimetres; empty = keep the picture's own size), File size (Min KB optional, Max KB required), Recent sizes (last 5,

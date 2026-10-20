@@ -7,7 +7,7 @@ import app.scanfit.core.designsystem.theme.ScanFitTheme
 import app.scanfit.core.model.Confidence
 import app.scanfit.core.model.ExamCategory
 
-// Previews: light, dark, 200% font and Hindi (UI_UX §4), plus every list state.
+// Previews: light, dark, 200% font and Hindi (UI_UX §4): the Home grid and every Exam forms list state.
 private val previewItems =
     listOf(
         ExamListItem("ibps_po", "IBPS PO / MT", "IBPS", ExamCategory.BANKING, Confidence.HIGH),
@@ -20,9 +20,9 @@ private val previewItems =
 @Preview(name = "Sections large font", showBackground = true, fontScale = 2f)
 @Preview(name = "Sections Hindi", showBackground = true, locale = "hi")
 @Composable
-private fun HomeSectionsPreview() {
+private fun ExamBrowserSectionsPreview() {
     ScanFitTheme {
-        HomeScreen(
+        ExamBrowserScreen(
             HomeUiState(PresetsStatus.Ready(55, 2), pinned = previewItems.take(1), popular = previewItems),
             {},
             {},
@@ -34,9 +34,9 @@ private fun HomeSectionsPreview() {
 
 @Preview(name = "Results", showBackground = true)
 @Composable
-private fun HomeResultsPreview() {
+private fun ExamBrowserResultsPreview() {
     ScanFitTheme {
-        HomeScreen(
+        ExamBrowserScreen(
             HomeUiState(PresetsStatus.Ready(55, 2), query = "po", results = previewItems),
             {},
             {},
@@ -48,12 +48,27 @@ private fun HomeResultsPreview() {
 
 @Preview(name = "No results", showBackground = true)
 @Composable
-private fun HomeNoResultsPreview() {
-    ScanFitTheme { HomeScreen(HomeUiState(PresetsStatus.Ready(55, 2), query = "zzzz"), {}, {}, {}, HomeLinks()) }
+private fun ExamBrowserNoResultsPreview() {
+    ScanFitTheme { ExamBrowserScreen(HomeUiState(PresetsStatus.Ready(55, 2), query = "zzzz"), {}, {}, {}, HomeLinks()) }
 }
 
 @Preview(name = "Loading", showBackground = true)
 @Composable
-private fun HomeLoadingPreview() {
-    ScanFitTheme { HomeScreen(HomeUiState(), {}, {}, {}, HomeLinks()) }
+private fun ExamBrowserLoadingPreview() {
+    ScanFitTheme { ExamBrowserScreen(HomeUiState(), {}, {}, {}, HomeLinks()) }
+}
+
+@Preview(name = "Home", showBackground = true, heightDp = 1400)
+@Preview(name = "Home dark", showBackground = true, heightDp = 1400, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(name = "Home large font", showBackground = true, heightDp = 2600, fontScale = 2f)
+@Preview(name = "Home Hindi", showBackground = true, heightDp = 1400, locale = "hi")
+@Composable
+private fun HomeGridPreview() {
+    ScanFitTheme { HomeScreen(previewItems.take(2), {}, {}) }
+}
+
+@Preview(name = "Home, no pinned exams", showBackground = true, heightDp = 1400)
+@Composable
+private fun HomeNoPinnedPreview() {
+    ScanFitTheme { HomeScreen(emptyList(), {}, {}) }
 }

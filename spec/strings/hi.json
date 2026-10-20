@@ -27,7 +27,6 @@
 
 	"tab.home": "होम",
 	"tab.kit": "मेरी किट",
-	"tab.tools": "टूल्स",
 	"tab.settings": "सेटिंग्स",
 
 	"common.save": "सेव करें",
@@ -42,7 +41,7 @@
 	"common.next": "TODO_HI: आगे",
 	"common.coming_soon": "TODO_HI: जल्द आ रहा है",
 
-	"home.title": "TODO_HI: आप किसके लिए आवेदन कर रहे हैं?",
+	"home.title": "TODO_HI: आप क्या करना चाहते हैं?",
 	"home.search_hint": "TODO_HI: {count:int}+ परीक्षाएँ खोजें — IBPS, SSC, NEET…",
 	"home.section_pinned": "TODO_HI: मेरी परीक्षाएँ",
 	"home.section_popular": "TODO_HI: अभी लोकप्रिय",
@@ -400,6 +399,27 @@
 		"one": "TODO_HI: {count:int} पन्ना",
 		"other": "TODO_HI: {count:int} पन्ने"
 	},
+
+	"home.subtitle": "TODO_HI: फ़ोटो और हस्ताक्षर का साइज़ बदलें, PDF बनाएँ, या परीक्षा फ़ॉर्म की हर फ़ाइल तैयार करें।",
+	"home.card_exams": "TODO_HI: परीक्षा फ़ॉर्म",
+	"home.card_exams_body": "TODO_HI: परीक्षा के नियमों के हिसाब से हर फ़ोटो, हस्ताक्षर और दस्तावेज़",
+	"home.card_photo": "TODO_HI: फ़ोटो का साइज़ बदलें",
+	"home.card_photo_body": "TODO_HI: KB, पिक्सेल या सेमी में कोई भी साइज़",
+	"home.card_signature": "TODO_HI: हस्ताक्षर",
+	"home.card_signature_body": "TODO_HI: कागज़ पर किए हस्ताक्षर को साफ़ करें और साइज़ बदलें",
+	"home.card_thumb": "TODO_HI: अंगूठे का निशान",
+	"home.card_thumb_body": "TODO_HI: किसी भी साइज़ में साफ़ अंगूठे का निशान",
+	"home.card_document": "TODO_HI: हाथ से लिखा पन्ना",
+	"home.card_document_body": "TODO_HI: घोषणा और नोट्स, साफ़ और सही साइज़ में",
+	"home.card_check": "TODO_HI: फ़ाइल जाँचें",
+	"home.coming_soon_heading": "TODO_HI: जल्द आ रहा है",
+	"tools.scan_body": "TODO_HI: कैमरे से पन्ने स्कैन करें",
+	"tools.guide_sheet_body": "TODO_HI: असली साइज़ के बॉक्स प्रिंट करें और उनमें हस्ताक्षर करें",
+	"tools.coach_body": "TODO_HI: पोर्टल पर ली जाने वाली लाइव फ़ोटो का अभ्यास करें",
+	"kit.preview_failed": "TODO_HI: यह फ़ाइल नहीं खुली। हो सकता है अब यह रखी न गई हो।",
+	"kit.preview_page": "TODO_HI: पन्ना {number:int} / {total:int}",
+	"kit.save_preview_title": "TODO_HI: यह फ़ोटो My Kit में सेव करें?",
+	"kit.save_preview_body": "TODO_HI: ScanFit पूरी फ़ोटो रखता है, क्रॉप की गई फ़ाइल नहीं, ताकि आप इसे दूसरी परीक्षाओं के लिए फिर से इस्तेमाल कर सकें।",
 
 	"infoplist.camera_usage": "TODO_HI: ScanFit परीक्षा फ़ॉर्म के लिए आपकी फ़ोटो लेने के लिए कैमरे का इस्तेमाल करता है। फ़ोटो आपके फ़ोन पर ही रहती है।"
 }

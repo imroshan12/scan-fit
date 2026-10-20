@@ -157,8 +157,20 @@
     <string name="flow_toggle_crisp_black">Crisp black</string>
     <string name="flow_toggle_name_date">Name &amp; date</string>
     <string name="flow_toggle_white_bg">White background</string>
+    <string name="home_card_check">Check a file</string>
+    <string name="home_card_document">Handwritten page</string>
+    <string name="home_card_document_body">Declarations and notes, cleaned up and sized</string>
+    <string name="home_card_exams">Exam forms</string>
+    <string name="home_card_exams_body">Every photo, signature and document an exam asks for, made to its rules</string>
+    <string name="home_card_photo">Resize photo</string>
+    <string name="home_card_photo_body">Any size in KB, pixels or cm</string>
+    <string name="home_card_signature">Signature</string>
+    <string name="home_card_signature_body">Clean up and resize a signature on paper</string>
+    <string name="home_card_thumb">Thumb impression</string>
+    <string name="home_card_thumb_body">A clear thumb print at any size</string>
     <string name="home_category_all">All</string>
     <string name="home_check_file">Already have a file? Check it.</string>
+    <string name="home_coming_soon_heading">Coming soon</string>
     <string name="home_empty_hint">Not listed? Use Custom size.</string>
     <string name="home_fix_file_body">Check a photo, signature or PDF before you upload it.</string>
     <string name="home_fix_file_title">Fix a file</string>
@@ -174,7 +186,8 @@
     <string name="home_search_hint">Search %1$d+ exams — IBPS, SSC, NEET…</string>
     <string name="home_section_pinned">My exams</string>
     <string name="home_section_popular">Popular now</string>
-    <string name="home_title">What are you applying for?</string>
+    <string name="home_subtitle">Resize photos and signatures, make PDFs, or get every file an exam form asks for.</string>
+    <string name="home_title">What would you like to do?</string>
     <string name="ink_crop_hint">Drag the corners to leave out everything else</string>
     <string name="ink_declaration_heading">Write this by hand, sign it, then photograph it</string>
     <string name="ink_source_heading">Photograph it on plain white paper</string>
@@ -213,8 +226,12 @@
     <string name="kit_originals_empty_body">On a review, tap Save to My Kit to keep the picture and use it for other exams.</string>
     <string name="kit_originals_empty_title">No originals yet</string>
     <string name="kit_originals_load_failed">Could not load your originals. Please try again.</string>
+    <string name="kit_preview_failed">Couldn\'t open this file. It may no longer be kept.</string>
+    <string name="kit_preview_page">Page %1$d of %2$d</string>
     <string name="kit_save_failed">Could not save to My Kit. Please try again.</string>
     <string name="kit_save_original">Save to My Kit</string>
+    <string name="kit_save_preview_body">ScanFit keeps the whole picture, not the cropped file, so you can use it again for other exams.</string>
+    <string name="kit_save_preview_title">Save this picture to My Kit?</string>
     <string name="kit_saved_on">Saved %1$s</string>
     <string name="kit_saved_original">Saved to My Kit</string>
     <string name="kit_saving_original">Saving to My Kit…</string>
@@ -364,11 +381,12 @@
     <string name="tab_home">Home</string>
     <string name="tab_kit">My Kit</string>
     <string name="tab_settings">Settings</string>
-    <string name="tab_tools">Tools</string>
     <string name="tools_checker">Checker</string>
     <string name="tools_coach">Live photo coach</string>
+    <string name="tools_coach_body">Practise the live photo a portal takes</string>
     <string name="tools_custom_resize">Custom size</string>
     <string name="tools_guide_sheet">Printable guide sheet</string>
+    <string name="tools_guide_sheet_body">Print boxes at true size to sign in</string>
     <string name="tools_pdf">PDF tools</string>
     <string name="tools_pdf_compress">Compress a PDF</string>
     <string name="tools_pdf_compress_body">Get a PDF under the size the form asks for</string>
@@ -379,4 +397,5 @@
     <string name="tools_pdf_merge">Merge PDFs</string>
     <string name="tools_pdf_merge_body">Several PDFs into one file</string>
     <string name="tools_scan">Scan</string>
+    <string name="tools_scan_body">Scan pages with your camera</string>
 </resources>

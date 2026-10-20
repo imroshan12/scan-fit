@@ -27,7 +27,6 @@
 
 	"tab.home": "Home",
 	"tab.kit": "My Kit",
-	"tab.tools": "Tools",
 	"tab.settings": "Settings",
 
 	"common.save": "Save",
@@ -42,7 +41,7 @@
 	"common.next": "Next",
 	"common.coming_soon": "Coming soon",
 
-	"home.title": "What are you applying for?",
+	"home.title": "What would you like to do?",
 	"home.search_hint": "Search {count:int}+ exams — IBPS, SSC, NEET…",
 	"home.section_pinned": "My exams",
 	"home.section_popular": "Popular now",
@@ -400,6 +399,27 @@
 		"one": "{count:int} page",
 		"other": "{count:int} pages"
 	},
+
+	"home.subtitle": "Resize photos and signatures, make PDFs, or get every file an exam form asks for.",
+	"home.card_exams": "Exam forms",
+	"home.card_exams_body": "Every photo, signature and document an exam asks for, made to its rules",
+	"home.card_photo": "Resize photo",
+	"home.card_photo_body": "Any size in KB, pixels or cm",
+	"home.card_signature": "Signature",
+	"home.card_signature_body": "Clean up and resize a signature on paper",
+	"home.card_thumb": "Thumb impression",
+	"home.card_thumb_body": "A clear thumb print at any size",
+	"home.card_document": "Handwritten page",
+	"home.card_document_body": "Declarations and notes, cleaned up and sized",
+	"home.card_check": "Check a file",
+	"home.coming_soon_heading": "Coming soon",
+	"tools.scan_body": "Scan pages with your camera",
+	"tools.guide_sheet_body": "Print boxes at true size to sign in",
+	"tools.coach_body": "Practise the live photo a portal takes",
+	"kit.preview_failed": "Couldn't open this file. It may no longer be kept.",
+	"kit.preview_page": "Page {number:int} of {total:int}",
+	"kit.save_preview_title": "Save this picture to My Kit?",
+	"kit.save_preview_body": "ScanFit keeps the whole picture, not the cropped file, so you can use it again for other exams.",
 
 	"infoplist.camera_usage": "ScanFit uses the camera to take your photo for exam forms. The photo stays on your phone."
 }

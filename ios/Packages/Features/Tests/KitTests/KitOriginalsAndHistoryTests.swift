@@ -21,6 +21,18 @@ final class FakeKitImages: KitImages, @unchecked Sendable {
         )
         return context?.makeImage()
     }
+
+    /// Every PDF opens as three A4 pages.
+    func pdfPageCount(_: [UInt8]) -> Int? { 3 }
+
+    func pdfPage(_: [UInt8], index: Int, width: Int) -> CGImage? {
+        guard index >= 0, index < 3 else { return nil }
+        let height = Int(Double(width) * 842 / 595)
+        return CGContext(
+            data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
+            space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue
+        )?.makeImage()
+    }
 }
 
 /// My Kit's Originals, History and original screens (ALGORITHMS 13).

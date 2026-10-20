@@ -1,3 +1,4 @@
+import CoreGraphics
 import Match
 import Observation
 import ScanData
@@ -38,15 +39,30 @@ public final class KitViewModel {
 
     public private(set) var state: State = .loading
     @ObservationIgnored private let drafts: any DraftStore
+    @ObservationIgnored private let images: any KitImages
     @ObservationIgnored private let load: @Sendable () async -> PresetBundle?
     @ObservationIgnored private var generation = 0
+    @ObservationIgnored private var bundle: PresetBundle?
 
     public init(
-        drafts: any DraftStore = NoDraftStore(),
+        drafts: any DraftStore = NoDraftStore(), images: any KitImages = LiveKitImages(),
         load: @escaping @Sendable () async -> PresetBundle?
     ) {
         self.drafts = drafts
+        self.images = images
         self.load = load
+    }
+
+    /// A Prepared row's thumbnail: the retained draft, re-read through its checks (ALGORITHMS 13.3 previews).
+    public func thumbnail(_ route: FlowRoute) async -> CGImage? {
+        guard case let .exam(examId, docType) = route.target,
+              let exam = bundle?.exams.first(where: { $0.id == examId }),
+              let spec = exam.documents.first(where: { $0.type == docType }),
+              let draft = await drafts.load(examID: examId, spec: spec, kind: DocKind.of(docType)) else { return nil }
+        let images = self.images
+        return await Task.detached(priority: .userInitiated) {
+            images.image(draft.bytes, maxPixelSize: KitOriginalsViewModel.thumbnailPixels)
+        }.value
     }
 
     #if DEBUG
@@ -67,6 +83,7 @@ public final class KitViewModel {
             state = .failed
             return
         }
+        self.bundle = bundle
         var groups: [KitGroup] = []
         for exam in bundle.exams where exam.status == .active {
             var rows: [KitRow] = []

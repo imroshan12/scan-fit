@@ -94,6 +94,17 @@ class PhotoKitViewModelTest {
     }
 
     @Test
+    fun thePreviewIsTheWorkingPictureAtDisplaySizeAndSavesNothing() = runTest(dispatcher) {
+        val m = reviewed()
+        val preview = requireNotNull(m.originalPreview())
+        val source = requireNotNull(tools.decoded)
+        assertTrue(maxOf(preview.width, preview.height) <= 720)
+        assertEquals(source.width.toDouble() / source.height, preview.width.toDouble() / preview.height, 0.02)
+        assertTrue("a preview writes nothing", kit.originals.isEmpty())
+        assertEquals(KitSave.IDLE, m.review.kit)
+    }
+
+    @Test
     fun aFullKitAndAFailureAreShownAndCanBeRetried() = runTest(dispatcher) {
         repeat(KitStore.MAX_ORIGINALS) { kit.saveOriginal(DocKind.SIGNATURE, TestJpeg.make(10, 10, 4096)) }
         val m = reviewed()

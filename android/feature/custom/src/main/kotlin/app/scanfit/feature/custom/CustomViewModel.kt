@@ -1,5 +1,6 @@
 package app.scanfit.feature.custom
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.scanfit.core.data.UserPreferences
@@ -8,6 +9,7 @@ import app.scanfit.core.model.CustomSizeError
 import app.scanfit.core.model.CustomSizeFields
 import app.scanfit.core.model.DocType
 import app.scanfit.core.model.SizeUnit
+import app.scanfit.core.model.wire
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -67,12 +69,18 @@ data class CustomUiState(
 
 /** UI_UX §3 Custom size: what the file is and the form's limits, then the usual photo or ink flow. */
 @HiltViewModel
-class CustomViewModel
-@Inject
-constructor(
+class CustomViewModel internal constructor(
     private val preferences: UserPreferences,
+    /** What Home's card chose (ALGORITHMS 11): Resize photo, Signature, Thumb impression or Handwritten page. */
+    initialDoc: DocType? = null,
 ) : ViewModel() {
-    private val form = MutableStateFlow(CustomForm())
+    @Inject
+    constructor(
+        preferences: UserPreferences,
+        savedState: SavedStateHandle,
+    ) : this(preferences, docOf(savedState.get<String>(DOC)))
+
+    private val form = MutableStateFlow(CustomForm(doc = initialDoc ?: DocType.PHOTO))
     private val attempted = MutableStateFlow(false)
 
     val uiState: StateFlow<CustomUiState> =
@@ -135,6 +143,10 @@ constructor(
     }
 
     companion object {
+        /** Navigation argument: `custom?doc=<wire>` (ALGORITHMS 11). */
+        const val DOC = "doc"
+
+        private fun docOf(wire: String?): DocType? = CustomSize.DOCS.firstOrNull { it.wire == wire }
 
         private const val STOP_TIMEOUT_MS = 5_000L
         private const val MAX_DIGITS = 5

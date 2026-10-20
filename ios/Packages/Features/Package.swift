@@ -35,7 +35,7 @@ let package = Package(
     targets: [
         // Phase 0 content
         .target(name: "Home", dependencies: [core, presets, model, data]),
-        .target(name: "Kit", dependencies: [core, model, data, match]),
+        .target(name: "Kit", dependencies: [core, model, data, match, imaging, pdf]),
         .target(name: "Settings", dependencies: [core, presets, data]),
         .target(name: "Exams", dependencies: [core, model, data, match, imaging, inspect]),
         .target(name: "PhotoFlow", dependencies: [core, model, imaging, vision, match, inspect, data]),

@@ -48,6 +48,17 @@ struct PhotoKitTests {
         #expect(await kit.originalsList.count == 1)
     }
 
+    @Test("the preview is the working picture at display size and saves nothing")
+    func preview() async throws {
+        let m = try await model()
+        #expect(await m.originalPreview() == nil, "nothing to preview before a picture")
+        await reviewed(m)
+        let picture = try #require(await m.originalPreview())
+        #expect(max(picture.width, picture.height) <= 720)
+        #expect(abs(Double(picture.width) / Double(picture.height) - 1000.0 / 1400.0) < 0.02)
+        #expect(await kit.originalsList.isEmpty && m.kitSave == .idle)
+    }
+
     @Test("a full kit and a failure are shown and can be retried")
     func fullAndRetry() async throws {
         for _ in 0..<KitLimits.maxOriginals {
