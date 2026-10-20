@@ -7,6 +7,7 @@ on:
   push:
     branches: [main]
     paths: ['spec/**', 'web/**', '.github/workflows/spec.yml']
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -48,9 +49,13 @@ jobs:
       - name: Echo-page inspector tests
         run: node --test web/upload-test/inspect.test.mjs
 
+  # Manual only (Actions > spec > Run workflow) since the site moved to GitHub Pages (2026-10-20): it builds and signs
+  # the presets with the production key and uploads them as an artifact, but nothing reads them from the site until the
+  # presets OTA sync ships (ROADMAP Phase 4). Then pages.yml deploys the signed presets with the site. On every push it
+  # only left an approval waiting in the presets-production environment.
   publish-presets:
     needs: validate
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     environment: presets-production      # protect with required reviewers in repo settings
     steps:
@@ -75,5 +80,5 @@ jobs:
         with:
           name: site
           path: web
-      # Deploy step is added when the Cloudflare Pages project exists (ROADMAP Phase 0 [Ops]):
-      #   - uses: cloudflare/wrangler-action@v3 with apiToken/accountId secrets, command: pages deploy web
+      # No deploy here: the site is GitHub Pages (pages.yml). When the presets OTA ships, pages.yml gets this signing
+      # step so the deployed site carries web/presets/v2/presets.json(.sig).

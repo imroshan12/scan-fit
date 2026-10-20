@@ -50,7 +50,7 @@ let package = Package(
         .target(name: "Coach", dependencies: [core, model]),
         .testTarget(name: "HomeTests", dependencies: ["Home", presets, model, data, testSupport]),
         .testTarget(name: "PaywallTests", dependencies: ["Paywall", data, billing, testSupport]),
-        .testTarget(name: "SettingsTests", dependencies: ["Settings", presets, data, billing, testSupport]),
+        .testTarget(name: "SettingsTests", dependencies: ["Settings", presets, data, billing, config, testSupport]),
         .testTarget(name: "ExamsTests", dependencies: ["Exams", model, data, match, testSupport]),
         .testTarget(name: "KitTests", dependencies: ["Kit", model, data, match, imaging, inspect, testSupport]),
         .testTarget(name: "CustomTests", dependencies: ["Custom", model, data]),

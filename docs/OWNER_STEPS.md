@@ -52,26 +52,40 @@ Answered: `pro.sarvesh.roshan@gmail.com`. Users will write there (Report a probl
 Optionally add a Gmail filter that labels mail with "Mr Doc" in the subject.
 
 ### A4. Put the website online with GitHub Pages (5 minutes)
-The workflow `.github/workflows/pages.yml` publishes `web/` on every push to `main` that changes `web/`.
+The workflow `.github/workflows/pages.yml` publishes `web/` on every push to `main` that changes `web/`. Until step 1
+is done it fails with "Get Pages site failed … verify that the repository has Pages enabled": that's expected.
 1. On github.com open `imroshan12/scan-fit` › **Settings › Pages**. Under **Build and deployment › Source** choose
    **GitHub Actions**. (Nothing else to set.)
-2. Push (A1). Open the **Actions** tab: the **pages** run should go green in about a minute. If it didn't start, open
-   it and click **Run workflow**.
+2. Run it again: **Actions › pages ›** the failed run **› Re-run all jobs**, or **Actions › pages › Run workflow**. It
+   goes green in about a minute.
 3. Open `https://imroshan12.github.io/scan-fit/` and check `/privacy/`, `/terms/`, `/help/`, `/delete-account/` and `/upload-test/`.
 4. Good to know: your repository is **public**, so anyone can read the app's code (no keys or passwords are in it;
    they're all git-ignored). GitHub Pages is free for public repos; a private repo would need a paid GitHub plan or a
    move to Cloudflare Pages. GitHub Pages ignores `web/_headers` (only small security headers are lost).
 5. Later, with a domain: Settings › Pages › **Custom domain**, then tell Claude so the app links follow.
 
-### A5. Sign the exam presets with your production key (5 minutes)
-This is the only blocker the release check reports. In a terminal at the repo root:
-```bash
-source .venv/bin/activate
-PRESETS_SIGNING_KEY='<your presets seed from the password manager>' spec/tools/build_all.sh --release --allow-todo-hi
-python3 spec/tools/release_preflight.py
-```
-Done when the preflight shows **no BLOCKER** (warnings about Hindi, links and billing are expected for test builds).
-Re-run it after every change to `spec/presets/`.
+### A5. The presets "seed" (your private signing key): nothing to do unless you build releases on your Mac
+The exam rules inside the app are signed so a tampered file is refused. The **seed** is the private half of that
+signing key: a 44-character text that `python3 spec/tools/build_presets.py --genkey` printed once as
+`PRIVATE (CI secret PRESETS_SIGNING_KEY): …` when `spec/signing/prod_public_key.b64` was created (2 Oct). It was meant to
+go into GitHub › Settings › Secrets and variables › Actions as `PRESETS_SIGNING_KEY` and into your password manager.
+
+- **It is in GitHub already**: on 20 Oct the CI job "Build, sign with the production key, verify" passed, so the secret
+  exists and matches the public key. CI signs every release build with it, so you never need to type it.
+- GitHub never shows a secret again. Look in your password manager / notes for the `PRIVATE` line.
+- **If you have it**, local release builds work with:
+  ```bash
+  source .venv/bin/activate
+  PRESETS_SIGNING_KEY='<the 44-character PRIVATE value>' spec/tools/build_all.sh --release --allow-todo-hi
+  ```
+- **If you don't have a copy anywhere**, make a new key now. It costs nothing before launch (no app with the old key is
+  in users' hands), while later it would need an app update:
+  ```bash
+  source .venv/bin/activate
+  python3 spec/tools/build_presets.py --genkey
+  ```
+  Save the PRIVATE value in your password manager, paste it into the GitHub secret `PRESETS_SIGNING_KEY` (Update),
+  write the PUBLIC value (one line) into `spec/signing/prod_public_key.b64`, then commit and push.
 
 ### A6. Google Play Console: account and app ⏳
 1. Open **play.google.com/console**. If the dashboard asks you to **verify your identity**, a **contact phone/email**, or to
@@ -130,21 +144,18 @@ The closed test needs a complete store listing.
    feature graphic and the iPhone screenshots from the simulator; Android screenshots need your phone (screenshot the
    screens listed in STORE_LISTING §7, with sample documents only, never real IDs or signatures).
 
-### A12. First test build (Fri 23 – Sat 24 Oct)
-Android, signed with your upload key (`android/keystore.properties` is already set up):
-```bash
-cd android
-./gradlew :app:bundleRelease -Pscanfit.versionName=0.9.0 -Pscanfit.versionCode=1
-# the file: android/app/build/outputs/bundle/release/app-release.aab
-```
-Every later upload needs a higher `versionCode` (2, 3, …).
-
-iOS (your team is in `ios/Config/Local.xcconfig`; Xcode must be signed in to that Apple account):
-```bash
-cd ios
-ASC_KEY_PATH=/path/outside/repo/AuthKey_XXXX.p8 ASC_KEY_ID=XXXX ASC_ISSUER_ID=xxxxxxxx-xxxx \
-  Scripts/archive.sh --version 0.9.0 --build 1 --upload
-```
+### A12. First test build: CI already makes it (Fri 23 – Sat 24 Oct)
+Every push to `main` runs the **release** jobs after the tests (both succeeded on 19 Oct):
+- **Android**: a signed `.aab`, version from `android/gradle.properties`, `versionCode` = the run number (always
+  higher than the last). On GitHub: **Actions › android ›** the latest green run **› Summary › Artifacts ›
+  `android-release-…`** (download, unzip, the `.aab` is inside). Upload that file in A13.
+- **iOS**: archived, signed and **uploaded to TestFlight** automatically (build number = run number). It appears in App
+  Store Connect › TestFlight about 15 minutes after the run, once processing finishes.
+- Before tagging a real release: bump `scanfit.versionName` in `android/gradle.properties` and `MARKETING_VERSION` in
+  `ios/project.yml` together (e.g. `0.9.0`), or tag `android-v0.9.0-rc1` / `ios-v0.9.0-rc1` (RELEASE_CHECKLIST §3).
+- Local builds instead (needs the seed from A5): `cd android && ./gradlew :app:bundleRelease
+  -Pscanfit.versionName=0.9.0 -Pscanfit.versionCode=<higher than any upload>`; iOS `cd ios &&
+  Scripts/archive.sh --version 0.9.0 --build <n> --upload` with `ASC_KEY_PATH`, `ASC_KEY_ID`, `ASC_ISSUER_ID` set.
 
 ### A13. Play: first upload and the "Set up your app" tasks
 1. **Test and release › Testing › Internal testing › Create new release**: upload `app-release.aab`, release name

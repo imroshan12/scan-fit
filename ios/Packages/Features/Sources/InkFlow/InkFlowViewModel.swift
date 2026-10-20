@@ -19,6 +19,8 @@ public final class InkFlowViewModel {
     public private(set) var draftValidationPending = false
     /// The share sheet's file, or the staging failure (ALGORITHMS 1.6.2).
     public internal(set) var share: ShareStatus = .none
+    /// Tests only: a share folder of the test's own (`ShareStager.stage(_:filename:in:)`); nil is the app's folder.
+    @ObservationIgnored var shareFolder: URL?
     public let exporter: any DocumentExporting
 
     @ObservationIgnored let preferences: UserPreferences?

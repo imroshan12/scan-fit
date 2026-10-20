@@ -49,8 +49,9 @@ Owner: **You** = only you can do it (accounts, money, legal, devices, people). *
       create the app record, sign the **Paid Apps agreement**, add bank and tax info, enrol in the **App Store Small Business
       Program** (15% commission instead of 30%). These take days to verify, so start now.
 - [x] **You** Generate the production presets key and the Android upload keystore (RELEASE_CHECKLIST §1); store both in a
-      password manager. _Done (preflight 2026-10-20: prod key, upload key and iOS team are set). Still to run once:
-      `PRESETS_SIGNING_KEY=<seed> spec/tools/build_all.sh --release --allow-todo-hi` (the only preflight blocker)._
+      password manager. _Done (preflight 2026-10-20: prod key, upload key and iOS team are set; CI's release jobs
+      sign the presets with the `PRESETS_SIGNING_KEY` secret and upload to TestFlight). Locally only if you build
+      releases on your Mac (OWNER_STEPS A5)._
 - [ ] **You** Create the Firebase project (Android + iOS apps) and the RevenueCat project.
 - [ ] **You** Put the website online: GitHub Pages (user decision 2026-10-20) at `https://imroshan12.github.io/scan-fit/`. Repo Settings › Pages ›
       Source: **GitHub Actions**, then push; `.github/workflows/pages.yml` deploys `web/`. Your details are already

@@ -114,13 +114,29 @@ struct SaveAllTests {
     @Test("share stages exactly the bytes under the name, one file at a time, and refuses a path")
     func share() async throws {
         let bytes = TestJpeg.make(width: 140, height: 60, size: 16 * 1024)
-        let first = try #require(await ShareStager.stage(bytes, filename: "a.jpg"))
+        let folder = ownShareFolder()
+        let first = try #require(await ShareStager.stage(bytes, filename: "a.jpg", in: folder))
         let written = [UInt8](try Data(contentsOf: first))
         #expect(first.lastPathComponent == "a.jpg" && written == bytes)
-        let second = try #require(await ShareStager.stage(bytes, filename: "b.jpg"))
+        let second = try #require(await ShareStager.stage(bytes, filename: "b.jpg", in: folder))
         #expect(!FileManager.default.fileExists(atPath: first.path), "the previous staged file is gone")
-        #expect(await ShareStager.stage(bytes, filename: "../escape.jpg") == nil)
-        await ShareStager.clear()
+        #expect(await ShareStager.stage(bytes, filename: "../escape.jpg", in: folder) == nil)
+        await ShareStager.clear(in: folder)
         #expect(!FileManager.default.fileExists(atPath: second.path))
+    }
+
+    // Regression (CI 2026-10-20): suites stage in parallel, and a stage empties its folder, so a test sharing into the
+    // app's folder could lose its file to another test. Own folders keep each test's file.
+    @Test("stages in separate folders never remove each other's file")
+    func separateFolders() async throws {
+        let bytes = TestJpeg.make(width: 140, height: 60, size: 16 * 1024)
+        let (one, two) = (ownShareFolder(), ownShareFolder())
+        async let first = ShareStager.stage(bytes, filename: "a.jpg", in: one)
+        async let second = ShareStager.stage(bytes, filename: "b.jpg", in: two)
+        let urls = await [first, second].compactMap { $0 }
+        #expect(urls.count == 2)
+        for url in urls { #expect([UInt8](try Data(contentsOf: url)) == bytes) }
+        await ShareStager.clear(in: one)
+        await ShareStager.clear(in: two)
     }
 }

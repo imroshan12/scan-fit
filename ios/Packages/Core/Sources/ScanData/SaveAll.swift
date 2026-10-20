@@ -50,10 +50,11 @@ public extension DocumentExporting {
 public enum ShareStager {
     static var folder: URL { FileManager.default.temporaryDirectory.appendingPathComponent("share", isDirectory: true) }
 
-    /// A file URL for `bytes` named `filename`, or nil when it could not be written exactly.
-    public static func stage(_ bytes: [UInt8], filename: String) async -> URL? {
-        await Task.detached(priority: .userInitiated) { () -> URL? in
-            let folder = Self.folder
+    /// A file URL for `bytes` named `filename`, or nil when it could not be written exactly. `folder` is for tests
+    /// only: every stage empties its folder, so tests that share in parallel each need their own (`ownShareFolder`).
+    public static func stage(_ bytes: [UInt8], filename: String, in folder: URL? = nil) async -> URL? {
+        let folder = folder ?? Self.folder
+        return await Task.detached(priority: .userInitiated) { () -> URL? in
             let url = folder.appendingPathComponent(filename)
             // A §9.8 name is a single path segment; anything else is not shared.
             guard url.deletingLastPathComponent().standardizedFileURL == folder.standardizedFileURL else { return nil }
@@ -73,8 +74,9 @@ public enum ShareStager {
     }
 
     /// Empties the share folder: called on app start, so a shared file never outlives the session.
-    public static func clear() async {
-        await Task.detached { try? FileManager.default.removeItem(at: Self.folder) }.value
+    public static func clear(in folder: URL? = nil) async {
+        let folder = folder ?? Self.folder
+        await Task.detached { try? FileManager.default.removeItem(at: folder) }.value
     }
 }
 

@@ -56,6 +56,7 @@ struct PhotoFlowExportTests {
             faces: FakeFaceDetector(faces: [Face(x: 400, y: 500, w: 200, h: 240)]),
             preferences: preferences, exporter: exporter, gate: gate
         ) { bundle }
+        model.shareFolder = ownShareFolder() // suites run in parallel; a stage empties its folder
         await model.onAppear()
         await model.imageSelected([1])
         await model.cropDone()

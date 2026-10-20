@@ -88,6 +88,7 @@ struct PhotoFlowViewModelTests {
         let bundle = try SpecPresets.bundle()
         let m = PhotoFlowViewModel(examId: exam, docType: doc, tools: tools, faces: detector ?? faces,
                                    segmenter: segmenter) { bundle }
+        m.shareFolder = ownShareFolder() // suites run in parallel; a stage empties its folder
         await m.onAppear()
         return m
     }

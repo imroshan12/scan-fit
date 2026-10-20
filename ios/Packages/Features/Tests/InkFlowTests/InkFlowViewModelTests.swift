@@ -84,6 +84,7 @@ struct InkFlowViewModelTests {
         let bundle = try SpecPresets.bundle()
         let m = InkFlowViewModel(examId: exam, docType: doc, tools: tools, preferences: prefs ?? preferences(),
                                  exporter: exporter) { bundle }
+        m.shareFolder = ownShareFolder() // suites run in parallel; a stage empties its folder
         await m.onAppear()
         return m
     }

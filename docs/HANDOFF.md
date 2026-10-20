@@ -220,6 +220,23 @@ drafted with `TODO_HI:`. The spec suite still emits pre-existing unclosed-file `
 
 ## 4. What changed (by area, for review)
 
+### CI fixes after the launch-prep push (2026-10-20, night)
+
+- **What failed:** `1209812` android + ios (the Home redesign's stale `home.title` test expectation, fixed in the next
+  commit); `b82fda6` ios "Feature tests": (1) `SettingsViewModelTests` still expected `mailto:support@…` after the
+  support address became the Gmail one, now compared with `AppLinks.supportEmail` (SettingsTests depends on `Config`);
+  (2) a flake: `ShareStager.stage` empties its one folder, so InkFlow/PhotoFlow suites running in parallel deleted each
+  other's staged file ("share waits for the handwriting tick" in CI; "share stages exactly the review bytes" earlier).
+  Fix: `stage(_:filename:in:)` / `clear(in:)` take an optional folder, the photo and ink VMs have a test-only
+  `shareFolder`, test models use `ownShareFolder()` (TestSupport); regression test "stages in separate folders never
+  remove each other's file". App behaviour is unchanged (nil = the app's folder). `pages` failed only because Pages is
+  not switched on yet (OWNER_STEPS A4). `spec.yml` `publish-presets` now runs only on manual dispatch (it left an
+  approval waiting on every push and deploys nothing while the site is on GitHub Pages).
+- **Verified locally:** Features SwiftPM 3 full runs in a row green (170), ScanData 60 incl. the new test, strict
+  SwiftLint, DesignSystemTests via xcodebuild on the iPhone 17 simulator; Android CI command (`spotlessCheck detekt
+  testDebugUnitTest lint --continue` + coverage gate) green. GitHub showed `b82fda6` android build green. Not run
+  locally: the release rehearsals (`rehearsal_key.sh` overwrites `prod_public_key.b64`; CI-only) and app tests.
+
 ### Website and store listing (2026-10-20, evening)
 
 - `web/index.html` rewritten (was a placeholder); new `web/privacy/`, `web/terms/`, `web/help/`, `web/delete-account/`,
@@ -594,6 +611,12 @@ drafted with `TODO_HI:`. The spec suite still emits pre-existing unclosed-file `
    only with official sources and user direction.
 
 ## 6. Testing tips that cost time to learn
+
+- iOS tests that share (photo/ink `share()`, `ShareStager.stage`) must use `ownShareFolder()` (set `model.shareFolder`
+  or pass `in:`): suites run in parallel and every stage empties its folder, which made CI flaky (2026-10-20).
+- CI step logs need a GitHub sign-in; the unauthenticated API still gives job/step status and annotations:
+  `curl -s https://api.github.com/repos/imroshan12/scan-fit/actions/runs?per_page=5`, then `…/runs/<id>/jobs` and
+  `…/check-runs/<job id>/annotations`. Reproduce the failing step locally with the command in the workflow file.
 
 - No fixture or built-in macOS image contains a face. To reach crop/review on the simulator, build a **throwaway** copy with a stub
   `FaceDetector` (a box in the middle of any photo) injected in `RootView`, test, then restore the file and reinstall the real build.

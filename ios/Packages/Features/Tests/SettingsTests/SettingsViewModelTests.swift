@@ -1,4 +1,5 @@
 import Billing
+import Config
 import Foundation
 import ScanData
 @testable import Settings
@@ -57,7 +58,7 @@ struct SettingsViewModelTests {
     func report() throws {
         let url = try #require(SettingsViewModel.reportURL(subject: "Mr Doc problem", body: "App 0.9 · iOS 17"))
         #expect(url.scheme == "mailto")
-        #expect(url.absoluteString.hasPrefix("mailto:support@"))
+        #expect(url.absoluteString.hasPrefix("mailto:\(AppLinks.supportEmail)"))
         #expect(url.absoluteString.contains("subject=Mr%20Doc%20problem"))
     }
 }

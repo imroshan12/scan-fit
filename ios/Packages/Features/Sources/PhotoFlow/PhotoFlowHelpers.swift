@@ -135,7 +135,7 @@ public extension PhotoFlowViewModel {
             width: ready.width, height: ready.height, bytes: ready.bytes.count
         )
         guard gate?.allows([ready.bytes], trigger: .share) ?? true else { return }
-        let url = await ShareStager.stage(ready.bytes, filename: filename)
+        let url = await ShareStager.stage(ready.bytes, filename: filename, in: shareFolder)
         if url != nil { await gate?.record(ready.bytes) }
         guard case let .review(current) = state, current.result == review.result else { return }
         share = url.map { .ready(SharedFile(url: $0)) } ?? .failed
